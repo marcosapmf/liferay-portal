@@ -4,12 +4,15 @@ definition {
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Order Management";
 
 	setUp {
 		task ("Setup: Create Minium site") {
 			CommerceConfiguration.commerceSetUp(minium = "true");
+		}
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
 		}
 
 		task ("Setup: Create a Commerce Account and Buyer User") {
@@ -103,7 +106,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -236,7 +239,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -880,67 +883,6 @@ definition {
 		}
 	}
 
-	@description = "COMMERCE-9936. A disabled default currency should not be usable."
-	@priority = 4
-	test CannotUseDisabledCurrency {
-		property portal.acceptance = "false";
-
-		task ("Given an account with a default Currency") {
-			Account.openAccountsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
-
-			Account.gotoAssigneeTab(assigneeTab = "Channel Defaults");
-
-			Account.setDefaultCurrency(currencyName = "Euro");
-		}
-
-		task ("and the currency is disabled") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_commerce_currency_web_internal_portlet_CommerceCurrencyPortlet");
-
-			CommerceEntry.selectEntryEllipsis(entryName = "Euro");
-
-			DropdownMenuItem.click(menuItem = "Deactivate");
-
-			Account.openAccountsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
-
-			Account.gotoAssigneeTab(assigneeTab = "Channel Defaults");
-
-			ScrollWebElementIntoView(
-				key_settingHeader = "Currencies",
-				locator1 = "Account#DEFAULT_SETTINGS_HEADER");
-
-			AssertElementPresent(
-				key_activeStatus = "No",
-				key_currentDefault = "Euro",
-				key_settingHeader = "Currencies",
-				locator1 = "Account#DEFAULT_SETTING_ACTIVE_STATUS");
-		}
-
-		task ("When the buyer view products on the Minium site") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("Then the currency should be set to Dollars and not Euros") {
-			AssertTextEquals.assertPartialText(
-				key_productName = "U-Joint",
-				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
-				value1 = "$");
-
-			AssertTextNotEquals.assertNotPartialMatch(
-				key_productName = "U-Joint",
-				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
-				value1 = "€");
-		}
-	}
-
 	@description = "COMMERCE-9725. A default delivery term that has been disabled should not be displayed at checkout."
 	@priority = 4
 	test CannotUseDisabledDefaultDeliveryTerm {
@@ -1033,7 +975,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -1129,7 +1071,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -2457,32 +2399,6 @@ definition {
 		}
 	}
 
-	@description = "COMMERCE-9938. Only active currencies can be viewed and disabled currency should not be available to be selected."
-	@priority = 4
-	test CanViewOnlyActiveCurrencies {
-		property portal.acceptance = "false";
-
-		task ("Given a disabled currency") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_commerce_currency_web_internal_portlet_CommerceCurrencyPortlet");
-
-			CommerceEntry.selectEntryEllipsis(entryName = "Euro");
-
-			DropdownMenuItem.click(menuItem = "Deactivate");
-		}
-
-		task ("When the admin sets a default currency for the account") {
-			Account.openAccountsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
-
-			Account.gotoAssigneeTab(assigneeTab = "Channel Defaults");
-		}
-
-		task ("Then the disabled currency should not be available") {
-			Account.assertDisabledCurrencyIsNotAvailable(disabledCurrency = "Euro");
-		}
-	}
-
 	@description = "COMMERCE-9925. Default currency rules works on the storefront"
 	@priority = 4
 	test DefaultCurrencyRulesCanWorkOnStoreFront {
@@ -2688,7 +2604,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -3151,7 +3067,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -3448,7 +3364,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -3560,7 +3476,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 

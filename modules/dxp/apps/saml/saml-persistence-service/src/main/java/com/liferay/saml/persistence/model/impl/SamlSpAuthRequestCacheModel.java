@@ -55,7 +55,7 @@ public class SamlSpAuthRequestCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(11);
+		StringBundler sb = new StringBundler(13);
 
 		sb.append("{samlSpAuthnRequestId=");
 		sb.append(samlSpAuthnRequestId);
@@ -65,6 +65,8 @@ public class SamlSpAuthRequestCacheModel
 		sb.append(createDate);
 		sb.append(", samlIdpEntityId=");
 		sb.append(samlIdpEntityId);
+		sb.append(", samlRelayState=");
+		sb.append(samlRelayState);
 		sb.append(", samlSpAuthRequestKey=");
 		sb.append(samlSpAuthRequestKey);
 		sb.append("}");
@@ -94,6 +96,13 @@ public class SamlSpAuthRequestCacheModel
 			samlSpAuthRequestImpl.setSamlIdpEntityId(samlIdpEntityId);
 		}
 
+		if (samlRelayState == null) {
+			samlSpAuthRequestImpl.setSamlRelayState("");
+		}
+		else {
+			samlSpAuthRequestImpl.setSamlRelayState(samlRelayState);
+		}
+
 		if (samlSpAuthRequestKey == null) {
 			samlSpAuthRequestImpl.setSamlSpAuthRequestKey("");
 		}
@@ -113,6 +122,7 @@ public class SamlSpAuthRequestCacheModel
 		companyId = objectInput.readLong();
 		createDate = objectInput.readLong();
 		samlIdpEntityId = objectInput.readUTF();
+		samlRelayState = objectInput.readUTF();
 		samlSpAuthRequestKey = objectInput.readUTF();
 	}
 
@@ -130,6 +140,13 @@ public class SamlSpAuthRequestCacheModel
 			objectOutput.writeUTF(samlIdpEntityId);
 		}
 
+		if (samlRelayState == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(samlRelayState);
+		}
+
 		if (samlSpAuthRequestKey == null) {
 			objectOutput.writeUTF("");
 		}
@@ -142,6 +159,7 @@ public class SamlSpAuthRequestCacheModel
 	public long companyId;
 	public long createDate;
 	public String samlIdpEntityId;
+	public String samlRelayState;
 	public String samlSpAuthRequestKey;
 
 }

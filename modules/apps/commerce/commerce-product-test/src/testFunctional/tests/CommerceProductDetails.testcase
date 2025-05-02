@@ -4,11 +4,14 @@ definition {
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Shopping Experience";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp();
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -980,9 +983,7 @@ definition {
 		}
 
 		task ("And navigates to Brake Fluid details page") {
-			CommerceAcceleratorsInitializer.changeProductsSorting(sortingType = "Name Ascending");
-
-			CommerceNavigator.gotoProductDetails(productName = ${productName1});
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/brake-fluid");
 		}
 
 		task ("And inputs invalid quantities for Brake Fluid(e.g. 5, 11, 12)") {
@@ -1020,7 +1021,7 @@ definition {
 
 					FrontStore.viewQuantitySelectorPopoverListItem(
 						conditionNotSatisfied = ${maximumConditionNotSatisfied},
-						quantity = 10,
+						quantity = 8,
 						quantityConfiguration = "max");
 
 					FrontStore.viewQuantitySelectorPopoverListItem(
@@ -1052,7 +1053,7 @@ definition {
 
 					FrontStore.viewQuantitySelectorPopoverListItem(
 						conditionNotSatisfied = "false",
-						quantity = 10,
+						quantity = 8,
 						quantityConfiguration = "max");
 
 					FrontStore.viewQuantitySelectorPopoverListItem(
@@ -1064,11 +1065,7 @@ definition {
 		}
 
 		task ("When the buyer navigates to Hoses details page") {
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
-
-			CommerceAcceleratorsInitializer.changeProductsSorting(sortingType = "Name Ascending");
-
-			CommerceNavigator.gotoProductDetails(productName = ${productName2});
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/hoses");
 		}
 
 		task ("And inputs invalid quantities for Hoses(e.g. 3, 5, 6, 7)") {
@@ -1169,9 +1166,7 @@ definition {
 		}
 
 		task ("And navigates to Brake Fluid details page") {
-			CommerceAcceleratorsInitializer.changeProductsSorting(sortingType = "Name Ascending");
-
-			CommerceNavigator.gotoProductDetails(productName = ${productName1});
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/brake-fluid");
 		}
 
 		task ("And inputs invalid quantities for Brake Fluid(e.g. 3, 4, 7)") {
@@ -1209,7 +1204,7 @@ definition {
 
 					FrontStore.viewQuantitySelectorPopoverListItem(
 						conditionNotSatisfied = ${minimumConditionNotSatisfied},
-						quantity = 5,
+						quantity = 6,
 						quantityConfiguration = "min");
 
 					FrontStore.viewQuantitySelectorPopoverListItem(
@@ -1241,7 +1236,7 @@ definition {
 
 					FrontStore.viewQuantitySelectorPopoverListItem(
 						conditionNotSatisfied = "false",
-						quantity = 5,
+						quantity = 6,
 						quantityConfiguration = "min");
 
 					FrontStore.viewQuantitySelectorPopoverListItem(
@@ -1253,11 +1248,7 @@ definition {
 		}
 
 		task ("When the buyer navigates to Hoses details page") {
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
-
-			CommerceAcceleratorsInitializer.changeProductsSorting(sortingType = "Name Ascending");
-
-			CommerceNavigator.gotoProductDetails(productName = ${productName2});
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/hoses");
 		}
 
 		task ("And inputs invalid quantities for Hoses(e.g. 2, 3, 5)") {
@@ -1279,16 +1270,16 @@ definition {
 
 					AssertElementPresent(locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON_PRODUCT_DETAILS_PAGE_INVALID");
 
-					if (${quantity} == 2) {
-						var minimumConditionNotSatisfied = "true";
+					if (${quantity} == 5) {
+						var minimumConditionNotSatisfied = "false";
 					}
 					else {
-						var minimumConditionNotSatisfied = "false";
+						var minimumConditionNotSatisfied = "true";
 					}
 
 					FrontStore.viewQuantitySelectorPopoverListItem(
 						conditionNotSatisfied = ${minimumConditionNotSatisfied},
-						quantity = 3,
+						quantity = 4,
 						quantityConfiguration = "min");
 
 					FrontStore.viewQuantitySelectorPopoverListItem(
@@ -1320,7 +1311,7 @@ definition {
 
 					FrontStore.viewQuantitySelectorPopoverListItem(
 						conditionNotSatisfied = "false",
-						quantity = 3,
+						quantity = 4,
 						quantityConfiguration = "min");
 
 					FrontStore.viewQuantitySelectorPopoverListItem(
@@ -2216,7 +2207,7 @@ definition {
 				productListPriceInactive = "55.00",
 				productMPN = "MPN1",
 				productName = "Grouped Product",
-				productNetPrice = "160.00",
+				productNetPrice = "40.00",
 				productSalePriceInactive = "50.00",
 				productShortDescription = "Short Description",
 				productSKU = "GROUPEDSKU",
@@ -2750,95 +2741,6 @@ definition {
 
 	}
 
-	@description = "COMMERCE-6364. As a buyer, I want the first selectable quantity of a product in Product Details to be the minimum multiple quantity if Minimum Order Quantity is higher than Multiple Order Quantity"
-	@priority = 5
-	test ViewFirstSelectableQuantityInProductDetailsWhenMinimumOrderQuantityIsHigherThanMultipleOrderQuantity {
-		property portal.acceptance = "true";
-
-		// TODO Review
-
-		var minimumQuantity = 6;
-		var multipleQuantity = 5;
-		var product = "U-Joint";
-
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-		CommerceProducts.openProductsAdmin();
-
-		CommerceNavigator.searchEntry(entryName = ${product});
-
-		CommerceNavigator.gotoEntry(entryName = ${product});
-
-		CommerceEntry.gotoMenuTab(menuTab = "Configuration");
-
-		Type(
-			key_text = "Minimum Order Quantity",
-			locator1 = "TextInput#ANY",
-			value1 = ${minimumQuantity});
-
-		Type(
-			key_text = "Multiple Order Quantity",
-			locator1 = "TextInput#ANY",
-			value1 = ${multipleQuantity});
-
-		Button.clickPublish();
-
-		ApplicationsMenu.gotoSite(site = "Minium");
-
-		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Account Management");
-
-		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Commerce Account");
-
-		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
-
-		Click(
-			key_productName = ${product},
-			locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
-
-		AssertTextEquals(
-			key_productName = ${product},
-			locator1 = "CommerceFrontStore#PRODUCT_DETAILS_QUANTITY_SELECTOR",
-			value1 = 10);
-
-		for (var quantity : list "5,20") {
-			Type(
-				key_productName = ${product},
-				locator1 = "CommerceFrontStore#PRODUCT_DETAILS_QUANTITY_SELECTOR",
-				value1 = ${quantity});
-
-			AssertTextEquals(
-				key_productName = ${product},
-				locator1 = "CommerceFrontStore#PRODUCT_DETAILS_QUANTITY_SELECTOR",
-				value1 = ${quantity});
-
-			if (${quantity} == 5) {
-				var minimumConditionNotSatisfied = "true";
-
-				AssertElementPresent(
-					key_productName = ${product},
-					locator1 = "CommerceFrontStore#PRODUCT_DETAILS_QUANTITY_SELECTOR_HAS_ERROR");
-			}
-			else {
-				var minimumConditionNotSatisfied = "false";
-				var multipleConditionNotSatisfied = "false";
-
-				AssertElementNotPresent(
-					key_productName = ${product},
-					locator1 = "CommerceFrontStore#PRODUCT_DETAILS_QUANTITY_SELECTOR_HAS_ERROR");
-			}
-
-			FrontStore.viewQuantitySelectorPopoverListItem(
-				conditionNotSatisfied = ${minimumConditionNotSatisfied},
-				quantity = ${minimumQuantity},
-				quantityConfiguration = "min");
-
-			FrontStore.viewQuantitySelectorPopoverListItem(
-				conditionNotSatisfied = ${multipleConditionNotSatisfied},
-				quantity = ${multipleQuantity},
-				quantityConfiguration = "multiple");
-		}
-	}
-
 	@description = "COMMERCE-6366. As a buyer, I want the first selectable quantity of a product in Product Details to be the minimum multiple quantity if Minimum Order Quantity is lower than Multiple Order Quantity"
 	@priority = 5
 	test ViewFirstSelectableQuantityInProductDetailsWhenMinimumOrderQuantityIsLowerThanMultipleOrderQuantity {
@@ -2925,7 +2827,7 @@ definition {
 
 			FrontStore.viewQuantitySelectorPopoverListItem(
 				conditionNotSatisfied = ${minimumConditionNotSatisfied},
-				quantity = ${minimumQuantity},
+				quantity = ${multipleQuantity},
 				quantityConfiguration = "min");
 
 			FrontStore.viewQuantitySelectorPopoverListItem(

@@ -12,8 +12,6 @@ import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -34,10 +32,12 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -67,7 +67,8 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BaseCategoryDisplayPageResourceImpl
 	implements CategoryDisplayPageResource, EntityModelResource,
-			   VulcanBatchEngineTaskItemDelegate<CategoryDisplayPage> {
+			   VulcanBatchEngineTaskItemDelegate<CategoryDisplayPage>,
+			   VulcanCRUDItemDelegate<CategoryDisplayPage> {
 
 	/**
 	 * Invoke this method with the command line:
@@ -184,41 +185,6 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-channel/v1.0/category-display-pages/{id}' -d $'{"categoryId": ___, "pageUuid": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "id"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "CategoryDisplayPage"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path("/category-display-pages/{id}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public CategoryDisplayPage patchCategoryDisplayPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
-			Long id,
-			CategoryDisplayPage categoryDisplayPage)
-		throws Exception {
-
-		return new CategoryDisplayPage();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-channel/v1.0/channels/by-externalReferenceCode/{externalReferenceCode}/category-display-pages'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -271,51 +237,14 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 				@javax.ws.rs.QueryParam("search")
 				String search,
-				@javax.ws.rs.core.Context Filter filter,
+				@javax.ws.rs.core.Context
+					com.liferay.portal.kernel.search.filter.Filter filter,
 				@javax.ws.rs.core.Context Pagination pagination,
-				@javax.ws.rs.core.Context Sort[] sorts)
+				@javax.ws.rs.core.Context
+					com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-channel/v1.0/channels/by-externalReferenceCode/{externalReferenceCode}/category-display-pages' -d $'{"categoryId": ___, "pageUuid": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "CategoryDisplayPage"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/channels/by-externalReferenceCode/{externalReferenceCode}/category-display-pages"
-	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public CategoryDisplayPage
-			postChannelByExternalReferenceCodeCategoryDisplayPage(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("externalReferenceCode")
-				String externalReferenceCode,
-				CategoryDisplayPage categoryDisplayPage)
-		throws Exception {
-
-		return new CategoryDisplayPage();
 	}
 
 	/**
@@ -369,9 +298,11 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
 			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -380,7 +311,81 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-channel/v1.0/channels/{id}/category-display-pages' -d $'{"categoryId": ___, "pageUuid": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-channel/v1.0/category-display-pages/{id}' -d $'{"categoryExternalReferenceCode": ___, "categoryId": ___, "groupExternalReferenceCode": ___, "pageUuid": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "id"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "CategoryDisplayPage"
+			)
+		}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.PATCH
+	@javax.ws.rs.Path("/category-display-pages/{id}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public CategoryDisplayPage patchCategoryDisplayPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
+			Long id,
+			CategoryDisplayPage categoryDisplayPage)
+		throws Exception {
+
+		return new CategoryDisplayPage();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-channel/v1.0/channels/by-externalReferenceCode/{externalReferenceCode}/category-display-pages' -d $'{"categoryExternalReferenceCode": ___, "categoryId": ___, "groupExternalReferenceCode": ___, "pageUuid": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "CategoryDisplayPage"
+			)
+		}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path(
+		"/channels/by-externalReferenceCode/{externalReferenceCode}/category-display-pages"
+	)
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public CategoryDisplayPage
+			postChannelByExternalReferenceCodeCategoryDisplayPage(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("externalReferenceCode")
+				String externalReferenceCode,
+				CategoryDisplayPage categoryDisplayPage)
+		throws Exception {
+
+		return new CategoryDisplayPage();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-channel/v1.0/channels/{id}/category-display-pages' -d $'{"categoryExternalReferenceCode": ___, "categoryId": ___, "groupExternalReferenceCode": ___, "pageUuid": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -467,8 +472,27 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (CategoryDisplayPage categoryDisplayPage : categoryDisplayPages) {
-			deleteCategoryDisplayPage(categoryDisplayPage.getId());
+		UnsafeFunction<CategoryDisplayPage, CategoryDisplayPage, Exception>
+			categoryDisplayPageUnsafeFunction = categoryDisplayPage -> {
+				deleteCategoryDisplayPage(categoryDisplayPage.getId());
+
+				return categoryDisplayPage;
+			};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				categoryDisplayPages, categoryDisplayPageUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				categoryDisplayPages, categoryDisplayPageUnsafeFunction::apply);
+		}
+		else {
+			for (CategoryDisplayPage categoryDisplayPage :
+					categoryDisplayPages) {
+
+				categoryDisplayPageUnsafeFunction.apply(categoryDisplayPage);
+			}
 		}
 	}
 
@@ -505,7 +529,9 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 
 	@Override
 	public Page<CategoryDisplayPage> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -589,6 +615,11 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 		return null;
 	}
 
+	@Override
+	public CategoryDisplayPage getItem(Long id) throws Exception {
+		return getCategoryDisplayPage(id);
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
 	}
@@ -631,7 +662,8 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -641,7 +673,8 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -676,6 +709,10 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "headless-commerce-admin-channel";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -693,7 +730,7 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -718,7 +755,7 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -736,13 +773,13 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -753,7 +790,7 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -880,7 +917,8 @@ public abstract class BaseCategoryDisplayPageResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

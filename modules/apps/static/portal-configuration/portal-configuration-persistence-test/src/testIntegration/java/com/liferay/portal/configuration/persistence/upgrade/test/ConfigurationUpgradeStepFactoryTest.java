@@ -11,6 +11,7 @@ import com.liferay.portal.configuration.persistence.upgrade.ConfigurationUpgrade
 import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
 import com.liferay.portal.file.install.constants.FileInstallConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -292,7 +293,7 @@ public class ConfigurationUpgradeStepFactoryTest {
 		_assert(factory, data, configFile, felixFileName, true);
 	}
 
-	private static final String _TEST_PID = "test.pid";
+	private static final String _TEST_PID = RandomTestUtil.randomString();
 
 	private static final String _TEST_PID_NEW = _TEST_PID + ".new";
 

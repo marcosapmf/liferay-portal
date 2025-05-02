@@ -65,7 +65,6 @@ if (Validator.isNotNull(structureAvailableFields)) {
 }
 
 boolean showBackURL = ParamUtil.getBoolean(request, "showBackURL", true);
-boolean showHeader = ParamUtil.getBoolean(request, "showHeader", true);
 %>
 
 <portlet:actionURL name="/dynamic_data_mapping/add_template" var="addTemplateURL">
@@ -115,7 +114,7 @@ boolean showHeader = ParamUtil.getBoolean(request, "showHeader", true);
 				<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(imageMaxSize, locale) %>" key="please-enter-a-small-image-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
 			</liferay-ui:error>
 
-			<c:if test="<%= showHeader %>">
+			<c:if test='<%= ParamUtil.getBoolean(request, "showHeader", true) %>'>
 
 				<%
 				String title = StringPool.BLANK;
@@ -197,9 +196,20 @@ boolean showHeader = ParamUtil.getBoolean(request, "showHeader", true);
 
 						<aui:input name="name" />
 
-						<clay:panel-group>
-							<clay:panel
-								displayTitle='<%= LanguageUtil.get(request, "details") %>'
+						<liferay-ui:panel-container
+							cssClass="lfr-structure-entry-details-container"
+							extended="<%= false %>"
+							id="templateDetailsPanelContainer"
+							persistState="<%= true %>"
+						>
+							<liferay-ui:panel
+								collapsible="<%= true %>"
+								defaultState="closed"
+								extended="<%= false %>"
+								id="templateDetailsSectionPanel"
+								markupView="lexicon"
+								persistState="<%= true %>"
+								title="details"
 							>
 								<c:if test="<%= type.equals(DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY) %>">
 									<aui:select changesContext="<%= true %>" helpMessage='<%= (template == null) ? StringPool.BLANK : "changing-the-language-does-not-automatically-translate-the-existing-template-script" %>' label="language" name="language">
@@ -292,8 +302,8 @@ boolean showHeader = ParamUtil.getBoolean(request, "showHeader", true);
 										</div>
 									</c:otherwise>
 								</c:choose>
-							</clay:panel>
-						</clay:panel-group>
+							</liferay-ui:panel>
+						</liferay-ui:panel-container>
 
 						<c:choose>
 							<c:when test="<%= type.equals(DDMTemplateConstants.TEMPLATE_TYPE_FORM) %>">

@@ -34,23 +34,20 @@ public class StyleBookEntryServiceImpl extends StyleBookEntryServiceBaseImpl {
 	@Override
 	public StyleBookEntry addStyleBookEntry(
 			String externalReferenceCode, long groupId, String name,
-			String styleBookEntryKey, ServiceContext serviceContext)
+			String styleBookEntryKey, String themeId,
+			ServiceContext serviceContext)
 		throws PortalException {
 
-		_portletResourcePermission.check(
-			getPermissionChecker(), groupId,
-			StyleBookActionKeys.MANAGE_STYLE_BOOK_ENTRIES);
-
-		return styleBookEntryLocalService.addStyleBookEntry(
-			externalReferenceCode, getUserId(), groupId, false,
-			StringPool.BLANK, name, styleBookEntryKey, serviceContext);
+		return addStyleBookEntry(
+			externalReferenceCode, groupId, StringPool.BLANK, name,
+			styleBookEntryKey, themeId, serviceContext);
 	}
 
 	@Override
 	public StyleBookEntry addStyleBookEntry(
 			String externalReferenceCode, long groupId,
 			String frontendTokensValues, String name, String styleBookEntryKey,
-			ServiceContext serviceContext)
+			String themeId, ServiceContext serviceContext)
 		throws PortalException {
 
 		_portletResourcePermission.check(
@@ -59,7 +56,8 @@ public class StyleBookEntryServiceImpl extends StyleBookEntryServiceBaseImpl {
 
 		return styleBookEntryLocalService.addStyleBookEntry(
 			externalReferenceCode, getUserId(), groupId, false,
-			frontendTokensValues, name, styleBookEntryKey, serviceContext);
+			frontendTokensValues, name, styleBookEntryKey, themeId,
+			serviceContext);
 	}
 
 	@Override

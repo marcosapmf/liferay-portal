@@ -39,7 +39,7 @@ public class JavaMetaAnnotationsCheck extends JavaAnnotationsCheck {
 			return annotation;
 		}
 
-		_checkDelimeters(fileName, fileContent, annotation);
+		_checkDelimiters(fileName, fileContent, annotation);
 
 		if (isAttributeValue(_CHECK_CONFIGURATION_NAME_KEY, absolutePath)) {
 			_checkConfigurationNameValue(fileName, fileContent, annotation);
@@ -67,15 +67,16 @@ public class JavaMetaAnnotationsCheck extends JavaAnnotationsCheck {
 			if (!nameValue.endsWith("-configuration-name")) {
 				addMessage(
 					fileName,
-					"Value for 'name' should end with '-configuration-name'",
+					"Value for \"name\" should end with \"-configuration-" +
+						"name\"",
 					getLineNumber(content, content.indexOf(matcher.group())));
 			}
 		}
 	}
 
-	private void _checkDelimeter(
+	private void _checkDelimiter(
 		String fileName, String content, Matcher matcher, String key,
-		String correctDelimeter, String incorrectDelimeter) {
+		String correctDelimiter, String incorrectDelimiter) {
 
 		if (!key.equals(matcher.group(1))) {
 			return;
@@ -83,38 +84,38 @@ public class JavaMetaAnnotationsCheck extends JavaAnnotationsCheck {
 
 		String value = matcher.group(2);
 
-		if (!value.contains(incorrectDelimeter)) {
+		if (!value.contains(incorrectDelimiter)) {
 			return;
 		}
 
 		StringBundler sb = new StringBundler(7);
 
-		sb.append("Value '");
+		sb.append("Value \"");
 		sb.append(value);
-		sb.append("' for key '");
+		sb.append("\" for key \"");
 		sb.append(key);
-		sb.append("' should use '");
-		sb.append(correctDelimeter);
-		sb.append("' as delimeter");
+		sb.append("\" should use \"");
+		sb.append(correctDelimiter);
+		sb.append("\" as delimiter");
 
 		addMessage(
 			fileName, sb.toString(),
 			getLineNumber(content, content.indexOf(matcher.group())));
 	}
 
-	private void _checkDelimeters(
+	private void _checkDelimiters(
 		String fileName, String content, String annotation) {
 
 		Matcher matcher = _annotationMetaValueKeyPattern.matcher(annotation);
 
 		while (matcher.find()) {
-			_checkDelimeter(
+			_checkDelimiter(
 				fileName, content, matcher, "description", StringPool.DASH,
 				StringPool.PERIOD);
-			_checkDelimeter(
+			_checkDelimiter(
 				fileName, content, matcher, "id", StringPool.PERIOD,
 				StringPool.DASH);
-			_checkDelimeter(
+			_checkDelimiter(
 				fileName, content, matcher, "name", StringPool.DASH,
 				StringPool.PERIOD);
 		}

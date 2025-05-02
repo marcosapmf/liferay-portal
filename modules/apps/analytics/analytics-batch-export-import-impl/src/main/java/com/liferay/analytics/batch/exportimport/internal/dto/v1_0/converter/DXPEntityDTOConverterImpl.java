@@ -155,17 +155,15 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 	private List<String> _filterAttributeNames(
 		List<String> attributeNames, List<String> removeAttributeNames) {
 
-		List<String> filteredAttributeNames = new ArrayList<>();
+		return TransformUtil.transform(
+			attributeNames,
+			attributeName -> {
+				if (removeAttributeNames.contains(attributeName)) {
+					return null;
+				}
 
-		for (String attributeName : attributeNames) {
-			if (removeAttributeNames.contains(attributeName)) {
-				continue;
-			}
-
-			filteredAttributeNames.add(attributeName);
-		}
-
-		return filteredAttributeNames;
+				return attributeName;
+			});
 	}
 
 	private Map<String, Serializable> _getAttributes(
@@ -569,23 +567,23 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 	}
 
 	private String _parseValue(Object value) {
-		if (value != null) {
-			Class<?> clazz = value.getClass();
-
-			if (!clazz.isArray()) {
-				return String.valueOf(value);
-			}
-
-			JSONArray jsonArray = _jsonFactory.createJSONArray();
-
-			for (int i = 0; i < Array.getLength(value); i++) {
-				jsonArray.put(Array.get(value, i));
-			}
-
-			return jsonArray.toString();
+		if (value == null) {
+			return null;
 		}
 
-		return null;
+		Class<?> clazz = value.getClass();
+
+		if (!clazz.isArray()) {
+			return String.valueOf(value);
+		}
+
+		JSONArray jsonArray = _jsonFactory.createJSONArray();
+
+		for (int i = 0; i < Array.getLength(value); i++) {
+			jsonArray.put(Array.get(value, i));
+		}
+
+		return jsonArray.toString();
 	}
 
 	private DXPEntity _toDXPEntity(

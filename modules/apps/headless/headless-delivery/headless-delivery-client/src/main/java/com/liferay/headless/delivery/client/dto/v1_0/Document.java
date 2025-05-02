@@ -176,16 +176,23 @@ public class Document implements Cloneable, Serializable {
 
 	protected Creator creator;
 
-	public CustomField[] getCustomFields() {
+	public com.liferay.headless.delivery.client.custom.field.CustomField[]
+		getCustomFields() {
+
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.headless.delivery.client.custom.field.CustomField[]
+			customFields) {
+
 		this.customFields = customFields;
 	}
 
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.headless.delivery.client.custom.field.CustomField[],
+			 Exception> customFieldsUnsafeSupplier) {
 
 		try {
 			customFields = customFieldsUnsafeSupplier.get();
@@ -195,7 +202,8 @@ public class Document implements Cloneable, Serializable {
 		}
 	}
 
-	protected CustomField[] customFields;
+	protected com.liferay.headless.delivery.client.custom.field.CustomField[]
+		customFields;
 
 	public Date getDateCreated() {
 		return dateCreated;
@@ -301,6 +309,32 @@ public class Document implements Cloneable, Serializable {
 	}
 
 	protected String description;
+
+	public String getDocumentFolderExternalReferenceCode() {
+		return documentFolderExternalReferenceCode;
+	}
+
+	public void setDocumentFolderExternalReferenceCode(
+		String documentFolderExternalReferenceCode) {
+
+		this.documentFolderExternalReferenceCode =
+			documentFolderExternalReferenceCode;
+	}
+
+	public void setDocumentFolderExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			documentFolderExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			documentFolderExternalReferenceCode =
+				documentFolderExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String documentFolderExternalReferenceCode;
 
 	public Long getDocumentFolderId() {
 		return documentFolderId;

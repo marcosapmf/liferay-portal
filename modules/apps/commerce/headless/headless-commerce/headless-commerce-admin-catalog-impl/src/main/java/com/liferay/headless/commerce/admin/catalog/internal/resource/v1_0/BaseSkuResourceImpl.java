@@ -11,9 +11,8 @@ import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -34,10 +33,12 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -67,7 +68,115 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BaseSkuResourceImpl
 	implements EntityModelResource, SkuResource,
-			   VulcanBatchEngineTaskItemDelegate<Sku> {
+			   VulcanBatchEngineTaskItemDelegate<Sku>,
+			   VulcanCRUDItemDelegate<Sku> {
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/{id}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "id"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/skus/{id}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Response deleteSku(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
+			Long id)
+		throws Exception {
+
+		Response.ResponseBuilder responseBuilder = Response.ok();
+
+		return responseBuilder.build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
+	)
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/skus/batch")
+	@javax.ws.rs.Produces("application/json")
+	@Override
+	public Response deleteSkuBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			Object object)
+		throws Exception {
+
+		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineImportTaskResource.deleteImportTask(
+				Sku.class.getName(), callbackURL, object)
+		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/skus/by-externalReferenceCode/{externalReferenceCode}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Response deleteSkuByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+
+		Response.ResponseBuilder responseBuilder = Response.ok();
+
+		return responseBuilder.build();
+	}
 
 	/**
 	 * Invoke this method with the command line:
@@ -113,40 +222,6 @@ public abstract class BaseSkuResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/{externalReferenceCode}/skus' -d $'{"cost": ___, "customFields": ___, "depth": ___, "discontinued": ___, "discontinuedDate": ___, "displayDate": ___, "expirationDate": ___, "externalReferenceCode": ___, "gtin": ___, "height": ___, "manufacturerPartNumber": ___, "neverExpire": ___, "price": ___, "promoPrice": ___, "published": ___, "purchasable": ___, "replacementSkuExternalReferenceCode": ___, "replacementSkuId": ___, "sku": ___, "skuOptions": ___, "skuSubscriptionConfiguration": ___, "skuUnitOfMeasures": ___, "skuVirtualSettings": ___, "unspsc": ___, "weight": ___, "width": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/products/by-externalReferenceCode/{externalReferenceCode}/skus"
-	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Sku postProductByExternalReferenceCodeSku(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode,
-			Sku sku)
-		throws Exception {
-
-		return new Sku();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/{id}/skus'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -180,6 +255,358 @@ public abstract class BaseSkuResourceImpl
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/{id}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "id"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/skus/{id}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Sku getSku(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
+			Long id)
+		throws Exception {
+
+		return new Sku();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/skus/by-externalReferenceCode/{externalReferenceCode}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Sku getSkuByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+
+		return new Sku();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "filter"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/skus")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<Sku> getSkusPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("search")
+			String search,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context Pagination pagination,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/unit-of-measure-skus'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "filter"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/unit-of-measure-skus")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<Sku> getUnitOfMeasureSkusPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("search")
+			String search,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context Pagination pagination,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/{id}' -d $'{"cost": ___, "customFields": ___, "depth": ___, "discontinued": ___, "discontinuedDate": ___, "displayDate": ___, "expirationDate": ___, "externalReferenceCode": ___, "gtin": ___, "height": ___, "manufacturerPartNumber": ___, "neverExpire": ___, "price": ___, "promoPrice": ___, "published": ___, "purchasable": ___, "replacementSkuExternalReferenceCode": ___, "replacementSkuId": ___, "sku": ___, "skuOptions": ___, "skuSubscriptionConfiguration": ___, "skuUnitOfMeasures": ___, "skuVirtualSettings": ___, "unspsc": ___, "weight": ___, "width": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "id"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.PATCH
+	@javax.ws.rs.Path("/skus/{id}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Sku patchSku(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
+			Long id,
+			Sku sku)
+		throws Exception {
+
+		return new Sku();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/by-externalReferenceCode/{externalReferenceCode}' -d $'{"cost": ___, "customFields": ___, "depth": ___, "discontinued": ___, "discontinuedDate": ___, "displayDate": ___, "expirationDate": ___, "externalReferenceCode": ___, "gtin": ___, "height": ___, "manufacturerPartNumber": ___, "neverExpire": ___, "price": ___, "promoPrice": ___, "published": ___, "purchasable": ___, "replacementSkuExternalReferenceCode": ___, "replacementSkuId": ___, "sku": ___, "skuOptions": ___, "skuSubscriptionConfiguration": ___, "skuUnitOfMeasures": ___, "skuVirtualSettings": ___, "unspsc": ___, "weight": ___, "width": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.PATCH
+	@javax.ws.rs.Path("/skus/by-externalReferenceCode/{externalReferenceCode}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Sku patchSkuByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			Sku sku)
+		throws Exception {
+
+		Sku existingSku = getSkuByExternalReferenceCode(externalReferenceCode);
+
+		if (sku.getCost() != null) {
+			existingSku.setCost(sku.getCost());
+		}
+
+		if (sku.getCustomFields() != null) {
+			existingSku.setCustomFields(sku.getCustomFields());
+		}
+
+		if (sku.getDepth() != null) {
+			existingSku.setDepth(sku.getDepth());
+		}
+
+		if (sku.getDiscontinued() != null) {
+			existingSku.setDiscontinued(sku.getDiscontinued());
+		}
+
+		if (sku.getDiscontinuedDate() != null) {
+			existingSku.setDiscontinuedDate(sku.getDiscontinuedDate());
+		}
+
+		if (sku.getDisplayDate() != null) {
+			existingSku.setDisplayDate(sku.getDisplayDate());
+		}
+
+		if (sku.getExpirationDate() != null) {
+			existingSku.setExpirationDate(sku.getExpirationDate());
+		}
+
+		if (sku.getExternalReferenceCode() != null) {
+			existingSku.setExternalReferenceCode(
+				sku.getExternalReferenceCode());
+		}
+
+		if (sku.getGtin() != null) {
+			existingSku.setGtin(sku.getGtin());
+		}
+
+		if (sku.getHeight() != null) {
+			existingSku.setHeight(sku.getHeight());
+		}
+
+		if (sku.getManufacturerPartNumber() != null) {
+			existingSku.setManufacturerPartNumber(
+				sku.getManufacturerPartNumber());
+		}
+
+		if (sku.getNeverExpire() != null) {
+			existingSku.setNeverExpire(sku.getNeverExpire());
+		}
+
+		if (sku.getPrice() != null) {
+			existingSku.setPrice(sku.getPrice());
+		}
+
+		if (sku.getPromoPrice() != null) {
+			existingSku.setPromoPrice(sku.getPromoPrice());
+		}
+
+		if (sku.getPublished() != null) {
+			existingSku.setPublished(sku.getPublished());
+		}
+
+		if (sku.getPurchasable() != null) {
+			existingSku.setPurchasable(sku.getPurchasable());
+		}
+
+		if (sku.getReplacementSkuExternalReferenceCode() != null) {
+			existingSku.setReplacementSkuExternalReferenceCode(
+				sku.getReplacementSkuExternalReferenceCode());
+		}
+
+		if (sku.getReplacementSkuId() != null) {
+			existingSku.setReplacementSkuId(sku.getReplacementSkuId());
+		}
+
+		if (sku.getSku() != null) {
+			existingSku.setSku(sku.getSku());
+		}
+
+		if (sku.getUnspsc() != null) {
+			existingSku.setUnspsc(sku.getUnspsc());
+		}
+
+		if (sku.getWeight() != null) {
+			existingSku.setWeight(sku.getWeight());
+		}
+
+		if (sku.getWidth() != null) {
+			existingSku.setWidth(sku.getWidth());
+		}
+
+		preparePatch(sku, existingSku);
+
+		return putSkuByExternalReferenceCode(
+			externalReferenceCode, existingSku);
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/{externalReferenceCode}/skus' -d $'{"cost": ___, "customFields": ___, "depth": ___, "discontinued": ___, "discontinuedDate": ___, "displayDate": ___, "expirationDate": ___, "externalReferenceCode": ___, "gtin": ___, "height": ___, "manufacturerPartNumber": ___, "neverExpire": ___, "price": ___, "promoPrice": ___, "published": ___, "purchasable": ___, "replacementSkuExternalReferenceCode": ___, "replacementSkuId": ___, "sku": ___, "skuOptions": ___, "skuSubscriptionConfiguration": ___, "skuUnitOfMeasures": ___, "skuVirtualSettings": ___, "unspsc": ___, "weight": ___, "width": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path(
+		"/products/by-externalReferenceCode/{externalReferenceCode}/skus"
+	)
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Sku postProductByExternalReferenceCodeSku(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			Sku sku)
+		throws Exception {
+
+		return new Sku();
 	}
 
 	/**
@@ -260,54 +687,6 @@ public abstract class BaseSkuResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "filter"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "search"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "sort"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/skus")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<Sku> getSkusPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("search")
-			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/export-batch'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -350,8 +729,10 @@ public abstract class BaseSkuResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -385,69 +766,7 @@ public abstract class BaseSkuResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/skus/by-externalReferenceCode/{externalReferenceCode}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Response deleteSkuByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-
-		Response.ResponseBuilder responseBuilder = Response.ok();
-
-		return responseBuilder.build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/skus/by-externalReferenceCode/{externalReferenceCode}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Sku getSkuByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-
-		return new Sku();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/by-externalReferenceCode/{externalReferenceCode}' -d $'{"cost": ___, "customFields": ___, "depth": ___, "discontinued": ___, "discontinuedDate": ___, "displayDate": ___, "expirationDate": ___, "externalReferenceCode": ___, "gtin": ___, "height": ___, "manufacturerPartNumber": ___, "neverExpire": ___, "price": ___, "promoPrice": ___, "published": ___, "purchasable": ___, "replacementSkuExternalReferenceCode": ___, "replacementSkuId": ___, "sku": ___, "skuOptions": ___, "skuSubscriptionConfiguration": ___, "skuUnitOfMeasures": ___, "skuVirtualSettings": ___, "unspsc": ___, "weight": ___, "width": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/by-externalReferenceCode/{externalReferenceCode}' -d $'{"cost": ___, "customFields": ___, "depth": ___, "discontinued": ___, "discontinuedDate": ___, "displayDate": ___, "expirationDate": ___, "externalReferenceCode": ___, "gtin": ___, "height": ___, "manufacturerPartNumber": ___, "neverExpire": ___, "price": ___, "promoPrice": ___, "published": ___, "purchasable": ___, "replacementSkuExternalReferenceCode": ___, "replacementSkuId": ___, "sku": ___, "skuOptions": ___, "skuSubscriptionConfiguration": ___, "skuUnitOfMeasures": ___, "skuVirtualSettings": ___, "unspsc": ___, "weight": ___, "width": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -461,11 +780,11 @@ public abstract class BaseSkuResourceImpl
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
 	)
 	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
 	@javax.ws.rs.Path("/skus/by-externalReferenceCode/{externalReferenceCode}")
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
 	@Override
-	public Sku patchSkuByExternalReferenceCode(
+	public Sku putSkuByExternalReferenceCode(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
 			@javax.ws.rs.PathParam("externalReferenceCode")
@@ -474,189 +793,6 @@ public abstract class BaseSkuResourceImpl
 		throws Exception {
 
 		return new Sku();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/{id}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "id"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/skus/{id}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Response deleteSku(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
-			Long id)
-		throws Exception {
-
-		Response.ResponseBuilder responseBuilder = Response.ok();
-
-		return responseBuilder.build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
-	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/skus/batch")
-	@javax.ws.rs.Produces("application/json")
-	@Override
-	public Response deleteSkuBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			Object object)
-		throws Exception {
-
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.deleteImportTask(
-				Sku.class.getName(), callbackURL, object)
-		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/{id}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "id"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/skus/{id}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Sku getSku(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
-			Long id)
-		throws Exception {
-
-		return new Sku();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/skus/{id}' -d $'{"cost": ___, "customFields": ___, "depth": ___, "discontinued": ___, "discontinuedDate": ___, "displayDate": ___, "expirationDate": ___, "externalReferenceCode": ___, "gtin": ___, "height": ___, "manufacturerPartNumber": ___, "neverExpire": ___, "price": ___, "promoPrice": ___, "published": ___, "purchasable": ___, "replacementSkuExternalReferenceCode": ___, "replacementSkuId": ___, "sku": ___, "skuOptions": ___, "skuSubscriptionConfiguration": ___, "skuUnitOfMeasures": ___, "skuVirtualSettings": ___, "unspsc": ___, "weight": ___, "width": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "id"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path("/skus/{id}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Sku patchSku(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
-			Long id,
-			Sku sku)
-		throws Exception {
-
-		return new Sku();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/unit-of-measure-skus'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "filter"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "search"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "sort"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Sku")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/unit-of-measure-skus")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<Sku> getUnitOfMeasureSkusPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("search")
-			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
 	}
 
 	@Override
@@ -679,6 +815,47 @@ public abstract class BaseSkuResourceImpl
 			else {
 				throw new NotSupportedException(
 					"One of the following parameters must be specified: [externalReferenceCode]");
+			}
+		}
+
+		if (StringUtil.equalsIgnoreCase(createStrategy, "UPSERT")) {
+			String updateStrategy = (String)parameters.getOrDefault(
+				"updateStrategy", "UPDATE");
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+				skuUnsafeFunction = sku -> {
+					Sku persistedSku = null;
+
+					try {
+						Sku getSku = getSkuByExternalReferenceCode(
+							sku.getExternalReferenceCode());
+
+						persistedSku = patchSku(
+							getSku.getId() != null ? getSku.getId() :
+								_parseLong((String)parameters.get("skuId")),
+							sku);
+					}
+					catch (NoSuchModelException noSuchModelException) {
+						if (parameters.containsKey("externalReferenceCode")) {
+							persistedSku =
+								postProductByExternalReferenceCodeSku(
+									(String)parameters.get(
+										"externalReferenceCode"),
+									sku);
+						}
+						else {
+							throw new NotSupportedException(
+								"One of the following parameters must be specified: [externalReferenceCode]");
+						}
+					}
+
+					return persistedSku;
+				};
+			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				skuUnsafeFunction = sku -> putSkuByExternalReferenceCode(
+					sku.getExternalReferenceCode(), sku);
 			}
 		}
 
@@ -706,13 +883,48 @@ public abstract class BaseSkuResourceImpl
 			Collection<Sku> skus, Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (Sku sku : skus) {
-			deleteSku(sku.getId());
+		UnsafeFunction<Sku, Sku, Exception> skuUnsafeFunction = sku -> {
+			if (sku.getId() != null) {
+				try {
+					deleteSku(sku.getId());
+
+					return sku;
+				}
+				catch (Exception exception) {
+					if (sku.getExternalReferenceCode() != null) {
+						deleteSkuByExternalReferenceCode(
+							sku.getExternalReferenceCode());
+
+						return sku;
+					}
+				}
+			}
+			else if (sku.getExternalReferenceCode() != null) {
+				deleteSkuByExternalReferenceCode(
+					sku.getExternalReferenceCode());
+
+				return sku;
+			}
+
+			throw new UnsupportedOperationException(
+				"Unable to delete by external reference code or ID");
+		};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(skus, skuUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(skus, skuUnsafeFunction::apply);
+		}
+		else {
+			for (Sku sku : skus) {
+				skuUnsafeFunction.apply(sku);
+			}
 		}
 	}
 
 	public Set<String> getAvailableCreateStrategies() {
-		return SetUtil.fromArray("INSERT");
+		return SetUtil.fromArray("INSERT", "UPSERT");
 	}
 
 	public Set<String> getAvailableUpdateStrategies() {
@@ -744,7 +956,9 @@ public abstract class BaseSkuResourceImpl
 
 	@Override
 	public Page<Sku> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -817,6 +1031,11 @@ public abstract class BaseSkuResourceImpl
 		return null;
 	}
 
+	@Override
+	public Sku getItem(Long id) throws Exception {
+		return getSku(id);
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
 	}
@@ -856,7 +1075,8 @@ public abstract class BaseSkuResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -866,7 +1086,8 @@ public abstract class BaseSkuResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -901,6 +1122,10 @@ public abstract class BaseSkuResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "headless-commerce-admin-catalog";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -918,7 +1143,7 @@ public abstract class BaseSkuResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -943,7 +1168,7 @@ public abstract class BaseSkuResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -961,13 +1186,13 @@ public abstract class BaseSkuResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -978,7 +1203,7 @@ public abstract class BaseSkuResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1016,6 +1241,9 @@ public abstract class BaseSkuResourceImpl
 
 		return addAction(
 			actionName, siteId, methodName, null, permissionName, siteId);
+	}
+
+	protected void preparePatch(Sku sku, Sku existingSku) {
 	}
 
 	protected <T, R, E extends Throwable> List<R> transform(
@@ -1103,7 +1331,8 @@ public abstract class BaseSkuResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

@@ -48,7 +48,8 @@ public interface LayoutPageTemplateCollectionService extends BaseService {
 	 */
 	public LayoutPageTemplateCollection addLayoutPageTemplateCollection(
 			String externalReferenceCode, long groupId,
-			long parentLayoutPageTemplateCollectionId, String name,
+			long parentLayoutPageTemplateCollectionId,
+			String layoutPageTemplateCollectionKey, String name,
 			String description, int type, ServiceContext serviceContext)
 		throws PortalException;
 
@@ -83,6 +84,11 @@ public interface LayoutPageTemplateCollectionService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public LayoutPageTemplateCollection fetchLayoutPageTemplateCollection(
+			String externalReferenceCode, long groupId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public LayoutPageTemplateCollection getLayoutPageTemplateCollection(
 			String externalReferenceCode, long groupId)
 		throws PortalException;
 

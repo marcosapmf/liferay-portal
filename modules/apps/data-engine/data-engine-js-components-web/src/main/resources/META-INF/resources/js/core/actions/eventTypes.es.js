@@ -33,16 +33,18 @@ const FIELD_SET = {
 const HISTORY = {
 	ADD: 'add_step',
 	BLUR: 'handle_blur',
-	EDITED: 'mark_edited',
+	MARK: 'mark_edited',
 	NEXT: 'next_step',
 	PREV: 'prev_step',
 	RESET: 'reset_history',
+	UNMARK: 'unmark_edited',
 };
 
 const LANGUAGE = {
 	ADD: 'language_add',
 	CHANGE: 'language_change',
 	DELETE: 'language_delete',
+	LOCALES_DROPDOWN_CHANGE: 'language_locales_dropdown_change',
 	UPDATE: 'language_update',
 };
 

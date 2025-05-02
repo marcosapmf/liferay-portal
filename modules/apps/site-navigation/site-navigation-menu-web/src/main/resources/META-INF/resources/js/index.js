@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {openSelectionModal} from 'frontend-js-components-web';
 import {
 	addParams,
 	debounce,
 	delegate,
 	getFormElement,
-	openSelectionModal,
 	toggleDisabled,
 	toggleSelectBox,
 } from 'frontend-js-web';
@@ -24,13 +24,11 @@ export function NavigationMenuConfiguration({
 }) {
 	const form = document.getElementById(`${namespace}fm`);
 
-	const displayStyle = document.getElementById(
-		`${namespace}preferences--displayStyle--`
-	);
-
 	const resetPreview = (option) => {
 		const displayDepthSelect = getFormElement(form, 'displayDepth');
-		const displayStyleValue = option || displayStyle.value;
+		const displayStyle = document.getElementById(
+			`${namespace}preferences--displayStyle--`
+		);
 		const expandedLevelsSelect = getFormElement(form, 'expandedLevels');
 		const rootMenuItemIdInput = getFormElement(form, 'rootMenuItemId');
 		const rootMenuItemLevelSelect = getFormElement(
@@ -46,6 +44,15 @@ export function NavigationMenuConfiguration({
 			form,
 			'siteNavigationMenuType'
 		);
+
+		let displayStyleValue = null;
+
+		if (typeof option === 'string' || option instanceof String) {
+			displayStyleValue = option;
+		}
+		else {
+			displayStyleValue = displayStyle.value;
+		}
 
 		let data = {
 			preview: true,

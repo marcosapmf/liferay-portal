@@ -6,12 +6,8 @@
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
 import {useIsMounted, useThunk} from '@liferay/frontend-js-react-web';
-import {
-	fetch,
-	loadClientExtensions,
-	loadModule,
-	openToast,
-} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {fetch, loadClientExtensions, loadModule} from 'frontend-js-web';
 import React, {
 	useCallback,
 	useEffect,
@@ -33,11 +29,8 @@ import SidePanel from './side_panel/SidePanel';
 import filterCreationActions from './utils/actionItems/filterCreationActions';
 import EVENTS from './utils/eventsDefinitions';
 import getRandomId from './utils/getRandomId';
-import {
-	formatItemChanges,
-	getCurrentItemUpdates,
-	loadData,
-} from './utils/index';
+import {formatItemChanges, getCurrentItemUpdates} from './utils/index';
+import {loadData} from './utils/loadData';
 import {logError} from './utils/logError';
 import ViewsContext from './views/ViewsContext';
 import getViewComponent from './views/getViewComponent';
@@ -49,6 +42,7 @@ const DEFAULT_PAGINATION_PAGE_NUMBER = 1;
 const FrontendDataSet = ({
 	actionParameterName,
 	activeViewSettings,
+	additionalAPIURLParameters,
 	apiURL,
 	appURL,
 	bulkActions,
@@ -74,15 +68,19 @@ const FrontendDataSet = ({
 	onActionDropdownItemClick,
 	onBulkActionItemClick,
 	onSelect,
+	onSelectedItemsChange,
 	overrideEmptyResultView,
 	pagination,
 	portletId,
 	selectedItems: initialSelectedItemsValues,
 	selectedItemsKey,
 	selectionType,
+	showBulkActionsManagementBar,
+	showBulkActionsManagementBarActions,
 	showManagementBar,
 	showPagination,
 	showSearch,
+	showSelectAll,
 	sidePanelId,
 	sorts: sortsProp,
 	style,
@@ -106,6 +104,9 @@ const FrontendDataSet = ({
 			(pagination?.initialPageNumber || DEFAULT_PAGINATION_PAGE_NUMBER)
 	);
 	const [searchParam, setSearchParam] = useState('');
+
+	const [allItemsSelectedActive, setAllItemsSelectedActive] = useState(false);
+
 	const [selectedItemsValue, setSelectedItemsValue] = useState(
 		initialSelectedItemsValues || []
 	);
@@ -113,8 +114,23 @@ const FrontendDataSet = ({
 	const [total, setTotal] = useState(0);
 
 	const getInitialViewsState = () => {
+		const customInternalViews =
+			customRenderers?.views?.map((customRenderer) => ({
+				component: customRenderer.component,
+				default: customRenderer.default,
+				label: customRenderer.label,
+				name: customRenderer.name,
+				schema: customRenderer.schema,
+				thumbnail: customRenderer.symbol,
+			})) || [];
+
 		let initialActiveView =
-			views.find(({default: defaultProp}) => defaultProp) || views[0];
+			views.find(({default: defaultProp}) => defaultProp) ||
+			customInternalViews?.find(
+				({default: defaultProp}) => defaultProp
+			) ||
+			views[0] ||
+			(customInternalViews?.length && customInternalViews[0]);
 
 		let initialVisibleFieldNames = {};
 
@@ -138,7 +154,7 @@ const FrontendDataSet = ({
 		}
 
 		const activeView = {
-			component: getViewComponent(initialActiveView.contentRenderer),
+			component: getViewComponent(initialActiveView),
 			...initialActiveView,
 		};
 
@@ -182,7 +198,7 @@ const FrontendDataSet = ({
 			modifiedFields: {},
 			paginationDelta,
 			sorts: sortsProp,
-			views,
+			views: [...views, ...customInternalViews],
 			visibleFieldNames: initialVisibleFieldNames,
 		};
 	};
@@ -212,16 +228,18 @@ const FrontendDataSet = ({
 		const activeSorts =
 			sorts.length > 1 ? sorts.filter((sort) => sort.active) : sorts;
 
-		return loadData(
+		return loadData({
+			additionalAPIURLParameters,
 			apiURL,
 			currentURL,
-			activeFiltersOdataStrings,
+			delta: paginationDelta,
+			odataFiltersStrings: activeFiltersOdataStrings,
+			page: pageNumber,
 			searchParam,
-			paginationDelta,
-			pageNumber,
-			activeSorts
-		);
+			sorts: activeSorts,
+		});
 	}, [
+		additionalAPIURLParameters,
 		apiURL,
 		currentURL,
 		paginationDelta,
@@ -234,7 +252,24 @@ const FrontendDataSet = ({
 	const isMounted = useIsMounted();
 
 	function updateDataSetItems(dataSetData) {
-		setItems(dataSetData.items);
+		const remappedItems = dataSetData.items.map((item) => {
+			if (item.embedded && item.embedded.actions) {
+				const actions = item.embedded.actions;
+
+				delete item.embedded.actions;
+
+				return {
+					...item,
+					actions,
+				};
+			}
+
+			return {
+				...item,
+			};
+		});
+
+		setItems(remappedItems);
 		setTotal(dataSetData.totalCount);
 
 		if (!dataSetData.items.length && dataSetData.totalCount > 0) {
@@ -325,24 +360,40 @@ const FrontendDataSet = ({
 		}
 	}, [itemsProp]);
 
-	function selectItems(value) {
+	function deselectItems(value) {
 		if (Array.isArray(value)) {
-			return setSelectedItemsValue(value);
+			return setSelectedItemsValue(
+				selectedItemsValue.filter((item) => !value.includes(item))
+			);
 		}
 
+		setSelectedItemsValue(
+			selectedItemsValue.filter((item) => item !== value)
+		);
+	}
+
+	function selectItems(value) {
 		if (selectionType === 'single') {
-			return setSelectedItemsValue([value]);
+			return setSelectedItemsValue(
+				Array.isArray(value) ? value : [value]
+			);
 		}
 
-		const itemAdded = selectedItemsValue.find((item) => item === value);
+		if (Array.isArray(value)) {
+			const newItems = value.filter(
+				(item) => !selectedItemsValue.includes(item)
+			);
 
-		if (itemAdded) {
+			return setSelectedItemsValue([...selectedItemsValue, ...newItems]);
+		}
+
+		if (selectedItemsValue.includes(value)) {
 			setSelectedItemsValue(
-				selectedItemsValue.filter((element) => element !== value)
+				selectedItemsValue.filter((item) => item !== value)
 			);
 		}
 		else {
-			setSelectedItemsValue(selectedItemsValue.concat(value));
+			setSelectedItemsValue([...selectedItemsValue, value]);
 		}
 	}
 
@@ -368,45 +419,49 @@ const FrontendDataSet = ({
 		}
 	}, [wrapperRef]);
 
-	function refreshData(successNotification) {
-		setDataLoading(true);
+	const refreshData = useCallback(
+		(successNotification) => {
+			setDataLoading(true);
 
-		return requestData()
-			.then(({data}) => {
-				if (successNotification?.showSuccessNotification) {
-					openToast({
-						message:
-							successNotification.message ||
-							Liferay.Language.get('table-data-updated'),
-						type: 'success',
-					});
-				}
+			return requestData()
+				.then(({data}) => {
+					if (successNotification?.showSuccessNotification) {
+						openToast({
+							message:
+								successNotification.message ||
+								Liferay.Language.get('table-data-updated'),
+							type: 'success',
+						});
+					}
 
-				if (isMounted()) {
-					updateDataSetItems(data);
+					if (isMounted()) {
+						updateDataSetItems(data);
 
-					const itemKeys = new Set(
-						data.items.map((item) => item[selectedItemsKey])
-					);
+						const itemKeys = new Set(
+							data.items.map((item) => item[selectedItemsKey])
+						);
 
-					setSelectedItemsValue(
-						selectedItemsValue.filter((item) => itemKeys.has(item))
-					);
+						setSelectedItemsValue(
+							selectedItemsValue.filter((item) =>
+								itemKeys.has(item)
+							)
+						);
 
+						setDataLoading(false);
+
+						Liferay.fire(EVENTS.DISPLAY_UPDATED, {id});
+					}
+
+					return data;
+				})
+				.catch((error) => {
 					setDataLoading(false);
 
-					Liferay.fire(EVENTS.DISPLAY_UPDATED, {id});
-				}
-
-				return data;
-			})
-			.catch((error) => {
-				logError(error);
-				setDataLoading(false);
-
-				throw error;
-			});
-	}
+					throw error;
+				});
+		},
+		[id, isMounted, requestData, selectedItemsKey, selectedItemsValue]
+	);
 
 	useEffect(() => {
 		setSelectedItems((selectedItems) => {
@@ -428,9 +483,11 @@ const FrontendDataSet = ({
 				}
 			});
 
+			onSelectedItemsChange(newSelectedItems);
+
 			return newSelectedItems;
 		});
-	}, [selectedItemsValue, items, selectedItemsKey]);
+	}, [selectedItemsValue, items, onSelectedItemsChange, selectedItemsKey]);
 
 	useEffect(() => {
 		if (View || !contentRendererModuleURL) {
@@ -525,15 +582,6 @@ const FrontendDataSet = ({
 			setHighlightedItemsValue([]);
 		}
 
-		if (
-			(nestedItemsReferenceKey && !nestedItemsKey) ||
-			(!nestedItemsReferenceKey && nestedItemsKey)
-		) {
-			logError(
-				'"nestedItemsKey" and "nestedItemsReferenceKey" params are both mandatory to manage nested items'
-			);
-		}
-
 		Liferay.on(EVENTS.SIDE_PANEL_CLOSED, handleCloseSidePanel);
 		Liferay.on(EVENTS.UPDATE_DISPLAY, handleRefreshFromTheOutside);
 
@@ -541,26 +589,37 @@ const FrontendDataSet = ({
 			Liferay.detach(EVENTS.SIDE_PANEL_CLOSED, handleCloseSidePanel);
 			Liferay.detach(EVENTS.UPDATE_DISPLAY, handleRefreshFromTheOutside);
 		};
-
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [id]);
+	}, [id, refreshData]);
 
 	const managementBar = showManagementBar ? (
 		<div className="management-bar-wrapper">
 			<ManagementBar
 				bulkActions={bulkActions}
 				creationMenu={creationMenu}
+				deselectItems={(items) => {
+					deselectItems(items);
+
+					if (allItemsSelectedActive) {
+						setAllItemsSelectedActive(false);
+					}
+				}}
 				fluid={style === 'fluid'}
-				selectAllItems={() =>
-					selectItems(items.map((item) => item[selectedItemsKey]))
-				}
+				items={items}
+				onBulkActionsClear={() => {
+					deselectItems(selectedItemsValue);
+
+					setAllItemsSelectedActive(false);
+				}}
+				onSelectAll={(value) => setAllItemsSelectedActive(value)}
+				selectItems={(items) => selectItems(items)}
 				selectedItems={selectedItems}
 				selectedItemsKey={selectedItemsKey}
 				selectedItemsValue={selectedItemsValue}
 				selectionType={selectionType}
 				showSearch={showSearch}
+				showSelectAll={showSelectAll}
 				sidePanelId={dataSetSupportSidePanelId}
-				total={items?.length ?? 0}
+				total={total}
 			/>
 		</div>
 	) : null;
@@ -585,6 +644,24 @@ const FrontendDataSet = ({
 						header={header}
 						items={items}
 						itemsActions={itemsActions}
+						onItemSelectionChange={(selectedItem) => {
+							if (allItemsSelectedActive) {
+								setSelectedItemsValue(
+									items
+										.filter(
+											(item) =>
+												item[selectedItemsKey] !==
+												selectedItem[selectedItemsKey]
+										)
+										.map((item) => item[selectedItemsKey])
+								);
+
+								setAllItemsSelectedActive(false);
+							}
+							else {
+								selectItems(selectedItem[selectedItemsKey]);
+							}
+						}}
 						style={style}
 						{...currentViewProps}
 					/>
@@ -595,7 +672,7 @@ const FrontendDataSet = ({
 							Liferay.Language.get('sorry,-no-results-were-found')
 						}
 						imgSrc={
-							themeDisplay.getPathThemeImages() +
+							Liferay.ThemeDisplay.getPathThemeImages() +
 							(emptyState?.image ?? '/states/search_state.svg')
 						}
 						title={
@@ -646,18 +723,25 @@ const FrontendDataSet = ({
 	function executeAsyncItemAction({
 		errorMessage,
 		method = 'GET',
+		requestBody,
 		setActionItemLoading,
 		successMessage,
 		url,
 	}) {
-		return fetch(url, {
+		const requestOptions = {
 			headers: {
 				'Accept': 'application/json',
 				'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
 				'Content-Type': 'application/json',
 			},
 			method,
-		})
+		};
+
+		if (method.toUpperCase() !== 'GET') {
+			requestOptions.body = requestBody ? requestBody : '{}';
+		}
+
+		return fetch(url, requestOptions)
 			.then((response) => {
 				if (response.ok) {
 					Liferay.fire(EVENTS.ACTION_PERFORMED, {
@@ -714,6 +798,14 @@ const FrontendDataSet = ({
 			onSubmit: refreshData,
 			...config,
 		});
+	}
+
+	function onItemsChange({itemKey = 'id', items: itemsChanged}) {
+		const updatedItems = new Map(
+			[...items, ...itemsChanged].map((item) => [item[itemKey], item])
+		);
+
+		setItems(Array.from(updatedItems.values()));
 	}
 
 	function updateItem(itemKey, property, valuePath, value = null) {
@@ -847,10 +939,24 @@ const FrontendDataSet = ({
 			});
 	}
 
+	const onSearch = ({query}) => {
+		if (apiURL || appURL) {
+			setSearchParam(query);
+		}
+		else {
+			setItems(
+				itemsProp.filter((item) => {
+					return JSON.stringify(Object.values(item)).includes(query);
+				})
+			);
+		}
+	};
+
 	return (
 		<FrontendDataSetContext.Provider
 			value={{
 				actionParameterName,
+				allItemsSelectedActive,
 				apiURL,
 				appURL,
 				applyItemInlineUpdates,
@@ -874,6 +980,8 @@ const FrontendDataSet = ({
 				nestedItemsReferenceKey,
 				onActionDropdownItemClick,
 				onBulkActionItemClick,
+				onItemsChange,
+				onSearch,
 				onSelect,
 				openModal,
 				openSidePanel,
@@ -887,6 +995,8 @@ const FrontendDataSet = ({
 				selectedItemsKey,
 				selectedItemsValue,
 				selectionType,
+				showBulkActionsManagementBar,
+				showBulkActionsManagementBarActions,
 				sidePanelId: dataSetSupportSidePanelId,
 				sorts,
 				style,
@@ -894,7 +1004,6 @@ const FrontendDataSet = ({
 				uniformActionsDisplay,
 				updateDataSetItems,
 				updateItem,
-				updateSearchParam: setSearchParam,
 			}}
 		>
 			<ViewsContext.Provider value={[viewsState, viewsDispatch]}>
@@ -909,7 +1018,7 @@ const FrontendDataSet = ({
 					)}
 
 					<div
-						className="data-set-wrapper"
+						className={`data-set-wrapper visualization-mode-${activeView.contentRenderer}`}
 						data-testid={`visualization-mode-${activeView.name}`}
 						ref={wrapperRef}
 					>
@@ -937,7 +1046,7 @@ const FrontendDataSet = ({
 							<div className="data-set data-set-fluid">
 								{managementBar}
 
-								<div className="container-fluid container-xl mt-3">
+								<div className="container-fluid mt-3">
 									{view}
 
 									{paginationComponent}
@@ -957,11 +1066,16 @@ FrontendDataSet.defaultProps = {
 	inlineEditingSettings: null,
 	items: null,
 	itemsActions: null,
+	onSelect: () => {},
+	onSelectedItemsChange: () => {},
 	selectedItemsKey: 'id',
 	selectionType: 'multiple',
+	showBulkActionsManagementBar: true,
+	showBulkActionsManagementBarActions: true,
 	showManagementBar: true,
 	showPagination: true,
 	showSearch: true,
+	showSelectAll: false,
 	sorts: [],
 	style: 'default',
 };

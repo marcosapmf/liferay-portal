@@ -99,7 +99,7 @@ public class CommerceShippingFixedOptionRelsDisplayContext
 
 		return _commerceInventoryWarehouseService.
 			getCommerceInventoryWarehouses(
-				commerceShippingMethod.getCompanyId(),
+				commerceShippingMethod.getCompanyId(), 0,
 				commerceShippingMethod.getGroupId(), true);
 	}
 
@@ -223,11 +223,7 @@ public class CommerceShippingFixedOptionRelsDisplayContext
 		List<CommerceShippingFixedOption> commerceShippingFixedOptions =
 			getCommerceShippingFixedOptions();
 
-		if (commerceShippingFixedOptions.isEmpty()) {
-			return false;
-		}
-
-		return true;
+		return !commerceShippingFixedOptions.isEmpty();
 	}
 
 	private final CommerceInventoryWarehouseService

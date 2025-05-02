@@ -10,7 +10,6 @@ import com.liferay.headless.commerce.admin.channel.resource.v1_0.DefaultProductD
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -21,6 +20,7 @@ import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.util.Collection;
 import java.util.List;
@@ -79,6 +79,37 @@ public abstract class BaseDefaultProductDisplayPageResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-channel/v1.0/channels/{id}/default-product-display-pages'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "id"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "DefaultProductDisplayPage"
+			)
+		}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/channels/{id}/default-product-display-pages")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteChannelIdDefaultProductDisplayPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
+			Long id)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-channel/v1.0/channels/by-externalReferenceCode/{externalReferenceCode}/default-product-display-page'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -108,6 +139,39 @@ public abstract class BaseDefaultProductDisplayPageResourceImpl
 				@javax.validation.constraints.NotNull
 				@javax.ws.rs.PathParam("externalReferenceCode")
 				String externalReferenceCode)
+		throws Exception {
+
+		return new DefaultProductDisplayPage();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-channel/v1.0/channels/{id}/default-product-display-pages'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "id"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "DefaultProductDisplayPage"
+			)
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/channels/{id}/default-product-display-pages")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public DefaultProductDisplayPage getChannelIdDefaultProductDisplayPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
+			Long id)
 		throws Exception {
 
 		return new DefaultProductDisplayPage();
@@ -147,70 +211,6 @@ public abstract class BaseDefaultProductDisplayPageResourceImpl
 				@javax.ws.rs.PathParam("externalReferenceCode")
 				String externalReferenceCode,
 				DefaultProductDisplayPage defaultProductDisplayPage)
-		throws Exception {
-
-		return new DefaultProductDisplayPage();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-channel/v1.0/channels/{id}/default-product-display-pages'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "id"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "DefaultProductDisplayPage"
-			)
-		}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/channels/{id}/default-product-display-pages")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteChannelIdDefaultProductDisplayPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
-			Long id)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-channel/v1.0/channels/{id}/default-product-display-pages'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "id"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "DefaultProductDisplayPage"
-			)
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/channels/{id}/default-product-display-pages")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public DefaultProductDisplayPage getChannelIdDefaultProductDisplayPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
-			Long id)
 		throws Exception {
 
 		return new DefaultProductDisplayPage();
@@ -274,7 +274,8 @@ public abstract class BaseDefaultProductDisplayPageResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -284,7 +285,8 @@ public abstract class BaseDefaultProductDisplayPageResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -317,6 +319,10 @@ public abstract class BaseDefaultProductDisplayPageResourceImpl
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider) {
 		this.sortParserProvider = sortParserProvider;
+	}
+
+	protected String getApplicationPath() {
+		return "headless-commerce-admin-channel";
 	}
 
 	protected Map<String, String> addAction(
@@ -434,7 +440,8 @@ public abstract class BaseDefaultProductDisplayPageResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

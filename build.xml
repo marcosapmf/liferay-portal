@@ -69,19 +69,21 @@
 					</else>
 				</if>
 
-				<if>
-					<equals arg1="${clean.temp.dir}" arg2="true" />
-					<then>
-						<delete dir="${app.server.temp.dir}" />
-					</then>
-				</if>
+				<sequential>
+					<if>
+						<equals arg1="${clean.work.dir}" arg2="true" />
+						<then>
+							<delete dir="${app.server.work.dir}" />
+						</then>
+					</if>
 
-				<if>
-					<equals arg1="${clean.work.dir}" arg2="true" />
-					<then>
-						<delete dir="${app.server.work.dir}" />
-					</then>
-				</if>
+					<if>
+						<equals arg1="${clean.temp.dir}" arg2="true" />
+						<then>
+							<delete dir="${app.server.temp.dir}" />
+						</then>
+					</if>
+				</sequential>
 			</parallel>
 		</sequential>
 	</macrodef>
@@ -297,12 +299,6 @@ message.
 
 		<ant dir="portal-kernel" inheritAll="false" target="install-portal-snapshot" />
 
-		<gradle-execute dir="modules/apps" task="deploy">
-			<arg value="--parallel" />
-			<arg value="-Dbuild.profile=portal-pre" />
-			<arg value="-Pforced.deploy.dir=${project.dir}/tmp/lib-pre" />
-		</gradle-execute>
-
 		<parallel failonany="true" threadcount="${parallel.thread.count}">
 			<ant dir="support-tomcat" inheritAll="false" target="compile" />
 			<ant dir="util-bridges" inheritAll="false" target="compile" />
@@ -330,13 +326,6 @@ message.
 	</target>
 
 	<target name="deploy">
-		<if>
-			<equals arg1="${app.server.type}" arg2="websphere" />
-			<then>
-				<delete file="${app.server.portal.war.name}" />
-			</then>
-		</if>
-
 		<if>
 			<and>
 				<equals arg1="${app.server.type}" arg2="tomcat" />
@@ -379,16 +368,6 @@ message.
 		<mkdir dir="${app.server.temp.dir}" />
 		<mkdir dir="${app.server.work.dir}" />
 
-		<if>
-			<equals arg1="${app.server.type}" arg2="websphere" />
-			<then>
-				<copy
-					file="${app.server.portal.dir}/WEB-INF/ibm-web-ext.xml"
-					tofile="${app.server.websphere.instance.dir}/config/cells/liferay-cell/applications/liferay-portal.ear/deployments/liferay-portal/liferay-portal.war/WEB-INF/ibm-web-ext.xml"
-				/>
-			</then>
-		</if>
-
 		<ant dir="portal-web" inheritAll="false" target="war" />
 
 		<stopwatch name="modules.stopwatch" />
@@ -407,7 +386,6 @@ message.
 					<arg value="-Dbuild.include.dirs=${build.include.dirs}" />
 					<arg value="-Dbuild.profile=${build.profile}" />
 					<arg value="-Dgradle.develocity.tag=portal" />
-					<env key="WAS_HOME" value="${app.server.websphere.dir}" />
 				</gradle-execute>
 
 				<if>
@@ -482,8 +460,8 @@ message.
 		<stopwatch action="elapsed" name="modules.stopwatch" />
 
 		<copy
-			file="tools/osgi-marketplace-override-README.markdown"
-			tofile="${liferay.home}/osgi/marketplace/override/README.markdown"
+			file="tools/osgi-marketplace-override-README.md"
+			tofile="${liferay.home}/osgi/marketplace/override/README.md"
 		/>
 
 		<print-current-time />
@@ -523,59 +501,9 @@ message.
 		</copy>
 
 		<if>
-			<or>
-				<equals arg1="${app.server.type}" arg2="tcserver" />
-				<equals arg1="${app.server.type}" arg2="tomcat" />
-			</or>
+			<equals arg1="${app.server.type}" arg2="tomcat" />
 			<then>
-				<if>
-					<equals arg1="${app.server.type}" arg2="tomcat" />
-					<then>
-						<ant dir="support-tomcat" inheritAll="false" target="deploy" />
-					</then>
-				</if>
-
-				<copy
-					todir="${app.server.shielded-container-lib.portal.dir}"
-				>
-					<fileset
-						dir="lib/development"
-						includes="activation.jar,mail.jar"
-					/>
-				</copy>
-
-				<if>
-					<equals arg1="${app.server.type}" arg2="tcserver" />
-					<then>
-						<delete>
-							<fileset
-								dir="${app.server.shielded-container-lib.portal.dir}"
-								includes="tomcat-juli.jar"
-							/>
-						</delete>
-					</then>
-				</if>
-			</then>
-		</if>
-
-		<if>
-			<equals arg1="${app.server.type}" arg2="websphere" />
-			<then>
-				<tstamp>
-					<format pattern="yyyyMMddkkmmssSSS" property="tstamp.value" />
-				</tstamp>
-
-				<jar
-					basedir="${app.server.portal.dir}"
-					jarfile="${tstamp.value}"
-				/>
-
-				<delete dir="${app.server.portal.dir}" />
-
-				<move
-					file="${tstamp.value}"
-					tofile="${app.server.portal.war.name}"
-				/>
+				<ant dir="support-tomcat" inheritAll="false" target="deploy" />
 			</then>
 		</if>
 	</target>
@@ -1199,107 +1127,6 @@ This target has been renamed to "snapshot-bundle". Please call "snapshot-bundle"
 				</if>
 			</then>
 		</if>
-
-		<if>
-			<equals arg1="${app.server.type}" arg2="websphere" />
-			<then>
-				<replace
-					file="${app.server.websphere.dir}/configuration/config.ini"
-				>
-					<replacetoken>com.ibm.CORBA,com.ibm</replacetoken>
-					<replacevalue>com.ibm.CORBA,javax.portlet,javax.portlet.filter,javax.portlet.annotations,com.ibm</replacevalue>
-				</replace>
-
-				<if>
-					<os family="unix" />
-					<then>
-						<chmod
-							file="${app.server.websphere.bin.dir}/startServer.sh"
-							perm="a+x"
-						/>
-
-						<exec dir="${app.server.websphere.bin.dir}" executable="/bin/sh">
-							<arg value="-c" />
-							<arg value="./startServer.sh server1" />
-						</exec>
-					</then>
-					<elseif>
-						<os family="windows" />
-						<then>
-							<exec dir="${app.server.websphere.bin.dir}" executable="cmd.exe">
-								<arg value="/c" />
-								<arg value="startServer.bat server1" />
-							</exec>
-						</then>
-					</elseif>
-				</if>
-
-				<echo>Installing liferay-portal.war.</echo>
-
-				<echo file="wsadmin.py">
-def isAppInstalled(appName):
-	appNames = AdminApp.list()
-
-	if len(appNames) > 0:
-		for curAppName in appNames.split('\n'):
-			curAppName = curAppName.rstrip()
-
-			if curAppName.find(appName) >= 0:
-				return 1
-
-	return 0
-
-if isAppInstalled('DefaultApplication'):
-	print AdminApp.uninstall('DefaultApplication')
-
-	print AdminConfig.save()
-
-appManager = AdminControl.queryNames('type=ApplicationManager,process=server1,*')
-
-if isAppInstalled('liferay-portal'):
-	print AdminControl.invoke(appManager, 'stopApplication', 'liferay-portal')
-
-	print AdminApp.update('liferay-portal', 'app', '[-contents ${app.server.websphere.instance.dir}/wsadmin-deploy/liferay-portal.war -contextroot / -operation update]')
-else:
-	print AdminApp.install('${app.server.websphere.instance.dir}/wsadmin-deploy/liferay-portal.war', '[-appname liferay-portal -contextroot / -defaultbinding.virtual.host default_host -usedefaultbindings]')
-
-print AdminConfig.save()
-
-print AdminControl.invoke(appManager, 'startApplication', 'liferay-portal')
-				</echo>
-
-				<if>
-					<os family="unix" />
-					<then>
-						<exec dir="${app.server.websphere.bin.dir}" executable="/bin/sh">
-							<arg value="-c" />
-							<arg value="./wsadmin.sh -f ${basedir}/wsadmin.py" />
-						</exec>
-
-						<exec dir="${app.server.websphere.bin.dir}" executable="/bin/sh">
-							<arg value="-c" />
-							<arg value="./stopServer.sh server1" />
-						</exec>
-					</then>
-					<elseif>
-						<os family="windows" />
-						<then>
-							<exec dir="${app.server.websphere.bin.dir}" executable="cmd.exe">
-								<arg value="/c" />
-								<arg value="wsadmin.bat -f ${basedir}\wsadmin.py" />
-							</exec>
-
-							<exec dir="${app.server.websphere.bin.dir}" executable="cmd.exe">
-								<arg value="/c" />
-								<arg value="stopServer.bat server1" />
-							</exec>
-						</then>
-					</elseif>
-				</if>
-
-				<delete file="wsadmin.py" />
-			</then>
-		</if>
 	</target>
 
 	<target name="update-binaries-cache">
@@ -1380,7 +1207,7 @@ print AdminControl.invoke(appManager, 'startApplication', 'liferay-portal')
 			classname="com.liferay.portal.tools.ConfigurationEnvBuilder"
 			classpathref="project.classpath"
 			dir="${project.dir}"
-			fork="${fork.mode}"
+			fork="true"
 			newenvironment="true"
 		>
 			<arg value="configuration.java.files=${configuration.java.files}" />
@@ -1388,6 +1215,7 @@ print AdminControl.invoke(appManager, 'startApplication', 'liferay-portal')
 			<arg value="language.properties.file=${project.dir}/${language.properties.file}" />
 			<arg value="properties.output.file=${project.dir}/portal-impl/src/portal-osgi-configuration.properties" />
 			<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
+			<jvmarg line="--add-opens java.base/java.lang.invoke=ALL-UNNAMED" />
 		</java>
 
 		<gradle-execute dir="${workspace.module.dir}" task="formatSource">

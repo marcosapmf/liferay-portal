@@ -9,9 +9,8 @@ import {
 	openModal,
 	openSelectionModal,
 	openSimpleInputModal,
-	setFormValues,
-	sub,
-} from 'frontend-js-web';
+} from 'frontend-js-components-web';
+import {setFormValues, sub} from 'frontend-js-web';
 
 import openContentTypeModal from '../commands/openContentTypeModal';
 import openDeletePageTemplateModal from '../commands/openDeletePageTemplateModal';
@@ -113,6 +112,7 @@ const ACTIONS = {
 			itemSelectorURL,
 			layoutPageTemplateEntryId,
 			layoutPageTemplateEntryName,
+			moveSelectedDisplayPageURL,
 		},
 		portletNamespace
 	) {
@@ -124,12 +124,13 @@ const ACTIONS = {
 				);
 
 				setFormValues(form, {
+					copyPermissions: true,
 					layoutPageTemplateEntriesIds: layoutPageTemplateEntryId,
-					targetLayoutPageTemplateCollectionId:
+					layoutParentPageTemplateCollectionId:
 						selectedItem.resourceid,
 				});
 
-				submitForm(form);
+				submitForm(form, moveSelectedDisplayPageURL);
 			},
 			selectEventName: 'selectFolder',
 			size: 'md',

@@ -8,8 +8,6 @@ package com.liferay.headless.commerce.delivery.catalog.resource.v1_0;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.DDMOption;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Sku;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.SkuOption;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -49,11 +47,29 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface SkuResource {
 
+	public Sku
+			getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode(
+				String channelExternalReferenceCode,
+				String productExternalReferenceCode,
+				String skuExternalReferenceCode, Long accountId,
+				String currencyCode)
+		throws Exception;
+
 	public Page<Sku>
 			getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage(
 				String channelExternalReferenceCode,
 				String productExternalReferenceCode, Long accountId,
-				Pagination pagination)
+				String currencyCode, Pagination pagination)
+		throws Exception;
+
+	public Sku getChannelProductSku(
+			Long channelId, Long productId, Long skuId, Long accountId,
+			String currencyCode)
+		throws Exception;
+
+	public Page<Sku> getChannelProductSkusPage(
+			Long channelId, Long productId, Long accountId, String currencyCode,
+			Pagination pagination)
 		throws Exception;
 
 	public Sku
@@ -64,23 +80,11 @@ public interface SkuResource {
 		throws Exception;
 
 	public Sku
-			getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode(
-				String channelExternalReferenceCode,
-				String productExternalReferenceCode,
-				String skuExternalReferenceCode, Long accountId)
-		throws Exception;
-
-	public Sku
 			postChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuBySkuOption(
 				String channelExternalReferenceCode,
 				String productExternalReferenceCode, Long accountId,
-				java.math.BigDecimal quantity, String skuUnitOfMeasureKey,
-				SkuOption[] skuOptions)
-		throws Exception;
-
-	public Page<Sku> getChannelProductSkusPage(
-			Long channelId, Long productId, Long accountId,
-			Pagination pagination)
+				String currencyCode, java.math.BigDecimal quantity,
+				String skuUnitOfMeasureKey, SkuOption[] skuOptions)
 		throws Exception;
 
 	public Sku postChannelProductSku(
@@ -89,13 +93,9 @@ public interface SkuResource {
 		throws Exception;
 
 	public Sku postChannelProductSkuBySkuOption(
-			Long channelId, Long productId, Long accountId,
+			Long channelId, Long productId, Long accountId, String currencyCode,
 			java.math.BigDecimal quantity, String skuUnitOfMeasureKey,
 			SkuOption[] skuOptions)
-		throws Exception;
-
-	public Sku getChannelProductSku(
-			Long channelId, Long productId, Long skuId, Long accountId)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -120,7 +120,8 @@ public interface SkuResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -145,19 +146,23 @@ public interface SkuResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

@@ -18,6 +18,7 @@ export default function updatePriorities(defaultLanguageId, namespace) {
 					'priorityImage' + i + '_' + lang
 				);
 
+				const data = {};
 				let image = '';
 
 				if (defaultImageInput && priorityImageInput) {
@@ -27,9 +28,11 @@ export default function updatePriorities(defaultLanguageId, namespace) {
 					image = priorityImage || defaultImage;
 				}
 
+				data['priorityImage' + i + '_temp'] = image;
+
 				const defaultNameInput = getFormElement(
 					form,
-					'priorityName' + i + defaultLanguageId
+					'priorityName' + i + '_' + defaultLanguageId
 				);
 				const priorityNameInput = getFormElement(
 					form,
@@ -45,9 +48,11 @@ export default function updatePriorities(defaultLanguageId, namespace) {
 					name = priorityName || defaultName;
 				}
 
+				data['priorityName' + i + '_temp'] = name;
+
 				const defaultValueInput = getFormElement(
 					form,
-					'priorityValue' + i + defaultLanguageId
+					'priorityValue' + i + '_' + defaultLanguageId
 				);
 				const priorityValueInput = getFormElement(
 					form,
@@ -57,19 +62,13 @@ export default function updatePriorities(defaultLanguageId, namespace) {
 				let value = '';
 
 				if (defaultValueInput && priorityValueInput) {
-					const defaultValue = defaultValueInput;
-					const priorityValue = priorityValueInput;
+					const defaultValue = defaultValueInput.value;
+					const priorityValue = priorityValueInput.value;
 
 					value = priorityValue || defaultValue;
 				}
 
-				const data = {};
-
-				if (name && image && value) {
-					data['priorityName' + i + '_temp'] = name;
-					data['priorityImage' + i + '_temp'] = image;
-					data['priorityValue' + i + '_temp'] = value;
-				}
+				data['priorityValue' + i + '_temp'] = value;
 
 				setFormValues(form, data);
 			}
@@ -112,7 +111,7 @@ export default function updatePriorities(defaultLanguageId, namespace) {
 				});
 			}
 
-			prioritiesChanged.value = false;
+			window[`${namespace}prioritiesChanged`] = false;
 		}
 
 		const selLanguageInput = getFormElement(form, 'prioritiesLanguageId');
@@ -137,7 +136,7 @@ export default function updatePriorities(defaultLanguageId, namespace) {
 				}
 			}
 
-			prioritiesLastLanguageId.value = selLanguageId;
+			window[`${namespace}prioritiesLastLanguageId`] = selLanguageId;
 		}
 	}
 }

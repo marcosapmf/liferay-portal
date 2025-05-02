@@ -9,16 +9,20 @@ import {ApiHelpers} from '../../helpers/ApiHelpers';
 import getRandomString from '../../utils/getRandomString';
 import {userData} from '../../utils/performLogin';
 import {PORTLET_URLS} from '../../utils/portletUrls';
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../utils/waitForAlert';
 import {InstanceSettingsPage} from '../configuration-admin-web/InstanceSettingsPage';
 
 export class ChangeTrackingPage {
+	readonly frontendDataSetEntries: Locator;
 	readonly instanceSettingsPage: InstanceSettingsPage;
 	readonly page: Page;
 	readonly reviewChangesButton: Locator;
 	readonly tabsContainer: Locator;
 
 	constructor(page: Page) {
+		this.frontendDataSetEntries = page.locator(
+			'[data-testid="visualization-mode-table"]'
+		);
 		this.instanceSettingsPage = new InstanceSettingsPage(page);
 		this.page = page;
 		this.reviewChangesButton = page.getByRole('menuitem', {
@@ -64,7 +68,7 @@ export class ChangeTrackingPage {
 
 		await this.page.getByLabel('Submit').click();
 
-		await waitForSuccessAlert(
+		await waitForAlert(
 			this.page,
 			'Success:Users were invited successfully.'
 		);
@@ -91,6 +95,22 @@ export class ChangeTrackingPage {
 			user.id
 		);
 
+		const site =
+			await apiHelpers.headlessAdminUser.getSiteByFriendlyUrlPath(
+				'guest'
+			);
+
+		const siteAdminRole =
+			await apiHelpers.headlessAdminUser.getRoleByName(
+				'Site Administrator'
+			);
+
+		await apiHelpers.headlessAdminUser.assignUserToSite(
+			siteAdminRole.id,
+			site.id,
+			user.id
+		);
+
 		return user;
 	}
 
@@ -104,6 +124,30 @@ export class ChangeTrackingPage {
 		await this.editComment(comment, editedComment);
 
 		await this.deleteComment(editedComment);
+	}
+
+	async assertStatus(status: string, title: string) {
+		await this.goToPublicationHistory();
+
+		await this.page
+			.locator('.fds tbody tr')
+			.filter({
+				has: this.page.getByText(title),
+			})
+			.filter({
+				has: this.page.getByText(status, {exact: true}),
+			})
+			.waitFor();
+
+		await this.page
+			.locator('.fds tbody tr')
+			.filter({
+				has: this.page.getByText(title),
+			})
+			.filter({
+				has: this.page.getByText(status, {exact: true}),
+			})
+			.isVisible();
 	}
 
 	async deleteComment(comment) {
@@ -148,8 +192,76 @@ export class ChangeTrackingPage {
 		await expect(this.page.getByText(content)).toBeVisible();
 	}
 
+	async enablePublications(check: boolean) {
+		await this.goToPublicationsViaApplicationMenu();
+
+		if (
+			await this.page
+				.getByTestId('headerTitle')
+				.filter({hasText: 'Publications'})
+				.isVisible()
+		) {
+			await this.page.getByLabel('Options').click();
+
+			await this.page.getByRole('menuitem', {name: 'Settings'}).click();
+
+			await expect(
+				this.page.getByText('Enable Publications')
+			).toBeVisible();
+		}
+
+		const checkBox = this.page.getByRole('checkbox', {
+			name: 'Enable Publications',
+		});
+
+		if (check) {
+			await checkBox.setChecked(true);
+
+			await expect(
+				this.page.getByText('Allow Unapproved Changes')
+			).toBeVisible();
+
+			await this.goto();
+		}
+		else {
+			await checkBox.setChecked(false);
+
+			await expect(
+				this.page.getByText('Allow Unapproved Changes')
+			).not.toBeVisible();
+		}
+	}
+
 	async goto() {
 		await this.page.goto(`/group/guest${PORTLET_URLS.publications}`);
+
+		const changeTrackingIndicatorButton = this.page.locator(
+			'.change-tracking-indicator-button'
+		);
+
+		if (!(await changeTrackingIndicatorButton.isVisible())) {
+			await this.enablePublications(true);
+		}
+	}
+
+	async goToPublicationsViaApplicationMenu() {
+		await this.page.getByLabel('Open Applications MenuCtrl+Alt+A').click();
+
+		await this.page.getByRole('menuitem', {name: 'Publications'}).click();
+
+		const enablePublications = this.page.getByText('Enable Publications');
+
+		const publicationsHeader = this.page
+			.getByTestId('headerTitle')
+			.filter({hasText: 'Publications'});
+
+		await expect(enablePublications.or(publicationsHeader)).toBeVisible();
+	}
+
+	async goToPublicationHistory() {
+		await this.goto();
+
+		await this.selectTab('History');
 	}
 
 	async goToReviewChanges(title: string) {
@@ -196,10 +308,41 @@ export class ChangeTrackingPage {
 			.waitFor();
 	}
 
+	async goToReviewChangesScheduled(title: string) {
+		await this.goto();
+
+		await this.selectTab('Scheduled');
+
+		await this.page
+			.locator('#fnsd___table-id div')
+			.filter({hasText: title})
+			.first()
+			.waitFor();
+
+		await this.page.getByRole('link', {exact: true, name: title}).click();
+
+		await this.page
+			.locator(
+				'#_com_liferay_change_tracking_web_portlet_PublicationsPortlet_controlMenu'
+			)
+			.filter({hasText: 'Review Changes'})
+			.waitFor();
+	}
+
+	async switchLanguage(language: string) {
+		await this.page.getByLabel('show-available-locales').click();
+
+		await this.page
+			.getByRole('menuitem', {
+				name: `${language} Translated`,
+			})
+			.click();
+	}
+
 	async workOnProduction() {
 		const apiHelpers = new ApiHelpers(this.page);
 
-		await apiHelpers.headlessChangeTracking.checkoutCTCollection('0');
+		await apiHelpers.headlessChangeTracking.checkoutCTCollection(0);
 
 		await this.page.reload();
 	}
@@ -208,7 +351,7 @@ export class ChangeTrackingPage {
 		const apiHelpers = new ApiHelpers(this.page);
 
 		await apiHelpers.headlessChangeTracking.checkoutCTCollection(
-			ctCollection.id
+			ctCollection.body.id
 		);
 
 		await this.page.reload();
@@ -248,10 +391,101 @@ export class ChangeTrackingPage {
 
 		await this.instanceSettingsPage.saveButton.click();
 
-		await waitForSuccessAlert(
+		await waitForAlert(
 			this.page,
 			`Success:Your request completed successfully.`
 		);
+	}
+
+	async publishSandboxPublication(title: string) {
+		await this.goto();
+
+		await this.page.getByRole('link', {name: title}).first().click();
+
+		await this.page.getByRole('link', {name: 'Publish'}).waitFor();
+
+		await this.page.getByRole('link', {name: 'Publish'}).click();
+
+		await expect(
+			this.page.getByText('No unresolved conflicts, ready to publish.')
+		).toBeVisible();
+
+		await this.page.getByRole('button', {name: 'Publish'}).click();
+	}
+
+	async toggleSandboxConfiguration(check: boolean) {
+		await this.goto();
+
+		await this.page.getByLabel('Options').click();
+
+		await this.page.getByRole('menuitem', {name: 'Settings'}).click();
+
+		await expect(this.page.getByText('Enable Publications')).toBeVisible();
+
+		const checkBox = this.page.getByRole('checkbox', {
+			name: 'enable-sandbox-only',
+		});
+
+		const publicationsEnabled = this.page.getByRole('checkbox', {
+			name: 'Enable Publications',
+		});
+
+		if (check) {
+			await checkBox.setChecked(true);
+
+			await expect(publicationsEnabled).toBeChecked();
+
+			await expect(checkBox).toBeChecked();
+		}
+		else {
+			await checkBox.setChecked(false);
+
+			await expect(publicationsEnabled).toBeChecked();
+
+			await expect(checkBox).not.toBeChecked();
+		}
+	}
+
+	async viewChanges({
+		changed,
+		isVisible,
+		site,
+		title,
+		type,
+	}: {
+		changed?: string;
+		isVisible?: boolean;
+		site?: string;
+		title: string;
+		type?: string;
+	}) {
+		let fdsRow = this.page.locator('.fds tbody tr').filter({
+			has: this.page.getByText(title),
+		});
+
+		if (changed) {
+			fdsRow = fdsRow.filter({
+				has: this.page.getByRole('cell', {name: changed}),
+			});
+		}
+
+		if (site) {
+			fdsRow = fdsRow.filter({
+				has: this.page.getByRole('cell', {name: site}),
+			});
+		}
+		if (type) {
+			fdsRow = fdsRow.filter({
+				has: this.page.getByRole('cell', {name: type}),
+			});
+		}
+
+		if (isVisible === true) {
+			await expect(fdsRow).toBeVisible();
+		}
+		else if (isVisible === false) {
+			await expect(fdsRow).toBeHidden();
+		}
 	}
 
 	async viewDisplayTab(tabLabel: string, {isHidden} = {isHidden: false}) {

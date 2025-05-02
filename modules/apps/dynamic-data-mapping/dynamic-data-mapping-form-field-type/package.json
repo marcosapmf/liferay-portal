@@ -1,24 +1,24 @@
 {
 	"dependencies": {
-		"@clayui/autocomplete": "3.118.0",
-		"@clayui/button": "3.116.0",
-		"@clayui/card": "3.118.0",
-		"@clayui/color-picker": "3.118.0",
-		"@clayui/core": "3.118.0",
-		"@clayui/data-provider": "3.116.0",
-		"@clayui/date-picker": "3.118.0",
-		"@clayui/drop-down": "3.118.0",
-		"@clayui/form": "3.116.0",
-		"@clayui/icon": "3.111.0",
-		"@clayui/label": "3.111.0",
-		"@clayui/layout": "3.111.0",
-		"@clayui/modal": "3.117.0",
-		"@clayui/multi-select": "3.118.0",
-		"@clayui/panel": "3.116.0",
-		"@clayui/popover": "3.116.1",
-		"@clayui/progress-bar": "3.111.0",
+		"@clayui/autocomplete": "3.135.0",
+		"@clayui/button": "3.128.0",
+		"@clayui/card": "3.135.0",
+		"@clayui/color-picker": "3.135.0",
+		"@clayui/core": "3.134.0",
+		"@clayui/data-provider": "3.132.0",
+		"@clayui/date-picker": "3.135.0",
+		"@clayui/drop-down": "3.135.0",
+		"@clayui/form": "3.132.0",
+		"@clayui/icon": "3.128.0",
+		"@clayui/label": "3.128.0",
+		"@clayui/layout": "3.128.0",
+		"@clayui/modal": "3.134.0",
+		"@clayui/multi-select": "3.135.0",
+		"@clayui/panel": "3.132.0",
+		"@clayui/popover": "3.132.0",
+		"@clayui/progress-bar": "3.128.0",
 		"@clayui/table": "3.111.0",
-		"@clayui/tooltip": "3.116.0",
+		"@clayui/tooltip": "3.132.0",
 		"@liferay/frontend-js-react-web": "*",
 		"@liferay/map-google-maps": "*",
 		"@liferay/map-openstreetmap": "*",
@@ -26,13 +26,14 @@
 		"classnames": "2.3.1",
 		"data-engine-js-components-web": "*",
 		"frontend-editor-ckeditor-web": "*",
+		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
 		"leaflet": "1.7.1",
 		"moment": "2.29.4",
-		"react": "16.12.0",
+		"react": "18.2.0",
 		"react-dnd": "11.1.1",
 		"react-dnd-html5-backend": "11.1.1",
-		"react-dom": "16.12.0",
+		"react-dom": "18.2.0",
 		"resize-observer-polyfill": "1.5.1",
 		"text-mask-addons": "^3.7.1",
 		"text-mask-core": "^5.1.2"
@@ -40,6 +41,13 @@
 	"jest": {
 		"setupFiles": [
 			"<rootDir>/jest-setup.config.js"
+		],
+		"testMatch": [
+			"<rootDir>/test/**/*.js",
+			"<rootDir>/test/**/*.spec.js"
+		],
+		"testPathIgnorePatterns": [
+			"\\.d\\.ts$"
 		]
 	},
 	"main": "index.ts",
@@ -49,7 +57,7 @@
 		"build": "node-scripts build",
 		"checkFormat": "node-scripts format --check",
 		"format": "node-scripts format",
-		"test": "node-scripts test"
+		"test": "USE_REACT_16=true node-scripts test"
 	},
-	"version": "6.0.178"
+	"version": "6.0.192"
 }

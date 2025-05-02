@@ -17,6 +17,7 @@ import './InformLicensingTermsPage.scss';
 import {useState} from 'react';
 
 import {LicenseTier} from '../../../../../../enums/licenseTier';
+import i18n from '../../../../../../i18n';
 import {
 	getPriceListByCatalogName,
 	getPriceListIdPriceEntries,
@@ -28,9 +29,10 @@ import {
 } from '../../../../../../utils/api';
 import {isTrialSKU} from '../../../../../../utils/productUtils';
 import {getSkuPrice} from '../../../../../../utils/util';
-import {TYPES} from '../AppContext/actionTypes';
+import {ActionTypes} from '../AppContext/actionTypes';
 import IconButton from './components/IconButton/IconButton';
 import LicensePriceCard from './components/LicensePriceCard';
+
 interface InformLicensingTermsPricePageProps {
 	onClickBack: () => void;
 	onClickContinue: () => void;
@@ -40,13 +42,16 @@ export function InformLicensingTermsPricePage({
 	onClickBack,
 	onClickContinue,
 }: InformLicensingTermsPricePageProps) {
-	const [{appLicensePrice, appProductId}, dispatch] = useAppContext();
+	const [{appLicensePrice, appProductId, appType}, dispatch] =
+		useAppContext();
 	const [isProcessing, setProcessing] = useState(false);
+
+	const isDXP = appType.value === 'dxp';
 
 	const handleAddPriceTier = (licenseTier: LicenseTier) =>
 		dispatch({
 			payload: {licenseTier},
-			type: TYPES.ADD_APP_LICENSE_PRICE,
+			type: ActionTypes.ADD_APP_LICENSE_PRICE,
 		});
 
 	const handleDeletePriceTier = (licenseTier: LicenseTier, key: number) =>
@@ -55,7 +60,7 @@ export function InformLicensingTermsPricePage({
 				key,
 				licenseTier,
 			},
-			type: TYPES.DELETE_APP_LICENSE_PRICE,
+			type: ActionTypes.DELETE_APP_LICENSE_PRICE,
 		});
 
 	const handleEditPriceTier = (
@@ -69,7 +74,7 @@ export function InformLicensingTermsPricePage({
 				licenseTier,
 				price,
 			},
-			type: TYPES.UPDATE_APP_LICENSE_PRICES,
+			type: ActionTypes.UPDATE_APP_LICENSE_PRICES,
 		});
 
 	const processTier = async (priceEntry: PriceEntry) => {
@@ -145,16 +150,20 @@ export function InformLicensingTermsPricePage({
 	return (
 		<div className="informing-licensing-terms-page-container">
 			<Header
-				description="Define the licensing approach for your app. This will impact users' licensing renew experience."
-				title="Select licensing terms"
+				description={i18n.translate(
+					'define-the-licensing-approach-for-your-app-this-will-impact-users-licensing-renew-experience'
+				)}
+				title={i18n.translate('select-licensing-terms')}
 			/>
 
 			<Section
 				className="mb-6"
-				label="Standard License prices"
+				label={i18n.translate('standard-license-prices')}
 				required
-				tooltip="Standard licenses cover the following DXP environments: production, non-production (UAT) and backup (DR) for both standalone and virtual cluster servers."
-				tooltipText="More Info"
+				tooltip={i18n.translate(
+					'standard-licenses-cover-the-following-dxp-environments-production-non-production-uat-and-backup-dr-for-both-standalone-and-virtual-cluster-servers'
+				)}
+				tooltipText={i18n.translate('more-info')}
 			>
 				<LicensePriceCard
 					licensePrices={appLicensePrice.standard}
@@ -168,37 +177,46 @@ export function InformLicensingTermsPricePage({
 				/>
 			</Section>
 
-			<Section
-				label="Developer License prices"
-				tooltip="Developer licenses are limited to 5 unique addresses and should not be used for full scale production deployments."
-				tooltipText="More Info"
-			>
-				{appLicensePrice.developer.length ? (
-					<LicensePriceCard
-						licensePrices={appLicensePrice.developer}
-						onAdd={() => handleAddPriceTier(LicenseTier.DEVELOPER)}
-						onChange={(index: number, price: LicensePrice) =>
-							handleEditPriceTier(
-								LicenseTier.DEVELOPER,
-								index,
-								price
-							)
-						}
-						onDelete={(key: number) =>
-							handleDeletePriceTier(LicenseTier.DEVELOPER, key)
-						}
-					/>
-				) : (
-					<IconButton
-						className="icon-button py-3 w-100"
-						onClick={() =>
-							handleAddPriceTier(LicenseTier.DEVELOPER)
-						}
-					>
-						Add Developer Licenses
-					</IconButton>
-				)}
-			</Section>
+			{isDXP && (
+				<Section
+					label={i18n.translate('developer-license-prices')}
+					tooltip={i18n.translate(
+						'developer-licenses-are-limited-to-5-unique-addresses-and-should-not-be-used-for-full-scale-production-deployments'
+					)}
+					tooltipText={i18n.translate('more-info')}
+				>
+					{appLicensePrice.developer.length ? (
+						<LicensePriceCard
+							licensePrices={appLicensePrice.developer}
+							onAdd={() =>
+								handleAddPriceTier(LicenseTier.DEVELOPER)
+							}
+							onChange={(index: number, price: LicensePrice) =>
+								handleEditPriceTier(
+									LicenseTier.DEVELOPER,
+									index,
+									price
+								)
+							}
+							onDelete={(key: number) =>
+								handleDeletePriceTier(
+									LicenseTier.DEVELOPER,
+									key
+								)
+							}
+						/>
+					) : (
+						<IconButton
+							className="icon-button py-3 w-100"
+							onClick={() =>
+								handleAddPriceTier(LicenseTier.DEVELOPER)
+							}
+						>
+							{i18n.translate('add-developer-licenses')}
+						</IconButton>
+					)}
+				</Section>
+			)}
 
 			<NewAppPageFooterButtons
 				disableContinueButton={isProcessing || !appLicensePrice}

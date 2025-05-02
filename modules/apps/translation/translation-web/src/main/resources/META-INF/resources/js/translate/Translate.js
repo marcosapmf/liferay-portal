@@ -6,7 +6,8 @@
 import ClayAlert from '@clayui/alert';
 import ClayLayout from '@clayui/layout';
 import {useIsMounted} from '@liferay/frontend-js-react-web';
-import {fetch, navigate, openConfirmModal, unescapeHTML} from 'frontend-js-web';
+import {openConfirmModal} from 'frontend-js-components-web';
+import {fetch, navigate, unescapeHTML} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useMemo, useReducer, useState} from 'react';
 
@@ -191,18 +192,10 @@ const Translate = ({
 					dispatch({
 						payload: Object.entries(fields).reduce(
 							(acc, [id, content]) => {
-								let contentData;
-								if (
-									html &&
-									sourceFields[id].html === html[id]
-								) {
-									contentData = content;
-								}
-								else {
-									contentData = unescapeHTML(content);
-								}
 								acc[id] = {
-									content: contentData,
+									content: html?.[id]
+										? content
+										: unescapeHTML(content),
 								};
 
 								return acc;
@@ -256,20 +249,13 @@ const Translate = ({
 					throw error;
 				}
 
-				let contentData;
-
-				if (html && sourceFields[fieldId].html === html[fieldId]) {
-					contentData = fields[fieldId];
-				}
-				else {
-					contentData = unescapeHTML(fields[fieldId]);
-				}
-
 				if (isMounted()) {
 					dispatch({
 						payload: {
 							field: {
-								content: contentData,
+								content: html?.[fieldId]
+									? fields[fieldId]
+									: unescapeHTML(fields[fieldId]),
 								message:
 									Liferay.Language.get('field-translated'),
 								status: FETCH_STATUS.SUCCESS,

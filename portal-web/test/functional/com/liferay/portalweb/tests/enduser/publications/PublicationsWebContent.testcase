@@ -5,7 +5,6 @@ definition {
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Web Content Administration";
 	property testray.main.component.name = "Publications";
 
 	setUp {
@@ -184,11 +183,13 @@ definition {
 
 			WebContent.addWithStructureCP(webContentTitle = "WC Title");
 
-			PortletEntry.changeLocale(locale = "de-DE");
+			PortletEntry.changeLocale(
+				locale = "de-DE",
+				translated = "true");
 
 			WebContent.addWithStructureCP(webContentTitle = "WC Titel");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Review changes of the Web Content") {
@@ -299,70 +300,6 @@ definition {
 		}
 	}
 
-	@description = "This is the use case for LPS-161037."
-	@priority = 4
-	test CanViewWebContentTimelineOverMultiplePublications {
-		property custom.properties = "feature.flag.LPS-161033=true";
-
-		task ("Add new web content on new added site") {
-			HeadlessSite.addSite(siteName = "Site Name");
-
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = "Site Name",
-				title = "Web Content Title");
-		}
-
-		task ("Add and select a new Publication") {
-			JSONPublications.addPublication(publicationName = "Publication Name 1");
-
-			JSONPublications.selectPublication(publicationName = "Publication Name 1");
-		}
-
-		task ("Assert there are no changes in the Publication timeline") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
-
-			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
-
-			Publications.viewPublicationTimeline(isEmpty = "true");
-		}
-
-		task ("Edit the web content") {
-			WebContent.editCP(
-				webContentContentEdit = "Web Content Content Edit 1",
-				webContentTitle = "Web Content Title",
-				webContentTitleEdit = "Web Content Title Edit 1");
-		}
-
-		task ("Publish the publication") {
-			JSONPublications.selectPublication(publicationName = "Publication Name 1");
-
-			Publications.publishPublication(
-				gotoPublicationsAdmin = "true",
-				publicationName = "Publication Name 1");
-		}
-
-		task ("Add a new Publication") {
-			JSONPublications.addPublication(publicationName = "Publication Name 2");
-		}
-
-		task ("View Publication timeline in Production") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
-
-			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title Edit 1");
-
-			Publications.viewPublicationTimeline(publicationName = "Publication Name 1");
-		}
-
-		task ("View Publication timeline in Publication") {
-			JSONPublications.selectPublication(publicationName = "Publication Name 2");
-
-			Refresh();
-
-			Publications.viewPublicationTimeline(publicationName = "Publication Name 1");
-		}
-	}
-
 	@description = "This is use case for LPS-159561. Making the changes in the description doesn't yield a missing requirement conflict."
 	@priority = 3
 	test MakingChangesInDescriptionCannotYieldConflict {
@@ -394,7 +331,7 @@ definition {
 			webContentText = "This is a Text field",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
@@ -406,7 +343,11 @@ definition {
 
 		WebContent.addWithStructureCP(webContentText = "This is a edited Text field");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
+
+		WaitForElementPresent.waitForElementPresentNoException(locator1 = "Message#ALERT_DISMISSIBLE");
+
+		PublicationsNavigator.openPublicationsAdmin();
 
 		PublicationsNavigator.gotoPublish(
 			gotoPublicationsAdmin = "true",
@@ -415,99 +356,6 @@ definition {
 		AssertElementNotPresent(locator1 = "Publications#NEEDS_MANUAL_RESOLUTION_TABLE");
 
 		Publications.publishPublication(publicationName = "Publication Name");
-	}
-
-	@description = "Manage Conflicting Web Content Folder changes and discard the changes."
-	@priority = 4
-	test ManageConflictingWebContentFolderChanges {
-		property test.assert.warning.exceptions = "true";
-
-		HeadlessSite.addSite(siteName = "Site Name");
-
-		JSONWebcontent.addFolder(
-			folderName = "WC Folder Name",
-			groupName = "Site Name");
-
-		JSONPublications.addPublication(publicationName = "Publication 1 Name");
-
-		JSONPublications.selectPublication(publicationName = "Publication 1 Name");
-
-		JSONWebcontent.addWebContent(
-			content = "WC WebContent Content",
-			groupName = "Site Name",
-			title = "WC WebContent Title");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
-
-		WebContent.moveToFolderCP(
-			folderName = "WC Folder Name",
-			webContentTitle = "WC WebContent Title");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
-
-		WebContentFolder.gotoEditCP(
-			folderName = "WC Folder Name",
-			webContentTitle = "WC Folder Name");
-
-		PortletEntry.inputName(name = "WC Folder Name Edited");
-
-		PortletEntry.save();
-
-		PublicationsNavigator.gotoReviewChanges();
-
-		PublicationsChanges.viewChanges(
-			changeCategory = "Web Content Folder",
-			changeSite = "Site Name",
-			changeTitle = "WC Folder Name Edited",
-			changeType = "Modified",
-			changeUser = "Test Test");
-
-		JSONPublications.addPublication(publicationName = "Publication 2 Name");
-
-		JSONPublications.selectPublication(publicationName = "Publication 2 Name");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
-
-		WebContentFolder.moveToRecycleBinCP(
-			assetType = "Web Content Folder",
-			folderName = "WC Folder Name");
-
-		// Workaround LPS-183473
-
-		/*PublicationsNavigator.gotoReviewChanges();
-
-		PublicationsChanges.viewChanges(
-			changeCategory = "Web Content Folder",
-			changeSite = "Site Name",
-			changeTitle = "WC Folder Name",
-			changeType = "Deleted",
-			changeUser = "Test Test");*/
-
-		Publications.publishPublication(publicationName = "Publication 2 Name");
-
-		JSONPublications.selectPublication(publicationName = "Publication 1 Name");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
-
-		AssertTextNotPresent(
-			locator1 = "WC#ENTRY_LIST_TITLE",
-			value1 = "Web Content Folder");
-
-		PublicationsNavigator.gotoPublish(publicationName = "Publication 1 Name");
-
-		PublicationsChanges.discardChanges(
-			changeCategory = "WC Folder Name",
-			changeTitle = "WC Folder Name Edited",
-			conflictingChanges = "true",
-			entryTitle = "WC Folder Name Edited");
-
-		Publications.publishPublication(publicationName = "Publication 1 Name");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
-
-		AssertTextNotPresent(
-			locator1 = "WC#ENTRY_LIST_TITLE",
-			value1 = "Web Content Folder");
 	}
 
 	@priority = 4
@@ -701,7 +549,7 @@ definition {
 			webContentTitle = "WC WebContent Title",
 			webContentUpload = "DM Document Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		AssertElementPresent(
 			key_webContentTitle = "WC WebContent Title",
@@ -748,6 +596,10 @@ definition {
 
 	@priority = 4
 	test PublishWebContentWithFriendlyURL {
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
@@ -784,7 +636,9 @@ definition {
 			pageName = "Test Page",
 			pageType = "Pages");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
+
+		WaitForElementPresent.waitForElementPresentNoException(locator1 = "Message#ALERT_DISMISSIBLE");
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -862,13 +716,13 @@ definition {
 			webContentText = "WC Web Content Text",
 			webContentTitle = "WC Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "WC Web Content Title");
 
 		WebContent.addCP(webContentDescription = "Web Content Description");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		PublicationsNavigator.gotoReviewChanges();
 

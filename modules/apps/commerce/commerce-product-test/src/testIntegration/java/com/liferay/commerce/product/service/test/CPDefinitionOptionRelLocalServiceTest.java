@@ -37,6 +37,7 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -80,9 +81,16 @@ public class CPDefinitionOptionRelLocalServiceTest {
 
 	@After
 	public void tearDown() throws Exception {
-		_serviceContext = null;
+		for (CPDefinitionOptionRel cpDefinitionOptionRel :
+				_cpDefinitionOptionRels) {
 
-		_cpOptionLocalService.deleteCPOptions(_group.getCompanyId());
+			_cpDefinitionOptionRelLocalService.deleteCPDefinitionOptionRel(
+				cpDefinitionOptionRel);
+		}
+
+		_cpOptionLocalService.deleteCPOptions(_serviceContext.getCompanyId());
+
+		_serviceContext = null;
 	}
 
 	@Test
@@ -106,6 +114,8 @@ public class CPDefinitionOptionRelLocalServiceTest {
 			CPTestUtil.addCPDefinitionOptionRel(
 				_commerceCatalog.getGroupId(), cpDefinition.getCPDefinitionId(),
 				false, 2);
+
+		_cpDefinitionOptionRels.add(cpDefinitionOptionRel);
 
 		Assert.assertFalse(
 			"SKU contributor value", cpDefinitionOptionRel.isSkuContributor());
@@ -138,12 +148,16 @@ public class CPDefinitionOptionRelLocalServiceTest {
 			_commerceCatalog.getGroupId(), cpDefinition.getCPDefinitionId(),
 			false, 2);
 
+		_cpDefinitionOptionRels.add(cpDefinitionOptionRel);
+
 		Assert.assertFalse(
 			"SKU contributor value", cpDefinitionOptionRel.isSkuContributor());
 
 		cpDefinitionOptionRel = CPTestUtil.addCPDefinitionOptionRel(
 			_commerceCatalog.getGroupId(), cpDefinition.getCPDefinitionId(),
 			true, 2);
+
+		_cpDefinitionOptionRels.add(cpDefinitionOptionRel);
 
 		Assert.assertTrue(
 			"SKU contributor value", cpDefinitionOptionRel.isSkuContributor());
@@ -219,6 +233,8 @@ public class CPDefinitionOptionRelLocalServiceTest {
 				_commerceCatalog.getGroupId(), cpDefinition.getCPDefinitionId(),
 				1, 5);
 
+		_cpDefinitionOptionRels.addAll(cpDefinitionOptionRels);
+
 		CPDefinitionOptionRel cpDefinitionOptionRel =
 			cpDefinitionOptionRels.get(0);
 
@@ -281,6 +297,8 @@ public class CPDefinitionOptionRelLocalServiceTest {
 			CPTestUtil.addCPOption(
 				_commerceCatalog.getGroupId(), cpDefinition.getCPDefinitionId(),
 				cpOptionsCount, cpOptionValuesCount);
+
+		_cpDefinitionOptionRels.addAll(cpDefinitionOptionRels);
 
 		List<CPInstance> cpInstances = _cpInstanceLocalService.buildCPInstances(
 			cpDefinition.getCPDefinitionId(),
@@ -354,6 +372,8 @@ public class CPDefinitionOptionRelLocalServiceTest {
 			CPTestUtil.addCPDefinitionOptionRel(
 				_commerceCatalog.getGroupId(), cpDefinition.getCPDefinitionId(),
 				cpOption.getCPOptionId());
+
+		_cpDefinitionOptionRels.add(cpDefinitionOptionRel);
 
 		Assert.assertTrue(
 			Validator.isNull(cpDefinitionOptionRel.getPriceType()));
@@ -501,6 +521,8 @@ public class CPDefinitionOptionRelLocalServiceTest {
 			_cpDefinitionOptionRelLocalService.getCPDefinitionOptionRels(
 				cpDefinition.getCPDefinitionId());
 
+		_cpDefinitionOptionRels.addAll(cpDefinitionOptionRels);
+
 		Assert.assertFalse(cpDefinitionOptionRels.isEmpty());
 
 		for (CPDefinitionOptionRel cpDefinitionOptionRel :
@@ -556,6 +578,9 @@ public class CPDefinitionOptionRelLocalServiceTest {
 	@Inject
 	private CPDefinitionOptionRelLocalService
 		_cpDefinitionOptionRelLocalService;
+
+	private final List<CPDefinitionOptionRel> _cpDefinitionOptionRels =
+		new ArrayList<>();
 
 	@Inject
 	private CPDefinitionOptionValueRelLocalService

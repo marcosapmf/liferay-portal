@@ -16,6 +16,7 @@ import com.liferay.fragment.service.FragmentCollectionService;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryService;
 import com.liferay.layout.test.util.LayoutTestUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -34,13 +35,13 @@ import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
@@ -97,10 +98,22 @@ public class PortletFragmentEntryProcessorTest {
 		ServiceContextThreadLocal.popServiceContext();
 	}
 
-	@Test(expected = FragmentEntryContentException.class)
+	@Test
+	public void testCanAddMoreThanOneInstanceableWidget() throws Exception {
+		_addFragmentEntry(
+			_getHTML(
+				FragmentEntryLinkPortletKeys.
+					FRAGMENT_ENTRY_LINK_INSTANCEABLE_TEST_PORTLET_ALIAS,
+				RandomTestUtil.randomString(), RandomTestUtil.randomString()));
+	}
+
+	@Test
 	public void testCanAddOneNoninstanceableWidget() throws Exception {
 		_addFragmentEntry(
-			"fragment_entry_with_noninstanceable_widget_tag.html");
+			_getHTML(
+				FragmentEntryLinkPortletKeys.
+					FRAGMENT_ENTRY_LINK_NONINSTANCEABLE_TEST_PORTLET_ALIAS,
+				StringPool.BLANK));
 	}
 
 	@Test(expected = FragmentEntryContentException.class)
@@ -108,13 +121,21 @@ public class PortletFragmentEntryProcessorTest {
 		throws Exception {
 
 		_addFragmentEntry(
-			"fragment_entry_with_duplicate_noninstanceable_widget_tag.html");
+			_getHTML(
+				FragmentEntryLinkPortletKeys.
+					FRAGMENT_ENTRY_LINK_NONINSTANCEABLE_TEST_PORTLET_ALIAS,
+				StringPool.BLANK, StringPool.BLANK));
 	}
 
 	@Test
 	public void testFragmentEntryLinkPortletPreferences() throws Exception {
+		String instanceId = RandomTestUtil.randomString();
+
 		FragmentEntry fragmentEntry = _addFragmentEntry(
-			"fragment_entry_with_instanceable_widget_tag.html");
+			_getHTML(
+				FragmentEntryLinkPortletKeys.
+					FRAGMENT_ENTRY_LINK_INSTANCEABLE_TEST_PORTLET_ALIAS,
+				instanceId));
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
@@ -149,14 +170,14 @@ public class PortletFragmentEntryProcessorTest {
 
 		PortletPreferences portletPreferences = portletPreferencesList.get(0);
 
-		String instanceId = PortletIdCodec.decodeInstanceId(
+		String curInstanceId = PortletIdCodec.decodeInstanceId(
 			portletPreferences.getPortletId());
 
 		Assert.assertEquals(
-			fragmentEntryLink.getNamespace() + "widget", instanceId);
+			fragmentEntryLink.getNamespace() + instanceId, curInstanceId);
 	}
 
-	private FragmentEntry _addFragmentEntry(String htmlFile) throws Exception {
+	private FragmentEntry _addFragmentEntry(String html) throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(
 				_group.getGroupId(), TestPropsValues.getUserId());
@@ -169,9 +190,29 @@ public class PortletFragmentEntryProcessorTest {
 		return _fragmentEntryService.addFragmentEntry(
 			null, _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(), "fragment-entry",
-			"Fragment Entry", null, _readFileToString(htmlFile), null, false,
-			null, null, 0, false, FragmentConstants.TYPE_SECTION, null,
+			"Fragment Entry", null, html, null, false, null, null, 0, false,
+			false, FragmentConstants.TYPE_SECTION, null,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
+	}
+
+	private String _getHTML(String portletAlias, String... instanceIds) {
+		StringBundler sb = new StringBundler();
+
+		sb.append("<div>");
+
+		for (String instanceId : instanceIds) {
+			sb.append("<lfr-widget-");
+			sb.append(portletAlias);
+			sb.append(" id=\"");
+			sb.append(instanceId);
+			sb.append("\"></lfr-widget-");
+			sb.append(portletAlias);
+			sb.append(">");
+		}
+
+		sb.append("</div>");
+
+		return sb.toString();
 	}
 
 	private HttpServletRequest _getHttpServletRequest() throws Exception {
@@ -227,15 +268,6 @@ public class PortletFragmentEntryProcessorTest {
 		themeDisplay.setUser(TestPropsValues.getUser());
 
 		return themeDisplay;
-	}
-
-	private String _readFileToString(String fileName) throws Exception {
-		Class<?> clazz = getClass();
-
-		return StringUtil.read(
-			clazz.getClassLoader(),
-			"com/liferay/fragment/entry/processor/portlet/test/dependencies/" +
-				fileName);
 	}
 
 	private Company _company;

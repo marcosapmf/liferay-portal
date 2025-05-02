@@ -13,7 +13,7 @@ JSONObject samlSloContextJSONObject = (JSONObject)request.getAttribute("SAML_SLO
 JSONArray samlSloRequestInfosJSONArray = samlSloContextJSONObject.getJSONArray("samlSloRequestInfos");
 %>
 
-<style type="text/css">
+<aui:style type="text/css">
 	.portlet-msg-no-support-label {
 		background-image: url(<%= themeDisplay.getPathThemeImages() %>/arrows/02_x.png);
 	}
@@ -37,7 +37,7 @@ JSONArray samlSloRequestInfosJSONArray = samlSloContextJSONObject.getJSONArray("
 		display: inline-block;
 		margin-left: 10px;
 	}
-</style>
+</aui:style>
 
 <h3>
 	<liferay-ui:message key="signing-out-from-services" />
@@ -87,7 +87,7 @@ JSONArray samlSloRequestInfosJSONArray = samlSloContextJSONObject.getJSONArray("
 <aui:script use="aui-base,aui-io-request-deprecated,aui-template-deprecated">
 	var eventHandlers = [];
 
-	var detachHandlers = function() {
+	var detachHandlers = function () {
 		(new A.EventHandle(eventHandlers)).detach();
 	};
 
@@ -202,7 +202,7 @@ JSONArray samlSloRequestInfosJSONArray = samlSloContextJSONObject.getJSONArray("
 			instance.checkStatus();
 		},
 
-		checkStatus: function() {
+		checkStatus: function () {
 			var instance = this;
 
 			A.io.request(
@@ -235,13 +235,13 @@ JSONArray samlSloRequestInfosJSONArray = samlSloContextJSONObject.getJSONArray("
 			);
 		},
 
-		clearFinishTimeout: function() {
+		clearFinishTimeout: function () {
 			var instance = this;
 
 			clearTimeout(instance.finishTimeout);
 		},
 
-		finishLogout: function() {
+		finishLogout: function () {
 			detachHandlers();
 
 			location.href = '?cmd=finish';

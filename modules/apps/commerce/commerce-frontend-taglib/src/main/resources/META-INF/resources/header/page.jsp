@@ -21,8 +21,8 @@ if (bean instanceof WorkflowedModel) {
 String myWorkflowTasksPortletNamespace = PortalUtil.getPortletNamespace(PortletKeys.MY_WORKFLOW_TASK);
 %>
 
-<div class="bg-white border-bottom commerce-header<%= fullWidth ? " container-fluid" : StringPool.BLANK %><%= Validator.isNotNull(wrapperCssClasses) ? StringPool.SPACE + wrapperCssClasses : StringPool.BLANK %> side-panel-top-anchor">
-	<div class="container<%= Validator.isNotNull(cssClasses) ? StringPool.SPACE + HtmlUtil.escapeAttribute(cssClasses) : StringPool.BLANK %>">
+<div class="bg-white border-bottom commerce-header<%= Validator.isNotNull(wrapperCssClasses) ? StringPool.SPACE + wrapperCssClasses : StringPool.BLANK %> side-panel-top-anchor">
+	<div class="container-fluid container-fluid-max-xxxl<%= Validator.isNotNull(cssClasses) ? StringPool.SPACE + HtmlUtil.escapeAttribute(cssClasses) : StringPool.BLANK %>">
 		<div class="align-items-center c-py-3 c-py-lg-2 d-lg-flex">
 			<div class="align-items-center d-flex">
 				<c:if test="<%= Validator.isNotNull(thumbnailUrl) %>">
@@ -153,13 +153,15 @@ String myWorkflowTasksPortletNamespace = PortalUtil.getPortletNamespace(PortletK
 							<liferay-ui:message key="assigned-to" />:
 						</div>
 
-						<button aria-expanded="false" aria-haspopup="true" class="align-items-center btn btn-secondary d-flex dropdown-toggle header-assign-button justify-content-between" data-toggle="dropdown" onclick="<portlet:namespace />toggleDropdown();" type="button">
-							<liferay-ui:message key="<%= HtmlUtil.escape(assignee) %>" />
+						<liferay-ui:csp>
+							<button aria-expanded="false" aria-haspopup="true" class="align-items-center btn btn-secondary d-flex dropdown-toggle header-assign-button justify-content-between" data-toggle="dropdown" onclick="<portlet:namespace />toggleDropdown();" type="button">
+								<liferay-ui:message key="<%= HtmlUtil.escape(assignee) %>" />
 
-							<clay:icon
-								symbol="caret-bottom"
-							/>
-						</button>
+								<clay:icon
+									symbol="caret-bottom"
+								/>
+							</button>
+						</liferay-ui:csp>
 
 						<div class="dropdown-menu dropdown-menu-right" id="<portlet:namespace />commerce-dropdown-assigned-to">
 							<c:if test="<%= !assignedToCurrentUser %>">
@@ -182,19 +184,12 @@ String myWorkflowTasksPortletNamespace = PortalUtil.getPortletNamespace(PortletK
 									document
 										.querySelector('#<portlet:namespace />assign-to-me-modal-opener')
 										.addEventListener('click', (e) => {
-											Liferay.Util.openWindow({
-												dialog: {
-													destroyOnHide: true,
-													height: 430,
-													resizable: false,
-													width: 896,
-												},
-												dialogIframe: {
-													bodyCssClass: 'dialog-with-footer task-dialog',
-												},
+											Liferay.Util.openModal({
+												containerProps: {},
 												id: '<%= myWorkflowTasksPortletNamespace %>assignToDialog',
+												iframeBodyCssClass: 'dialog-with-footer task-dialog',
 												title: '<liferay-ui:message key="assign-to-me" />',
-												uri: '<%= HtmlUtil.escapeJS(assignToMeURL) %>',
+												url: '<%= HtmlUtil.escapeJS(assignToMeURL) %>',
 											});
 										});
 								</aui:script>
@@ -218,19 +213,12 @@ String myWorkflowTasksPortletNamespace = PortalUtil.getPortletNamespace(PortletK
 								document
 									.querySelector('#<portlet:namespace />assign-to-modal-opener')
 									.addEventListener('click', (e) => {
-										Liferay.Util.openWindow({
-											dialog: {
-												destroyOnHide: true,
-												height: 430,
-												resizable: false,
-												width: 896,
-											},
-											dialogIframe: {
-												bodyCssClass: 'dialog-with-footer task-dialog',
-											},
+										Liferay.Util.openModal({
+											containerProps: {},
 											id: '<%= myWorkflowTasksPortletNamespace %>assignToDialog',
+											iframeBodyCssClass: 'dialog-with-footer task-dialog',
 											title: '<liferay-ui:message key="assign-to-..." />',
-											uri: '<%= HtmlUtil.escapeJS(assignToURL) %>',
+											url: '<%= HtmlUtil.escapeJS(assignToURL) %>',
 										});
 									});
 
@@ -299,7 +287,18 @@ String myWorkflowTasksPortletNamespace = PortalUtil.getPortletNamespace(PortletK
 														' not found!'
 												);
 											}
-											submitForm(form);
+											<c:choose>
+												<c:when test="<%= Validator.isNotNull(action.getSubmitButtonId()) %>">
+													document
+														.getElementById(
+															'<%= HtmlUtil.escapeJS(action.getSubmitButtonId()) %>'
+														)
+														.click();
+												</c:when>
+												<c:otherwise>
+													submitForm(form);
+												</c:otherwise>
+											</c:choose>
 										});
 								</aui:script>
 							</c:if>

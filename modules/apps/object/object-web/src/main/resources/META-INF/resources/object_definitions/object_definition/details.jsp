@@ -8,23 +8,33 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String backURL = ParamUtil.getString(request, "backURL", String.valueOf(renderResponse.createRenderURL()));
-
 ObjectDefinition objectDefinition = (ObjectDefinition)request.getAttribute(ObjectWebKeys.OBJECT_DEFINITION);
+
 ObjectDefinitionsDetailsDisplayContext objectDefinitionsDetailsDisplayContext = (ObjectDefinitionsDetailsDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
 portletDisplay.setShowBackIcon(true);
-portletDisplay.setURLBack(backURL);
+portletDisplay.setURLBack(
+	ParamUtil.getString(
+		request, "backURL",
+		URLBuilder.create(
+			String.valueOf(renderResponse.createRenderURL())
+		).setParameter(
+			"objectFolderName", objectDefinitionsDetailsDisplayContext.getObjectFolderName()
+		).build()));
 
 renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.getLabel(locale, true), false));
 %>
+
+<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" var="baseResourceURL" />
 
 <div id="<portlet:namespace />EditObjectDefinition">
 	<react:component
 		module="{EditObjectDetails} from object-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
-				"backURL", ParamUtil.getString(request, "backURL", String.valueOf(renderResponse.createRenderURL()))
+				"backURL", portletDisplay.getURLBack()
+			).put(
+				"baseResourceURL", String.valueOf(baseResourceURL)
 			).put(
 				"companies", objectDefinitionsDetailsDisplayContext.getScopeJSONArray("company")
 			).put(
@@ -37,6 +47,8 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 				"isApproved", objectDefinition.isApproved()
 			).put(
 				"isRootDescendantNode", objectDefinition.isRootDescendantNode()
+			).put(
+				"isRootNode", objectDefinition.isRootNode()
 			).put(
 				"label", LocalizationUtil.getLocalizationMap(objectDefinition.getLabel())
 			).put(

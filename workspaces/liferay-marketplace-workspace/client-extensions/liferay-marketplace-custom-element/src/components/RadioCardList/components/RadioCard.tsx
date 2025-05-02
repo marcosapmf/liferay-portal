@@ -95,7 +95,7 @@ const NewRadioCard = ({
 						)}
 
 						<div
-							className={classNames('mt-2  mb-0', {
+							className={classNames({
 								'col-10': !fullTitle,
 								'col-12 pr-0': fullTitle,
 								'pl-0': !leftRadio,

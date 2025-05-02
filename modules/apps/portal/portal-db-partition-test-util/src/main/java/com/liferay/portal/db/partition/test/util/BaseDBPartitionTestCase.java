@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
-import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.AssumeTestRule;
@@ -105,16 +104,19 @@ public abstract class BaseDBPartitionTestCase {
 				CurrentConnectionUtil.class, "_currentConnection",
 				defaultCurrentConnection);
 		}
-
-		DBPartitionUtil.forEachCompanyId(
-			companyId -> _resourceActionLocalService.checkResourceActions());
 	}
 
 	protected static void createControlTable(String tableName)
 		throws Exception {
 
-		db.runSQL(
-			"create table " + tableName + " (testColumn bigint primary key)");
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					PortalInstancePool.getDefaultCompanyId())) {
+
+			db.runSQL(
+				"create table " + tableName +
+					" (testColumn bigint primary key)");
+		}
 
 		if (_controlTableNames == null) {
 			_controlTableNames = ReflectionTestUtil.getFieldValue(
@@ -139,7 +141,8 @@ public abstract class BaseDBPartitionTestCase {
 		try (Statement statement = connection.createStatement()) {
 			for (long companyId : COMPANY_IDS) {
 				try (SafeCloseable safeCloseable =
-						CompanyThreadLocal.setWithSafeCloseable(companyId)) {
+						CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+							companyId)) {
 
 					statement.execute(
 						"delete from Company where companyId = " + companyId);
@@ -158,7 +161,12 @@ public abstract class BaseDBPartitionTestCase {
 	}
 
 	protected static void dropControlTable(String tableName) throws Exception {
-		db.runSQL("drop table if exists " + tableName);
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					PortalInstancePool.getDefaultCompanyId())) {
+
+			dropTable(tableName);
+		}
 
 		if (_controlTableNames != null) {
 			_controlTableNames.remove(StringUtil.toLowerCase(tableName));
@@ -182,6 +190,14 @@ public abstract class BaseDBPartitionTestCase {
 		db.runSQL("drop table if exists " + tableName + " cascade");
 	}
 
+	protected static void extractCompany(long companyId) throws Exception {
+		_executeOnDBPartitions(
+			new long[] {companyId},
+			currentCompanyId -> ReflectionTestUtil.invoke(
+				DBPartitionUtil.class, "_extractCompany",
+				new Class<?>[] {long.class}, companyId));
+	}
+
 	protected static void extractDBPartitions() throws Exception {
 		extractDBPartitions(COMPANY_IDS);
 	}
@@ -201,6 +217,12 @@ public abstract class BaseDBPartitionTestCase {
 	protected static String getCreateTableSQL(String tableName) {
 		return "create table " + tableName +
 			" (testColumn bigint primary key, companyId bigint)";
+	}
+
+	protected static String getExtractedPartitionName(long companyId) {
+		return ReflectionTestUtil.invoke(
+			DBPartitionUtil.class, "_getExtractedPartitionName",
+			new Class<?>[] {long.class}, companyId);
 	}
 
 	protected static String getPartitionName(long companyId) {
@@ -241,7 +263,7 @@ public abstract class BaseDBPartitionTestCase {
 	protected static void insertPartitionData() throws Exception {
 		for (long companyId : COMPANY_IDS) {
 			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setWithSafeCloseable(companyId);
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(companyId);
 				PreparedStatement preparedStatement1 =
 					connection.prepareStatement(
 						"insert into Group_ (mvccVersion, ctCollectionId, " +
@@ -307,7 +329,7 @@ public abstract class BaseDBPartitionTestCase {
 	protected static void insertPartitionRequiredData() throws Exception {
 		for (long companyId : COMPANY_IDS) {
 			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setWithSafeCloseable(companyId);
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(companyId);
 				PreparedStatement preparedStatement1 =
 					connection.prepareStatement(
 						"insert into Company (companyId, mx, webId) values " +
@@ -367,9 +389,6 @@ public abstract class BaseDBPartitionTestCase {
 	}
 
 	protected static void setUpClass() throws Exception {
-		CompanyThreadLocal.setCompanyId(
-			PortalInstancePool.getDefaultCompanyId());
-
 		connection = DataAccess.getConnection();
 
 		dbInspector = new DBInspector(connection);
@@ -399,7 +418,11 @@ public abstract class BaseDBPartitionTestCase {
 
 		createControlTable(tableName);
 
-		try (Statement statement = connection.createStatement()) {
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					PortalInstancePool.getDefaultCompanyId());
+			Statement statement = connection.createStatement()) {
+
 			statement.execute("insert into " + tableName + " values (1)");
 		}
 	}
@@ -483,8 +506,5 @@ public abstract class BaseDBPartitionTestCase {
 	}
 
 	private static Set<String> _controlTableNames;
-
-	@Inject
-	private static ResourceActionLocalService _resourceActionLocalService;
 
 }

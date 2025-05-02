@@ -90,7 +90,7 @@ public interface CPDefinitionLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public CPDefinition addCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<Locale, String> nameMap,
 			Map<Locale, String> shortDescriptionMap,
 			Map<Locale, String> descriptionMap, Map<Locale, String> urlTitleMap,
@@ -118,7 +118,7 @@ public interface CPDefinitionLocalService
 		throws PortalException;
 
 	public CPDefinition addCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<Locale, String> nameMap,
 			Map<Locale, String> shortDescriptionMap,
 			Map<Locale, String> descriptionMap, Map<Locale, String> urlTitleMap,
@@ -143,7 +143,7 @@ public interface CPDefinitionLocalService
 		throws PortalException;
 
 	public CPDefinition addOrUpdateCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<Locale, String> nameMap,
 			Map<Locale, String> shortDescriptionMap,
 			Map<Locale, String> descriptionMap, Map<Locale, String> urlTitleMap,
@@ -171,7 +171,7 @@ public interface CPDefinitionLocalService
 		throws PortalException;
 
 	public CPDefinition addOrUpdateCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<Locale, String> nameMap,
 			Map<Locale, String> shortDescriptionMap,
 			Map<Locale, String> descriptionMap, Map<Locale, String> urlTitleMap,
@@ -353,6 +353,10 @@ public interface CPDefinitionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CPDefinition fetchCPDefinitionByCProductId(long cProductId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CPDefinition fetchCPDefinitionByFriendlyURL(
+		long groupId, String friendlyURL);
 
 	/**
 	 * Returns the cp definition matching the UUID and group.
@@ -584,7 +588,7 @@ public interface CPDefinitionLocalService
 	public boolean isVersionable(
 		long cpDefinitionId, HttpServletRequest httpServletRequest);
 
-	public void maintainVersionThreshold(long cProductId)
+	public void maintainVersionThreshold(long companyId, long cProductId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)

@@ -5,9 +5,12 @@
 
 package com.liferay.dynamic.data.mapping.form.web.internal.portlet.action;
 
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
+import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.servlet.taglib.DynamicIncludeUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 
 import javax.portlet.RenderRequest;
@@ -38,6 +41,14 @@ public class EditFormInstanceMVCRenderCommand implements MVCRenderCommand {
 			"com.liferay.dynamic.data.mapping.form.web#" +
 				"EditFormInstanceMVCRenderCommand#render",
 			true);
+
+		long formInstanceId = ParamUtil.getLong(
+			renderRequest, "formInstanceId");
+
+		if (formInstanceId > 0) {
+			CTTimelineUtil.setCTTimelineKeys(
+				renderRequest, DDMFormInstance.class, formInstanceId);
+		}
 
 		return "/admin/edit_form_instance.jsp";
 	}

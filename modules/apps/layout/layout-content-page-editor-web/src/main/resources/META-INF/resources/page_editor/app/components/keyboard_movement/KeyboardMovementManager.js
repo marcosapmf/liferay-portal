@@ -4,7 +4,8 @@
  */
 
 import {useEventListener} from '@liferay/frontend-js-react-web';
-import {openToast, sub} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {sub} from 'frontend-js-web';
 import {useEffect, useRef} from 'react';
 
 import {FRAGMENT_ENTRY_TYPES} from '../../config/constants/fragmentEntryTypes';
@@ -23,22 +24,29 @@ import {
 } from '../../contexts/ControlsContext';
 import {
 	useDisableKeyboardMovement,
-	useMovementSource,
+	useMovementSources,
 	useMovementTarget,
 	useSetMovementTarget,
 	useSetMovementText,
 } from '../../contexts/KeyboardMovementContext';
 import {useDispatch, useSelectorRef} from '../../contexts/StoreContext';
+import {useGetWidgets} from '../../contexts/WidgetsContext';
 import selectLayoutDataItemLabel from '../../selectors/selectLayoutDataItemLabel';
 import addFragment from '../../thunks/addFragment';
 import addItem from '../../thunks/addItem';
+import addStepper from '../../thunks/addStepper';
 import addWidget from '../../thunks/addWidget';
-import moveItem from '../../thunks/moveItem';
+import moveItems from '../../thunks/moveItems';
+import moveStepper from '../../thunks/moveStepper';
 import checkAllowedChild from '../../utils/drag_and_drop/checkAllowedChild';
 import {TARGET_POSITIONS} from '../../utils/drag_and_drop/constants/targetPositions';
 import getDropData from '../../utils/drag_and_drop/getDropData';
 import itemIsAncestor from '../../utils/drag_and_drop/itemIsAncestor';
+import {getFormParent} from '../../utils/getFormParent';
+import {isMultistepForm} from '../../utils/isMultistepForm';
+import isStepper from '../../utils/isStepper';
 import {isUnmappedCollection} from '../../utils/isUnmappedCollection';
+import {openFormConversionModal} from '../../utils/openFormConversionModal';
 
 const DIRECTIONS = {
 	down: 'down',
@@ -51,8 +59,10 @@ const ACTION_TYPES = {
 };
 
 export default function KeyboardMovementManager() {
-	const source = useMovementSource();
+	const sources = useMovementSources();
 	const target = useMovementTarget();
+
+	const lastSource = sources[sources.length - 1];
 
 	const fragmentEntryLinksRef = useSelectorRef(
 		(state) => state.fragmentEntryLinks
@@ -67,9 +77,9 @@ export default function KeyboardMovementManager() {
 	const selectMultipleItems = useSelectMultipleItems();
 	const dispatch = useDispatch();
 
-	const selectItems = Liferay.FeatureFlags['LPD-18221']
-		? selectMultipleItems
-		: selectItem;
+	const getWidgets = useGetWidgets();
+
+	const selectItems = selectMultipleItems;
 
 	keymapRef.current = {
 		disableMovement: {
@@ -81,14 +91,14 @@ export default function KeyboardMovementManager() {
 		},
 		executeAction: {
 			action: () => {
-				const actionType = source.itemId
+				const actionType = lastSource.itemId
 					? ACTION_TYPES.move
 					: ACTION_TYPES.add;
 
-				const {dropItemId, position} = getDropData({
+				const {position, targetId} = getDropData({
 					isElevation: target.position !== TARGET_POSITIONS.MIDDLE,
 					layoutDataRef,
-					sourceItemId: source.itemId,
+					sourceItemId: lastSource.itemId,
 					targetItemId: target.itemId,
 					targetPosition: target.position,
 				});
@@ -96,7 +106,7 @@ export default function KeyboardMovementManager() {
 				let thunk;
 
 				if (actionType === ACTION_TYPES.move) {
-					if (source.itemId === target.itemId) {
+					if (lastSource.itemId === target.itemId) {
 						setText(null);
 
 						disableMovement();
@@ -104,71 +114,113 @@ export default function KeyboardMovementManager() {
 						return;
 					}
 
-					thunk = moveItem({
-						itemId: source.itemId,
-						parentItemId: dropItemId,
-						position,
-					});
+					thunk = isStepper(lastSource)
+						? moveStepper({
+								itemId: lastSource.itemId,
+								parentItemId: targetId,
+								position,
+							})
+						: moveItems({
+								itemIds: sources.map(({itemId}) => itemId),
+								parentItemIds: [targetId],
+								positions: [position],
+							});
 				}
 				else if (actionType === ACTION_TYPES.add) {
+					const [source] = sources;
+
 					if (source.type === LAYOUT_DATA_ITEM_TYPES.fragment) {
 						if (source.isWidget) {
 							thunk = addWidget({
-								parentItemId: dropItemId,
+								parentItemId: targetId,
 								portletId: source.portletId,
 								portletItemId: source.portletItemId,
 								position,
 								selectItems,
 							});
 						}
+						else if (isStepper(source)) {
+							thunk = addStepper({
+								fragmentEntryKey: source.fragmentEntryKey,
+								groupId: source.groupId,
+								parentItemId: targetId,
+								position,
+								selectItems,
+								type: source.type,
+							});
+						}
 						else {
 							thunk = addFragment({
 								fragmentEntryKey: source.fragmentEntryKey,
 								groupId: source.groupId,
-								parentItemId: dropItemId,
+								parentItemId: targetId,
 								position,
 								selectItems,
-								type: source.type,
+								type: source.fragmentEntryType,
 							});
 						}
 					}
 					else {
 						thunk = addItem({
 							itemType: source.type,
-							parentItemId: dropItemId,
+							parentItemId: targetId,
 							position,
 							selectItems,
 						});
 					}
 				}
 
-				dispatch(thunk);
+				const executeAction = () => {
+					const [source] = sources;
 
-				setText(
-					sub(Liferay.Language.get('x-placed-on-x-of-x'), [
-						source.name,
-						target.position,
-						target.name,
-					])
+					dispatch(thunk);
+
+					setText(
+						sub(Liferay.Language.get('x-placed-on-x-of-x'), [
+							source.name,
+							target.position,
+							target.name,
+						])
+					);
+
+					if (actionType === ACTION_TYPES.move) {
+						selectItems(sources.map(({itemId}) => itemId));
+					}
+				};
+
+				const targetItem = layoutDataRef.current.items[target.itemId];
+				const formParent = getFormParent(
+					targetItem,
+					layoutDataRef.current
 				);
+
+				if (
+					formParent &&
+					sources.every((source) => isStepper(source)) &&
+					!isMultistepForm(formParent)
+				) {
+					openFormConversionModal({
+						onContinue: async () => executeAction(),
+					});
+				}
+				else {
+					executeAction();
+				}
 
 				setTimeout(() => setText(null), 1000);
 
 				disableMovement();
-
-				if (actionType === ACTION_TYPES.move) {
-					selectItem(source.itemId);
-				}
 			},
 			keyCode: ENTER_KEY_CODE,
 		},
 		moveDown: {
 			action: () => {
 				const nextTarget = getNextTarget(
-					source,
+					lastSource,
 					target,
-					fragmentEntryLinksRef.current,
+					fragmentEntryLinksRef,
 					layoutDataRef,
+					getWidgets,
 					DIRECTIONS.down
 				);
 
@@ -188,9 +240,10 @@ export default function KeyboardMovementManager() {
 		moveToEnd: {
 			action: () => {
 				const nextTarget = getInitialTarget(
-					source,
+					sources,
 					layoutDataRef,
-					fragmentEntryLinksRef
+					fragmentEntryLinksRef,
+					getWidgets
 				);
 
 				setTarget(nextTarget);
@@ -212,13 +265,14 @@ export default function KeyboardMovementManager() {
 					];
 
 				const nextTarget = getNextTarget(
-					source,
+					lastSource,
 					{
 						itemId: root.itemId,
 						position: TARGET_POSITIONS.TOP,
 					},
 					fragmentEntryLinksRef,
 					layoutDataRef,
+					getWidgets,
 					DIRECTIONS.down
 				);
 
@@ -238,10 +292,11 @@ export default function KeyboardMovementManager() {
 		moveUp: {
 			action: () => {
 				const nextTarget = getNextTarget(
-					source,
+					lastSource,
 					target,
 					fragmentEntryLinksRef,
 					layoutDataRef,
+					getWidgets,
 					DIRECTIONS.up
 				);
 
@@ -282,9 +337,10 @@ export default function KeyboardMovementManager() {
 
 	useEffect(() => {
 		const initialTarget = getInitialTarget(
-			source,
+			sources,
 			layoutDataRef,
-			fragmentEntryLinksRef
+			fragmentEntryLinksRef,
+			getWidgets
 		);
 
 		if (initialTarget) {
@@ -304,31 +360,45 @@ export default function KeyboardMovementManager() {
 		else {
 			disableMovement();
 
-			showErrorToast(source);
+			showErrorToast(lastSource);
 		}
 	}, [
 		disableMovement,
 		fragmentEntryLinksRef,
+		getWidgets,
+		lastSource,
 		layoutDataRef,
 		selectItem,
 		setTarget,
 		setText,
-		source,
+		sources,
 	]);
 
 	return null;
 }
 
-export function getInitialTarget(source, layoutDataRef, fragmentEntryLinksRef) {
+export function getInitialTarget(
+	sources,
+	layoutDataRef,
+	fragmentEntryLinksRef,
+	getWidgets
+) {
 	const layoutData = layoutDataRef.current;
 	const fragmentEntryLinks = fragmentEntryLinksRef.current;
+	const lastSource = sources[sources.length - 1];
 
-	const actionType = source.itemId ? ACTION_TYPES.move : ACTION_TYPES.add;
+	const actionType = lastSource.itemId ? ACTION_TYPES.move : ACTION_TYPES.add;
 
 	if (actionType === ACTION_TYPES.add) {
 		const root = layoutData.items[layoutData.rootItems.main];
 
-		const canDropInRoot = checkAllowedChild(source, root, layoutDataRef);
+		const canDropInRoot = checkAllowedChild(
+			lastSource,
+			root,
+			layoutDataRef.current,
+			fragmentEntryLinksRef.current,
+			getWidgets
+		).valid;
 
 		// Check root children to see if someone is targetable
 
@@ -363,10 +433,11 @@ export function getInitialTarget(source, layoutDataRef, fragmentEntryLinksRef) {
 
 				else {
 					return getNextTarget(
-						source,
+						lastSource,
 						target,
-						fragmentEntryLinks,
+						fragmentEntryLinksRef,
 						layoutDataRef,
+						getWidgets,
 						DIRECTIONS.up
 					);
 				}
@@ -387,8 +458,11 @@ export function getInitialTarget(source, layoutDataRef, fragmentEntryLinksRef) {
 	}
 	else if (actionType === ACTION_TYPES.move) {
 		return {
-			itemId: source.itemId,
-			name: source.name,
+			itemId: lastSource.itemId,
+			name:
+				sources.length > 1
+					? sub(Liferay.Language.get('x-items'), sources.length)
+					: lastSource.name,
 			position: TARGET_POSITIONS.BOTTOM,
 		};
 	}
@@ -397,10 +471,12 @@ export function getInitialTarget(source, layoutDataRef, fragmentEntryLinksRef) {
 function getNextTarget(
 	source,
 	target,
-	fragmentEntryLinks,
+	fragmentEntryLinksRef,
 	layoutDataRef,
+	getWidgets,
 	direction
 ) {
+	const fragmentEntryLinks = fragmentEntryLinksRef.current;
 	const layoutData = layoutDataRef.current;
 
 	const checkValidTarget = (nextTarget) => {
@@ -422,8 +498,9 @@ function getNextTarget(
 			return getNextTarget(
 				source,
 				nextTarget,
-				fragmentEntryLinks,
+				fragmentEntryLinksRef,
 				layoutDataRef,
+				getWidgets,
 				direction
 			);
 		}
@@ -435,12 +512,21 @@ function getNextTarget(
 		}
 
 		if (nextTarget.position === TARGET_POSITIONS.BOTTOM) {
-			if (!checkAllowedChild(source, nextTargetParent, layoutDataRef)) {
+			if (
+				!checkAllowedChild(
+					source,
+					nextTargetParent,
+					layoutDataRef.current,
+					fragmentEntryLinksRef.current,
+					getWidgets
+				).valid
+			) {
 				return getNextTarget(
 					source,
 					nextTarget,
-					fragmentEntryLinks,
+					fragmentEntryLinksRef,
 					layoutDataRef,
+					getWidgets,
 					direction
 				);
 			}
@@ -449,13 +535,20 @@ function getNextTarget(
 		if (nextTarget.position === TARGET_POSITIONS.TOP) {
 			if (
 				nextTargetParent.children[0] !== nextTarget.itemId ||
-				!checkAllowedChild(source, nextTargetParent, layoutDataRef)
+				!checkAllowedChild(
+					source,
+					nextTargetParent,
+					layoutDataRef.current,
+					fragmentEntryLinksRef.current,
+					getWidgets
+				).valid
 			) {
 				return getNextTarget(
 					source,
 					nextTarget,
-					fragmentEntryLinks,
+					fragmentEntryLinksRef,
 					layoutDataRef,
+					getWidgets,
 					direction
 				);
 			}
@@ -464,13 +557,20 @@ function getNextTarget(
 		if (nextTarget.position === TARGET_POSITIONS.MIDDLE) {
 			if (
 				hasChildren(nextTargetItem, layoutData) ||
-				!checkAllowedChild(source, nextTargetItem, layoutDataRef)
+				!checkAllowedChild(
+					source,
+					nextTargetItem,
+					layoutDataRef.current,
+					fragmentEntryLinksRef.current,
+					getWidgets
+				).valid
 			) {
 				return getNextTarget(
 					source,
 					nextTarget,
-					fragmentEntryLinks,
+					fragmentEntryLinksRef,
 					layoutDataRef,
+					getWidgets,
 					direction
 				);
 			}
@@ -616,7 +716,7 @@ function showErrorToast(source) {
 
 	if (source.fragmentEntryType === FRAGMENT_ENTRY_TYPES.input) {
 		error = Liferay.Language.get(
-			'form-components-can-only-be-placed-inside-a-mapped-form-container'
+			'this-form-component-can-only-be-placed-inside-a-mapped-form-container'
 		);
 	}
 

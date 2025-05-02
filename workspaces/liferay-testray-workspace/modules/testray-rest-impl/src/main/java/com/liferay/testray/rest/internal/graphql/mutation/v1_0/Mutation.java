@@ -2,7 +2,6 @@ package com.liferay.testray.rest.internal.graphql.mutation.v1_0;
 
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -11,10 +10,14 @@ import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTa
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
+import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.testray.rest.dto.v1_0.TestrayBuild;
 import com.liferay.testray.rest.dto.v1_0.TestrayBuildAutofill;
+import com.liferay.testray.rest.dto.v1_0.TestraySubtask;
 import com.liferay.testray.rest.dto.v1_0.TestrayTestFlow;
 import com.liferay.testray.rest.dto.v1_0.TestrayTestSuite;
 import com.liferay.testray.rest.resource.v1_0.TestrayBuildAutofillResource;
+import com.liferay.testray.rest.resource.v1_0.TestrayBuildResource;
 import com.liferay.testray.rest.resource.v1_0.TestrayTestFlowResource;
 import com.liferay.testray.rest.resource.v1_0.TestrayTestSuiteResource;
 
@@ -36,6 +39,14 @@ import org.osgi.service.component.ComponentServiceObjects;
  */
 @Generated("")
 public class Mutation {
+
+	public static void setTestrayBuildResourceComponentServiceObjects(
+		ComponentServiceObjects<TestrayBuildResource>
+			testrayBuildResourceComponentServiceObjects) {
+
+		_testrayBuildResourceComponentServiceObjects =
+			testrayBuildResourceComponentServiceObjects;
+	}
 
 	public static void setTestrayBuildAutofillResourceComponentServiceObjects(
 		ComponentServiceObjects<TestrayBuildAutofillResource>
@@ -59,6 +70,18 @@ public class Mutation {
 
 		_testrayTestSuiteResourceComponentServiceObjects =
 			testrayTestSuiteResourceComponentServiceObjects;
+	}
+
+	@GraphQLField
+	public TestrayBuild patchTestrayBuild(
+			@GraphQLName("testrayBuildId") Long testrayBuildId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_testrayBuildResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			testrayBuildResource -> testrayBuildResource.patchTestrayBuild(
+				testrayBuildId));
 	}
 
 	@GraphQLField
@@ -105,6 +128,26 @@ public class Mutation {
 				testrayTestFlowResource.
 					putTestrayTestFlowByTestraySubtaskIdTestraySubtask(
 						testraySubtaskId, testrayTestFlow));
+	}
+
+	@GraphQLField
+	public java.util.Collection<TestraySubtask>
+			updateTestrayTestFlowTestraySubtaskMergePage(
+				@GraphQLName("testraySubtasks") TestraySubtask[]
+					testraySubtasks)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_testrayTestFlowResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			testrayTestFlowResource -> {
+				Page paginationPage =
+					testrayTestFlowResource.
+						putTestrayTestFlowTestraySubtaskMergePage(
+							testraySubtasks);
+
+				return paginationPage.getItems();
+			});
 	}
 
 	@GraphQLField
@@ -203,6 +246,21 @@ public class Mutation {
 	}
 
 	private void _populateResourceContext(
+			TestrayBuildResource testrayBuildResource)
+		throws Exception {
+
+		testrayBuildResource.setContextAcceptLanguage(_acceptLanguage);
+		testrayBuildResource.setContextCompany(_company);
+		testrayBuildResource.setContextHttpServletRequest(_httpServletRequest);
+		testrayBuildResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		testrayBuildResource.setContextUriInfo(_uriInfo);
+		testrayBuildResource.setContextUser(_user);
+		testrayBuildResource.setGroupLocalService(_groupLocalService);
+		testrayBuildResource.setRoleLocalService(_roleLocalService);
+	}
+
+	private void _populateResourceContext(
 			TestrayBuildAutofillResource testrayBuildAutofillResource)
 		throws Exception {
 
@@ -268,6 +326,8 @@ public class Mutation {
 			_vulcanBatchEngineImportTaskResource);
 	}
 
+	private static ComponentServiceObjects<TestrayBuildResource>
+		_testrayBuildResourceComponentServiceObjects;
 	private static ComponentServiceObjects<TestrayBuildAutofillResource>
 		_testrayBuildAutofillResourceComponentServiceObjects;
 	private static ComponentServiceObjects<TestrayTestFlowResource>
@@ -281,7 +341,8 @@ public class Mutation {
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

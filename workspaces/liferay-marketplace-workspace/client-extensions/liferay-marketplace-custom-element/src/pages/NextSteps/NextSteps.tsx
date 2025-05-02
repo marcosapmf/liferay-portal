@@ -4,12 +4,14 @@
  */
 
 import ClayIcon from '@clayui/icon';
-import classNames from 'classnames';
-import {ReactNode} from 'react';
+import ClayLoadingIndicator from '@clayui/loading-indicator';
 
 import {AccountAndAppCard} from '../../components/Card/AccountAndAppCard';
 import {Header} from '../../components/Header/Header';
 import {NewAppPageFooterButtons} from '../../components/NewAppPageFooterButtons/NewAppPageFooterButtons';
+import {OrderTypes, PaymentStatus} from '../../enums/Order';
+import withProviders from '../../hoc/withProviders';
+import i18n from '../../i18n';
 import {Liferay} from '../../liferay/liferay';
 import {baseURL} from '../../utils/api';
 import {
@@ -17,60 +19,22 @@ import {
 	getThumbnailByProductAttachment,
 	showAppImage,
 } from '../../utils/util';
-
-import './NextSteps.scss';
-
-import ClayLoadingIndicator from '@clayui/loading-indicator';
-
-import {useMarketplaceContext} from '../../context/MarketplaceContext';
-import withProviders from '../../hoc/withProviders';
-import i18n from '../../i18n';
-import CommerceSelectAccountImpl from '../../services/rest/CommerceSelectAccount';
-import {PaymentStatus} from '../GetApp/enums/PaymentStatus';
 import getProductPriceModel from '../GetApp/utils/getProductPriceModel';
 import useNextSteps from './useNextSteps';
 
-type NextStepsProps = {
-	children?: ReactNode;
-	continueButtonText?: string;
-	header?: {
-		description?: string;
-		title?: string;
-	};
-	linkText?: string;
-	onClickContinue?: () => void;
-	showBackButton?: boolean;
-	showOrderId?: boolean;
-	size?: 'lg';
-};
+import './NextSteps.scss';
 
-type TypeNextStepBody = {
-	[key in string]?: ReactNode;
-};
-
-export function NextSteps({
-	children,
-	onClickContinue,
-	showBackButton,
-	size,
-}: NextStepsProps) {
+export function NextSteps() {
 	const queryString = window.location.search;
 	const urlParams = new URLSearchParams(queryString);
 	const orderId = urlParams.get('orderId');
 
-	const {
-		accountCommerce,
-		cart,
-		cartItems,
-		firstCartItem,
-		isLoading,
-		product,
-	} = useNextSteps(orderId as string);
-	const {properties} = useMarketplaceContext();
+	const {accountCommerce, firstPlacedOrder, isLoading, placedOrder, product} =
+		useNextSteps(orderId as string);
 
-	const {name: appName = ''} = firstCartItem ?? {};
+	const {name: appName = ''} = firstPlacedOrder ?? {};
 
-	const isTrial = cartItems?.items?.some(
+	const isTrial = placedOrder?.placedOrderItems?.some(
 		(item: any) =>
 			item.sku.endsWith('ts') || item.sku.toLowerCase().includes('trial')
 	);
@@ -82,15 +46,32 @@ export function NextSteps({
 		baseURL
 	);
 
-	const paymentStatus = cart?.paymentStatusLabel;
+	const paymentStatus = placedOrder?.paymentStatus;
+	const orderTypeExternalReferenceCode =
+		placedOrder?.orderTypeExternalReferenceCode;
+
+	const isCloudApp = orderTypeExternalReferenceCode === OrderTypes.CLOUDAPP;
 
 	const {isPaidApp} = getProductPriceModel(product);
 
-	const nextStepBody: TypeNextStepBody = {
+	const nextStepBody = {
 		[PaymentStatus.PAID]: (
 			<Header
 				description={
-					isPaidApp ? (
+					isCloudApp ? (
+						<span>
+							<p>
+								Congratulations on the purchase of{' '}
+								<strong>{appName}</strong>. You will now need to
+								install the app by clicking on the
+								&quot;Continue to Install&quot; button below.
+							</p>
+
+							<p>
+								Your Order ID is: <strong>{orderId}</strong>
+							</p>
+						</span>
+					) : isPaidApp ? (
 						<span>
 							<p>
 								Congratulations on the purchase of{' '}
@@ -177,70 +158,61 @@ export function NextSteps({
 	}
 
 	return (
-		<div
-			className={classNames('next-step-page-container', {
-				'next-step-page-container-larger': size === 'lg',
-			})}
-		>
+		<div className="next-step-page-container">
 			<div className="next-step-page-content">
-				{!children && (
-					<div className="next-step-page-cards">
-						<AccountAndAppCard
-							category="Application"
-							logo={appLogo || 'catalog'}
-							title={appName}
-						/>
+				<div className="next-step-page-cards">
+					<AccountAndAppCard
+						category="Application"
+						logo={appLogo || 'catalog'}
+						title={appName}
+					/>
 
-						<ClayIcon
-							className="m-0 next-step-page-icon"
-							symbol="arrow-right-full"
-						/>
+					<ClayIcon
+						className="m-0 next-step-page-icon"
+						symbol="arrow-right-full"
+					/>
 
-						<AccountAndAppCard
-							category="Account"
-							logo={getAccountImage(
-								accountCommerce?.logoURL as string
-							)}
-							title={accountCommerce?.name ?? ''}
-						/>
-					</div>
-				)}
+					<AccountAndAppCard
+						category="Account"
+						logo={getAccountImage(
+							accountCommerce?.logoURL as string
+						)}
+						title={accountCommerce?.name ?? ''}
+					/>
+				</div>
 
 				<div className="next-step-page-text">
 					<div className="next-step-page-text">
-						{nextStepBody[String(paymentStatus) || '']}
+						{(nextStepBody as any)[String(paymentStatus) || '']}
 					</div>
 				</div>
 
 				<NewAppPageFooterButtons
-					backButtonText="Go to Dashboard"
+					backButtonText={i18n.translate(
+						isCloudApp ? 'go-to-my-apps' : 'go-to-dashboard'
+					)}
 					continueButtonText={i18n.translate(
-						properties.featureFlags?.includes('LPD-21582') &&
-							cart.orderTypeExternalReferenceCode === 'DXPAPP'
-							? 'download-app'
-							: 'go-to-console'
+						isCloudApp ? 'continue-to-install' : 'download-app'
 					)}
 					onClickBack={() => {
-						return CommerceSelectAccountImpl.selectAccount(
-							cart?.accountId
-						).then(() => {
-							Liferay.CommerceContext.account = {
-								accountId: cart?.accountId,
-							};
-
+						Liferay.Util.navigate(
+							Liferay.ThemeDisplay.getLayoutURL().replace(
+								'/next-steps',
+								`/customer-dashboard`
+							)
+						);
+					}}
+					onClickContinue={() => {
+						if (isCloudApp) {
 							Liferay.Util.navigate(
 								Liferay.ThemeDisplay.getLayoutURL().replace(
 									'/next-steps',
-									`/customer-dashboard`
+									`/customer-dashboard#/order/${orderId}/cloud-provisioning`
 								)
 							);
-						});
-					}}
-					onClickContinue={() => {
-						if (
-							properties.featureFlags?.includes('LPD-21582') &&
-							cart.orderTypeExternalReferenceCode === 'DXPAPP'
-						) {
+						}
+
+						if (!isCloudApp) {
 							Liferay.Util.navigate(
 								Liferay.ThemeDisplay.getLayoutURL().replace(
 									'/next-steps',
@@ -248,20 +220,8 @@ export function NextSteps({
 								)
 							);
 						}
-
-						if (
-							cart.orderTypeExternalReferenceCode ===
-								'CLOUDAPP' &&
-							onClickContinue
-						) {
-							window.location.href =
-								'https://console.liferay.cloud/projects';
-						}
 					}}
-					showBackButton={showBackButton}
-					showContinueButton={properties.featureFlags?.includes(
-						'LPD-21582'
-					)}
+					showContinueButton={true}
 				/>
 
 				{(paymentStatus === PaymentStatus.PAID || isTrial) && (

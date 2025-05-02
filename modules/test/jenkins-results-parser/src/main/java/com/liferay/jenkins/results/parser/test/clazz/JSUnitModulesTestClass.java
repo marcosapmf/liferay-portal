@@ -29,16 +29,81 @@ import org.json.JSONObject;
  */
 public class JSUnitModulesTestClass extends ModulesTestClass {
 
+	public String getTestrayMainComponentName() {
+		return _testrayMainComponentName;
+	}
+
 	protected JSUnitModulesTestClass(
 		BatchTestClassGroup batchTestClassGroup, File testClassFile) {
 
 		super(batchTestClassGroup, testClassFile, "packageRunTest");
+
+		File testPropertiesBaseDir = getTestPropertiesBaseDir(
+			getTestClassFile());
+
+		if ((testPropertiesBaseDir != null) && testPropertiesBaseDir.exists()) {
+			_testPropertiesFile = new File(
+				testPropertiesBaseDir, "test.properties");
+
+			_testrayMainComponentName = JenkinsResultsParserUtil.getProperty(
+				JenkinsResultsParserUtil.getProperties(_testPropertiesFile),
+				"testray.main.component.name");
+		}
+		else {
+			_testPropertiesFile = null;
+			_testrayMainComponentName = null;
+		}
 	}
 
 	protected JSUnitModulesTestClass(
 		BatchTestClassGroup batchTestClassGroup, JSONObject jsonObject) {
 
 		super(batchTestClassGroup, jsonObject);
+
+		if (jsonObject.has("file")) {
+			_testPropertiesFile = new File(
+				jsonObject.getString("file") + "/test.properties");
+		}
+		else if (jsonObject.has("test_properties_file")) {
+			_testPropertiesFile = new File(
+				jsonObject.getString("test_properties_file"));
+		}
+		else {
+			_testPropertiesFile = null;
+		}
+
+		if (_testPropertiesFile != null) {
+			String testrayMainComponentName =
+				JenkinsResultsParserUtil.getProperty(
+					JenkinsResultsParserUtil.getProperties(_testPropertiesFile),
+					"testray.main.component.name");
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(
+					testrayMainComponentName)) {
+
+				File parentFile = _testPropertiesFile.getParentFile();
+
+				parentFile = parentFile.getParentFile();
+
+				testrayMainComponentName = JenkinsResultsParserUtil.getProperty(
+					JenkinsResultsParserUtil.getProperties(
+						new File(parentFile + "/test.properties")),
+					"testray.main.component.name");
+			}
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(
+					testrayMainComponentName)) {
+
+				_testrayMainComponentName = null;
+			}
+			else {
+				_testrayMainComponentName = testrayMainComponentName;
+			}
+		}
+		else {
+			_testrayMainComponentName = jsonObject.optString(
+				"testray_main_component_name");
+		}
 	}
 
 	@Override
@@ -147,5 +212,8 @@ public class JSUnitModulesTestClass extends ModulesTestClass {
 
 		return jsUnitModulesBatchTestClassGroup.testGitrepoJSUnit();
 	}
+
+	private final File _testPropertiesFile;
+	private final String _testrayMainComponentName;
 
 }

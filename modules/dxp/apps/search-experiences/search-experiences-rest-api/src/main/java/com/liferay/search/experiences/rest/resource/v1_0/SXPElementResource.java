@@ -5,8 +5,6 @@
 
 package com.liferay.search.experiences.rest.resource.v1_0;
 
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,56 +46,57 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface SXPElementResource {
 
-	public Page<SXPElement> getSXPElementsPage(
-			String search, Filter filter, Pagination pagination, Sort[] sorts)
+	public void deleteSXPElement(Long sxpElementId) throws Exception;
+
+	public Response deleteSXPElementBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public Response postSXPElementsPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
-			String contentType, String fieldNames)
-		throws Exception;
-
-	public SXPElement postSXPElement(SXPElement sxpElement) throws Exception;
-
-	public Response postSXPElementBatch(
-			SXPElement sxpElement, String callbackURL, Object object)
-		throws Exception;
+	public SXPElement getSXPElement(Long sxpElementId) throws Exception;
 
 	public SXPElement getSXPElementByExternalReferenceCode(
 			String externalReferenceCode)
 		throws Exception;
 
-	public SXPElement putSXPElementByExternalReferenceCode(
-			String externalReferenceCode, SXPElement sxpElement)
+	public Response getSXPElementExport(Long sxpElementId) throws Exception;
+
+	public Page<SXPElement> getSXPElementsPage(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
+
+	public SXPElement patchSXPElement(Long sxpElementId, SXPElement sxpElement)
+		throws Exception;
+
+	public SXPElement postSXPElement(SXPElement sxpElement) throws Exception;
+
+	public Response postSXPElementBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public SXPElement postSXPElementCopy(Long sxpElementId) throws Exception;
 
 	public SXPElement postSXPElementPreview(SXPElement sxpElement)
 		throws Exception;
 
 	public SXPElement postSXPElementValidate(String string) throws Exception;
 
-	public void deleteSXPElement(Long sxpElementId) throws Exception;
-
-	public Response deleteSXPElementBatch(
-			Long sxpElementId, String callbackURL, Object object)
-		throws Exception;
-
-	public SXPElement getSXPElement(Long sxpElementId) throws Exception;
-
-	public SXPElement patchSXPElement(Long sxpElementId, SXPElement sxpElement)
+	public Response postSXPElementsPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public SXPElement putSXPElement(Long sxpElementId, SXPElement sxpElement)
 		throws Exception;
 
-	public Response putSXPElementBatch(
-			Long sxpElementId, SXPElement sxpElement, String callbackURL,
-			Object object)
+	public Response putSXPElementBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public SXPElement postSXPElementCopy(Long sxpElementId) throws Exception;
-
-	public Response getSXPElementExport(Long sxpElementId) throws Exception;
+	public SXPElement putSXPElementByExternalReferenceCode(
+			String externalReferenceCode, SXPElement sxpElement)
+		throws Exception;
 
 	public default void setContextAcceptLanguage(
 		AcceptLanguage contextAcceptLanguage) {
@@ -121,7 +120,8 @@ public interface SXPElementResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -146,19 +146,23 @@ public interface SXPElementResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

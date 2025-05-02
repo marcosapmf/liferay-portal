@@ -5,6 +5,7 @@
 
 package com.liferay.portal.kernel.servlet;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -13,13 +14,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -93,8 +91,7 @@ public class MetaInfoCacheServletResponse extends HttpServletResponseWrapper {
 			}
 
 			if (metaInfoDataBag._status != SC_OK) {
-				httpServletResponse.setStatus(
-					metaInfoDataBag._status, metaInfoDataBag._statusMessage);
+				httpServletResponse.setStatus(metaInfoDataBag._status);
 			}
 		}
 	}
@@ -270,19 +267,8 @@ public class MetaInfoCacheServletResponse extends HttpServletResponseWrapper {
 	 */
 	@Override
 	public Collection<String> getHeaders(String name) {
-		Set<Header> values = _metaData._headers.get(name);
-
-		if (values == null) {
-			return Collections.emptyList();
-		}
-
-		List<String> stringValues = new ArrayList<>();
-
-		for (Header header : values) {
-			stringValues.add(header.toString());
-		}
-
-		return stringValues;
+		return TransformUtil.transform(
+			_metaData._headers.get(name), header -> header.toString());
 	}
 
 	@Override
@@ -339,7 +325,6 @@ public class MetaInfoCacheServletResponse extends HttpServletResponseWrapper {
 		_metaData._headers.clear();
 		_metaData._locale = null;
 		_metaData._status = SC_OK;
-		_metaData._statusMessage = null;
 
 		// calledGetOutputStream and calledGetWriter should be cleared by
 		// resetBuffer() in subclass.
@@ -552,17 +537,9 @@ public class MetaInfoCacheServletResponse extends HttpServletResponseWrapper {
 		super.setStatus(status);
 	}
 
-	@Override
 	@SuppressWarnings("deprecation")
 	public void setStatus(int status, String statusMessage) {
-		if (isCommitted()) {
-			return;
-		}
-
-		_metaData._status = status;
-		_metaData._statusMessage = statusMessage;
-
-		super.setStatus(status, statusMessage);
+		setStatus(status);
 	}
 
 	@Override
@@ -589,7 +566,6 @@ public class MetaInfoCacheServletResponse extends HttpServletResponseWrapper {
 		private Locale _locale;
 		private String _location;
 		private int _status = SC_OK;
-		private String _statusMessage;
 
 	}
 

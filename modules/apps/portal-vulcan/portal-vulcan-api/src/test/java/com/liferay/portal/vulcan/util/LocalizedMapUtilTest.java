@@ -12,6 +12,7 @@ import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -34,6 +35,50 @@ public class LocalizedMapUtilTest {
 	@Rule
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
+
+	@Test
+	public void testGetI18nMap() {
+		Map<String, String> i18nMap = LocalizedMapUtil.getI18nMap(
+			HashMapBuilder.put(
+				LocaleUtil.FRANCE, "bonjour"
+			).put(
+				LocaleUtil.US, "hello"
+			).build());
+
+		Assert.assertEquals(i18nMap.toString(), 2, i18nMap.size());
+		Assert.assertEquals("hello", i18nMap.get("en-US"));
+		Assert.assertEquals("bonjour", i18nMap.get("fr-FR"));
+
+		i18nMap = LocalizedMapUtil.getI18nMap(
+			false,
+			HashMapBuilder.put(
+				LocaleUtil.FRANCE, "bonjour"
+			).put(
+				LocaleUtil.US, "hello"
+			).build());
+
+		Assert.assertNull(i18nMap);
+
+		Set<Locale> availableLocales = new HashSet<>();
+
+		availableLocales.add(LocaleUtil.BRAZIL);
+		availableLocales.add(LocaleUtil.FRANCE);
+		availableLocales.add(LocaleUtil.US);
+
+		i18nMap = LocalizedMapUtil.getI18nMap(
+			true, availableLocales,
+			HashMapBuilder.put(
+				"en_US", "hello"
+			).put(
+				"fr_FR", "bonjour"
+			).put(
+				"hu_HU", "szia"
+			).build());
+
+		Assert.assertEquals(i18nMap.toString(), 2, i18nMap.size());
+		Assert.assertEquals("hello", i18nMap.get("en_US"));
+		Assert.assertEquals("bonjour", i18nMap.get("fr_FR"));
+	}
 
 	@Test
 	public void testMergeI18nMap() {
@@ -118,6 +163,106 @@ public class LocalizedMapUtilTest {
 	}
 
 	@Test
+	public void testPopulateI18nMap() {
+
+		// Do not populate international map if both default language and site
+		// default value are undefined
+
+		Map<String, String> i18nMap = HashMapBuilder.put(
+			"pt_BR", RandomTestUtil.randomString()
+		).build();
+
+		Assert.assertEquals(
+			i18nMap, LocalizedMapUtil.populateI18nMap(null, i18nMap, null));
+
+		// Do not populate international map if site default value is already
+		// defined
+
+		i18nMap = HashMapBuilder.put(
+			"en_US", RandomTestUtil.randomString()
+		).build();
+
+		Assert.assertEquals(
+			i18nMap,
+			LocalizedMapUtil.populateI18nMap(
+				RandomTestUtil.randomString(), i18nMap,
+				RandomTestUtil.randomString()));
+
+		// Populate international map with default language value
+
+		String defaultValue = RandomTestUtil.randomString();
+
+		Assert.assertEquals(
+			HashMapBuilder.put(
+				"en_US", defaultValue
+			).put(
+				"pt_BR", defaultValue
+			).build(),
+			LocalizedMapUtil.populateI18nMap(
+				"pt_BR",
+				HashMapBuilder.put(
+					"pt-BR", defaultValue
+				).build(),
+				RandomTestUtil.randomString()));
+		Assert.assertEquals(
+			HashMapBuilder.put(
+				"en_US", defaultValue
+			).put(
+				"pt_BR", defaultValue
+			).build(),
+			LocalizedMapUtil.populateI18nMap(
+				"pt_BR",
+				HashMapBuilder.put(
+					"pt_BR", defaultValue
+				).build(),
+				RandomTestUtil.randomString()));
+
+		// Populate international map with english value when default language
+		// value is undefined
+
+		Locale locale = LocaleUtil.getDefault();
+
+		try {
+			_setDefaultLocale(LocaleUtil.BRAZIL);
+
+			String englishValue = RandomTestUtil.randomString();
+
+			Assert.assertEquals(
+				HashMapBuilder.put(
+					"en_US", englishValue
+				).put(
+					"pt_BR", englishValue
+				).build(),
+				LocalizedMapUtil.populateI18nMap(
+					null,
+					HashMapBuilder.put(
+						"en_US", englishValue
+					).build(),
+					null));
+		}
+		finally {
+			_setDefaultLocale(locale);
+		}
+
+		// Populate international map with site default value when default
+		// language is undefined
+
+		String siteDefaultValue = RandomTestUtil.randomString();
+
+		Assert.assertEquals(
+			HashMapBuilder.put(
+				"en_US", siteDefaultValue
+			).build(),
+			LocalizedMapUtil.populateI18nMap("pt_BR", null, siteDefaultValue));
+		Assert.assertEquals(
+			HashMapBuilder.put(
+				"en_US", siteDefaultValue
+			).build(),
+			LocalizedMapUtil.populateI18nMap(
+				"pt_BR", Collections.emptyMap(), siteDefaultValue));
+	}
+
+	@Test
 	public void testValidateI18n() {
 		String randomEntityName = RandomTestUtil.randomString();
 
@@ -151,6 +296,11 @@ public class LocalizedMapUtilTest {
 
 			Assert.assertTrue(missingNotFoundLocales.isEmpty());
 		}
+	}
+
+	private void _setDefaultLocale(Locale locale) {
+		LocaleUtil.setDefault(
+			locale.getLanguage(), locale.getCountry(), locale.getVariant());
 	}
 
 }

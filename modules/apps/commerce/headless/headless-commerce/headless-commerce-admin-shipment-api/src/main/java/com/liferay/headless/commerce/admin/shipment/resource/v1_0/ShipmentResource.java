@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.shipment.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.shipment.dto.v1_0.Shipment;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,34 +46,38 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ShipmentResource {
 
-	public Page<Shipment> getShipmentsPage(
-			String search, Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
+	public void deleteShipment(Long shipmentId) throws Exception;
 
-	public Response postShipmentsPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
-			String contentType, String fieldNames)
-		throws Exception;
-
-	public Shipment postShipment(Shipment shipment) throws Exception;
-
-	public Response postShipmentBatch(String callbackURL, Object object)
+	public Response deleteShipmentBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public void deleteShipmentByExternalReferenceCode(
 			String externalReferenceCode)
 		throws Exception;
 
+	public Shipment getShipment(Long shipmentId) throws Exception;
+
 	public Shipment getShipmentByExternalReferenceCode(
 			String externalReferenceCode)
+		throws Exception;
+
+	public Page<Shipment> getShipmentsPage(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Shipment patchShipment(Long shipmentId, Shipment shipment)
 		throws Exception;
 
 	public Shipment patchShipmentByExternalReferenceCode(
 			String externalReferenceCode, Shipment shipment)
 		throws Exception;
 
-	public Shipment putShipmentByExternalReferenceCode(
-			String externalReferenceCode, Shipment shipment)
+	public Shipment postShipment(Shipment shipment) throws Exception;
+
+	public Response postShipmentBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public Shipment postShipmentByExternalReferenceCodeStatusDelivered(
@@ -90,16 +92,6 @@ public interface ShipmentResource {
 			String externalReferenceCode)
 		throws Exception;
 
-	public void deleteShipment(Long shipmentId) throws Exception;
-
-	public Response deleteShipmentBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public Shipment getShipment(Long shipmentId) throws Exception;
-
-	public Shipment patchShipment(Long shipmentId, Shipment shipment)
-		throws Exception;
-
 	public Shipment postShipmentStatusDelivered(Long shipmentId)
 		throws Exception;
 
@@ -107,6 +99,17 @@ public interface ShipmentResource {
 		throws Exception;
 
 	public Shipment postShipmentStatusShipped(Long shipmentId) throws Exception;
+
+	public Response postShipmentsPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
+		throws Exception;
+
+	public Shipment putShipmentByExternalReferenceCode(
+			String externalReferenceCode, Shipment shipment)
+		throws Exception;
 
 	public default void setContextAcceptLanguage(
 		AcceptLanguage contextAcceptLanguage) {
@@ -130,7 +133,8 @@ public interface ShipmentResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -155,19 +159,23 @@ public interface ShipmentResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

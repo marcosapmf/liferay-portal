@@ -639,21 +639,21 @@ definition {
 		task ("Then assert that the errors are shown in the quantity selector popover") {
 			FrontStore.viewQuantitySelectorPopoverListItem(
 				conditionNotSatisfied = "true",
-				quantity = "0.444",
+				quantity = "2.22",
 				quantityConfiguration = "multiple",
 				quantityConfigurationDecimalText = 3);
 		}
 
-		task ("When the buyer sets the quantity to a valid quantity(0.888)") {
+		task ("When the buyer sets the quantity to a valid quantity(2.22)") {
 			Type(
 				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_QUANTITY_SELECTOR_INPUT_FIELD",
-				value1 = "0.888");
+				value1 = "2.22");
 		}
 
 		task ("Then assert that the popover does not show any error") {
 			FrontStore.viewQuantitySelectorPopoverListItem(
 				conditionNotSatisfied = "false",
-				quantity = "0.444",
+				quantity = "2.22",
 				quantityConfiguration = "multiple");
 		}
 
@@ -1534,7 +1534,7 @@ definition {
 				AssertTextEquals(
 					key_cellName1 = ${sku},
 					key_cellName2 = ${uomKey},
-					key_columnNumber = 3,
+					key_columnNumber = 4,
 					locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 					value1 = ${outstandingQuantity});
 			}
@@ -1877,14 +1877,16 @@ definition {
 			CommerceEntry.gotoMenuTab(menuTab = "Price");
 
 			AssertTextEquals(
+				key_cellContent = "Minium Base Price List",
 				key_columnIndex = 4,
 				key_rowIndex = 1,
 				locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
 				value1 = "$ 75.00");
 
 			AssertTextEquals(
+				key_cellContent = "Minium Base Promotion",
 				key_columnIndex = 4,
-				key_rowIndex = 2,
+				key_rowIndex = 1,
 				locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
 				value1 = "$ 70.00");
 		}
@@ -2169,19 +2171,21 @@ definition {
 		}
 
 		task ("Then Unit Price is set to the default value and UOM field is empty") {
-			for (var rowAndValue : list "1:$ 50.00,2:$ 0.00") {
-				var rowIndex = StringUtil.extractFirst(${rowAndValue}, ":");
+			for (var rowAndValue : list "Minium Base Price List:$ 50.00,Minium Base Promotion:$ 0.00") {
+				var row = StringUtil.extractFirst(${rowAndValue}, ":");
 				var value = StringUtil.extractLast(${rowAndValue}, ":");
 
 				AssertTextEquals(
+					key_cellContent = ${row},
 					key_columnIndex = 4,
-					key_rowIndex = ${rowIndex},
+					key_rowIndex = 1,
 					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
 					value1 = ${value});
 
 				AssertTextEquals(
+					key_cellContent = ${row},
 					key_columnIndex = 2,
-					key_rowIndex = ${rowIndex},
+					key_rowIndex = 1,
 					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
 					value1 = "");
 			}
@@ -2203,6 +2207,7 @@ definition {
 				var value = StringUtil.extractLast(${columnAndValue}, ":");
 
 				AssertTextEquals(
+					key_cellContent = "MIN93015",
 					key_columnIndex = ${columnIndex},
 					key_rowIndex = 1,
 					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
@@ -2226,342 +2231,12 @@ definition {
 				var value = StringUtil.extractLast(${columnAndValue}, ":");
 
 				AssertTextEquals(
+					key_cellContent = "MIN93015",
 					key_columnIndex = ${columnIndex},
 					key_rowIndex = 1,
 					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
 					value1 = ${value});
 			}
-		}
-	}
-
-	@description = "COMMERCE-12343. As admin, I can view SKU-UOM's related price informations on SKU, price list and promotion levels."
-	@priority = 5
-	test CanViewPriceInfoOnTablesEntriesWhenUOMsAreCreated {
-		property portal.acceptance = "true";
-
-		task ("Given a Minium site is created") {
-			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-		}
-
-		task ("And the admin adds 2 UOMs to a SKU (MIN93015)") {
-			for (var index : list "1,2") {
-				CommerceJSONSKUsAPI._addCommerceUOM(
-					basePrice = ${index},
-					productSKU = "MIN93015",
-					promoPrice = ${index},
-					uomKey = "uom${index}",
-					uomName = "uom${index}");
-			}
-		}
-
-		task ("When the admin navigates to Commerce -> Products -> Product -> SKU -> Price tab") {
-			CommerceProducts.openProductsAdmin();
-
-			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
-
-			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
-
-			CommerceNavigator.gotoEntry(entryName = "MIN93015");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Price");
-		}
-
-		task ("Then the UOM and unit price fields are correctly filled") {
-			for (var rowAndValue : list "1:1,2:1,3:2,4:2") {
-				var rowIndex = StringUtil.extractFirst(${rowAndValue}, ":");
-				var value = StringUtil.extractLast(${rowAndValue}, ":");
-
-				AssertTextEquals(
-					key_columnIndex = 4,
-					key_rowIndex = ${rowIndex},
-					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-					value1 = "$ ${value}.00");
-
-				AssertTextEquals(
-					key_columnIndex = 2,
-					key_rowIndex = ${rowIndex},
-					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-					value1 = "uom${value}");
-			}
-		}
-
-		task ("When the admin navigates to Commerce -> Price Lists -> Minium Base Price List -> Entries searching for MIN93015") {
-			CommercePriceLists.openPriceListsAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Entries");
-
-			CommerceNavigator.searchEntry(entryName = "MIN93015");
-		}
-
-		task ("Then the fields are correctly filled on Minium Base Price List SKU entry") {
-			for (var rowIndex : list "1,2") {
-				AssertTextEquals(
-					key_columnIndex = 4,
-					key_rowIndex = ${rowIndex},
-					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-					value1 = "uom${rowIndex}");
-
-				AssertTextEquals(
-					key_columnIndex = 6,
-					key_rowIndex = ${rowIndex},
-					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-					value1 = "$ 1.00");
-
-				AssertTextEquals(
-					key_columnIndex = 7,
-					key_rowIndex = ${rowIndex},
-					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-					value1 = "$ ${rowIndex}.00");
-			}
-		}
-
-		task ("When the admin navigates to Commerce -> Promotions -> Minium Base Promotion -> Entries searching for MIN93015") {
-			CommercePromotions.openPromotionsAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "Minium Base Promotion");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Entries");
-
-			CommerceNavigator.searchEntry(entryName = "MIN93015");
-		}
-
-		task ("Then the fields are correctly filled on Minium Base Promotion SKU entry") {
-			for (var rowIndex : list "1,2") {
-				AssertTextEquals(
-					key_columnIndex = 4,
-					key_rowIndex = ${rowIndex},
-					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-					value1 = "uom${rowIndex}");
-
-				AssertTextEquals(
-					key_columnIndex = 6,
-					key_rowIndex = ${rowIndex},
-					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-					value1 = "$ 1.00");
-
-				AssertTextEquals(
-					key_columnIndex = 7,
-					key_rowIndex = ${rowIndex},
-					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-					value1 = "$ ${rowIndex}.00");
-			}
-		}
-
-		task ("When a UOM is deleted from the SKU") {
-			CommerceJSONSKUsAPI._deleteCommerceSkuUom(
-				productSKU = "MIN93015",
-				uomKey = "uom1");
-		}
-
-		task ("And the admin navigates to Commerce -> Products -> Product -> SKU -> Price tab") {
-			CommerceProducts.openProductsAdmin();
-
-			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
-
-			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
-
-			CommerceNavigator.gotoEntry(entryName = "MIN93015");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Price");
-		}
-
-		task ("Then the UOM and unit price fields are correctly updated") {
-			for (var rowIndex : list "1,2") {
-				AssertTextEquals(
-					key_columnIndex = 4,
-					key_rowIndex = ${rowIndex},
-					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-					value1 = "$ 2.00");
-
-				AssertTextEquals(
-					key_columnIndex = 2,
-					key_rowIndex = ${rowIndex},
-					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-					value1 = "uom2");
-			}
-		}
-
-		task ("When the admin navigates to Commerce → Price Lists → Minium Base Price List → Entries searching for MIN93015") {
-			CommercePriceLists.openPriceListsAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Entries");
-
-			CommerceNavigator.searchEntry(entryName = "MIN93015");
-		}
-
-		task ("Then the fields are correctly updated on Minium Base Price List SKU entry") {
-			AssertTextEquals(
-				key_columnIndex = 4,
-				key_rowIndex = 1,
-				locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-				value1 = "uom2");
-
-			for (var columnIndex : list "6,7") {
-				AssertTextEquals(
-					key_columnIndex = ${columnIndex},
-					key_rowIndex = 1,
-					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-					value1 = "$ 2.00");
-			}
-		}
-
-		task ("When the admin navigates to Commerce -> Promotions -> Minium Base Promotion -> Entries searching for MIN93015") {
-			CommercePromotions.openPromotionsAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "Minium Base Promotion");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Entries");
-
-			CommerceNavigator.searchEntry(entryName = "MIN93015");
-		}
-
-		task ("Then the fields are correctly updated on Minium Base Promotion SKU entry") {
-			AssertTextEquals(
-				key_columnIndex = 4,
-				key_rowIndex = 1,
-				locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-				value1 = "uom2");
-
-			for (var columnIndex : list "6,7") {
-				AssertTextEquals(
-					key_columnIndex = ${columnIndex},
-					key_rowIndex = 1,
-					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-					value1 = "$ 2.00");
-			}
-		}
-	}
-
-	@description = "This is a test for COMMERCE-12425. Buyers can view the discount for correctly applied SKU/UOM combinations on the product details page"
-	@priority = 5
-	test CanViewSKUUOMDiscountIsAppliedOnProductDetailsPage {
-		property portal.acceptance = "true";
-
-		task ("Given a Minium site with a buyer user") {
-			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				accountType = "Business",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("When the admin adds one UOM to SKU MIN93015(for product ABS Sensor)") {
-			CommerceJSONSKUsAPI._addCommerceUOM(
-				basePrice = 10,
-				productSKU = "MIN93015",
-				uomKey = "uomKey1",
-				uomName = "uomName1");
-		}
-
-		task ("And an active 50% discount applied to the SKU/UOM (MIN93015/uomKey1) combination is created") {
-			CommerceJSONDiscountsAPI._addDiscount(
-				active = "true",
-				level = "L1",
-				percentageLevel1 = 50,
-				productSKUs = "MIN93015",
-				target = "skus",
-				title = "Test Discount",
-				unitOfMeasureKey = "uomKey1",
-				usePercentage = "true");
-		}
-
-		task ("And the buyer navigates to the product ABS Sensor's details page") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/abs-sensor");
-		}
-
-		task ("Then the discount is applied to product ABS Sensor directly") {
-			FrontStore.assertProductDetails(
-				discountPercentage = 50,
-				productListPriceInactive = "10.00",
-				productName = "ABS Sensor",
-				productNetPrice = "5.00",
-				productSKU = "MIN93015");
-		}
-
-		task ("When the admin adds the second SKU/UOM (MIN93015/uomKey2) combination to the discount") {
-			CommerceJSONSKUsAPI._addCommerceUOM(
-				basePrice = 20,
-				productSKU = "MIN93015",
-				uomKey = "uomKey2",
-				uomName = "uomName2");
-
-			CommerceJSONDiscountsAPI._addDiscountSku(
-				discountTitle = "Test Discount",
-				productSKU = "MIN93015",
-				unitOfMeasureKey = "uomKey2");
-		}
-
-		task ("Then the discount for each SKU/UOM is applied to product ABS Sensor") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/abs-sensor");
-
-			FrontStore.assertProductDetails(
-				discountPercentage = 50,
-				productListPriceInactive = "10.00",
-				productName = "ABS Sensor",
-				productNetPrice = "5.00",
-				productSKU = "MIN93015");
-
-			Select(
-				locator1 = "CommerceFrontStore#FS_PRODUCT_UOM_SELECT",
-				value1 = "uomName2");
-
-			FrontStore.assertProductDetails(
-				discountPercentage = 50,
-				productListPriceInactive = "20.00",
-				productName = "ABS Sensor",
-				productNetPrice = "10.00",
-				productSKU = "MIN93015");
-		}
-
-		task ("When the admin removes the second SKU/UOM from the discount") {
-			CommerceJSONDiscountsAPI._deleteDiscountSkuUom(
-				discountTitle = "Test Discount",
-				productSKU = "MIN93015",
-				uomKey = "uomKey2");
-		}
-
-		task ("Then only the discount for the first SKU/UOM is applied to product ABS Sensor") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/abs-sensor");
-
-			FrontStore.assertProductDetails(
-				discountPercentage = 50,
-				productListPriceInactive = "10.00",
-				productName = "ABS Sensor",
-				productNetPrice = "5.00",
-				productSKU = "MIN93015");
-
-			Select(
-				locator1 = "CommerceFrontStore#FS_PRODUCT_UOM_SELECT",
-				value1 = "uomName2");
-
-			FrontStore.assertProductDetails(
-				productListPrice = "20.00",
-				productName = "ABS Sensor",
-				productSKU = "MIN93015");
 		}
 	}
 

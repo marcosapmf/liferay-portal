@@ -13,6 +13,7 @@ import com.liferay.analytics.settings.rest.dto.v1_0.ContactOrganization;
 import com.liferay.analytics.settings.rest.dto.v1_0.ContactUserGroup;
 import com.liferay.analytics.settings.rest.dto.v1_0.Field;
 import com.liferay.analytics.settings.rest.dto.v1_0.FieldSummary;
+import com.liferay.analytics.settings.rest.dto.v1_0.RecommendationConfiguration;
 import com.liferay.analytics.settings.rest.dto.v1_0.Site;
 import com.liferay.analytics.settings.rest.resource.v1_0.ChannelResource;
 import com.liferay.analytics.settings.rest.resource.v1_0.CommerceChannelResource;
@@ -22,11 +23,10 @@ import com.liferay.analytics.settings.rest.resource.v1_0.ContactOrganizationReso
 import com.liferay.analytics.settings.rest.resource.v1_0.ContactUserGroupResource;
 import com.liferay.analytics.settings.rest.resource.v1_0.FieldResource;
 import com.liferay.analytics.settings.rest.resource.v1_0.FieldSummaryResource;
+import com.liferay.analytics.settings.rest.resource.v1_0.RecommendationConfigurationResource;
 import com.liferay.analytics.settings.rest.resource.v1_0.SiteResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -116,6 +116,15 @@ public class Query {
 
 		_fieldSummaryResourceComponentServiceObjects =
 			fieldSummaryResourceComponentServiceObjects;
+	}
+
+	public static void
+		setRecommendationConfigurationResourceComponentServiceObjects(
+			ComponentServiceObjects<RecommendationConfigurationResource>
+				recommendationConfigurationResourceComponentServiceObjects) {
+
+		_recommendationConfigurationResourceComponentServiceObjects =
+			recommendationConfigurationResourceComponentServiceObjects;
 	}
 
 	public static void setSiteResourceComponentServiceObjects(
@@ -353,6 +362,23 @@ public class Query {
 			_fieldSummaryResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			fieldSummaryResource -> fieldSummaryResource.getField());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {recommendationConfiguration{contentRecommenderMostPopularItems, contentRecommenderUserPersonalization}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public RecommendationConfiguration recommendationConfiguration()
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_recommendationConfigurationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			recommendationConfigurationResource ->
+				recommendationConfigurationResource.
+					getRecommendationConfiguration());
 	}
 
 	/**
@@ -641,6 +667,41 @@ public class Query {
 
 	}
 
+	@GraphQLName("RecommendationConfigurationPage")
+	public class RecommendationConfigurationPage {
+
+		public RecommendationConfigurationPage(
+			Page recommendationConfigurationPage) {
+
+			actions = recommendationConfigurationPage.getActions();
+
+			items = recommendationConfigurationPage.getItems();
+			lastPage = recommendationConfigurationPage.getLastPage();
+			page = recommendationConfigurationPage.getPage();
+			pageSize = recommendationConfigurationPage.getPageSize();
+			totalCount = recommendationConfigurationPage.getTotalCount();
+		}
+
+		@GraphQLField
+		protected Map<String, Map<String, String>> actions;
+
+		@GraphQLField
+		protected java.util.Collection<RecommendationConfiguration> items;
+
+		@GraphQLField
+		protected long lastPage;
+
+		@GraphQLField
+		protected long page;
+
+		@GraphQLField
+		protected long pageSize;
+
+		@GraphQLField
+		protected long totalCount;
+
+	}
+
 	@GraphQLName("SitePage")
 	public class SitePage {
 
@@ -814,6 +875,26 @@ public class Query {
 		fieldSummaryResource.setRoleLocalService(_roleLocalService);
 	}
 
+	private void _populateResourceContext(
+			RecommendationConfigurationResource
+				recommendationConfigurationResource)
+		throws Exception {
+
+		recommendationConfigurationResource.setContextAcceptLanguage(
+			_acceptLanguage);
+		recommendationConfigurationResource.setContextCompany(_company);
+		recommendationConfigurationResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		recommendationConfigurationResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		recommendationConfigurationResource.setContextUriInfo(_uriInfo);
+		recommendationConfigurationResource.setContextUser(_user);
+		recommendationConfigurationResource.setGroupLocalService(
+			_groupLocalService);
+		recommendationConfigurationResource.setRoleLocalService(
+			_roleLocalService);
+	}
+
 	private void _populateResourceContext(SiteResource siteResource)
 		throws Exception {
 
@@ -843,17 +924,22 @@ public class Query {
 		_fieldResourceComponentServiceObjects;
 	private static ComponentServiceObjects<FieldSummaryResource>
 		_fieldSummaryResourceComponentServiceObjects;
+	private static ComponentServiceObjects<RecommendationConfigurationResource>
+		_recommendationConfigurationResourceComponentServiceObjects;
 	private static ComponentServiceObjects<SiteResource>
 		_siteResourceComponentServiceObjects;
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

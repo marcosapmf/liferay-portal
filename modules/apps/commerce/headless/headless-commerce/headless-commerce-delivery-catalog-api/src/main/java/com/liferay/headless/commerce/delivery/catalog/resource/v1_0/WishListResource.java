@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.delivery.catalog.resource.v1_0;
 
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.WishList;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,30 +46,33 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface WishListResource {
 
+	public void deleteWishList(Long wishListId) throws Exception;
+
+	public Response deleteWishListBatch(String callbackURL, Object object)
+		throws Exception;
+
 	public Page<WishList> getChannelByExternalReferenceCodeWishListsPage(
-			String externalReferenceCode, Long accountId, Pagination pagination)
+			String externalReferenceCode, Long accountId, String currencyCode,
+			Pagination pagination)
+		throws Exception;
+
+	public Page<WishList> getChannelWishListsPage(
+			Long channelId, Long accountId, String currencyCode,
+			Pagination pagination)
+		throws Exception;
+
+	public WishList getWishList(Long wishListId) throws Exception;
+
+	public WishList patchWishList(
+			Long wishListId, Long accountId, WishList wishList)
 		throws Exception;
 
 	public WishList postChannelByExternalReferenceCodeWishList(
 			String externalReferenceCode, Long accountId, WishList wishList)
 		throws Exception;
 
-	public Page<WishList> getChannelWishListsPage(
-			Long channelId, Long accountId, Pagination pagination)
-		throws Exception;
-
 	public WishList postChannelWishList(
 			Long channelId, Long accountId, WishList wishList)
-		throws Exception;
-
-	public void deleteWishList(Long wishListId) throws Exception;
-
-	public Response deleteWishListBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public WishList getWishList(Long wishListId) throws Exception;
-
-	public WishList patchWishList(Long wishListId, WishList wishList)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -96,7 +97,8 @@ public interface WishListResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -121,19 +123,23 @@ public interface WishListResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

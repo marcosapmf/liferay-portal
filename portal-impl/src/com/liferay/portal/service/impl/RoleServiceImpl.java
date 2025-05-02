@@ -6,6 +6,7 @@
 package com.liferay.portal.service.impl;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
@@ -24,7 +25,6 @@ import com.liferay.portal.service.base.RoleServiceBaseImpl;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -209,6 +209,20 @@ public class RoleServiceImpl extends RoleServiceBaseImpl {
 	@Override
 	public Role getRole(long companyId, String name) throws PortalException {
 		Role role = roleLocalService.getRole(companyId, name);
+
+		RolePermissionUtil.check(
+			getPermissionChecker(), role.getRoleId(), ActionKeys.VIEW);
+
+		return role;
+	}
+
+	@Override
+	public Role getRoleByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		Role role = roleLocalService.getRoleByExternalReferenceCode(
+			externalReferenceCode, companyId);
 
 		RolePermissionUtil.check(
 			getPermissionChecker(), role.getRoleId(), ActionKeys.VIEW);
@@ -435,9 +449,9 @@ public class RoleServiceImpl extends RoleServiceBaseImpl {
 	 */
 	@Override
 	public Role updateRole(
-			long roleId, String name, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String subtype,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long roleId, String name,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String subtype, ServiceContext serviceContext)
 		throws PortalException {
 
 		RolePermissionUtil.check(
@@ -451,7 +465,8 @@ public class RoleServiceImpl extends RoleServiceBaseImpl {
 			oldExpandoBridge.getAttributes();
 
 		Role role = roleLocalService.updateRole(
-			roleId, name, titleMap, descriptionMap, subtype, serviceContext);
+			externalReferenceCode, roleId, name, titleMap, descriptionMap,
+			subtype, serviceContext);
 
 		if (role.getType() == RoleConstants.TYPE_ORGANIZATION) {
 			OrganizationMembershipPolicyUtil.verifyPolicy(
@@ -479,18 +494,18 @@ public class RoleServiceImpl extends RoleServiceBaseImpl {
 	}
 
 	protected List<Role> filterRoles(List<Role> roles) throws PortalException {
-		List<Role> filteredRoles = new ArrayList<>();
+		return TransformUtil.transform(
+			roles,
+			role -> {
+				if (RolePermissionUtil.contains(
+						getPermissionChecker(), role.getRoleId(),
+						ActionKeys.VIEW)) {
 
-		for (Role role : roles) {
-			if (RolePermissionUtil.contains(
-					getPermissionChecker(), role.getRoleId(),
-					ActionKeys.VIEW)) {
+					return role;
+				}
 
-				filteredRoles.add(role);
-			}
-		}
-
-		return filteredRoles;
+				return null;
+			});
 	}
 
 }

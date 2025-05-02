@@ -11,6 +11,7 @@ import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -38,6 +39,7 @@ import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.service.permission.RolePermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserPermissionUtil;
+import com.liferay.portal.kernel.service.persistence.CompanyPersistence;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -713,8 +715,10 @@ public class GroupServiceImpl extends GroupServiceBaseImpl {
 		}
 
 		if (ArrayUtil.contains(classNames, Company.class.getName())) {
-			Group companyGroup = groupLocalService.getCompanyGroup(
+			Company company = _companyPersistence.fetchByPrimaryKey(
 				user.getCompanyId());
+
+			Group companyGroup = company.getGroup();
 
 			if (GroupPermissionUtil.contains(
 					getPermissionChecker(), companyGroup,
@@ -1161,19 +1165,19 @@ public class GroupServiceImpl extends GroupServiceBaseImpl {
 	protected List<Group> filterGroups(List<Group> groups)
 		throws PortalException {
 
-		List<Group> filteredGroups = new ArrayList<>();
-
 		PermissionChecker permissionChecker = getPermissionChecker();
 
-		for (Group group : groups) {
-			if (GroupPermissionUtil.contains(
-					permissionChecker, group, ActionKeys.VIEW)) {
+		return TransformUtil.transform(
+			groups,
+			group -> {
+				if (GroupPermissionUtil.contains(
+						permissionChecker, group, ActionKeys.VIEW)) {
 
-				filteredGroups.add(group);
-			}
-		}
+					return group;
+				}
 
-		return filteredGroups;
+				return null;
+			});
 	}
 
 	protected Map<Locale, String> getLocalizationMap(String value) {
@@ -1190,6 +1194,9 @@ public class GroupServiceImpl extends GroupServiceBaseImpl {
 
 	@BeanReference(type = AssetTagLocalService.class)
 	private AssetTagLocalService _assetTagLocalService;
+
+	@BeanReference(type = CompanyPersistence.class)
+	private CompanyPersistence _companyPersistence;
 
 	@BeanReference(type = UserPersistence.class)
 	private UserPersistence _userPersistence;

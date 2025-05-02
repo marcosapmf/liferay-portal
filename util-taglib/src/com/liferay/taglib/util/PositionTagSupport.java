@@ -64,11 +64,18 @@ public class PositionTagSupport extends BaseBodyTagSupport implements BodyTag {
 			position = _POSITION_INLINE;
 		}
 
-		if (Validator.isNull(position)) {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)httpServletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
+		if (Validator.isNotNull(position)) {
+			return position;
+		}
 
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (themeDisplay == null) {
+			position = _POSITION_INLINE;
+		}
+		else {
 			if (themeDisplay.isIsolated() ||
 				themeDisplay.isLifecycleResource() ||
 				themeDisplay.isStateExclusive()) {

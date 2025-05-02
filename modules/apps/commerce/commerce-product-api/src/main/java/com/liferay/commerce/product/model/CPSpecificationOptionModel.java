@@ -252,20 +252,6 @@ public interface CPSpecificationOptionModel
 	public void setCPOptionCategoryId(long CPOptionCategoryId);
 
 	/**
-	 * Returns the list type definition ID of this cp specification option.
-	 *
-	 * @return the list type definition ID of this cp specification option
-	 */
-	public long getListTypeDefinitionId();
-
-	/**
-	 * Sets the list type definition ID of this cp specification option.
-	 *
-	 * @param listTypeDefinitionId the list type definition ID of this cp specification option
-	 */
-	public void setListTypeDefinitionId(long listTypeDefinitionId);
-
-	/**
 	 * Returns the title of this cp specification option.
 	 *
 	 * @return the title of this cp specification option
@@ -514,6 +500,27 @@ public interface CPSpecificationOptionModel
 	 * @param priority the priority of this cp specification option
 	 */
 	public void setPriority(double priority);
+
+	/**
+	 * Returns the visible of this cp specification option.
+	 *
+	 * @return the visible of this cp specification option
+	 */
+	public boolean getVisible();
+
+	/**
+	 * Returns <code>true</code> if this cp specification option is visible.
+	 *
+	 * @return <code>true</code> if this cp specification option is visible; <code>false</code> otherwise
+	 */
+	public boolean isVisible();
+
+	/**
+	 * Sets whether this cp specification option is visible.
+	 *
+	 * @param visible the visible of this cp specification option
+	 */
+	public void setVisible(boolean visible);
 
 	/**
 	 * Returns the last publish date of this cp specification option.

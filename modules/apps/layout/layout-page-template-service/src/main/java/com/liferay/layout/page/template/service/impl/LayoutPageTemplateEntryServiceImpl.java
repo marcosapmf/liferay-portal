@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.sql.Types;
 
@@ -65,7 +66,30 @@ public class LayoutPageTemplateEntryServiceImpl
 	@Override
 	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
 			String externalReferenceCode, long groupId,
-			long layoutPageTemplateCollectionId, long classNameId,
+			long layoutPageTemplateCollectionId,
+			String layoutPageTemplateEntryKey, long classNameId,
+			long classTypeId, String name, int type, long previewFileEntryId,
+			boolean defaultTemplate, long layoutPrototypeId, long plid,
+			long masterLayoutPlid, int status, ServiceContext serviceContext)
+		throws PortalException {
+
+		_portletResourcePermission.check(
+			getPermissionChecker(), groupId,
+			LayoutPageTemplateActionKeys.ADD_LAYOUT_PAGE_TEMPLATE_ENTRY);
+
+		return layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
+			externalReferenceCode, getUserId(), groupId,
+			layoutPageTemplateCollectionId, layoutPageTemplateEntryKey,
+			classNameId, classTypeId, name, type, previewFileEntryId,
+			defaultTemplate, layoutPrototypeId, plid, masterLayoutPlid, status,
+			serviceContext);
+	}
+
+	@Override
+	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
+			String externalReferenceCode, long groupId,
+			long layoutPageTemplateCollectionId,
+			String layoutPageTemplateEntryKey, long classNameId,
 			long classTypeId, String name, long masterLayoutPlid, int status,
 			ServiceContext serviceContext)
 		throws PortalException {
@@ -76,7 +100,8 @@ public class LayoutPageTemplateEntryServiceImpl
 
 		return layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 			externalReferenceCode, getUserId(), groupId,
-			layoutPageTemplateCollectionId, classNameId, classTypeId, name,
+			layoutPageTemplateCollectionId, layoutPageTemplateEntryKey,
+			classNameId, classTypeId, name,
 			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, masterLayoutPlid,
 			status, serviceContext);
 	}
@@ -84,7 +109,8 @@ public class LayoutPageTemplateEntryServiceImpl
 	@Override
 	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
 			String externalReferenceCode, long groupId,
-			long layoutPageTemplateCollectionId, String name, int type,
+			long layoutPageTemplateCollectionId,
+			String layoutPageTemplateEntryKey, String name, int type,
 			long masterLayoutPlid, int status, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -94,8 +120,8 @@ public class LayoutPageTemplateEntryServiceImpl
 
 		return layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 			externalReferenceCode, getUserId(), groupId,
-			layoutPageTemplateCollectionId, name, type, masterLayoutPlid,
-			status, serviceContext);
+			layoutPageTemplateCollectionId, layoutPageTemplateEntryKey, name,
+			type, masterLayoutPlid, status, serviceContext);
 	}
 
 	@Override
@@ -139,15 +165,20 @@ public class LayoutPageTemplateEntryServiceImpl
 				null, getUserId(), sourceLayout.getGroupId(),
 				targetLayoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
-				0, 0, name, LayoutPageTemplateEntryTypeConstants.BASIC, 0,
+				null, 0, 0, name, LayoutPageTemplateEntryTypeConstants.BASIC, 0,
 				false, 0, 0, sourceLayout.getMasterLayoutPlid(),
 				WorkflowConstants.STATUS_DRAFT, serviceContext);
 
 		Layout layout = _layoutLocalService.getLayout(
 			layoutPageTemplateEntry.getPlid());
 
+		Layout targetLayout = layout.fetchDraftLayout();
+
 		_layoutLocalService.copyLayoutContent(
-			segmentsExperienceId, sourceLayout, layout.fetchDraftLayout());
+			segmentsExperienceId, sourceLayout,
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				targetLayout.getPlid()),
+			targetLayout);
 
 		Layout draftLayout = _layoutLocalService.fetchDraftLayout(
 			layout.getPlid());
@@ -257,6 +288,26 @@ public class LayoutPageTemplateEntryServiceImpl
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
 				groupId, layoutPageTemplateCollectionId, name, type);
+
+		if (layoutPageTemplateEntry != null) {
+			_layoutPageTemplateEntryModelResourcePermission.check(
+				getPermissionChecker(), layoutPageTemplateEntry,
+				ActionKeys.VIEW);
+		}
+
+		return layoutPageTemplateEntry;
+	}
+
+	@Override
+	public LayoutPageTemplateEntry
+			fetchLayoutPageTemplateEntryByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			layoutPageTemplateEntryLocalService.
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
+					externalReferenceCode, groupId);
 
 		if (layoutPageTemplateEntry != null) {
 			_layoutPageTemplateEntryModelResourcePermission.check(
@@ -1019,49 +1070,49 @@ public class LayoutPageTemplateEntryServiceImpl
 				groupId
 			).and(
 				() -> {
-					if (layoutPageTemplateCollectionId >= 0) {
-						return LayoutPageTemplateEntryTable.INSTANCE.
-							layoutPageTemplateCollectionId.eq(
-								layoutPageTemplateCollectionId);
+					if (layoutPageTemplateCollectionId < 0) {
+						return null;
 					}
 
-					return null;
+					return LayoutPageTemplateEntryTable.INSTANCE.
+						layoutPageTemplateCollectionId.eq(
+							layoutPageTemplateCollectionId);
 				}
 			).and(
 				() -> {
-					if (classNameId > 0) {
-						return LayoutPageTemplateEntryTable.INSTANCE.
-							classNameId.eq(classNameId);
+					if (classNameId <= 0) {
+						return null;
 					}
 
-					return null;
+					return LayoutPageTemplateEntryTable.INSTANCE.classNameId.eq(
+						classNameId);
 				}
 			).and(
 				() -> {
-					if (classTypeId > 0) {
-						return LayoutPageTemplateEntryTable.INSTANCE.
-							classTypeId.eq(classTypeId);
+					if (classTypeId <= 0) {
+						return null;
 					}
 
-					return null;
+					return LayoutPageTemplateEntryTable.INSTANCE.classTypeId.eq(
+						classTypeId);
 				}
 			).and(
 				() -> {
-					if (Validator.isNotNull(name)) {
-						return LayoutPageTemplateEntryTable.INSTANCE.name.like(
-							StringUtil.quote(name, CharPool.PERCENT));
+					if (Validator.isNull(name)) {
+						return null;
 					}
 
-					return null;
+					return LayoutPageTemplateEntryTable.INSTANCE.name.like(
+						StringUtil.quote(name, CharPool.PERCENT));
 				}
 			).and(
 				() -> {
-					if (status >= 0) {
-						return LayoutPageTemplateEntryTable.INSTANCE.status.eq(
-							status);
+					if (status < 0) {
+						return null;
 					}
 
-					return null;
+					return LayoutPageTemplateEntryTable.INSTANCE.status.eq(
+						status);
 				}
 			).and(
 				LayoutPageTemplateEntryTable.INSTANCE.type.eq(type)
@@ -1085,23 +1136,22 @@ public class LayoutPageTemplateEntryServiceImpl
 					groupId
 				).and(
 					() -> {
-						if (layoutPageTemplateCollectionId >= 0) {
-							return LayoutPageTemplateCollectionTable.INSTANCE.
-								parentLayoutPageTemplateCollectionId.eq(
-									layoutPageTemplateCollectionId);
+						if (layoutPageTemplateCollectionId < 0) {
+							return null;
 						}
 
-						return null;
+						return LayoutPageTemplateCollectionTable.INSTANCE.
+							parentLayoutPageTemplateCollectionId.eq(
+								layoutPageTemplateCollectionId);
 					}
 				).and(
 					() -> {
-						if (Validator.isNotNull(name)) {
-							return LayoutPageTemplateCollectionTable.INSTANCE.
-								name.like(
-									StringUtil.quote(name, CharPool.PERCENT));
+						if (Validator.isNull(name)) {
+							return null;
 						}
 
-						return null;
+						return LayoutPageTemplateCollectionTable.INSTANCE.name.
+							like(StringUtil.quote(name, CharPool.PERCENT));
 					}
 				).and(
 					LayoutPageTemplateCollectionTable.INSTANCE.type.eq(type)
@@ -1137,6 +1187,9 @@ public class LayoutPageTemplateEntryServiceImpl
 		target = "(component.name=com.liferay.layout.page.template.internal.security.permission.resource.LayoutPageTemplatePortletResourcePermission)"
 	)
 	private PortletResourcePermission _portletResourcePermission;
+
+	@Reference
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	private static class
 		LayoutPageTemplateCollectionAndLayoutPageTemplateEntryTable

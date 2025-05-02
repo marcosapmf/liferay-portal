@@ -50,7 +50,7 @@ public class OpenAPIUtil {
 		return "v" + matcher.replaceFirst("");
 	}
 
-	public static String formatSingular(String s) {
+	public static String formatSingular(ConfigYAML configYAML, String s) {
 		if (s.endsWith("ases")) {
 
 			// bases to base
@@ -69,7 +69,10 @@ public class OpenAPIUtil {
 		else if (s.endsWith("ies")) {
 			s = s.substring(0, s.length() - 3) + "y";
 		}
-		else if (s.endsWith("s")) {
+		else if (s.endsWith("s") &&
+				 (!s.endsWith("ss") ||
+				  !ConfigUtil.isVersionCompatible(configYAML, 6))) {
+
 			s = s.substring(0, s.length() - 1);
 		}
 
@@ -144,7 +147,7 @@ public class OpenAPIUtil {
 					entry.getKey());
 
 				if (items != null) {
-					schemaName = formatSingular(schemaName);
+					schemaName = formatSingular(configYAML, schemaName);
 				}
 
 				allExternalSchemas.put(schemaName, schema);
@@ -199,7 +202,6 @@ public class OpenAPIUtil {
 					if (schema.isMergeProperties() &&
 						ConfigUtil.isVersionCompatible(configYAML, 4)) {
 
-						schema.setAllOfSchemas(null);
 						schema.setPropertySchemas(propertySchemas);
 					}
 				}
@@ -208,14 +210,42 @@ public class OpenAPIUtil {
 				}
 
 				if (propertySchemas == null) {
-					continue;
+					List<Schema> allOfSchemas = schema.getAllOfSchemas();
+
+					if (allOfSchemas == null) {
+						continue;
+					}
+
+					boolean polymorphicChild = false;
+
+					for (Schema allOfSchema : allOfSchemas) {
+						if (allOfSchema.getReference() == null) {
+							continue;
+						}
+
+						Schema referenceSchema = allSchemas.get(
+							OpenAPIParserUtil.getReferenceName(
+								allOfSchema.getReference()));
+
+						if (referenceSchema.getDiscriminator() == null) {
+							continue;
+						}
+
+						polymorphicChild = true;
+
+						break;
+					}
+
+					if (!polymorphicChild) {
+						continue;
+					}
 				}
 
 				String schemaName = StringUtil.upperCaseFirstLetter(
 					entry.getKey());
 
 				if (items != null) {
-					schemaName = formatSingular(schemaName);
+					schemaName = formatSingular(configYAML, schemaName);
 				}
 
 				allSchemas.put(schemaName, schema);
@@ -247,7 +277,7 @@ public class OpenAPIUtil {
 		return allSchemas;
 	}
 
-	public static Map<String, Schema> getGlobalEnumSchemas(
+	public static Map<String, Schema> getEnumSchemas(
 		ConfigYAML configYAML, Map<String, Schema> schemas) {
 
 		Map<String, Schema> globalEnumSchemas = new TreeMap<>();
@@ -275,7 +305,7 @@ public class OpenAPIUtil {
 					entry.getKey());
 
 				if (items != null) {
-					schemaName = formatSingular(schemaName);
+					schemaName = formatSingular(configYAML, schemaName);
 				}
 
 				globalEnumSchemas.put(schemaName, schema);
@@ -283,6 +313,18 @@ public class OpenAPIUtil {
 		}
 
 		return globalEnumSchemas;
+	}
+
+	public static Map<String, Schema> getGlobalEnumSchemas(
+		ConfigYAML configYAML, OpenAPIYAML openAPIYAML) {
+
+		Components components = openAPIYAML.getComponents();
+
+		if (components == null) {
+			return new HashMap<>();
+		}
+
+		return getEnumSchemas(configYAML, components.getSchemas());
 	}
 
 	private static void _addExternalReference(

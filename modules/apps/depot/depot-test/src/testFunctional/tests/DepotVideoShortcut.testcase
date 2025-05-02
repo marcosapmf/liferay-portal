@@ -3,7 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Depot";
+	property testray.main.component.name = "Asset Libraries";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -96,7 +96,7 @@ definition {
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Shortened URL Depot Name");
 
@@ -522,7 +522,7 @@ definition {
 			webContentContent = "Web Content Content",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Publications.publishPublication(
 			gotoPublicationsAdmin = "true",
@@ -541,6 +541,10 @@ definition {
 	test CanViewVideoShortcutInRelatedAssets {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		JSONLayout.addWidgetToPublicLayout(
 			groupName = "Site Name",
@@ -570,7 +574,7 @@ definition {
 			assetType = "External Video Shortcut",
 			depotName = "Test Depot Name");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Navigator.openSiteURL(siteName = "Site Name");
 

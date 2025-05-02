@@ -9,7 +9,7 @@ import com.liferay.asset.categories.admin.web.constants.AssetCategoriesAdminPort
 import com.liferay.asset.categories.admin.web.internal.configuration.AssetCategoriesAdminWebConfiguration;
 import com.liferay.asset.categories.admin.web.internal.constants.AssetCategoriesAdminDisplayStyleKeys;
 import com.liferay.asset.categories.admin.web.internal.constants.AssetCategoriesAdminWebKeys;
-import com.liferay.asset.categories.admin.web.internal.item.selector.criterion.AssetVocabularyItemSelectorCriterion;
+import com.liferay.asset.categories.admin.web.internal.item.selector.AssetVocabularyItemSelectorCriterion;
 import com.liferay.asset.categories.admin.web.internal.util.AssetCategoryTreePathComparator;
 import com.liferay.asset.categories.configuration.AssetCategoriesCompanyConfiguration;
 import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalServiceUtil;
@@ -65,7 +65,6 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
@@ -86,7 +85,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -524,15 +522,15 @@ public class AssetCategoriesDisplayContext {
 		for (DepotEntry depotEntry : depotEntries) {
 			Group group = depotEntry.getGroup();
 
-			List<AssetVocabulary> groupVocabularies =
+			List<AssetVocabulary> groupAssetVocabularies =
 				AssetVocabularyServiceUtil.getGroupVocabularies(
 					group.getGroupId(), false, QueryUtil.ALL_POS,
 					QueryUtil.ALL_POS,
 					AssetVocabularyCreateDateComparator.getInstance(true));
 
-			if (ListUtil.isNotEmpty(groupVocabularies)) {
+			if (ListUtil.isNotEmpty(groupAssetVocabularies)) {
 				_inheritedVocabularies.put(
-					group.getGroupId(), groupVocabularies);
+					group.getGroupId(), groupAssetVocabularies);
 			}
 		}
 
@@ -595,11 +593,11 @@ public class AssetCategoriesDisplayContext {
 	}
 
 	public VerticalNavItemList getVerticalNavItemList(
-		List<AssetVocabulary> vocabularies) {
+		List<AssetVocabulary> assetVocabularies) {
 
 		VerticalNavItemList verticalNavItemList = new VerticalNavItemList();
 
-		for (AssetVocabulary vocabulary : vocabularies) {
+		for (AssetVocabulary vocabulary : assetVocabularies) {
 			verticalNavItemList.add(
 				verticalNavItem -> {
 					if (vocabulary.getGroupId() !=
@@ -636,8 +634,8 @@ public class AssetCategoriesDisplayContext {
 							"vocabularyId", vocabulary.getVocabularyId()
 						).buildString());
 
-					String name = HtmlUtil.escape(
-						vocabulary.getTitle(_httpServletRequest.getLocale()));
+					String name = vocabulary.getTitle(
+						_httpServletRequest.getLocale());
 
 					verticalNavItem.setId(name);
 					verticalNavItem.setLabel(name);
@@ -648,27 +646,25 @@ public class AssetCategoriesDisplayContext {
 	}
 
 	public List<AssetVocabulary> getVocabularies() throws PortalException {
-		if (_vocabularies != null) {
-			return _vocabularies;
+		if (_assetVocabularies != null) {
+			return _assetVocabularies;
 		}
 
-		_vocabularies = AssetVocabularyServiceUtil.getGroupVocabularies(
+		_assetVocabularies = AssetVocabularyServiceUtil.getGroupVocabularies(
 			_themeDisplay.getScopeGroupId(), false, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS,
 			AssetVocabularyCreateDateComparator.getInstance(true));
 
-		return _vocabularies;
+		return _assetVocabularies;
 	}
 
 	public List<DropdownItem> getVocabulariesDropdownItems() {
 		LiferayPortletURL deleteVocabulariesURL =
-			_renderResponse.createActionURL();
+			(LiferayPortletURL)_renderResponse.createResourceURL();
 
 		deleteVocabulariesURL.setCopyCurrentRenderParameters(false);
-		deleteVocabulariesURL.setParameter(
-			ActionRequest.ACTION_NAME,
-			"/asset_categories_admin/delete_asset_vocabulary");
-		deleteVocabulariesURL.setParameter("redirect", getDefaultRedirect());
+		deleteVocabulariesURL.setResourceID(
+			"/asset_categories_admin/delete_asset_vocabularies");
 
 		ItemSelector itemSelector =
 			(ItemSelector)_httpServletRequest.getAttribute(
@@ -686,6 +682,7 @@ public class AssetCategoriesDisplayContext {
 				dropdownItem.putData("action", "deleteVocabularies");
 				dropdownItem.putData(
 					"deleteVocabulariesURL", deleteVocabulariesURL.toString());
+				dropdownItem.putData("redirectURL", getDefaultRedirect());
 				dropdownItem.putData(
 					"viewVocabulariesURL",
 					String.valueOf(
@@ -809,16 +806,11 @@ public class AssetCategoriesDisplayContext {
 	}
 
 	public boolean hasAddVocabularyPermission() {
-		if (AssetCategoriesPermission.contains(
-				_themeDisplay.getPermissionChecker(),
-				AssetCategoriesPermission.RESOURCE_NAME,
-				AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN,
-				_themeDisplay.getSiteGroupId(), ActionKeys.ADD_VOCABULARY)) {
-
-			return true;
-		}
-
-		return false;
+		return AssetCategoriesPermission.contains(
+			_themeDisplay.getPermissionChecker(),
+			AssetCategoriesPermission.RESOURCE_NAME,
+			AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN,
+			_themeDisplay.getSiteGroupId(), ActionKeys.ADD_VOCABULARY);
 	}
 
 	public boolean hasPermission(AssetCategory category, String actionId)
@@ -859,15 +851,10 @@ public class AssetCategoriesDisplayContext {
 	}
 
 	public boolean isFlattenedNavigationAllowed() {
-		if (StringUtil.equals(
-				_assetCategoriesAdminWebConfiguration.
-					categoryNavigationDisplayStyle(),
-				AssetCategoriesAdminDisplayStyleKeys.FLATTENED_TREE)) {
-
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(
+			_assetCategoriesAdminWebConfiguration.
+				categoryNavigationDisplayStyle(),
+			AssetCategoriesAdminDisplayStyleKeys.FLATTENED_TREE);
 	}
 
 	public boolean isItemSelector() {
@@ -903,11 +890,7 @@ public class AssetCategoriesDisplayContext {
 			return false;
 		}
 
-		if (isAssetCategoriesLimitExceeded()) {
-			return true;
-		}
-
-		return false;
+		return isAssetCategoriesLimitExceeded();
 	}
 
 	public boolean isShowCategoriesAddButton() {
@@ -926,16 +909,11 @@ public class AssetCategoriesDisplayContext {
 			_log.error("Unable to get asset vocabulary", exception);
 		}
 
-		if (AssetCategoriesPermission.contains(
-				_themeDisplay.getPermissionChecker(),
-				AssetCategoriesPermission.RESOURCE_NAME,
-				AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN,
-				_themeDisplay.getSiteGroupId(), ActionKeys.ADD_CATEGORY)) {
-
-			return true;
-		}
-
-		return false;
+		return AssetCategoriesPermission.contains(
+			_themeDisplay.getPermissionChecker(),
+			AssetCategoriesPermission.RESOURCE_NAME,
+			AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN,
+			_themeDisplay.getSiteGroupId(), ActionKeys.ADD_CATEGORY);
 	}
 
 	public boolean isShowCategoriesSelectButton() {
@@ -974,10 +952,10 @@ public class AssetCategoriesDisplayContext {
 	}
 
 	private long _getDefaultVocabularyId() throws PortalException {
-		List<AssetVocabulary> vocabularies = getVocabularies();
+		List<AssetVocabulary> assetVocabularies = getVocabularies();
 
-		if (ListUtil.isNotEmpty(vocabularies)) {
-			AssetVocabulary vocabulary = vocabularies.get(0);
+		if (ListUtil.isNotEmpty(assetVocabularies)) {
+			AssetVocabulary vocabulary = assetVocabularies.get(0);
 
 			return vocabulary.getVocabularyId();
 		}
@@ -989,10 +967,10 @@ public class AssetCategoriesDisplayContext {
 			for (Map.Entry<Long, List<AssetVocabulary>> entry :
 					inheritedVocabularies.entrySet()) {
 
-				vocabularies = entry.getValue();
+				assetVocabularies = entry.getValue();
 
-				if (ListUtil.isNotEmpty(vocabularies)) {
-					AssetVocabulary vocabulary = vocabularies.get(0);
+				if (ListUtil.isNotEmpty(assetVocabularies)) {
+					AssetVocabulary vocabulary = assetVocabularies.get(0);
 
 					return vocabulary.getVocabularyId();
 				}
@@ -1060,6 +1038,7 @@ public class AssetCategoriesDisplayContext {
 
 	private final AssetCategoriesAdminWebConfiguration
 		_assetCategoriesAdminWebConfiguration;
+	private List<AssetVocabulary> _assetVocabularies;
 	private Set<Locale> _availableLocales;
 	private SearchContainer<AssetCategory> _categoriesSearchContainer;
 	private AssetCategory _category;
@@ -1076,7 +1055,6 @@ public class AssetCategoriesDisplayContext {
 	private String _selectedLanguageId;
 	private Boolean _showSelectAssetDisplayPage;
 	private final ThemeDisplay _themeDisplay;
-	private List<AssetVocabulary> _vocabularies;
 	private SearchContainer<AssetVocabulary> _vocabulariesSearchContainer;
 	private AssetVocabulary _vocabulary;
 	private Long _vocabularyId;

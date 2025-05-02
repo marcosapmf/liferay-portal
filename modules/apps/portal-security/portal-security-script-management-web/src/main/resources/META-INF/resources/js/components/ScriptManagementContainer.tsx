@@ -8,7 +8,8 @@ import ClayButton from '@clayui/button';
 import {Text} from '@clayui/core';
 import {ClayCheckbox} from '@clayui/form';
 import ClayModal, {useModal} from '@clayui/modal';
-import {createResourceURL, fetch, openToast} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {createResourceURL, fetch} from 'frontend-js-web';
 import React, {useState} from 'react';
 
 import {GroovyScriptUsesModalContent} from './GroovyScriptUsesModalContent';
@@ -114,7 +115,7 @@ export default function ScriptManagementContainer({
 			{!isScriptManagementConfigurationDefined && (
 				<ClayAlert
 					displayType="info"
-					title={`${Liferay.Language.get('alert-helper-info')}:`}
+					title={`${Liferay.Language.get('info')}:`}
 				>
 					{Liferay.Language.get(
 						'this-configuration-is-not-saved-yet.-the-values-shown-are-the-default'

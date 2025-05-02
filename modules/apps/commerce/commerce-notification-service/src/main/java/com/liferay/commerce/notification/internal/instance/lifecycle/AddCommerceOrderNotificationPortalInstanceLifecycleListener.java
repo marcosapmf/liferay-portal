@@ -21,18 +21,13 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagListener;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
-import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
@@ -43,11 +38,7 @@ import java.net.URLConnection;
 import java.util.Collections;
 import java.util.List;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -62,12 +53,6 @@ public class AddCommerceOrderNotificationPortalInstanceLifecycleListener
 
 	@Override
 	public void portalInstanceRegistered(Company company) throws Exception {
-		if (!FeatureFlagManagerUtil.isEnabled(
-				company.getCompanyId(), "LPD-24498")) {
-
-			return;
-		}
-
 		try {
 			_verifyCommerceOrderNotificationTemplate(company.getCompanyId());
 			_verifyCommerceOrderObjectAction(company.getCompanyId());
@@ -79,29 +64,15 @@ public class AddCommerceOrderNotificationPortalInstanceLifecycleListener
 		}
 	}
 
-	@Activate
-	protected void activate(BundleContext bundleContext) {
-		_serviceRegistration = bundleContext.registerService(
-			FeatureFlagListener.class, new FeatureFlagListenerImpl(),
-			MapUtil.singletonDictionary("featureFlagKey", "LPD-24498"));
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		_serviceRegistration.unregister();
-	}
-
 	private User _getAdminUser(long companyId) throws Exception {
-		Role role = _roleLocalService.getRole(
-			companyId, RoleConstants.ADMINISTRATOR);
-
-		List<User> users = _userLocalService.getRoleUsers(role.getRoleId());
+		List<User> users = _userLocalService.getUsersByRoleName(
+			companyId, RoleConstants.ADMINISTRATOR, 0, 1);
 
 		if (users.isEmpty()) {
 			throw new NoSuchUserException(
 				StringBundler.concat(
 					"No user exists in company ", companyId, " with role ",
-					role.getName()));
+					RoleConstants.ADMINISTRATOR));
 		}
 
 		return users.get(0);
@@ -224,34 +195,6 @@ public class AddCommerceOrderNotificationPortalInstanceLifecycleListener
 	private ObjectFieldLocalService _objectFieldLocalService;
 
 	@Reference
-	private RoleLocalService _roleLocalService;
-
-	private ServiceRegistration<FeatureFlagListener> _serviceRegistration;
-
-	@Reference
 	private UserLocalService _userLocalService;
-
-	private class FeatureFlagListenerImpl implements FeatureFlagListener {
-
-		@Override
-		public void onValue(
-			long companyId, String featureFlagKey, boolean enabled) {
-
-			if (!enabled) {
-				return;
-			}
-
-			try {
-				_verifyCommerceOrderNotificationTemplate(companyId);
-				_verifyCommerceOrderObjectAction(companyId);
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception);
-				}
-			}
-		}
-
-	}
 
 }

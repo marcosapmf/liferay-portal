@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -41,8 +39,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Generated("")
 @GraphQLName("Specification")
+@io.swagger.v3.oas.annotations.media.Schema(
+	requiredProperties = {"key", "title"}
+)
 @JsonFilter("Liferay.Vulcan")
-@Schema(requiredProperties = {"key", "title"})
 @XmlRootElement(name = "Specification")
 public class Specification implements Serializable {
 
@@ -54,7 +54,9 @@ public class Specification implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Specification.class, json);
 	}
 
-	@Schema(example = "{hu_HU=Horvatorszag, hr_HR=Hrvatska, en_US=Croatia}")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		example = "{en_US=Croatia, hr_HR=Hrvatska, hu_HU=Horvatorszag}"
+	)
 	@Valid
 	public Map<String, String> getDescription() {
 		if (_descriptionSupplier != null) {
@@ -97,7 +99,7 @@ public class Specification implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _descriptionSupplier;
 
-	@Schema(example = "AB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -138,7 +140,7 @@ public class Specification implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema(example = "true")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
 	public Boolean getFacetable() {
 		if (_facetableSupplier != null) {
 			facetable = _facetableSupplier.get();
@@ -180,7 +182,7 @@ public class Specification implements Serializable {
 	private Supplier<Boolean> _facetableSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "31130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "31130")
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -219,7 +221,7 @@ public class Specification implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(example = "specification-key")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "specification-key")
 	public String getKey() {
 		if (_keySupplier != null) {
 			key = _keySupplier.get();
@@ -260,7 +262,9 @@ public class Specification implements Serializable {
 	private Supplier<String> _keySupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "31130")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		deprecated = true, example = "31130"
+	)
 	public Long getListTypeDefinitionId() {
 		if (_listTypeDefinitionIdSupplier != null) {
 			listTypeDefinitionId = _listTypeDefinitionIdSupplier.get();
@@ -294,6 +298,7 @@ public class Specification implements Serializable {
 		};
 	}
 
+	@Deprecated
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long listTypeDefinitionId;
@@ -301,7 +306,48 @@ public class Specification implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _listTypeDefinitionIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Long[] getListTypeDefinitionIds() {
+		if (_listTypeDefinitionIdsSupplier != null) {
+			listTypeDefinitionIds = _listTypeDefinitionIdsSupplier.get();
+
+			_listTypeDefinitionIdsSupplier = null;
+		}
+
+		return listTypeDefinitionIds;
+	}
+
+	public void setListTypeDefinitionIds(Long[] listTypeDefinitionIds) {
+		this.listTypeDefinitionIds = listTypeDefinitionIds;
+
+		_listTypeDefinitionIdsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setListTypeDefinitionIds(
+		UnsafeSupplier<Long[], Exception> listTypeDefinitionIdsUnsafeSupplier) {
+
+		_listTypeDefinitionIdsSupplier = () -> {
+			try {
+				return listTypeDefinitionIdsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long[] listTypeDefinitionIds;
+
+	@JsonIgnore
+	private Supplier<Long[]> _listTypeDefinitionIdsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public OptionCategory getOptionCategory() {
 		if (_optionCategorySupplier != null) {
@@ -344,7 +390,7 @@ public class Specification implements Serializable {
 	@JsonIgnore
 	private Supplier<OptionCategory> _optionCategorySupplier;
 
-	@Schema(example = "1.2")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "1.2")
 	public Double getPriority() {
 		if (_prioritySupplier != null) {
 			priority = _prioritySupplier.get();
@@ -385,7 +431,9 @@ public class Specification implements Serializable {
 	@JsonIgnore
 	private Supplier<Double> _prioritySupplier;
 
-	@Schema(example = "{en_US=Croatia, hr_HR=Hrvatska, hu_HU=Horvatorszag}")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		example = "{en_US=Croatia, hr_HR=Hrvatska, hu_HU=Horvatorszag}"
+	)
 	@Valid
 	public Map<String, String> getTitle() {
 		if (_titleSupplier != null) {
@@ -427,6 +475,47 @@ public class Specification implements Serializable {
 
 	@JsonIgnore
 	private Supplier<Map<String, String>> _titleSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
+	public Boolean getVisible() {
+		if (_visibleSupplier != null) {
+			visible = _visibleSupplier.get();
+
+			_visibleSupplier = null;
+		}
+
+		return visible;
+	}
+
+	public void setVisible(Boolean visible) {
+		this.visible = visible;
+
+		_visibleSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setVisible(
+		UnsafeSupplier<Boolean, Exception> visibleUnsafeSupplier) {
+
+		_visibleSupplier = () -> {
+			try {
+				return visibleUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean visible;
+
+	@JsonIgnore
+	private Supplier<Boolean> _visibleSupplier;
 
 	@Override
 	public boolean equals(Object object) {
@@ -535,6 +624,28 @@ public class Specification implements Serializable {
 			sb.append(listTypeDefinitionId);
 		}
 
+		Long[] listTypeDefinitionIds = getListTypeDefinitionIds();
+
+		if (listTypeDefinitionIds != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"listTypeDefinitionIds\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < listTypeDefinitionIds.length; i++) {
+				sb.append(listTypeDefinitionIds[i]);
+
+				if ((i + 1) < listTypeDefinitionIds.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		OptionCategory optionCategory = getOptionCategory();
 
 		if (optionCategory != null) {
@@ -571,13 +682,25 @@ public class Specification implements Serializable {
 			sb.append(_toJSON(title));
 		}
 
+		Boolean visible = getVisible();
+
+		if (visible != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"visible\": ");
+
+			sb.append(visible);
+		}
+
 		sb.append("}");
 
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.catalog.dto.v1_0.Specification",
 		name = "x-class-name"
 	)

@@ -220,6 +220,20 @@ public class ListTypeEntryPersistenceTest {
 	}
 
 	@Test
+	public void testCountByListTypeDefinitionIdArrayable() throws Exception {
+		_persistence.countByListTypeDefinitionId(
+			new long[] {RandomTestUtil.nextLong(), 0L});
+	}
+
+	@Test
+	public void testCountByC_U() throws Exception {
+		_persistence.countByC_U(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
+
+		_persistence.countByC_U(0L, 0L);
+	}
+
+	@Test
 	public void testCountByLTDI_K() throws Exception {
 		_persistence.countByLTDI_K(RandomTestUtil.nextLong(), "");
 

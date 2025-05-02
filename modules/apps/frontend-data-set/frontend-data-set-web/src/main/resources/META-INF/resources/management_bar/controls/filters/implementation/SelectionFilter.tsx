@@ -38,6 +38,7 @@ export interface SelectionFilterImplementationArgs
 	itemLabel: string;
 	items: TItem[];
 	multiple: boolean;
+	onClose?: () => void;
 }
 
 interface SelectedData {
@@ -159,6 +160,7 @@ function SelectionFilter({
 	itemLabel,
 	items: initialItems,
 	multiple,
+	onClose,
 	selectedData,
 	setFilter,
 }: SelectionFilterImplementationArgs) {
@@ -269,13 +271,13 @@ function SelectionFilter({
 		searchOptions,
 	]);
 
-	const setScrollingArea = useCallback((node) => {
+	const setScrollingArea = useCallback((node: any) => {
 		scrollingAreaRef.current = node;
 
 		setScrollingAreaRendered(true);
 	}, []);
 
-	const setInfiniteLoader = useCallback((node) => {
+	const setInfiniteLoader = useCallback((node: any) => {
 		infiniteLoaderRef.current = node;
 
 		setInfiniteLoaderRendered(true);
@@ -489,6 +491,10 @@ function SelectionFilter({
 								active: true,
 								selectedData: newSelectedData,
 							});
+						}
+
+						if (onClose) {
+							onClose();
 						}
 					}}
 					size="sm"

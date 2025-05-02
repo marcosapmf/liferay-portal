@@ -10,7 +10,6 @@ import com.liferay.commerce.product.model.CPOption;
 import com.liferay.commerce.product.service.CPOptionService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Option;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.OptionValue;
-import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.odata.entity.v1_0.OptionEntityModel;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.OptionResource;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.OptionValueResource;
@@ -27,6 +26,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -37,6 +37,7 @@ import com.liferay.portal.vulcan.util.SearchUtil;
 import java.io.Serializable;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -72,8 +73,9 @@ public class OptionResourceImpl extends BaseOptionResourceImpl {
 			String externalReferenceCode)
 		throws Exception {
 
-		CPOption cpOption = _cpOptionService.fetchByExternalReferenceCode(
-			externalReferenceCode, contextCompany.getCompanyId());
+		CPOption cpOption =
+			_cpOptionService.fetchCPOptionByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (cpOption == null) {
 			throw new NoSuchCPOptionException(
@@ -104,8 +106,9 @@ public class OptionResourceImpl extends BaseOptionResourceImpl {
 	public Option getOptionByExternalReferenceCode(String externalReferenceCode)
 		throws Exception {
 
-		CPOption cpOption = _cpOptionService.fetchByExternalReferenceCode(
-			externalReferenceCode, contextCompany.getCompanyId());
+		CPOption cpOption =
+			_cpOptionService.fetchCPOptionByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		return _toOption(cpOption.getCPOptionId());
 	}
@@ -142,8 +145,9 @@ public class OptionResourceImpl extends BaseOptionResourceImpl {
 			String externalReferenceCode, Option option)
 		throws Exception {
 
-		CPOption cpOption = _cpOptionService.fetchByExternalReferenceCode(
-			externalReferenceCode, contextCompany.getCompanyId());
+		CPOption cpOption =
+			_cpOptionService.fetchCPOptionByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (cpOption == null) {
 			throw new NoSuchCPOptionException(
@@ -160,10 +164,21 @@ public class OptionResourceImpl extends BaseOptionResourceImpl {
 
 	@Override
 	public Option postOption(Option option) throws Exception {
-		return _addOrUpdateOption(option);
+		return _addOrUpdateOption(option.getExternalReferenceCode(), option);
 	}
 
-	private Option _addOrUpdateOption(Option option) throws Exception {
+	@Override
+	public Option putOptionByExternalReferenceCode(
+			String externalReferenceCode, Option option)
+		throws Exception {
+
+		return _addOrUpdateOption(externalReferenceCode, option);
+	}
+
+	private Option _addOrUpdateOption(
+			String externalReferenceCode, Option option)
+		throws Exception {
+
 		Option.FieldType fieldType = option.getFieldType();
 
 		ServiceContext serviceContext =
@@ -173,7 +188,7 @@ public class OptionResourceImpl extends BaseOptionResourceImpl {
 			_getExpandoBridgeAttributes(option));
 
 		CPOption cpOption = _cpOptionService.addOrUpdateCPOption(
-			option.getExternalReferenceCode(),
+			externalReferenceCode,
 			LanguageUtils.getLocalizedMap(option.getName()),
 			LanguageUtils.getLocalizedMap(option.getDescription()),
 			fieldType.getValue(), GetterUtil.get(option.getFacetable(), false),
@@ -226,10 +241,17 @@ public class OptionResourceImpl extends BaseOptionResourceImpl {
 	private Map<String, Serializable> _getExpandoBridgeAttributes(
 		Option option) {
 
-		return CustomFieldsUtil.toMap(
-			CPOption.class.getName(), contextCompany.getCompanyId(),
-			option.getCustomFields(),
-			contextAcceptLanguage.getPreferredLocale());
+		Map<String, Serializable> expandoBridgeAttributes =
+			CustomFieldsUtil.toMap(
+				CPOption.class.getName(), contextCompany.getCompanyId(),
+				option.getCustomFields(),
+				contextAcceptLanguage.getPreferredLocale());
+
+		if (expandoBridgeAttributes == null) {
+			expandoBridgeAttributes = new HashMap<>();
+		}
+
+		return expandoBridgeAttributes;
 	}
 
 	private Option _toOption(Long cpOptionId) throws Exception {

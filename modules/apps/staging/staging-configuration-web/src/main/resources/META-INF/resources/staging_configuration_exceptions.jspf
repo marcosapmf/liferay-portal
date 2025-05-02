@@ -57,8 +57,10 @@
 
 			if (publishProcessesLink) {
 				publishProcessesLink.addEventListener('click', (event) => {
-					Liferay.Util.openWindow({
+					Liferay.Util.openModal({
+						containerProps: {},
 						id: 'publishProcesses',
+						iframeBodyCssClass: '',
 						title: '<liferay-ui:message key="initial-publish-process" />',
 
 						<liferay-portlet:renderURL portletName="<%= PortletKeys.EXPORT_IMPORT %>" var="publishProcessesURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
@@ -71,7 +73,7 @@
 							<portlet:param name="localPublishing" value="<%= String.valueOf(stagedLocally) %>" />
 						</liferay-portlet:renderURL>
 
-						uri: '<%= HtmlUtil.escapeJS(publishProcessesURL.toString()) %>',
+						url: '<%= HtmlUtil.escapeJS(publishProcessesURL.toString()) %>',
 					});
 				});
 			}

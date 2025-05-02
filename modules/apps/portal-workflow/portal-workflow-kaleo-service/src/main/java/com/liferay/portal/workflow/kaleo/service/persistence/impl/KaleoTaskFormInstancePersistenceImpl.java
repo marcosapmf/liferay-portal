@@ -2731,7 +2731,6 @@ public class KaleoTaskFormInstancePersistenceImpl
 			"kaleoTaskFormInstance.kaleoTaskInstanceTokenId = ?";
 
 	private FinderPath _finderPathFetchByKaleoTaskFormId;
-	private FinderPath _finderPathCountByKaleoTaskFormId;
 
 	/**
 	 * Returns the kaleo task form instance where kaleoTaskFormId = &#63; or throws a <code>NoSuchTaskFormInstanceException</code> if it could not be found.
@@ -2911,51 +2910,14 @@ public class KaleoTaskFormInstancePersistenceImpl
 	 */
 	@Override
 	public int countByKaleoTaskFormId(long kaleoTaskFormId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					KaleoTaskFormInstance.class)) {
+		KaleoTaskFormInstance kaleoTaskFormInstance = fetchByKaleoTaskFormId(
+			kaleoTaskFormId);
 
-			FinderPath finderPath = _finderPathCountByKaleoTaskFormId;
-
-			Object[] finderArgs = new Object[] {kaleoTaskFormId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(2);
-
-				sb.append(_SQL_COUNT_KALEOTASKFORMINSTANCE_WHERE);
-
-				sb.append(_FINDER_COLUMN_KALEOTASKFORMID_KALEOTASKFORMID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(kaleoTaskFormId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (kaleoTaskFormInstance == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String
@@ -3087,8 +3049,6 @@ public class KaleoTaskFormInstancePersistenceImpl
 				kaleoTaskFormInstanceModelImpl.getKaleoTaskFormId()
 			};
 
-			finderCache.putResult(
-				_finderPathCountByKaleoTaskFormId, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByKaleoTaskFormId, args,
 				kaleoTaskFormInstanceModelImpl);
@@ -3777,6 +3737,7 @@ public class KaleoTaskFormInstancePersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -3787,22 +3748,23 @@ public class KaleoTaskFormInstancePersistenceImpl
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("kaleoDefinitionId");
-		ctStrictColumnNames.add("kaleoDefinitionVersionId");
-		ctStrictColumnNames.add("kaleoInstanceId");
-		ctStrictColumnNames.add("kaleoTaskId");
-		ctStrictColumnNames.add("kaleoTaskInstanceTokenId");
-		ctStrictColumnNames.add("kaleoTaskFormId");
-		ctStrictColumnNames.add("formValues");
-		ctStrictColumnNames.add("formValueEntryGroupId");
-		ctStrictColumnNames.add("formValueEntryId");
-		ctStrictColumnNames.add("formValueEntryUuid");
-		ctStrictColumnNames.add("metadata");
+		ctMergeColumnNames.add("kaleoDefinitionId");
+		ctMergeColumnNames.add("kaleoDefinitionVersionId");
+		ctMergeColumnNames.add("kaleoInstanceId");
+		ctMergeColumnNames.add("kaleoTaskId");
+		ctMergeColumnNames.add("kaleoTaskInstanceTokenId");
+		ctMergeColumnNames.add("kaleoTaskFormId");
+		ctMergeColumnNames.add("formValues");
+		ctMergeColumnNames.add("formValueEntryGroupId");
+		ctMergeColumnNames.add("formValueEntryId");
+		ctMergeColumnNames.add("formValueEntryUuid");
+		ctMergeColumnNames.add("metadata");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("kaleoTaskFormInstanceId"));
@@ -3934,11 +3896,6 @@ public class KaleoTaskFormInstancePersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByKaleoTaskFormId",
 			new String[] {Long.class.getName()},
 			new String[] {"kaleoTaskFormId"}, true);
-
-		_finderPathCountByKaleoTaskFormId = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByKaleoTaskFormId",
-			new String[] {Long.class.getName()},
-			new String[] {"kaleoTaskFormId"}, false);
 
 		KaleoTaskFormInstanceUtil.setPersistence(this);
 	}

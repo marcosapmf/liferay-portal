@@ -161,6 +161,14 @@ public class ListTypeEntryLocalServiceImpl
 	}
 
 	@Override
+	public List<ListTypeEntry> getListTypeEntries(
+		long[] listTypeDefinitionIds) {
+
+		return listTypeEntryPersistence.findByListTypeDefinitionId(
+			listTypeDefinitionIds);
+	}
+
+	@Override
 	public int getListTypeEntriesCount(long listTypeDefinitionId) {
 		return listTypeEntryPersistence.countByListTypeDefinitionId(
 			listTypeDefinitionId);
@@ -214,6 +222,19 @@ public class ListTypeEntryLocalServiceImpl
 		listTypeEntry.setExternalReferenceCode(externalReferenceCode);
 
 		return listTypeEntryPersistence.update(listTypeEntry);
+	}
+
+	@Override
+	public void updateUserId(long companyId, long oldUserId, long newUserId)
+		throws PortalException {
+
+		for (ListTypeEntry listTypeEntry :
+				listTypeEntryPersistence.findByC_U(companyId, oldUserId)) {
+
+			listTypeEntry.setUserId(newUserId);
+
+			listTypeEntryPersistence.update(listTypeEntry);
+		}
 	}
 
 	private void _validateExternalReferenceCode(

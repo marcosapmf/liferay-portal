@@ -132,6 +132,7 @@ definition {
 	test CanCreateMultipleCustomAssetReport {
 		property portal.acceptance = "true";
 		property portal.release = "true";
+		property portal.upstream = "quarantine";
 
 		task ("Sign in as new user") {
 			User.logoutAndLoginPG(

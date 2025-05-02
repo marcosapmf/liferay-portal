@@ -6,7 +6,7 @@
 package com.liferay.layout.page.template.item.selector.web.internal.display.context;
 
 import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
-import com.liferay.layout.page.template.item.selector.criterion.LayoutPageTemplateCollectionTreeNodeItemSelectorCriterion;
+import com.liferay.layout.page.template.item.selector.LayoutPageTemplateCollectionTreeNodeItemSelectorCriterion;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalServiceUtil;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -78,18 +78,11 @@ public class LayoutPageTemplateCollectionsTreeNodeDisplayContext {
 					}
 				).put(
 					"disabled",
-					() -> {
-						if (ArrayUtil.contains(
-								_layoutPageTemplateCollectionTreeNodeItemSelectorCriterion.
-									getLayoutPageTemplateCollectionIds(),
-								layoutPageTemplateCollection.
-									getLayoutPageTemplateCollectionId())) {
-
-							return true;
-						}
-
-						return false;
-					}
+					() -> ArrayUtil.contains(
+						_layoutPageTemplateCollectionTreeNodeItemSelectorCriterion.
+							getLayoutPageTemplateCollectionIds(),
+						layoutPageTemplateCollection.
+							getLayoutPageTemplateCollectionId())
 				).put(
 					"id",
 					layoutPageTemplateCollection.

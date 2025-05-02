@@ -8,6 +8,9 @@ package com.liferay.gradle.plugins.workspace.internal.util;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,6 +27,8 @@ import java.util.stream.Stream;
 public class StringUtil {
 
 	public static final String BLANK = "";
+
+	public static final String COLON = ":";
 
 	public static final String COMMA = ",";
 
@@ -89,6 +94,21 @@ public class StringUtil {
 		}
 
 		return false;
+	}
+
+	public static boolean isUrl(String url) {
+		if (isBlank(url) || !url.contains(COLON)) {
+			return false;
+		}
+
+		try {
+			new URL(url);
+
+			return true;
+		}
+		catch (MalformedURLException malformedURLException) {
+			return false;
+		}
 	}
 
 	public static String join(String delimiter, Collection<?> objects) {

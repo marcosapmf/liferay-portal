@@ -44,6 +44,20 @@ public class RoleBriefSerDes {
 
 		sb.append("{");
 
+		if (roleBrief.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(roleBrief.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (roleBrief.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -52,6 +66,20 @@ public class RoleBriefSerDes {
 			sb.append("\"id\": ");
 
 			sb.append(roleBrief.getId());
+		}
+
+		if (roleBrief.getKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"key\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(roleBrief.getKey()));
+
+			sb.append("\"");
 		}
 
 		if (roleBrief.getName() != null) {
@@ -78,6 +106,16 @@ public class RoleBriefSerDes {
 			sb.append(_toJSON(roleBrief.getName_i18n()));
 		}
 
+		if (roleBrief.getRoleType() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"roleType\": ");
+
+			sb.append(roleBrief.getRoleType());
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -96,11 +134,27 @@ public class RoleBriefSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (roleBrief.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(roleBrief.getExternalReferenceCode()));
+		}
+
 		if (roleBrief.getId() == null) {
 			map.put("id", null);
 		}
 		else {
 			map.put("id", String.valueOf(roleBrief.getId()));
+		}
+
+		if (roleBrief.getKey() == null) {
+			map.put("key", null);
+		}
+		else {
+			map.put("key", String.valueOf(roleBrief.getKey()));
 		}
 
 		if (roleBrief.getName() == null) {
@@ -115,6 +169,13 @@ public class RoleBriefSerDes {
 		}
 		else {
 			map.put("name_i18n", String.valueOf(roleBrief.getName_i18n()));
+		}
+
+		if (roleBrief.getRoleType() == null) {
+			map.put("roleType", null);
+		}
+		else {
+			map.put("roleType", String.valueOf(roleBrief.getRoleType()));
 		}
 
 		return map;
@@ -134,7 +195,13 @@ public class RoleBriefSerDes {
 
 		@Override
 		protected boolean parseMaps(String jsonParserFieldName) {
-			if (Objects.equals(jsonParserFieldName, "id")) {
+			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "key")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "name")) {
@@ -142,6 +209,9 @@ public class RoleBriefSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "name_i18n")) {
 				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "roleType")) {
+				return false;
 			}
 
 			return false;
@@ -152,9 +222,20 @@ public class RoleBriefSerDes {
 			RoleBrief roleBrief, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "id")) {
+			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+				if (jsonParserFieldValue != null) {
+					roleBrief.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					roleBrief.setId(Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "key")) {
+				if (jsonParserFieldValue != null) {
+					roleBrief.setKey((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "name")) {
@@ -166,6 +247,12 @@ public class RoleBriefSerDes {
 				if (jsonParserFieldValue != null) {
 					roleBrief.setName_i18n(
 						(Map<String, String>)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "roleType")) {
+				if (jsonParserFieldValue != null) {
+					roleBrief.setRoleType(
+						Integer.valueOf((String)jsonParserFieldValue));
 				}
 			}
 		}
@@ -213,6 +300,10 @@ public class RoleBriefSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

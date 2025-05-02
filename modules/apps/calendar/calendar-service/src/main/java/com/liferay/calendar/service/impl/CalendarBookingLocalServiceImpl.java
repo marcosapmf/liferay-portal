@@ -43,6 +43,7 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.message.boards.service.MBMessageLocalService;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.Criterion;
@@ -801,22 +802,15 @@ public class CalendarBookingLocalServiceImpl
 	public List<CalendarBooking> getRecurringCalendarBookings(
 		CalendarBooking calendarBooking, long startTime) {
 
-		List<CalendarBooking> recurringCalendarBookings =
-			getRecurringCalendarBookings(calendarBooking);
+		return TransformUtil.transform(
+			getRecurringCalendarBookings(calendarBooking),
+			recurringCalendarBooking -> {
+				if (recurringCalendarBooking.getStartTime() > startTime) {
+					return recurringCalendarBooking;
+				}
 
-		List<CalendarBooking> followingRecurringCalendarBookings =
-			new ArrayList<>();
-
-		for (CalendarBooking recurringCalendarBooking :
-				recurringCalendarBookings) {
-
-			if (recurringCalendarBooking.getStartTime() > startTime) {
-				followingRecurringCalendarBookings.add(
-					recurringCalendarBooking);
-			}
-		}
-
-		return followingRecurringCalendarBookings;
+				return null;
+			});
 	}
 
 	@Override
@@ -838,11 +832,7 @@ public class CalendarBookingLocalServiceImpl
 					WorkflowConstants.STATUS_PENDING
 				});
 
-		if (!calendarBookings.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return !calendarBookings.isEmpty();
 	}
 
 	@Override
@@ -1207,7 +1197,7 @@ public class CalendarBookingLocalServiceImpl
 			(calendar.getGroupId() != calendarBooking.getGroupId())) {
 
 			systemEventLocalService.addSystemEvent(
-				userId, calendarBooking.getGroupId(),
+				userId, calendarBooking.getGroupId(), StringPool.BLANK,
 				CalendarBooking.class.getName(),
 				calendarBooking.getCalendarBookingId(),
 				calendarBooking.getUuid(), null,
@@ -1954,8 +1944,6 @@ public class CalendarBookingLocalServiceImpl
 			CalendarBooking calendarBooking)
 		throws Exception {
 
-		List<NotificationRecipient> notificationRecipients = new ArrayList<>();
-
 		CalendarResource calendarResource =
 			calendarBooking.getCalendarResource();
 
@@ -1967,23 +1955,23 @@ public class CalendarBookingLocalServiceImpl
 
 		users.add(_userLocalService.fetchUser(calendarResource.getUserId()));
 
-		for (User user : users) {
-			if (user == null) {
-				continue;
-			}
+		return TransformUtil.transform(
+			users,
+			user -> {
+				if (user == null) {
+					return null;
+				}
 
-			if (!user.isActive()) {
+				if (user.isActive()) {
+					return new NotificationRecipient(user);
+				}
+
 				if (_log.isDebugEnabled()) {
 					_log.debug("Skip inactive user " + user.getUserId());
 				}
 
-				continue;
-			}
-
-			notificationRecipients.add(new NotificationRecipient(user));
-		}
-
-		return notificationRecipients;
+				return null;
+			});
 	}
 
 	private Calendar _getNotLiveCalendar(Calendar calendar)
@@ -2447,68 +2435,61 @@ public class CalendarBookingLocalServiceImpl
 			long userId, CalendarBooking calendarBooking, long startTime)
 		throws PortalException {
 
-		List<CalendarBooking> recurringCalendarBookings =
-			getRecurringCalendarBookings(calendarBooking);
+		return TransformUtil.transform(
+			getRecurringCalendarBookings(calendarBooking),
+			recurringCalendarBooking -> {
+				if (recurringCalendarBooking.getStartTime() > startTime) {
+					return recurringCalendarBooking;
+				}
 
-		List<CalendarBooking> followingRecurringCalendarBookings =
-			new ArrayList<>();
+				boolean singleInstance = false;
+				java.util.Calendar splitJCalendar = null;
 
-		java.util.Calendar splitJCalendar = null;
+				if (Validator.isNull(calendarBooking.getRecurrence())) {
+					singleInstance = true;
 
-		boolean singleInstance = false;
+					splitJCalendar = JCalendarUtil.getJCalendar(
+						calendarBooking.getStartTime(),
+						_getTimeZone(
+							calendarBooking.getCalendar(),
+							calendarBooking.isAllDay()));
 
-		if (Validator.isNull(calendarBooking.getRecurrence())) {
-			singleInstance = true;
+					splitJCalendar.add(java.util.Calendar.DATE, 1);
+				}
 
-			splitJCalendar = JCalendarUtil.getJCalendar(
-				calendarBooking.getStartTime(),
-				_getTimeZone(
-					calendarBooking.getCalendar(), calendarBooking.isAllDay()));
+				if (!singleInstance) {
+					return null;
+				}
 
-			splitJCalendar.add(java.util.Calendar.DATE, 1);
-		}
-
-		for (CalendarBooking recurringCalendarBooking :
-				recurringCalendarBookings) {
-
-			if (recurringCalendarBooking.getStartTime() > startTime) {
-				followingRecurringCalendarBookings.add(
-					recurringCalendarBooking);
-			}
-			else if (singleInstance) {
 				Recurrence recurrenceObj =
 					recurringCalendarBooking.getRecurrenceObj();
 
-				if (recurrenceObj != null) {
-					java.util.Calendar startTimeJCalendar =
-						JCalendarUtil.getJCalendar(
-							recurringCalendarBooking.getStartTime(),
-							recurringCalendarBooking.getTimeZone());
-
-					RecurrenceSplit recurrenceSplit =
-						RecurrenceSplitterUtil.split(
-							recurrenceObj, startTimeJCalendar, splitJCalendar);
-
-					if (recurrenceSplit.isSplit()) {
-						java.util.Calendar newStartTimeJCalendar =
-							JCalendarUtil.mergeJCalendar(
-								splitJCalendar, startTimeJCalendar,
-								recurringCalendarBooking.getTimeZone());
-
-						CalendarBooking newCalendarBooking =
-							_splitCalendarBookingInstance(
-								userId, recurringCalendarBooking,
-								newStartTimeJCalendar.getTimeInMillis(),
-								recurrenceSplit.getSecondRecurrence());
-
-						followingRecurringCalendarBookings.add(
-							newCalendarBooking);
-					}
+				if (recurrenceObj == null) {
+					return null;
 				}
-			}
-		}
 
-		return followingRecurringCalendarBookings;
+				java.util.Calendar startTimeJCalendar =
+					JCalendarUtil.getJCalendar(
+						recurringCalendarBooking.getStartTime(),
+						recurringCalendarBooking.getTimeZone());
+
+				RecurrenceSplit recurrenceSplit = RecurrenceSplitterUtil.split(
+					recurrenceObj, startTimeJCalendar, splitJCalendar);
+
+				if (!recurrenceSplit.isSplit()) {
+					return null;
+				}
+
+				java.util.Calendar newStartTimeJCalendar =
+					JCalendarUtil.mergeJCalendar(
+						splitJCalendar, startTimeJCalendar,
+						recurringCalendarBooking.getTimeZone());
+
+				return _splitCalendarBookingInstance(
+					userId, recurringCalendarBooking,
+					newStartTimeJCalendar.getTimeInMillis(),
+					recurrenceSplit.getSecondRecurrence());
+			});
 	}
 
 	private void _updateCalendarBookingsByChanges(

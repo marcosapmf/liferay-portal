@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -68,8 +69,11 @@ public class CallFunction
 			DDMDataProviderRequest.Builder builder =
 				DDMDataProviderRequest.Builder.newBuilder();
 
-			builder = builder.withDDMDataProviderId(
-				ddmDataProviderInstanceUUID);
+			builder = builder.withCompanyId(
+				CompanyThreadLocal.getCompanyId()
+			).withDDMDataProviderId(
+				ddmDataProviderInstanceUUID
+			);
 
 			Map<String, String> parameterMap = _extractParameters(
 				paramsExpression);
@@ -152,7 +156,11 @@ public class CallFunction
 			JSONArray jsonArray = jsonFactory.createJSONArray(
 				String.valueOf(value));
 
-			return (String)jsonArray.get(0);
+			return jsonArray.join(
+				StringPool.COMMA_AND_SPACE
+			).replaceAll(
+				StringPool.QUOTE, StringPool.BLANK
+			);
 		}
 		catch (JSONException jsonException) {
 			if (_log.isDebugEnabled()) {
@@ -164,11 +172,11 @@ public class CallFunction
 	}
 
 	protected void setDDMFormFieldOptions(
-		String field, List<KeyValuePair> options) {
+		String field, List<KeyValuePair> optionKeyValuePairs) {
 
 		UpdateFieldPropertyRequest.Builder builder =
 			UpdateFieldPropertyRequest.Builder.newBuilder(
-				field, "options", options);
+				field, "options", optionKeyValuePairs);
 
 		_ddmExpressionObserver.updateFieldProperty(builder.build());
 	}

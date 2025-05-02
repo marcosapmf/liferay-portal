@@ -5,14 +5,13 @@
 
 package com.liferay.info.collection.provider.item.selector.web.internal.item.selector;
 
-import com.liferay.info.collection.provider.item.selector.criterion.RepeatableFieldInfoCollectionProviderItemSelectorCriterion;
+import com.liferay.info.collection.provider.item.selector.RepeatableFieldInfoCollectionProviderItemSelectorCriterion;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.RepeatableFieldsInfoItemFormProvider;
 import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 
@@ -70,9 +69,7 @@ public class RepeatableFieldInfoCollectionProviderItemSelectorView
 					RepeatableFieldsInfoItemFormProvider.class,
 					itemSelectorCriterion.getItemType());
 
-		if ((repeatableFieldsInfoItemFormProvider != null) &&
-			FeatureFlagManagerUtil.isEnabled("LPD-11377")) {
-
+		if (repeatableFieldsInfoItemFormProvider != null) {
 			return true;
 		}
 

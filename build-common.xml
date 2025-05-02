@@ -82,11 +82,7 @@
 		<pathelement path="${classpath.full}" />
 		<fileset
 			dir="${project.dir}/lib/development"
-			includes="osgi-annotation-versioning.jar,osgi-core.jar,jsp-api.jar,mail.jar,servlet-api.jar"
-		/>
-		<fileset
-			dir="${project.dir}/lib/portal"
-			includes="portlet.jar"
+			includes="osgi-annotation-versioning.jar,osgi-core.jar,portlet.jar,tomcat-jsp-api.jar,mail.jar,tomcat-servlet-api.jar"
 		/>
 		<path refid="lib.pre.classpath" />
 		<path refid="web-lib.classpath" />
@@ -171,10 +167,6 @@
 
 	<delete file="${app.server.tmp.properties}" />
 
-	<condition property="app.server.portal.war.name" value="${app.server.websphere.portal.war.name}">
-		<equals arg1="${app.server.type}" arg2="websphere" />
-	</condition>
-
 	<property name="liferay.home" value="${app.server.parent.dir}" />
 
 	<basename file="${basedir}" property="basedir.name" />
@@ -258,69 +250,10 @@
 		</condition>
 	</fail>
 
-	<whichresource property="google.errorprone.compiler" resource="/com/google/errorprone/ErrorProneAntCompilerAdapter.class" />
-
-	<if>
-		<and>
-			<equals arg1="${javac.compiler}" arg2="com.google.errorprone.ErrorProneAntCompilerAdapter" />
-			<not>
-				<isset property="google.errorprone.compiler" />
-			</not>
-		</and>
-		<then>
-			<trycatch>
-				<try>
-					<copy
-						file="${project.dir}/lib/development/error-prone-ant.jar"
-						todir="${ant.home}/lib"
-					/>
-				</try>
-				<catch>
-					<fail>
-.
-
-Please manually copy ${project.dir}/lib/development/error-prone-ant.jar to
-${ant.home}/lib to install Error-Prone. Then rerun your task.
-					</fail>
-				</catch>
-			</trycatch>
-
-			<if>
-				<available file="${ant.home}/lib/error-prone-ant.jar" />
-				<then>
-					<fail>
-.
-
-Task cannot continue because Error-Prone is not installed.
-
-Error-Prone was automatically installed. Please rerun your task.
-					</fail>
-				</then>
-			</if>
-		</then>
-	</if>
-
-	<property name="ant.options.add.opens" value="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/sun.net.www.protocol.http=ALL-UNNAMED --add-opens=java.base/sun.net.www.protocol.https=ALL-UNNAMED --add-opens=java.base/sun.util.calendar=ALL-UNNAMED --add-opens=jdk.zipfs/jdk.nio.zipfs=ALL-UNNAMED" />
-
-	<fail message=".${line.separator}Please update the environment variable ANT_OPTS to open packages for deep reflection${line.separator}&quot;${ant.options.add.opens}&quot;.">
-		<condition>
-			<and>
-				<not>
-					<equals arg1="${java.specification.version}" arg2="1.8" />
-				</not>
-				<not>
-					<contains string="${env.ANT_OPTS}" substring="${ant.options.add.opens}" />
-				</not>
-			</and>
-		</condition>
-	</fail>
-
-	<property name="ant.options.jvm.memory" value="-Xmx2560m" />
-
-	<fail message=".${line.separator}Please update the environment variable ANT_OPTS to allocate extra memory for the JVM${line.separator}&quot;${ant.options.jvm.memory}&quot;.">
+	<fail message=".${line.separator}Please set the environment variable ANT_OPTS to the recommended value of${line.separator}&quot;-Xmx2560m&quot;.">
 		<condition>
 			<not>
-				<contains string="${env.ANT_OPTS}" substring="-Xmx" />
+				<isset property="env.ANT_OPTS" />
 			</not>
 		</condition>
 	</fail>
@@ -459,7 +392,9 @@ information.
 						encoding="${javac.encoding}"
 						includeAntRuntime="false"
 						nowarn="${javac.nowarn}"
+						source="${ant.build.javac.source}"
 						srcdir="test/@{test.type}"
+						target="${ant.build.javac.target}"
 					/>
 				</then>
 			</if>
@@ -711,11 +646,12 @@ information.
 
 	<macrodef name="generate-backend-batch-junit-report-modules">
 		<attribute name="test.class.name" />
+		<attribute name="test.task.name" />
 
 		<sequential>
 			<generate-backend-batch-junit-report
 				junit.failure.count="1"
-				junit.failure.message.element="&lt;failure message=&quot;Failed to run test on CI&quot; /&gt;"
+				junit.failure.message.element="&lt;failure message=&quot;@{test.task.name} failed to compile successfully&quot; /&gt;"
 				test.class.name="@{test.class.name}"
 				test.command.name="testRun"
 				test.results.dir="modules/test-results"
@@ -742,6 +678,36 @@ information.
 
 					<property name="artifact.version" value="${Bundle-Version}" />
 
+					<loadproperties prefix="portal.kernel" srcFile="${project.dir}/portal-kernel/bnd.bnd">
+						<filterchain>
+							<linecontains>
+								<contains value="Bundle-Version" />
+							</linecontains>
+						</filterchain>
+					</loadproperties>
+
+					<property name="portal.kernel.version" value="${portal.kernel.Bundle-Version}" />
+
+					<loadproperties prefix="util.bridges" srcFile="${project.dir}/util-bridges/bnd.bnd">
+						<filterchain>
+							<linecontains>
+								<contains value="Bundle-Version" />
+							</linecontains>
+						</filterchain>
+					</loadproperties>
+
+					<property name="util.bridges.version" value="${util.bridges.Bundle-Version}" />
+
+					<loadproperties prefix="util.java" srcFile="${project.dir}/util-java/bnd.bnd">
+						<filterchain>
+							<linecontains>
+								<contains value="Bundle-Version" />
+							</linecontains>
+						</filterchain>
+					</loadproperties>
+
+					<property name="util.java.version" value="${util.java.Bundle-Version}" />
+
 					<copy
 						file="../tools/maven/${artifact.name}.xml"
 						tofile="classes/META-INF/maven/${project.groupId}/${project.artifactId}/pom.xml"
@@ -750,6 +716,9 @@ information.
 							<expandproperties />
 						</filterchain>
 						<filterset>
+							<filter token="portal.kernel.version" value="${portal.kernel.version}" />
+							<filter token="util.bridges.version" value="${util.bridges.version}" />
+							<filter token="util.java.version" value="${util.java.version}" />
 							<filter token="version" value="${artifact.version}" />
 						</filterset>
 					</copy>
@@ -1853,7 +1822,7 @@ artifact.url=${remote.repository.cdn.url}/com/liferay/portal/com.liferay.${proce
 				<path refid="lib.pre.classpath" />
 				<fileset
 					dir="${project.dir}/lib/development"
-					excludes="jalopy.jar,tomcat*.jar"
+					excludes="jalopy.jar"
 					includes="*.jar"
 				/>
 				<fileset
@@ -1871,6 +1840,8 @@ artifact.url=${remote.repository.cdn.url}/com/liferay/portal/com.liferay.${proce
 
 	<macrodef name="setup-yarn">
 		<sequential>
+			<lstopwatch action="start" name="setup.yarn" />
+
 			<if>
 				<not>
 					<and>
@@ -1888,11 +1859,26 @@ artifact.url=${remote.repository.cdn.url}/com/liferay/portal/com.liferay.${proce
 						</then>
 					</if>
 
-					<gradle-execute dir="${project.dir}/modules" task="setUpYarnOfflineCache">
-						<arg value="--build-file=${project.dir}/modules/util.gradle" />
-					</gradle-execute>
+					<if>
+						<and>
+							<available file="${project.dir}/${build.binaries.cache.dir}/.yarn/offline-cache" type="dir" />
+							<isset property="env.JENKINS_HOME" />
+						</and>
+						<then>
+							<sync-dir
+								dir="${project.dir}/${build.binaries.cache.dir}/.yarn/offline-cache"
+								symbolic="${sync.dir.symbolic}"
+								toDir="${project.dir}/modules/node_modules_cache"
+							/>
+						</then>
+						<else>
+							<gradle-execute dir="${project.dir}/modules" task="setUpYarnOfflineCache">
+								<arg value="--build-file=${project.dir}/modules/util.gradle" />
+							</gradle-execute>
+						</else>
+					</if>
 
-					<retry retrycount="5" retrydelay="10000">
+					<retry retrycount="5" retrydelay="30000">
 						<gradle-execute dir="${project.dir}/modules" task=":portalYarnInstall" />
 					</retry>
 
@@ -1906,6 +1892,8 @@ artifact.url=${remote.repository.cdn.url}/com/liferay/portal/com.liferay.${proce
 					</if>
 				</then>
 			</if>
+
+			<lstopwatch action="total" name="setup.yarn" />
 		</sequential>
 	</macrodef>
 
@@ -2110,6 +2098,7 @@ rerun your task.
 					<propertyref name="upgrade.table.dir" />
 					<propertyref prefix="build.compat.version.com.liferay.portal." />
 					<propertyref prefix="build.compat.version.com.liferay.util." />
+					<propertyref prefix="build.jakarta.transformer." />
 					<propertyref prefix="gradle.publish." />
 					<propertyref prefix="gradle.releng.pom." />
 					<propertyref prefix="ivy.pom." />
@@ -2120,7 +2109,7 @@ rerun your task.
 					<propertyref prefix="source.formatter." />
 					<propertyref prefix="systemProp." />
 					<propertyref regex=".+\.ignore\.local$" />
-					<propertyref regex="^\s*app\.server\.(?:jboss|tcserver|tomcat|weblogic|websphere|wildfly).*" />
+					<propertyref regex="^\s*app\.server\.(?:jboss|tomcat|weblogic|wildfly).*" />
 				</propertyset>
 			</echoproperties>
 
@@ -2162,6 +2151,8 @@ rerun your task.
 				<entry key="database.jdbc.drivers.url" value="${test.jdbc.drivers.url}" />
 				<entry key="database.jdbc.oracle.driver" value="${jdbc.oracle.driver}" />
 				<entry key="database.oracle.version" value="${database.oracle.version}" />
+				<entry if:set="build.java.version.override" key="java.version.override" unless:blank="${build.java.version.override}" value="${build.java.version.override}" />
+				<entry if:set="build.java.version.override.include.dirs" key="java.version.override.include.dirs" unless:blank="${build.java.version.override.include.dirs}" value="${build.java.version.override.include.dirs}" />
 				<entry if:set="build.java.version.source.compatibility" key="java.version.source.compatibility" unless:blank="${build.java.version.source.compatibility}" value="${build.java.version.source.compatibility}" />
 				<entry if:set="build.java.version.target.compatibility" key="java.version.target.compatibility" unless:blank="${build.java.version.target.compatibility}" value="${build.java.version.target.compatibility}" />
 				<entry if:set="junit.jvm.override" key="org.gradle.java.installations.paths" unless:blank="${junit.jvm.override}" value="${java.installation.paths.override}" />

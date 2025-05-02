@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.OptionValue;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,39 +46,40 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface OptionValueResource {
 
+	public Response deleteOptionValue(Long id) throws Exception;
+
+	public Response deleteOptionValueBatch(String callbackURL, Object object)
+		throws Exception;
+
 	public Response deleteOptionValueByExternalReferenceCode(
 			String externalReferenceCode)
 		throws Exception;
 
+	public Page<OptionValue> getOptionByExternalReferenceCodeOptionValuesPage(
+			String externalReferenceCode, String search, Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Page<OptionValue> getOptionIdOptionValuesPage(
+			Long id, String search, Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public OptionValue getOptionValue(Long id) throws Exception;
+
 	public OptionValue getOptionValueByExternalReferenceCode(
 			String externalReferenceCode)
+		throws Exception;
+
+	public Response patchOptionValue(Long id, OptionValue optionValue)
 		throws Exception;
 
 	public Response patchOptionValueByExternalReferenceCode(
 			String externalReferenceCode, OptionValue optionValue)
 		throws Exception;
 
-	public Response deleteOptionValue(Long id) throws Exception;
-
-	public Response deleteOptionValueBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public OptionValue getOptionValue(Long id) throws Exception;
-
-	public Response patchOptionValue(Long id, OptionValue optionValue)
-		throws Exception;
-
-	public Page<OptionValue> getOptionByExternalReferenceCodeOptionValuesPage(
-			String externalReferenceCode, String search, Pagination pagination,
-			Sort[] sorts)
-		throws Exception;
-
 	public OptionValue postOptionByExternalReferenceCodeOptionValue(
 			String externalReferenceCode, OptionValue optionValue)
-		throws Exception;
-
-	public Page<OptionValue> getOptionIdOptionValuesPage(
-			Long id, String search, Pagination pagination, Sort[] sorts)
 		throws Exception;
 
 	public OptionValue postOptionIdOptionValue(Long id, OptionValue optionValue)
@@ -112,7 +111,8 @@ public interface OptionValueResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -137,19 +137,23 @@ public interface OptionValueResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

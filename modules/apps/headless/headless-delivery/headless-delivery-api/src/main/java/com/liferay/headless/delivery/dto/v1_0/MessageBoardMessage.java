@@ -19,8 +19,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -61,7 +59,7 @@ public class MessageBoardMessage implements Serializable {
 			MessageBoardMessage.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Block of actions allowed by the user making the request."
 	)
 	@Valid
@@ -108,7 +106,9 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
-	@Schema(description = "The message's average rating.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The message's average rating."
+	)
 	@Valid
 	public AggregateRating getAggregateRating() {
 		if (_aggregateRatingSupplier != null) {
@@ -151,7 +151,7 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<AggregateRating> _aggregateRatingSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether the message's author is anonymous."
 	)
 	public Boolean getAnonymous() {
@@ -196,7 +196,9 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _anonymousSupplier;
 
-	@Schema(description = "The message's main content.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The message's main content."
+	)
 	public String getArticleBody() {
 		if (_articleBodySupplier != null) {
 			articleBody = _articleBodySupplier.get();
@@ -237,7 +239,9 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _articleBodySupplier;
 
-	@Schema(description = "The message's author.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The message's author."
+	)
 	@Valid
 	public Creator getCreator() {
 		if (_creatorSupplier != null) {
@@ -279,7 +283,7 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Creator> _creatorSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The message's creator statistics (rank, join date, number of posts, ...)"
 	)
 	@Valid
@@ -326,11 +330,13 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<CreatorStatistics> _creatorStatisticsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A list of the custom fields associated with the blog post."
 	)
 	@Valid
-	public CustomField[] getCustomFields() {
+	public com.liferay.portal.vulcan.custom.field.CustomField[]
+		getCustomFields() {
+
 		if (_customFieldsSupplier != null) {
 			customFields = _customFieldsSupplier.get();
 
@@ -340,7 +346,9 @@ public class MessageBoardMessage implements Serializable {
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields) {
+
 		this.customFields = customFields;
 
 		_customFieldsSupplier = null;
@@ -348,7 +356,9 @@ public class MessageBoardMessage implements Serializable {
 
 	@JsonIgnore
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.custom.field.CustomField[], Exception>
+				customFieldsUnsafeSupplier) {
 
 		_customFieldsSupplier = () -> {
 			try {
@@ -367,12 +377,15 @@ public class MessageBoardMessage implements Serializable {
 		description = "A list of the custom fields associated with the blog post."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected CustomField[] customFields;
+	protected com.liferay.portal.vulcan.custom.field.CustomField[] customFields;
 
 	@JsonIgnore
-	private Supplier<CustomField[]> _customFieldsSupplier;
+	private Supplier<com.liferay.portal.vulcan.custom.field.CustomField[]>
+		_customFieldsSupplier;
 
-	@Schema(description = "The date the message was created.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The date the message was created."
+	)
 	public Date getDateCreated() {
 		if (_dateCreatedSupplier != null) {
 			dateCreated = _dateCreatedSupplier.get();
@@ -413,7 +426,7 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateCreatedSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The last time the content or metadata of the message was changed."
 	)
 	public Date getDateModified() {
@@ -458,7 +471,7 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateModifiedSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The message's media format (e.g., HTML, BBCode, etc.)."
 	)
 	public String getEncodingFormat() {
@@ -503,7 +516,9 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _encodingFormatSupplier;
 
-	@Schema(description = "The message's external reference code.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The message's external reference code."
+	)
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -544,7 +559,7 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getFriendlyUrlPath() {
 		if (_friendlyUrlPathSupplier != null) {
 			friendlyUrlPath = _friendlyUrlPathSupplier.get();
@@ -585,7 +600,7 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _friendlyUrlPathSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getHasCompanyMx() {
 		if (_hasCompanyMxSupplier != null) {
 			hasCompanyMx = _hasCompanyMxSupplier.get();
@@ -626,7 +641,9 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _hasCompanyMxSupplier;
 
-	@Schema(description = "The message's main title.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The message's main title."
+	)
 	public String getHeadline() {
 		if (_headlineSupplier != null) {
 			headline = _headlineSupplier.get();
@@ -667,7 +684,9 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _headlineSupplier;
 
-	@Schema(description = "The message's ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The message's ID."
+	)
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -706,7 +725,9 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(description = "A list of keywords describing the message.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A list of keywords describing the message."
+	)
 	public String[] getKeywords() {
 		if (_keywordsSupplier != null) {
 			keywords = _keywordsSupplier.get();
@@ -747,7 +768,7 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _keywordsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The ID of the Message Board Section to which this message is scoped."
 	)
 	public Long getMessageBoardSectionId() {
@@ -792,7 +813,7 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _messageBoardSectionIdSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The ID of the Message Board Thread to which this message is scoped."
 	)
 	public Long getMessageBoardThreadId() {
@@ -837,7 +858,7 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _messageBoardThreadIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getModified() {
 		if (_modifiedSupplier != null) {
 			modified = _modifiedSupplier.get();
@@ -878,7 +899,9 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _modifiedSupplier;
 
-	@Schema(description = "The number of the message's attachments.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The number of the message's attachments."
+	)
 	public Integer getNumberOfMessageBoardAttachments() {
 		if (_numberOfMessageBoardAttachmentsSupplier != null) {
 			numberOfMessageBoardAttachments =
@@ -923,7 +946,9 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _numberOfMessageBoardAttachmentsSupplier;
 
-	@Schema(description = "The number of the message's child messages.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The number of the message's child messages."
+	)
 	public Integer getNumberOfMessageBoardMessages() {
 		if (_numberOfMessageBoardMessagesSupplier != null) {
 			numberOfMessageBoardMessages =
@@ -968,7 +993,9 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _numberOfMessageBoardMessagesSupplier;
 
-	@Schema(description = "The ID of the message's parent, if it exists.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The ID of the message's parent, if it exists."
+	)
 	public Long getParentMessageBoardMessageId() {
 		if (_parentMessageBoardMessageIdSupplier != null) {
 			parentMessageBoardMessageId =
@@ -1013,7 +1040,9 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _parentMessageBoardMessageIdSupplier;
 
-	@Schema(description = "A list of related contents to this message.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A list of related contents to this message."
+	)
 	@Valid
 	public RelatedContent[] getRelatedContents() {
 		if (_relatedContentsSupplier != null) {
@@ -1056,7 +1085,7 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<RelatedContent[]> _relatedContentsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether the message is answering a question."
 	)
 	public Boolean getShowAsAnswer() {
@@ -1101,7 +1130,9 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _showAsAnswerSupplier;
 
-	@Schema(description = "The ID of the site to which this message is scoped.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The ID of the site to which this message is scoped."
+	)
 	public Long getSiteId() {
 		if (_siteIdSupplier != null) {
 			siteId = _siteIdSupplier.get();
@@ -1144,7 +1175,9 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _siteIdSupplier;
 
-	@Schema(description = "The message's status.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The message's status."
+	)
 	public String getStatus() {
 		if (_statusSupplier != null) {
 			status = _statusSupplier.get();
@@ -1185,7 +1218,7 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _statusSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether the user making the requests is subscribed to this message."
 	)
 	public Boolean getSubscribed() {
@@ -1230,10 +1263,10 @@ public class MessageBoardMessage implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _subscribedSupplier;
 
-	@JsonGetter("viewableBy")
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A write-only property that specifies the default permissions."
 	)
+	@JsonGetter("viewableBy")
 	@Valid
 	public ViewableBy getViewableBy() {
 		if (_viewableBySupplier != null) {
@@ -1394,7 +1427,8 @@ public class MessageBoardMessage implements Serializable {
 			sb.append(String.valueOf(creatorStatistics));
 		}
 
-		CustomField[] customFields = getCustomFields();
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields =
+			getCustomFields();
 
 		if (customFields != null) {
 			if (sb.length() > 1) {
@@ -1406,7 +1440,7 @@ public class MessageBoardMessage implements Serializable {
 			sb.append("[");
 
 			for (int i = 0; i < customFields.length; i++) {
-				sb.append(String.valueOf(customFields[i]));
+				sb.append(customFields[i]);
 
 				if ((i + 1) < customFields.length) {
 					sb.append(", ");
@@ -1731,8 +1765,8 @@ public class MessageBoardMessage implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.MessageBoardMessage",
 		name = "x-class-name"
 	)

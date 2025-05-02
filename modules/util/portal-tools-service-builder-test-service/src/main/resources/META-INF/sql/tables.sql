@@ -56,11 +56,20 @@ create table DataLimitEntry (
 	modifiedDate DATE null
 );
 
+create table DefinedDefaultOrderEntry (
+	definedDefaultOrderEntryId LONG not null primary key,
+	modifiedDate DATE null,
+	name VARCHAR(75) null
+);
+
 create table ERCCompanyEntry (
 	uuid_ VARCHAR(75) null,
 	externalReferenceCode VARCHAR(75) null,
 	ercCompanyEntryId LONG not null primary key,
-	companyId LONG
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	column1 INTEGER
 );
 
 create table ERCGroupEntry (
@@ -103,6 +112,19 @@ create table FinderWhereClauseEntry (
 	finderWhereClauseEntryId LONG not null primary key,
 	name VARCHAR(75) null,
 	nickname VARCHAR(75) null
+);
+
+create table IndexEntry (
+	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
+	externalReferenceCode VARCHAR(75) null,
+	indexEntryId LONG not null,
+	companyId LONG,
+	ownerId LONG,
+	ownerType INTEGER,
+	plid LONG,
+	portletId VARCHAR(75) null,
+	primary key (indexEntryId, ctCollectionId)
 );
 
 create table LVEntries_BigDecimalEntries (
@@ -288,6 +310,12 @@ create table UADPartialEntry (
 	message VARCHAR(75) null
 );
 
+create table UndefinedDefaultOrderEntry (
+	undefinedDefaultOrderEntryId LONG not null primary key,
+	modifiedDate DATE null,
+	name VARCHAR(75) null
+);
+
 create table VersionedEntry (
 	mvccVersion LONG default 0 not null,
 	headId LONG,
@@ -301,4 +329,13 @@ create table VersionedEntryVersion (
 	version INTEGER,
 	versionedEntryId LONG,
 	groupId LONG
+);
+
+create table userId (
+	dataLimitEntryId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null
 );

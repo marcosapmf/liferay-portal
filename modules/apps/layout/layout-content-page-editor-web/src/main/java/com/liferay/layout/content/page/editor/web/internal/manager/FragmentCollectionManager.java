@@ -25,9 +25,15 @@ import com.liferay.layout.content.page.editor.web.internal.constants.ContentPage
 import com.liferay.layout.page.template.info.item.capability.EditPageInfoItemCapability;
 import com.liferay.layout.util.PortalPreferencesUtil;
 import com.liferay.layout.util.structure.DropZoneLayoutStructureItem;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
@@ -284,6 +290,9 @@ public class FragmentCollectionManager {
 
 			fragmentEntryMapsList.add(
 				HashMapBuilder.<String, Object>put(
+					"fieldTypes",
+					_getFieldTypesJSONArray(fragmentRenderer.getTypeOptions())
+				).put(
 					"fragmentEntryKey", fragmentRenderer.getKey()
 				).put(
 					"highlighted",
@@ -303,6 +312,23 @@ public class FragmentCollectionManager {
 		}
 
 		return fragmentCollectionMaps;
+	}
+
+	private JSONArray _getFieldTypesJSONArray(String typeOptions) {
+		try {
+			JSONObject jsonObject = _jsonFactory.createJSONObject(typeOptions);
+
+			JSONArray jsonArray = jsonObject.getJSONArray("fieldTypes");
+
+			if (jsonArray != null) {
+				return jsonArray;
+			}
+		}
+		catch (JSONException jsonException) {
+			_log.error(jsonException);
+		}
+
+		return _jsonFactory.createJSONArray();
 	}
 
 	private Map<String, Map<String, Object>>
@@ -355,19 +381,11 @@ public class FragmentCollectionManager {
 				continue;
 			}
 
-			fragmentEntryMapsList.sort(
-				(fragmentEntryMap1, fragmentEntryMap2) -> {
-					String name1 = String.valueOf(
-						fragmentEntryMap1.get("name"));
-					String name2 = String.valueOf(
-						fragmentEntryMap2.get("name"));
-
-					return name1.compareTo(name2);
-				});
-
 			fragmentCollectionContributorMaps.put(
 				fragmentCollectionContributor.getFragmentCollectionKey(),
 				HashMapBuilder.<String, Object>put(
+					"deprecated", fragmentCollectionContributor.isDeprecated()
+				).put(
 					"fragmentCollectionId",
 					fragmentCollectionContributor.getFragmentCollectionKey()
 				).put(
@@ -388,19 +406,19 @@ public class FragmentCollectionManager {
 		DropZoneLayoutStructureItem masterDropZoneLayoutStructureItem,
 		ThemeDisplay themeDisplay) {
 
-		List<Map<String, Object>> filteredFragmentCompositions =
-			new ArrayList<>();
+		return TransformUtil.transform(
+			fragmentCompositions,
+			fragmentComposition -> {
+				if (!_isAllowedFragmentEntryKey(
+						fragmentComposition.getFragmentCompositionKey(),
+						masterDropZoneLayoutStructureItem)) {
 
-		for (FragmentComposition fragmentComposition : fragmentCompositions) {
-			if (!_isAllowedFragmentEntryKey(
-					fragmentComposition.getFragmentCompositionKey(),
-					masterDropZoneLayoutStructureItem)) {
+					return null;
+				}
 
-				continue;
-			}
-
-			filteredFragmentCompositions.add(
-				HashMapBuilder.<String, Object>put(
+				return HashMapBuilder.<String, Object>put(
+					"fieldTypes", _jsonFactory.createJSONArray()
+				).put(
 					"fragmentEntryKey",
 					fragmentComposition.getFragmentCompositionKey()
 				).put(
@@ -420,10 +438,8 @@ public class FragmentCollectionManager {
 					"name", fragmentComposition.getName()
 				).put(
 					"type", ContentPageEditorConstants.TYPE_COMPOSITION
-				).build());
-		}
-
-		return filteredFragmentCompositions;
+				).build();
+			});
 	}
 
 	private List<Map<String, Object>> _getFragmentEntryMapsList(
@@ -432,28 +448,28 @@ public class FragmentCollectionManager {
 		DropZoneLayoutStructureItem masterDropZoneLayoutStructureItem,
 		ThemeDisplay themeDisplay) {
 
-		List<Map<String, Object>> fragmentEntryMapsList = new ArrayList<>();
+		return TransformUtil.transform(
+			fragmentEntries,
+			fragmentEntry -> {
+				if (!_isAllowedFragmentEntryKey(
+						fragmentEntry.getFragmentEntryKey(),
+						masterDropZoneLayoutStructureItem) ||
+					((fragmentEntry.isTypeInput() ||
+					  Objects.equals(
+						  fragmentEntry.getFragmentEntryKey(),
+						  "INPUTS-stepper") ||
+					  Objects.equals(
+						  fragmentEntry.getFragmentEntryKey(),
+						  "INPUTS-submit-button")) &&
+					 hideInputFragments)) {
 
-		for (FragmentEntry fragmentEntry : fragmentEntries) {
-			if (!_isAllowedFragmentEntryKey(
-					fragmentEntry.getFragmentEntryKey(),
-					masterDropZoneLayoutStructureItem) ||
-				((fragmentEntry.isTypeInput() ||
-				  Objects.equals(
-					  fragmentEntry.getFragmentEntryKey(), "INPUTS-stepper") ||
-				  Objects.equals(
-					  fragmentEntry.getFragmentEntryKey(),
-					  "INPUTS-submit-button")) &&
-				 hideInputFragments) ||
-				(Objects.equals(
-					fragmentEntry.getFragmentEntryKey(), "INPUTS-stepper") &&
-				 !FeatureFlagManagerUtil.isEnabled("LPD-10727"))) {
+					return null;
+				}
 
-				continue;
-			}
-
-			fragmentEntryMapsList.add(
-				HashMapBuilder.<String, Object>put(
+				return HashMapBuilder.<String, Object>put(
+					"fieldTypes",
+					_getFieldTypesJSONArray(fragmentEntry.getTypeOptions())
+				).put(
 					"fragmentEntryKey", fragmentEntry.getFragmentEntryKey()
 				).put(
 					"groupId", fragmentEntry.getGroupId()
@@ -473,10 +489,8 @@ public class FragmentCollectionManager {
 				).put(
 					"type",
 					FragmentConstants.getTypeLabel(fragmentEntry.getType())
-				).build());
-		}
-
-		return fragmentEntryMapsList;
+				).build();
+			});
 	}
 
 	private String _getFragmentUniqueKey(
@@ -515,6 +529,24 @@ public class FragmentCollectionManager {
 
 		sortedFragmentCollectionMapsList.addAll(
 			fragmentCollectionMaps.values());
+
+		for (Map<String, Object> fragmentCollectionMap :
+				sortedFragmentCollectionMapsList) {
+
+			List<Map<String, Object>> fragmentEntries =
+				(List<Map<String, Object>>)fragmentCollectionMap.get(
+					"fragmentEntries");
+
+			fragmentEntries.sort(
+				(fragmentEntryMap1, fragmentEntryMap2) -> {
+					String name1 = String.valueOf(
+						fragmentEntryMap1.get("name"));
+					String name2 = String.valueOf(
+						fragmentEntryMap2.get("name"));
+
+					return name1.compareTo(name2);
+				});
+		}
 
 		return sortedFragmentCollectionMapsList;
 	}
@@ -657,6 +689,9 @@ public class FragmentCollectionManager {
 		"layout-elements", "BASIC_COMPONENT", "INPUTS", "content-display"
 	};
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		FragmentCollectionManager.class);
+
 	@Reference
 	private FragmentCollectionContributorRegistry
 		_fragmentCollectionContributorRegistry;
@@ -678,6 +713,9 @@ public class FragmentCollectionManager {
 
 	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Language _language;

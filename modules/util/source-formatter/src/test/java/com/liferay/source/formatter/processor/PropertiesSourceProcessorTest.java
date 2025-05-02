@@ -5,6 +5,8 @@
 
 package com.liferay.source.formatter.processor;
 
+import com.liferay.petra.string.StringBundler;
+
 import org.junit.Test;
 
 /**
@@ -23,46 +25,37 @@ public class PropertiesSourceProcessorTest extends BaseSourceProcessorTestCase {
 			SourceProcessorTestParameters.create(
 				"content/Language.testproperties"
 			).addExpectedMessage(
-				"The context '' is invalid in the key 'order[]'"
+				StringBundler.concat(
+					"The single-word key \"abstract\" should include a word ",
+					"of context at the end, within a [], to indicate specific ",
+					"meaning"),
+				1
 			).addExpectedMessage(
-				"The context '...' is invalid in the key 'order[...]'"
+				StringBundler.concat(
+					"The single-word key \"order\" should include a word of ",
+					"context at the end, within a [], to indicate specific ",
+					"meaning"),
+				6
 			).addExpectedMessage(
-				"The context '0' is invalid in the key 'order[0]'"
+				"The context \"...\" is invalid in the key \"order[...]\"", 7
 			).addExpectedMessage(
-				"The context '123' is invalid in the key 'order[123]'"
+				"The context \"\" is invalid in the key \"order[]\"", 8
 			).addExpectedMessage(
-				"The context 'abc' is invalid in the key 'order[abc]'"
+				"The context \"0\" is invalid in the key \"order[0]\"", 9
 			).addExpectedMessage(
-				"The context 'x' is invalid in the key 'order[x]'"
+				"The context \"123\" is invalid in the key \"order[123]\"", 10
 			).addExpectedMessage(
-				"The context 'xyz' is invalid in the key 'order[xyz]'"
+				"The context \"abc\" is invalid in the key \"order[abc]\"", 11
 			).addExpectedMessage(
-				"The key 'a' should include a word of context at the end, " +
-					"within a [], to indicate specific meaning"
+				"The context \"x\" is invalid in the key \"order[x]\"", 13
 			).addExpectedMessage(
-				"The key 'add' should include a word of context at the end, " +
-					"within a [], to indicate specific meaning"
+				"The context \"xyz\" is invalid in the key \"order[xyz]\"", 14
 			).addExpectedMessage(
-				"The key 'alert' should include a word of context at the " +
-					"end, within a [], to indicate specific meaning"
-			).addExpectedMessage(
-				"The key 'average' should include a word of context at the " +
-					"end, within a [], to indicate specific meaning"
-			).addExpectedMessage(
-				"The key 'order' should include a word of context at the " +
-					"end, within a [], to indicate specific meaning"
-			).addExpectedMessage(
-				"The single-word key 'abstract' should include a word of " +
-					"context at the end, within a [], to indicate specific " +
-						"meaning"
-			).addExpectedMessage(
-				"The single-word key 'average' should include a word of " +
-					"context at the end, within a [], to indicate specific " +
-						"meaning"
-			).addExpectedMessage(
-				"The single-word key 'order' should include a word of " +
-					"context at the end, within a [], to indicate specific " +
-						"meaning"
+				StringBundler.concat(
+					"The single-word key \"view\" should include a word of ",
+					"context at the end, within a [], like [noun] or [verb] ",
+					"to indicate specific meaning"),
+				15
 			));
 	}
 
@@ -70,16 +63,6 @@ public class PropertiesSourceProcessorTest extends BaseSourceProcessorTestCase {
 	public void testSortDefinitionKeys() throws Exception {
 		test("FormatProperties1/liferay-plugin-package.testproperties");
 		test("FormatProperties1/TLiferayBatchFileProperties.testproperties");
-	}
-
-	@Test
-	public void testSortProperties() throws Exception {
-		test("FormatProperties2/test.testproperties");
-	}
-
-	@Test
-	public void testSQLStylingCheck() throws Exception {
-		test("FormatProperties3/test.testproperties");
 	}
 
 	@Test

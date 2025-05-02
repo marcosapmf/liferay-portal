@@ -188,7 +188,7 @@ public class CommerceInventoryWarehouseServiceHttp {
 
 	public static
 		com.liferay.commerce.inventory.model.CommerceInventoryWarehouse
-				fetchByExternalReferenceCode(
+				fetchCommerceInventoryWarehouseByExternalReferenceCode(
 					HttpPrincipal httpPrincipal, String externalReferenceCode,
 					long companyId)
 			throws com.liferay.portal.kernel.exception.PortalException {
@@ -196,8 +196,8 @@ public class CommerceInventoryWarehouseServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				CommerceInventoryWarehouseServiceUtil.class,
-				"fetchByExternalReferenceCode",
-				_fetchByExternalReferenceCodeParameterTypes3);
+				"fetchCommerceInventoryWarehouseByExternalReferenceCode",
+				_fetchCommerceInventoryWarehouseByExternalReferenceCodeParameterTypes3);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, externalReferenceCode, companyId);
@@ -474,8 +474,8 @@ public class CommerceInventoryWarehouseServiceHttp {
 	public static java.util.List
 		<com.liferay.commerce.inventory.model.CommerceInventoryWarehouse>
 				getCommerceInventoryWarehouses(
-					HttpPrincipal httpPrincipal, long companyId, long groupId,
-					boolean active)
+					HttpPrincipal httpPrincipal, long companyId,
+					long accountEntryId, long groupId, boolean active)
 			throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -485,7 +485,7 @@ public class CommerceInventoryWarehouseServiceHttp {
 				_getCommerceInventoryWarehousesParameterTypes9);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, companyId, groupId, active);
+				methodKey, companyId, accountEntryId, groupId, active);
 
 			Object returnObj = null;
 
@@ -854,9 +854,8 @@ public class CommerceInventoryWarehouseServiceHttp {
 			long.class
 		};
 	private static final Class<?>[]
-		_fetchByExternalReferenceCodeParameterTypes3 = new Class[] {
-			String.class, long.class
-		};
+		_fetchCommerceInventoryWarehouseByExternalReferenceCodeParameterTypes3 =
+			new Class[] {String.class, long.class};
 	private static final Class<?>[]
 		_geolocateCommerceInventoryWarehouseParameterTypes4 = new Class[] {
 			long.class, double.class, double.class
@@ -882,7 +881,7 @@ public class CommerceInventoryWarehouseServiceHttp {
 		};
 	private static final Class<?>[]
 		_getCommerceInventoryWarehousesParameterTypes9 = new Class[] {
-			long.class, long.class, boolean.class
+			long.class, long.class, long.class, boolean.class
 		};
 	private static final Class<?>[]
 		_getCommerceInventoryWarehousesCountParameterTypes10 = new Class[] {

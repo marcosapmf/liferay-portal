@@ -3,12 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {
-	fetch,
-	navigate,
-	objectToFormData,
-	openSelectionModal,
-} from 'frontend-js-web';
+import {openSelectionModal, openToast} from 'frontend-js-components-web';
+import {fetch, navigate, objectToFormData} from 'frontend-js-web';
 
 import openDeleteVocabularyModal from './openDeleteVocabularyModal';
 
@@ -35,7 +31,33 @@ const ACTIONS = {
 										.join(','),
 								}),
 								method: 'POST',
-							}).then((response) => navigate(response.url));
+							})
+								.then((response) => {
+									if (response.ok) {
+										return response.json();
+									}
+									else {
+										showErorMessage();
+									}
+								})
+								.then((data) => {
+									if (data.success) {
+										navigate(itemData.redirectURL);
+
+										openToast({
+											message: Liferay.Language.get(
+												'your-request-completed-successfully'
+											),
+											type: 'success',
+										});
+									}
+									else {
+										showErorMessage(data.errorMessage);
+									}
+								})
+								.catch(() => {
+									showErorMessage();
+								});
 						},
 					});
 				}
@@ -44,6 +66,15 @@ const ACTIONS = {
 			url: itemData.viewVocabulariesURL,
 		});
 	},
+};
+
+const showErorMessage = (errorMessage) => {
+	openToast({
+		message:
+			errorMessage ||
+			Liferay.Language.get('an-unexpected-error-occurred'),
+		type: 'danger',
+	});
 };
 
 export default function propsTransformer({

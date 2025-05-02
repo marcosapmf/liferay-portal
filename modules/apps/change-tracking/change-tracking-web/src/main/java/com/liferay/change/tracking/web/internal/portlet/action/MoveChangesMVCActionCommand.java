@@ -7,7 +7,9 @@ package com.liferay.change.tracking.web.internal.portlet.action;
 
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.constants.CTPortletKeys;
+import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTCollectionService;
+import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -15,6 +17,10 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -39,6 +45,8 @@ public class MoveChangesMVCActionCommand extends BaseMVCActionCommand {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
+		long[] ctEntryIds = StringUtil.split(
+			ParamUtil.getString(actionRequest, "ctEntryIds"), 0L);
 		long fromCTCollectionId = ParamUtil.getLong(
 			actionRequest, "fromCTCollectionId");
 		long toCTCollectionId = ParamUtil.getLong(
@@ -52,9 +60,24 @@ public class MoveChangesMVCActionCommand extends BaseMVCActionCommand {
 			(toCTCollectionId != CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
 
 			try {
-				_ctCollectionService.moveCTEntry(
-					fromCTCollectionId, toCTCollectionId, modelClassNameId,
-					modelClassPK);
+				List<CTEntry> ctEntries = new ArrayList<>();
+
+				if ((modelClassNameId > 0) && (modelClassPK > 0)) {
+					CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(
+						fromCTCollectionId, modelClassNameId, modelClassPK);
+
+					ctEntries.add(ctEntry);
+				}
+
+				for (long ctEntryId : ctEntryIds) {
+					CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(
+						ctEntryId);
+
+					ctEntries.add(ctEntry);
+				}
+
+				_ctCollectionService.moveCTEntries(
+					fromCTCollectionId, toCTCollectionId, ctEntries);
 			}
 			catch (PortalException portalException) {
 				SessionErrors.add(actionRequest, portalException.getClass());
@@ -82,6 +105,8 @@ public class MoveChangesMVCActionCommand extends BaseMVCActionCommand {
 			).setParameter(
 				"ctCollectionId", fromCTCollectionId
 			).setParameter(
+				"id", StringUtil.merge(ctEntryIds)
+			).setParameter(
 				"modelClassNameId", modelClassNameId
 			).setParameter(
 				"modelClassPK", modelClassPK
@@ -93,6 +118,9 @@ public class MoveChangesMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private CTCollectionService _ctCollectionService;
+
+	@Reference
+	private CTEntryLocalService _ctEntryLocalService;
 
 	@Reference
 	private Portal _portal;

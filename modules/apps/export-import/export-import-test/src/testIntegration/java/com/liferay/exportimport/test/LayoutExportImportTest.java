@@ -22,7 +22,6 @@ import com.liferay.layout.friendly.url.LayoutFriendlyURLEntryHelper;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
-import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -42,6 +41,7 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -201,7 +201,7 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), group.getGroupId(), 0, null,
 				"Test Master Page",
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
@@ -648,7 +648,13 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 		Layout childLayout = LayoutTestUtil.addTypeContentLayout(
 			group, parentLayout.getPlid());
 
-		ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+		_fragmentEntryLinkLocalService.addFragmentEntryLink(
+			null, TestPropsValues.getUserId(), group.getGroupId(), 0,
+			RandomTestUtil.randomLong(),
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				layout.getPlid()),
+			layout.getPlid(), StringPool.BLANK, StringPool.BLANK,
+			StringPool.BLANK, StringPool.BLANK,
 			StringUtil.replace(
 				_getContent(
 					"fragment_entry_link_editable_values_with_configuration." +
@@ -661,23 +667,12 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 					String.valueOf(childLayout.getLayoutId()),
 					childLayout.getUuid(), childLayout.getName("en_US")
 				}),
-			layout,
-			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid()));
+			StringPool.BLANK, 0, StringPool.BLANK,
+			FragmentConstants.TYPE_COMPONENT,
+			ServiceContextTestUtil.getServiceContext());
 
-		Map<Long, Boolean> selectedLayouts = HashMapBuilder.put(
-			layout.getPlid(), true
-		).build();
-
-		Map<String, String[]> exportParameterMap = getExportParameterMap();
-
-		exportParameterMap.put(Constants.CMD, new String[] {Constants.EXPORT});
-
-		exportLayouts(
-			ExportImportHelperUtil.getLayoutIds(selectedLayouts),
-			exportParameterMap);
-
-		importLayouts(exportParameterMap, false);
+		exportImportLayouts(
+			new long[] {layout.getLayoutId()}, getImportParameterMap());
 
 		Layout importedChildLayout =
 			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
@@ -698,11 +693,9 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 		Assert.assertNotNull(importedLayout);
 	}
 
-	/**
-	 * LPD-6808: AC9-AC10
-	 */
 	@FeatureFlags("LPS-199086")
 	@Test
+	@TestInfo("LPD-6808: AC9-AC10")
 	public void testLayoutExportImportWithModifiedContentAndExistingParentAndChildLayoutsOnImportSide()
 		throws Exception {
 
@@ -739,7 +732,6 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
 				layout.getUuid(), importedGroup.getGroupId(), false);
 
-		Assert.assertNotNull(importedParentLayout);
 		Assert.assertEquals(
 			0,
 			_getLayoutPortletIds(
@@ -750,7 +742,6 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
 				childLayout.getUuid(), importedGroup.getGroupId(), false);
 
-		Assert.assertNotNull(importedChildLayout);
 		Assert.assertEquals(
 			0,
 			_getLayoutPortletIds(
@@ -786,11 +777,9 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 			).size());
 	}
 
-	/**
-	 * LPD-6808: AC9-AC11
-	 */
 	@FeatureFlags("LPS-199086")
 	@Test
+	@TestInfo("LPD-6808: AC9-AC11")
 	public void testLayoutExportImportWithModifiedContentAndNonexistentParentAndChildLayoutsOnImportSide()
 		throws Exception {
 
@@ -834,11 +823,9 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 		Assert.assertNotNull(importedChildLayout);
 	}
 
-	/**
-	 * LPD-6808: AC12-AC13
-	 */
 	@FeatureFlags("LPS-199086")
 	@Test
+	@TestInfo("LPD-6808: AC12-AC13")
 	public void testLayoutExportImportWithUncheckedConfigurationAndModifiedContentAndExistingParentAndChildLayoutsOnImportSide()
 		throws Exception {
 
@@ -875,7 +862,6 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
 				layout.getUuid(), importedGroup.getGroupId(), false);
 
-		Assert.assertNotNull(importedParentLayout);
 		Assert.assertEquals(
 			0,
 			_getLayoutPortletIds(
@@ -886,7 +872,6 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
 				childLayout.getUuid(), importedGroup.getGroupId(), false);
 
-		Assert.assertNotNull(importedChildLayout);
 		Assert.assertEquals(
 			0,
 			_getLayoutPortletIds(
@@ -922,11 +907,9 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 			).size());
 	}
 
-	/**
-	 * LPD-6808: AC12-AC14
-	 */
 	@FeatureFlags("LPS-199086")
 	@Test
+	@TestInfo("LPD-6808: AC12-AC14")
 	public void testLayoutExportImportWithUncheckedConfigurationAndModifiedContentAndNonexistentParentAndChildLayoutsOnImportSide()
 		throws Exception {
 
@@ -971,10 +954,8 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 		}
 	}
 
-	/**
-	 * LPD-6808
-	 */
 	@Test
+	@TestInfo("LPD-6808")
 	public void testPublishParentLayoutsByDefaultConfigurationPublishParentLayoutFirstThenChildLayout()
 		throws Exception {
 
@@ -1112,13 +1093,10 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
 				layout.getUuid(), importedGroup.getGroupId(), false);
 
-		Assert.assertNotNull(importedParentLayout);
-
 		Layout importedChildLayout =
 			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
 				childLayout.getUuid(), importedGroup.getGroupId(), false);
 
-		Assert.assertNotNull(importedChildLayout);
 		Assert.assertEquals(
 			importedChildLayout.getParentLayoutId(),
 			importedParentLayout.getLayoutId());

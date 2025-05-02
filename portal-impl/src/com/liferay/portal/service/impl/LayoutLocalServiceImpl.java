@@ -25,6 +25,8 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.LayoutJavaScriptException;
+import com.liferay.portal.kernel.exception.LayoutNameException;
 import com.liferay.portal.kernel.exception.MasterLayoutException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -33,7 +35,6 @@ import com.liferay.portal.kernel.exception.SitemapChangeFrequencyException;
 import com.liferay.portal.kernel.exception.SitemapIncludeException;
 import com.liferay.portal.kernel.exception.SitemapPagePriorityException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.lock.LockManagerUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -249,13 +250,12 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		String name = nameMap.get(LocaleUtil.getSiteDefault());
 
 		if (system &&
-			((Objects.equals(type, LayoutConstants.TYPE_ASSET_DISPLAY) &&
+			(((Objects.equals(type, LayoutConstants.TYPE_ASSET_DISPLAY) ||
+			   Objects.equals(type, LayoutConstants.TYPE_UTILITY)) &&
 			  (classPK > 0) &&
 			  (classNameId == _classNameLocalService.getClassNameId(
 				  Layout.class.getName()))) ||
-			 Objects.equals(type, LayoutConstants.TYPE_COLLECTION) ||
-			 Objects.equals(type, LayoutConstants.TYPE_CONTENT) ||
-			 Objects.equals(type, LayoutConstants.TYPE_UTILITY))) {
+			 Objects.equals(type, LayoutConstants.TYPE_CONTENT))) {
 
 			friendlyURLMap = _getDraftFriendlyURLMap(groupId, friendlyURLMap);
 		}
@@ -367,8 +367,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		if (_workflowDefinitionLinkLocalService.hasWorkflowDefinitionLink(
 				layout.getCompanyId(), layout.getGroupId(),
 				Layout.class.getName()) &&
-			(Objects.equals(type, LayoutConstants.TYPE_COLLECTION) ||
-			 Objects.equals(type, LayoutConstants.TYPE_CONTENT) ||
+			(Objects.equals(type, LayoutConstants.TYPE_CONTENT) ||
 			 Objects.equals(type, LayoutConstants.TYPE_UTILITY)) &&
 			!system) {
 
@@ -423,9 +422,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			Layout.class.getName(), layout.getPlid(), false,
 			addGroupPermissions, addGuestPermissions);
 
-		if (FeatureFlagManagerUtil.isEnabled("LPD-21265") &&
-			Objects.equals(layout.getType(), LayoutConstants.TYPE_CONTENT)) {
-
+		if (Objects.equals(layout.getType(), LayoutConstants.TYPE_CONTENT)) {
 			PortalDefaultPermissionsUtil.setModelDefaultPermissions(
 				layout, layout.getCompanyId(), groupId, serviceContext);
 		}
@@ -447,10 +444,19 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		if (!layout.isDraftLayout() &&
 			(layout.isTypeAssetDisplay() || layout.isTypeContent())) {
 
+			serviceContext.setAttribute(
+				"defaultSegmentsExperienceExternalReferenceCode",
+				serviceContext.getAttribute(
+					"draftLayoutDefaultSegmentsExperienceExternalReference" +
+						"Code"));
 			serviceContext.setModifiedDate(date);
 
 			addLayout(
-				null, userId, groupId, privateLayout, parentLayoutId,
+				GetterUtil.getString(
+					serviceContext.getAttribute(
+						"draftLayoutExternalReferenceCode"),
+					null),
+				userId, groupId, privateLayout, parentLayoutId,
 				_classNameLocalService.getClassNameId(Layout.class),
 				layout.getPlid(), nameMap, titleMap, descriptionMap,
 				keywordsMap, robotsMap, type, typeSettings, true, true,
@@ -795,16 +801,8 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	@Override
 	public Layout copyLayoutContent(
-			long segmentsExperienceId, Layout sourceLayout, Layout targetLayout)
-		throws Exception {
-
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Layout copyLayoutContent(
-			long[] segmentsExperienceIds, Layout sourceLayout,
-			Layout targetLayout)
+			long sourceSegmentsExperienceId, Layout sourceLayout,
+			long targetSegmentsExperienceId, Layout targetLayout)
 		throws Exception {
 
 		throw new UnsupportedOperationException();
@@ -1078,8 +1076,22 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	@Override
 	public Layout fetchDraftLayout(long plid) {
-		return fetchLayout(
+		if (plid <= 0) {
+			return null;
+		}
+
+		List<Layout> layouts = layoutPersistence.findByC_C(
 			_classNameLocalService.getClassNameId(Layout.class), plid);
+
+		if (layouts.isEmpty()) {
+			return null;
+		}
+
+		if ((layouts.size() > 1) && _log.isWarnEnabled()) {
+			_log.warn("More than one draft layout uses layout ID " + plid);
+		}
+
+		return layouts.get(layouts.size() - 1);
 	}
 
 	@Override
@@ -1109,11 +1121,6 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	}
 
 	@Override
-	public Layout fetchLayout(long classNameId, long classPK) {
-		return layoutPersistence.fetchByC_C(classNameId, classPK);
-	}
-
-	@Override
 	public Layout fetchLayout(
 		String uuid, long groupId, boolean privateLayout) {
 
@@ -1132,10 +1139,24 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	@Override
 	public Layout fetchLayoutByIconImageId(
-			boolean privateLayout, long iconImageId)
-		throws PortalException {
+		boolean privateLayout, long iconImageId) {
 
-		return layoutPersistence.fetchByP_I(privateLayout, iconImageId);
+		if (iconImageId <= 0) {
+			return null;
+		}
+
+		List<Layout> layouts = layoutPersistence.findByP_I(
+			privateLayout, iconImageId);
+
+		if (layouts.isEmpty()) {
+			return null;
+		}
+
+		if ((layouts.size() > 1) && _log.isWarnEnabled()) {
+			_log.warn("More than one layout uses icon image ID " + iconImageId);
+		}
+
+		return layouts.get(layouts.size() - 1);
 	}
 
 	/**
@@ -1447,21 +1468,6 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		return layoutPersistence.findByG_P_F(
 			groupId, privateLayout, friendlyURL);
-	}
-
-	/**
-	 * Returns the layout for the icon image; throws a {@link
-	 * NoSuchLayoutException} otherwise.
-	 *
-	 * @param  iconImageId the primary key of the icon image
-	 * @return Returns the layout for the icon image
-	 * @throws PortalException if a portal exception occurred
-	 */
-	@Override
-	public Layout getLayoutByIconImageId(long iconImageId)
-		throws PortalException {
-
-		return layoutPersistence.findByIconImageId(iconImageId);
 	}
 
 	/**
@@ -2909,7 +2915,12 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		String name = nameMap.get(LocaleUtil.getSiteDefault());
 
-		if (Validator.isNull(name)) {
+		if (Validator.isNull(name) && nameMap.isEmpty()) {
+			throw new LayoutNameException(
+				"Name is required for layout PLID " + layout.getPlid(),
+				LayoutNameException.REQUIRED);
+		}
+		else if (Validator.isNull(name)) {
 			List<String> values = new ArrayList<>(nameMap.values());
 
 			name = values.get(0);
@@ -3096,6 +3107,14 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			layout, iconBytes != null, iconBytes, "iconImageId", 0, 0, 0);
 
 		return layoutPersistence.update(layout);
+	}
+
+	@Override
+	public void updateLayoutContent(
+			String data, Layout layout, long segmentsExperienceId)
+		throws Exception {
+
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -3669,8 +3688,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		layout.setType(type);
 
-		if (Objects.equals(type, LayoutConstants.TYPE_COLLECTION) ||
-			Objects.equals(type, LayoutConstants.TYPE_CONTENT) ||
+		if (Objects.equals(type, LayoutConstants.TYPE_CONTENT) ||
 			Objects.equals(type, LayoutConstants.TYPE_UTILITY)) {
 
 			layout.setLayoutPrototypeUuid(StringPool.BLANK);
@@ -3728,7 +3746,18 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			PropsValues.
 				FIELD_ENABLE_COM_LIFERAY_PORTAL_KERNEL_MODEL_LAYOUT_JAVASCRIPT;
 
-		if (!enableJavaScript) {
+		if (enableJavaScript) {
+			String javaScript = typeSettingsUnicodeProperties.getProperty(
+				"javascript");
+
+			if (Validator.isNotNull(javaScript) &&
+				(javaScript.contains("<script") ||
+				 javaScript.contains("</script>"))) {
+
+				throw new LayoutJavaScriptException();
+			}
+		}
+		else {
 			UnicodeProperties layoutTypeSettingsUnicodeProperties =
 				layout.getTypeSettingsProperties();
 
@@ -4104,10 +4133,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 				LayoutTable.INSTANCE.system.eq(false)
 			).and(
 				LayoutTable.INSTANCE.type.notIn(
-					new String[] {
-						LayoutConstants.TYPE_COLLECTION,
-						LayoutConstants.TYPE_CONTENT
-					}
+					new String[] {LayoutConstants.TYPE_CONTENT}
 				).or(
 					LayoutTable.INSTANCE.plid.in(
 						DSLQueryFactoryUtil.select(

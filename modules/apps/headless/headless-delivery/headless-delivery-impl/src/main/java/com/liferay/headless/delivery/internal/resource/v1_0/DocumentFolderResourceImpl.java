@@ -18,7 +18,6 @@ import com.liferay.headless.common.spi.resource.SPIRatingResource;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.headless.delivery.dto.v1_0.DocumentFolder;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
-import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RatingUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.DocumentFolderEntityModel;
 import com.liferay.headless.delivery.resource.v1_0.DocumentFolderResource;
@@ -48,6 +47,7 @@ import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -57,7 +57,6 @@ import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -567,13 +566,9 @@ public class DocumentFolderResourceImpl extends BaseDocumentFolderResourceImpl {
 	private List<DocumentFolder> _toDocumentFolders(List<DLFolder> dlFolders)
 		throws Exception {
 
-		List<DocumentFolder> documentFolders = new ArrayList<>();
-
-		for (DLFolder dlFolder : dlFolders) {
-			documentFolders.add(_toDocumentFolder(new LiferayFolder(dlFolder)));
-		}
-
-		return documentFolders;
+		return transform(
+			dlFolders,
+			dlFolder -> _toDocumentFolder(new LiferayFolder(dlFolder)));
 	}
 
 	private DocumentFolder _updateDocumentFolder(

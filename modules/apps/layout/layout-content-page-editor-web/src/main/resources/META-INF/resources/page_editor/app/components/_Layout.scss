@@ -29,6 +29,11 @@ html#{$cadmin-selector} {
 				&.empty {
 					box-shadow: inset 0 0 0 1px $cadmin-primary-l2;
 				}
+
+				&.disabled {
+					opacity: 40%;
+					pointer-events: none;
+				}
 			}
 
 			&__message {
@@ -48,11 +53,10 @@ html#{$cadmin-selector} {
 				min-height: 80px;
 
 				&__title {
-					color: $cadmin-purple;
-					font-size: 12px;
+					color: $cadmin-purple-d3;
+					font-size: 14px;
 					font-style: italic;
-					padding-left: 8px;
-					padding-top: 8px;
+					font-weight: 500;
 				}
 			}
 		}
@@ -99,6 +103,12 @@ html#{$cadmin-selector} {
 		&__collection-item {
 			position: relative;
 
+			.page-editor__no-fragments-state {
+				background: fade_out($cadmin-purple-l4, 0.9);
+				border: $dashedBorderWidth dashed $cadmin-purple-l4;
+				padding: 4vh 12% 6vh;
+			}
+
 			&:before {
 				$spacingUnit: 12px;
 
@@ -111,6 +121,11 @@ html#{$cadmin-selector} {
 				top: 0;
 				width: calc(100% - #{$spacingUnit * 2});
 			}
+		}
+
+		&__form-step {
+			box-shadow: inset 0 0 0 1px $cadmin-primary-l2;
+			height: 100%;
 		}
 
 		&__row.align-bottom,
@@ -149,13 +164,13 @@ html#{$cadmin-selector} {
 					flex: 1;
 
 					&__border {
-						min-height: $emptyItemMinHeight / 2;
+						min-height: calc($emptyItemMinHeight / 2);
 					}
 				}
 			}
 
 			.page-editor__col {
-				min-height: $emptyItemMinHeight / 2;
+				min-height: calc($emptyItemMinHeight / 2);
 			}
 		}
 
@@ -224,6 +239,13 @@ html#{$cadmin-selector} {
 			}
 		}
 
+		&__row
+			> .page-editor__col.hovered:not(.active)
+			> .page-editor__col__border:after {
+			box-shadow: inset 0 0 0 2px $cadmin-primary-l1;
+			z-index: $portletTopperHoveredZIndex;
+		}
+
 		&__row.no-gutters > .page-editor__col:before {
 			left: 0;
 			width: 100%;
@@ -239,8 +261,13 @@ html#{$cadmin-selector} {
 		}
 
 		&__no-fragments-state {
+			align-items: center;
 			background: $cadmin-primary-l3;
 			border: $dashedBorderWidth dashed $cadmin-primary-l2;
+			border-radius: 8px;
+			// stylelint-disable-next-line property-no-unknown
+			container-type: inline-size;
+			justify-content: center;
 			padding: 15vh 12%;
 
 			&.page-editor__form-unmapped-state {
@@ -258,6 +285,28 @@ html#{$cadmin-selector} {
 				color: $secondary;
 				font-size: 14px;
 				margin: 0;
+			}
+
+			// stylelint-disable-next-line at-rule-no-unknown
+			@container (max-width: 100px) {
+				&__image {
+					display: none;
+				}
+
+				&__message {
+					overflow-wrap: anywhere;
+				}
+			}
+
+			// stylelint-disable-next-line at-rule-no-unknown
+			@container (max-height: 100px) {
+				&__image {
+					display: none;
+				}
+
+				&__message {
+					overflow-wrap: anywhere;
+				}
 			}
 
 			&__title {
@@ -287,7 +336,7 @@ html#{$cadmin-selector} {
 			}
 
 			.page-editor__row.empty .page-editor__col {
-				min-height: $emptyItemMinHeight / 2;
+				min-height: calc($emptyItemMinHeight / 2);
 				min-width: $emptyColumnMinWidth;
 			}
 		}
@@ -340,5 +389,11 @@ html#{$cadmin-selector} {
 		&--active {
 			outline: solid $editablesBorderWidth $cadmin-primary;
 		}
+	}
+
+	.custom-height .page-editor__no-fragments-state {
+		// stylelint-disable-next-line property-no-unknown
+		container-type: size;
+		padding: 0;
 	}
 }

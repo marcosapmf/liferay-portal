@@ -49,6 +49,28 @@ public class Keyword implements Cloneable, Serializable {
 
 	protected Map<String, Map<String, String>> actions;
 
+	public AssetLibrary[] getAssetLibraries() {
+		return assetLibraries;
+	}
+
+	public void setAssetLibraries(AssetLibrary[] assetLibraries) {
+		this.assetLibraries = assetLibraries;
+	}
+
+	public void setAssetLibraries(
+		UnsafeSupplier<AssetLibrary[], Exception>
+			assetLibrariesUnsafeSupplier) {
+
+		try {
+			assetLibraries = assetLibrariesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected AssetLibrary[] assetLibraries;
+
 	public String getAssetLibraryKey() {
 		return assetLibraryKey;
 	}
@@ -133,6 +155,27 @@ public class Keyword implements Cloneable, Serializable {
 
 	protected Date dateModified;
 
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String externalReferenceCode;
+
 	public Long getId() {
 		return id;
 	}
@@ -191,6 +234,29 @@ public class Keyword implements Cloneable, Serializable {
 	}
 
 	protected String name;
+
+	public String getSiteExternalReferenceCode() {
+		return siteExternalReferenceCode;
+	}
+
+	public void setSiteExternalReferenceCode(String siteExternalReferenceCode) {
+		this.siteExternalReferenceCode = siteExternalReferenceCode;
+	}
+
+	public void setSiteExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			siteExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			siteExternalReferenceCode =
+				siteExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String siteExternalReferenceCode;
 
 	public Long getSiteId() {
 		return siteId;

@@ -19,6 +19,7 @@
 				<action-key>ADD_REPOSITORY</action-key>
 				<action-key>ADD_SHORTCUT</action-key>
 				<action-key>ADD_STRUCTURE</action-key>
+				<action-key>ADVANCED_UPDATE</action-key>
 				<action-key>PERMISSIONS</action-key>
 				<action-key>SUBSCRIBE</action-key>
 				<action-key>UPDATE</action-key>
@@ -41,6 +42,7 @@
 				<action-key>ADD_REPOSITORY</action-key>
 				<action-key>ADD_SHORTCUT</action-key>
 				<action-key>ADD_STRUCTURE</action-key>
+				<action-key>ADVANCED_UPDATE</action-key>
 				<action-key>PERMISSIONS</action-key>
 				<action-key>SUBSCRIBE</action-key>
 				<action-key>UPDATE</action-key>
@@ -63,6 +65,7 @@
 				<action-key>DOWNLOAD</action-key>
 				<action-key>OVERRIDE_CHECKOUT</action-key>
 				<action-key>PERMISSIONS</action-key>
+				<action-key>SUBSCRIBE</action-key>
 				<action-key>UPDATE</action-key>
 				<action-key>UPDATE_DISCUSSION</action-key>
 				<action-key>VIEW</action-key>
@@ -82,6 +85,7 @@
 				<action-key>DELETE_DISCUSSION</action-key>
 				<action-key>OVERRIDE_CHECKOUT</action-key>
 				<action-key>PERMISSIONS</action-key>
+				<action-key>SUBSCRIBE</action-key>
 				<action-key>UPDATE</action-key>
 				<action-key>UPDATE_DISCUSSION</action-key>
 			</guest-unsupported>
@@ -151,6 +155,7 @@
 				<action-key>ADD_DOCUMENT</action-key>
 				<action-key>ADD_SHORTCUT</action-key>
 				<action-key>ADD_SUBFOLDER</action-key>
+				<action-key>ADVANCED_UPDATE</action-key>
 				<action-key>DELETE</action-key>
 				<action-key>PERMISSIONS</action-key>
 				<action-key>SUBSCRIBE</action-key>
@@ -171,6 +176,7 @@
 				<action-key>ADD_DOCUMENT</action-key>
 				<action-key>ADD_SHORTCUT</action-key>
 				<action-key>ADD_SUBFOLDER</action-key>
+				<action-key>ADVANCED_UPDATE</action-key>
 				<action-key>DELETE</action-key>
 				<action-key>PERMISSIONS</action-key>
 				<action-key>SUBSCRIBE</action-key>

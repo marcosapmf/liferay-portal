@@ -14,6 +14,7 @@ import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTable;
 import com.liferay.object.related.models.ObjectRelatedModelsProvider;
+import com.liferay.object.relationship.util.ObjectRelationshipUtil;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
@@ -27,7 +28,6 @@ import com.liferay.petra.sql.dsl.expression.Expression;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.sql.dsl.query.FromStep;
 import com.liferay.petra.sql.dsl.query.GroupByStep;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -177,16 +177,13 @@ public class SystemObject1toMObjectRelatedModelsProviderImpl
 			_getDynamicObjectDefinitionTable(
 				relatedObjectDefinition.getObjectDefinitionId());
 
-		ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.getObjectDefinition(
-				objectRelationship.getObjectDefinitionId1());
-
 		Column<DynamicObjectDefinitionTable, Long> column =
 			(Column<DynamicObjectDefinitionTable, Long>)
 				dynamicObjectDefinitionTable.getColumn(
-					StringBundler.concat(
-						"r_", objectRelationship.getName(), "_",
-						objectDefinition.getPKObjectFieldName()));
+					ObjectRelationshipUtil.getObjectRelationshipFieldName(
+						_objectDefinitionLocalService.getObjectDefinition(
+							objectRelationship.getObjectDefinitionId1()),
+						objectRelationship.getName()));
 
 		if (column == null) {
 			dynamicObjectDefinitionTable =
@@ -294,7 +291,8 @@ public class SystemObject1toMObjectRelatedModelsProviderImpl
 	@Override
 	public List<T> getUnrelatedModels(
 			long companyId, long groupId, ObjectDefinition objectDefinition,
-			long objectEntryId, long objectRelationshipId, int start, int end)
+			long objectEntryId, long objectRelationshipId, String search,
+			int start, int end)
 		throws PortalException {
 
 		DSLQuery dslQuery = _getUnrelatedModelsGroupByStep(
@@ -317,7 +315,7 @@ public class SystemObject1toMObjectRelatedModelsProviderImpl
 	@Override
 	public int getUnrelatedModelsCount(
 			long companyId, long groupId, ObjectDefinition objectDefinition,
-			long objectEntryId, long objectRelationshipId)
+			long objectEntryId, long objectRelationshipId, String search)
 		throws PortalException {
 
 		DSLQuery dslQuery = _getUnrelatedModelsGroupByStep(
@@ -396,6 +394,9 @@ public class SystemObject1toMObjectRelatedModelsProviderImpl
 		ObjectDefinition objectDefinition1 =
 			_objectDefinitionLocalService.getObjectDefinition(
 				objectRelationship.getObjectDefinitionId1());
+		ObjectDefinition objectDefinition2 =
+			_objectDefinitionLocalService.getObjectDefinition(
+				objectRelationship.getObjectDefinitionId2());
 
 		ObjectField objectField = _objectFieldLocalService.getObjectField(
 			objectRelationship.getObjectFieldId2());
@@ -429,7 +430,10 @@ public class SystemObject1toMObjectRelatedModelsProviderImpl
 					if ((groupIdColumn == null) ||
 						Objects.equals(
 							ObjectDefinitionConstants.SCOPE_COMPANY,
-							objectDefinition1.getScope())) {
+							objectDefinition1.getScope()) ||
+						Objects.equals(
+							ObjectDefinitionConstants.SCOPE_COMPANY,
+							objectDefinition2.getScope())) {
 
 						return null;
 					}
@@ -449,9 +453,7 @@ public class SystemObject1toMObjectRelatedModelsProviderImpl
 				}
 			).and(
 				ObjectEntrySearchUtil.getRelatedModelsPredicate(
-					_objectDefinitionLocalService.fetchObjectDefinition(
-						objectRelationship.getObjectDefinitionId2()),
-					_objectFieldLocalService, search,
+					objectDefinition2, _objectFieldLocalService, search,
 					dynamicObjectDefinitionTable)
 			)
 		);
@@ -486,6 +488,17 @@ public class SystemObject1toMObjectRelatedModelsProviderImpl
 						Objects.equals(
 							ObjectDefinitionConstants.SCOPE_COMPANY,
 							objectDefinition1.getScope())) {
+
+						return null;
+					}
+
+					ObjectDefinition objectDefinition2 =
+						_objectDefinitionLocalService.getObjectDefinition(
+							objectRelationship.getObjectDefinitionId2());
+
+					if (Objects.equals(
+							ObjectDefinitionConstants.SCOPE_COMPANY,
+							objectDefinition2.getScope())) {
 
 						return null;
 					}

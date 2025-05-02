@@ -1,17 +1,25 @@
 {
 	"dependencies": {
-		"@clayui/autocomplete": "3.118.0",
-		"@clayui/button": "3.116.0",
-		"@clayui/drop-down": "3.118.0",
-		"@clayui/form": "3.116.0",
-		"@clayui/icon": "3.111.0",
-		"@clayui/loading-indicator": "3.111.0",
-		"@clayui/shared": "3.116.0",
+		"@clayui/autocomplete": "3.135.0",
+		"@clayui/button": "3.128.0",
+		"@clayui/drop-down": "3.135.0",
+		"@clayui/form": "3.132.0",
+		"@clayui/icon": "3.128.0",
+		"@clayui/loading-indicator": "3.128.0",
+		"@clayui/shared": "3.132.0",
 		"@liferay/frontend-data-set-web": "*",
+		"@liferay/object-js-components-web": "*",
 		"data-engine-js-components-web": "*",
 		"dynamic-data-mapping-form-field-type": "*",
+		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
-		"react": "16.12.0"
+		"react": "18.2.0",
+		"react-dom": "18.2.0"
+	},
+	"jest": {
+		"testMatch": [
+			"<rootDir>/src/main/resources/META-INF/resources/tests/**/*.spec.*"
+		]
 	},
 	"main": "js/index.ts",
 	"name": "@liferay/object-dynamic-data-mapping-form-field-type",
@@ -19,7 +27,8 @@
 	"scripts": {
 		"build": "node-scripts build",
 		"checkFormat": "node-scripts format --check",
-		"format": "node-scripts format"
+		"format": "node-scripts format",
+		"test": "node-scripts test"
 	},
-	"version": "1.0.55"
+	"version": "1.0.67"
 }

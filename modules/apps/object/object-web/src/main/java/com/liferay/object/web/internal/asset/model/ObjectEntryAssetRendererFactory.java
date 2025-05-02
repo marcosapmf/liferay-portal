@@ -15,6 +15,7 @@ import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.web.internal.security.permission.resource.util.ObjectDefinitionResourcePermissionUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -69,6 +70,11 @@ public class ObjectEntryAssetRendererFactory
 	}
 
 	@Override
+	public String getIconCssClass() {
+		return StringPool.BLANK;
+	}
+
+	@Override
 	public String getType() {
 		return _objectDefinition.getClassName();
 	}
@@ -103,14 +109,9 @@ public class ObjectEntryAssetRendererFactory
 
 	@Override
 	public boolean isSelectable() {
-		if (StringUtil.equals(
-				_objectDefinition.getScope(),
-				ObjectDefinitionConstants.SCOPE_COMPANY)) {
-
-			return false;
-		}
-
-		return true;
+		return !StringUtil.equals(
+			_objectDefinition.getScope(),
+			ObjectDefinitionConstants.SCOPE_COMPANY);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

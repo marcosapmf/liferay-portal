@@ -13,9 +13,11 @@ import com.liferay.commerce.price.list.internal.upgrade.v2_1_0.util.CommercePric
 import com.liferay.commerce.price.list.internal.upgrade.v2_2_0.util.CommercePriceListOrderTypeRelTable;
 import com.liferay.commerce.price.list.model.impl.CommercePriceEntryModelImpl;
 import com.liferay.commerce.price.list.model.impl.CommercePriceListAccountRelModelImpl;
+import com.liferay.commerce.price.list.model.impl.CommercePriceListModelImpl;
 import com.liferay.commerce.price.list.model.impl.CommerceTierPriceEntryModelImpl;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -64,14 +66,22 @@ public class CommercePriceListServiceUpgradeStepRegistrator
 				CommerceTierPriceEntryModelImpl.TABLE_NAME, "groupId"));
 
 		registry.register(
-			"2.0.0", "2.1.0",
+			"2.0.0", "2.0.1",
 			new com.liferay.commerce.price.list.internal.upgrade.v2_1_0.
-				CommercePriceEntryUpgradeProcess(),
+				CommercePriceEntryUpgradeProcess());
+
+		registry.register(
+			"2.0.1", "2.0.2",
 			new com.liferay.commerce.price.list.internal.upgrade.v2_1_0.
-				CommercePriceListUpgradeProcess(),
+				CommercePriceListUpgradeProcess());
+
+		registry.register(
+			"2.0.2", "2.0.3",
 			new com.liferay.commerce.price.list.internal.upgrade.v2_1_0.
-				CommerceTierPriceEntryUpgradeProcess(),
-			CommercePriceListChannelRelTable.create(),
+				CommerceTierPriceEntryUpgradeProcess());
+
+		registry.register(
+			"2.0.3", "2.1.0", CommercePriceListChannelRelTable.create(),
 			CommercePriceListDiscountRelTable.create());
 
 		registry.register(
@@ -159,6 +169,22 @@ public class CommercePriceListServiceUpgradeStepRegistrator
 			"2.8.1", "2.9.0",
 			UpgradeProcessFactory.addColumns(
 				"CommercePriceEntry", "pricingQuantity BIGDECIMAL null"));
+
+		registry.register(
+			"2.9.0", "3.0.0",
+			UpgradeProcessFactory.addColumns(
+				CommercePriceListModelImpl.TABLE_NAME,
+				"commerceCurrencyCode VARCHAR(75) null"),
+			UpgradeProcessFactory.runSQL(
+				StringBundler.concat(
+					"update CommercePriceList set commerceCurrencyCode = ",
+					"(select code_ from CommerceCurrency where ",
+					"CommerceCurrency.commerceCurrencyId = ",
+					"CommercePriceList.commerceCurrencyId)")),
+			UpgradeProcessFactory.dropColumns(
+				CommercePriceListModelImpl.TABLE_NAME, "commerceCurrencyId"));
+
+		registry.register("3.0.0", "4.0.0", new DummyUpgradeStep());
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce price list upgrade step registrator finished");

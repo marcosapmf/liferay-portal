@@ -17,14 +17,12 @@ import com.liferay.portal.kernel.util.SystemProperties;
 public class ClassLoaderAggregatePropertiesUtil {
 
 	public static ClassLoaderAggregateProperties create(
-		ClassLoader classLoader, long companyId, String webId,
-		String componentName) {
+		ClassLoader classLoader, String componentName) {
 
 		SystemProperties.set("base.path", ".");
 
 		ClassLoaderAggregateProperties classLoaderAggregateProperties =
-			new ClassLoaderAggregateProperties(
-				classLoader, webId, componentName);
+			new ClassLoaderAggregateProperties(classLoader, componentName);
 
 		if (_log.isInfoEnabled()) {
 			_log.info(
@@ -34,8 +32,7 @@ public class ClassLoaderAggregatePropertiesUtil {
 		}
 
 		EnvPropertiesUtil.loadEnvOverrides(
-			_ENV_OVERRIDE_PREFIX, companyId,
-			classLoaderAggregateProperties::setProperty);
+			_ENV_OVERRIDE_PREFIX, classLoaderAggregateProperties::setProperty);
 
 		return classLoaderAggregateProperties;
 	}

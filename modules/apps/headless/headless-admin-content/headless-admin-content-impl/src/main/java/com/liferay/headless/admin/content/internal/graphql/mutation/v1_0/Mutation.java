@@ -9,7 +9,6 @@ import com.liferay.headless.admin.content.resource.v1_0.PageDefinitionResource;
 import com.liferay.headless.admin.content.resource.v1_0.StructuredContentResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -71,23 +70,6 @@ public class Mutation {
 					Long.valueOf(siteKey), pageDefinition));
 	}
 
-	@GraphQLField(description = "Creates a draft of a structured content")
-	public com.liferay.headless.delivery.dto.v1_0.StructuredContent
-			createSiteStructuredContentDraft(
-				@GraphQLName("siteKey") @NotEmpty String siteKey,
-				@GraphQLName("structuredContent")
-					com.liferay.headless.delivery.dto.v1_0.StructuredContent
-						structuredContent)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_structuredContentResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			structuredContentResource ->
-				structuredContentResource.postSiteStructuredContentDraft(
-					Long.valueOf(siteKey), structuredContent));
-	}
-
 	@GraphQLField(
 		description = "Deletes a version of a structured content via its ID."
 	)
@@ -104,6 +86,23 @@ public class Mutation {
 					structuredContentId, version));
 
 		return true;
+	}
+
+	@GraphQLField(description = "Creates a draft of a structured content")
+	public com.liferay.headless.delivery.dto.v1_0.StructuredContent
+			createSiteStructuredContentDraft(
+				@GraphQLName("siteKey") @NotEmpty String siteKey,
+				@GraphQLName("structuredContent")
+					com.liferay.headless.delivery.dto.v1_0.StructuredContent
+						structuredContent)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_structuredContentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			structuredContentResource ->
+				structuredContentResource.postSiteStructuredContentDraft(
+					Long.valueOf(siteKey), structuredContent));
 	}
 
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R
@@ -187,7 +186,8 @@ public class Mutation {
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

@@ -6,8 +6,6 @@
 package com.liferay.digital.signature.rest.resource.v1_0;
 
 import com.liferay.digital.signature.rest.dto.v1_0.DSEnvelope;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,26 +46,25 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface DSEnvelopeResource {
 
+	public DSEnvelope getSiteDSEnvelope(Long siteId, String dsEnvelopeId)
+		throws Exception;
+
 	public Page<DSEnvelope> getSiteDSEnvelopesPage(
 			Long siteId, String fromDate, String keywords, String order,
 			String status, Pagination pagination)
-		throws Exception;
-
-	public Response postSiteDSEnvelopesPageExportBatch(
-			Long siteId, String fromDate, String keywords, String order,
-			String status, String callbackURL, String contentType,
-			String fieldNames)
 		throws Exception;
 
 	public DSEnvelope postSiteDSEnvelope(Long siteId, DSEnvelope dsEnvelope)
 		throws Exception;
 
 	public Response postSiteDSEnvelopeBatch(
-			Long siteId, DSEnvelope dsEnvelope, String callbackURL,
-			Object object)
+			Long siteId, String callbackURL, Object object)
 		throws Exception;
 
-	public DSEnvelope getSiteDSEnvelope(Long siteId, String dsEnvelopeId)
+	public Response postSiteDSEnvelopesPageExportBatch(
+			Long siteId, String fromDate, String keywords, String order,
+			String status, String callbackURL, String contentType,
+			String fieldNames)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -92,7 +89,8 @@ public interface DSEnvelopeResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -117,19 +115,23 @@ public interface DSEnvelopeResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

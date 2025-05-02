@@ -8,16 +8,19 @@ package com.liferay.commerce.product.content.web.internal.portlet;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.content.constants.CPContentWebKeys;
 import com.liferay.commerce.product.content.helper.CPCompareContentHelper;
+import com.liferay.commerce.product.content.helper.CPContentHelper;
 import com.liferay.commerce.product.content.render.list.CPContentListRendererRegistry;
 import com.liferay.commerce.product.content.render.list.entry.CPContentListEntryRendererRegistry;
 import com.liferay.commerce.product.content.web.internal.display.context.CPCompareContentDisplayContext;
 import com.liferay.commerce.product.type.CPTypeRegistry;
 import com.liferay.commerce.product.util.CPCompareHelper;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -74,9 +77,10 @@ public class CPCompareContentPortlet extends MVCPortlet {
 
 			CPCompareContentDisplayContext cpCompareContentDisplayContext =
 				new CPCompareContentDisplayContext(
-					_cpCompareHelper, _cpContentListEntryRendererRegistry,
+					_configurationProvider, _cpCompareHelper,
+					_cpContentListEntryRendererRegistry,
 					_cpContentListRendererRegistry, _cpDefinitionHelper,
-					_cpTypeRegistry, httpServletRequest);
+					_cpTypeRegistry, _groupLocalService, httpServletRequest);
 
 			httpServletRequest.setAttribute(
 				WebKeys.PORTLET_DISPLAY_CONTEXT,
@@ -86,6 +90,9 @@ public class CPCompareContentPortlet extends MVCPortlet {
 			_log.error(portalException);
 		}
 
+		renderRequest.setAttribute(
+			CPContentWebKeys.CP_CONTENT_HELPER, _cpContentHelper);
+
 		super.render(renderRequest, renderResponse);
 	}
 
@@ -93,10 +100,16 @@ public class CPCompareContentPortlet extends MVCPortlet {
 		CPCompareContentPortlet.class);
 
 	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	@Reference
 	private CPCompareContentHelper _cpCompareContentHelper;
 
 	@Reference
 	private CPCompareHelper _cpCompareHelper;
+
+	@Reference
+	private CPContentHelper _cpContentHelper;
 
 	@Reference
 	private CPContentListEntryRendererRegistry
@@ -110,6 +123,9 @@ public class CPCompareContentPortlet extends MVCPortlet {
 
 	@Reference
 	private CPTypeRegistry _cpTypeRegistry;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Portal _portal;

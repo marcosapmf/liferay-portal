@@ -69,14 +69,8 @@ public class AuthenticatedSessionManagerUtil {
 		return user.getUserId();
 	}
 
-	public static void login(
-			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, String login,
-			String password, boolean rememberMe, String authType)
-		throws Exception {
-
-		httpServletRequest = PortalUtil.getOriginalServletRequest(
-			httpServletRequest);
+	public static boolean isPasswordParameterInQueryString(
+		HttpServletRequest httpServletRequest) {
 
 		String queryString = HttpComponentsUtil.getQueryString(
 			httpServletRequest);
@@ -111,8 +105,24 @@ public class AuthenticatedSessionManagerUtil {
 							"referer header: ", referer));
 				}
 
-				return;
+				return true;
 			}
+		}
+
+		return false;
+	}
+
+	public static void login(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String login,
+			String password, boolean rememberMe, String authType)
+		throws Exception {
+
+		httpServletRequest = PortalUtil.getOriginalServletRequest(
+			httpServletRequest);
+
+		if (isPasswordParameterInQueryString(httpServletRequest)) {
+			return;
 		}
 
 		CookiesManagerUtil.validateSupportCookie(httpServletRequest);
@@ -197,9 +207,6 @@ public class AuthenticatedSessionManagerUtil {
 		CookiesManagerUtil.addCookie(
 			CookiesConstants.CONSENT_TYPE_NECESSARY, idCookie,
 			httpServletRequest, httpServletResponse);
-
-		RememberMeTokenLocalServiceUtil.deleteExpiredRememberMeTokens(
-			user.getUserId());
 
 		if (rememberMe) {
 			CookiesManagerUtil.addCookie(
@@ -288,9 +295,6 @@ public class AuthenticatedSessionManagerUtil {
 			CookiesConstants.NAME_PASSWORD, CookiesConstants.NAME_REMEMBER_ME,
 			CookiesConstants.NAME_REMEMBER_ME_TOKEN_ID,
 			CookiesConstants.NAME_REMEMBER_ME_TOKEN_VALUE);
-
-		RememberMeTokenLocalServiceUtil.deleteExpiredRememberMeTokens(
-			PortalUtil.getUserId(httpServletRequest));
 
 		try {
 			httpSession.invalidate();

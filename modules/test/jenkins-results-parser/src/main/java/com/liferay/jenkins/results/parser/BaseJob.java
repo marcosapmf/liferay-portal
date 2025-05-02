@@ -95,15 +95,19 @@ public abstract class BaseJob implements Job {
 
 	@Override
 	public Set<String> getBatchNames() {
-		Set<String> batchNames = new TreeSet<>();
+		if (_batchNames != null) {
+			return _batchNames;
+		}
+
+		_batchNames = Collections.synchronizedSet(new TreeSet<String>());
 
 		for (BatchTestClassGroup batchTestClassGroup :
 				getBatchTestClassGroups()) {
 
-			batchNames.add(batchTestClassGroup.getBatchName());
+			_batchNames.add(batchTestClassGroup.getBatchName());
 		}
 
-		return batchNames;
+		return _batchNames;
 	}
 
 	@Override
@@ -352,6 +356,58 @@ public abstract class BaseJob implements Job {
 	}
 
 	@Override
+	public Set<String> getDistRequiredBatchNames() {
+		if (!isStandaloneBatchEnabled()) {
+			return getBatchNames();
+		}
+
+		Set<String> batchNames = new TreeSet<>();
+
+		JobProperty jobProperty = getJobProperty("test.batch.names.standalone");
+
+		Set<String> standaloneTestBatchNames = getSetFromString(
+			jobProperty.getValue());
+
+		for (BatchTestClassGroup batchTestClassGroup :
+				getBatchTestClassGroups()) {
+
+			String batchName = batchTestClassGroup.getBatchName();
+
+			if (!standaloneTestBatchNames.contains(batchName)) {
+				batchNames.add(batchName);
+			}
+		}
+
+		return batchNames;
+	}
+
+	@Override
+	public Set<String> getDistRequiredSegmentNames() {
+		if (!isStandaloneBatchEnabled()) {
+			return getSegmentNames();
+		}
+
+		Set<String> segmentNames = new TreeSet<>();
+
+		JobProperty jobProperty = getJobProperty("test.batch.names.standalone");
+
+		Set<String> standaloneTestBatchNames = getSetFromString(
+			jobProperty.getValue());
+
+		for (SegmentTestClassGroup segmentTestClassGroup :
+				getSegmentTestClassGroups()) {
+
+			if (!standaloneTestBatchNames.contains(
+					segmentTestClassGroup.getBatchName())) {
+
+				segmentNames.add(segmentTestClassGroup.getSegmentName());
+			}
+		}
+
+		return segmentNames;
+	}
+
+	@Override
 	public DistType getDistType() {
 		return DistType.CI;
 	}
@@ -528,6 +584,58 @@ public abstract class BaseJob implements Job {
 		}
 
 		return segmentTestClassGroups;
+	}
+
+	@Override
+	public Set<String> getStandaloneBatchNames() {
+		if (!isStandaloneBatchEnabled()) {
+			return Collections.emptySet();
+		}
+
+		Set<String> batchNames = new TreeSet<>();
+
+		JobProperty jobProperty = getJobProperty("test.batch.names.standalone");
+
+		Set<String> standaloneTestBatchNames = getSetFromString(
+			jobProperty.getValue());
+
+		for (BatchTestClassGroup batchTestClassGroup :
+				getBatchTestClassGroups()) {
+
+			String batchName = batchTestClassGroup.getBatchName();
+
+			if (standaloneTestBatchNames.contains(batchName)) {
+				batchNames.add(batchName);
+			}
+		}
+
+		return batchNames;
+	}
+
+	@Override
+	public Set<String> getStandaloneSegmentNames() {
+		if (!isStandaloneBatchEnabled()) {
+			return Collections.emptySet();
+		}
+
+		Set<String> segmentNames = new TreeSet<>();
+
+		JobProperty jobProperty = getJobProperty("test.batch.names.standalone");
+
+		Set<String> standaloneTestBatchNames = getSetFromString(
+			jobProperty.getValue());
+
+		for (SegmentTestClassGroup segmentTestClassGroup :
+				getSegmentTestClassGroups()) {
+
+			if (standaloneTestBatchNames.contains(
+					segmentTestClassGroup.getBatchName())) {
+
+				segmentNames.add(segmentTestClassGroup.getSegmentName());
+			}
+		}
+
+		return segmentNames;
 	}
 
 	@Override
@@ -752,6 +860,11 @@ public abstract class BaseJob implements Job {
 			return true;
 		}
 
+		return false;
+	}
+
+	@Override
+	public boolean isStandaloneBatchEnabled() {
 		return false;
 	}
 
@@ -1468,8 +1581,7 @@ public abstract class BaseJob implements Job {
 	}
 
 	private static final String[] _JUNIT_BATCH_NAMES = {
-		"integration-jdk8", "modules-integration-jdk8", "modules-unit-jdk8",
-		"unit-jdk8"
+		"integration-jdk8", "modules-integration", "modules-unit", "unit"
 	};
 
 	private static final Integer _THREAD_COUNT = 10;
@@ -1477,6 +1589,7 @@ public abstract class BaseJob implements Job {
 	private static final ExecutorService _executorService =
 		JenkinsResultsParserUtil.getNewThreadPoolExecutor(_THREAD_COUNT, true);
 
+	private Set<String> _batchNames;
 	private final BuildProfile _buildProfile;
 	private String _companyDefaultLocale;
 	private Document _configDocument;

@@ -5,16 +5,22 @@
 
 package com.liferay.journal.internal.search.spi.model.query.contributor;
 
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
+import com.liferay.journal.model.JournalArticle;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.QueryFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -22,6 +28,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.asset.AssetSubtypeIdentifier;
 import com.liferay.portal.search.filter.DateRangeFilterBuilder;
 import com.liferay.portal.search.filter.FilterBuilders;
 import com.liferay.portal.search.spi.model.query.contributor.ModelPreFilterContributor;
@@ -32,6 +39,8 @@ import java.io.Serializable;
 import java.text.Format;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
@@ -119,6 +128,55 @@ public class JournalArticleModelPreFilterContributor
 			booleanFilter.addRequiredTerm("ddmStructureKey", ddmStructureKey);
 		}
 
+		HashMap<String, List<AssetSubtypeIdentifier>>
+			assetSubtypeIdentifiersMap =
+				(HashMap<String, List<AssetSubtypeIdentifier>>)
+					searchContext.getAttribute("assetSubtypeIdentifiersMap");
+
+		if ((assetSubtypeIdentifiersMap != null) &&
+			assetSubtypeIdentifiersMap.containsKey(
+				JournalArticle.class.getName())) {
+
+			BooleanFilter subtypeBooleanFilter = new BooleanFilter();
+
+			List<AssetSubtypeIdentifier> assetSubtypeIdentifiers =
+				assetSubtypeIdentifiersMap.get(JournalArticle.class.getName());
+
+			for (AssetSubtypeIdentifier assetSubtypeIdentifier :
+					assetSubtypeIdentifiers) {
+
+				try {
+					Group group =
+						_groupLocalService.getGroupByExternalReferenceCode(
+							assetSubtypeIdentifier.
+								getGroupExternalReferenceCode(),
+							searchContext.getCompanyId());
+
+					DDMStructure ddmStructure =
+						_ddmStructureLocalService.
+							fetchStructureByExternalReferenceCode(
+								assetSubtypeIdentifier.
+									getSubtypeExternalReferenceCode(),
+								group.getGroupId(),
+								_classNameLocalService.getClassNameId(
+									JournalArticle.class));
+
+					subtypeBooleanFilter.addTerm(
+						"ddmStructureKey", ddmStructure.getStructureKey());
+				}
+				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug("Unable to add subtype filter", exception);
+					}
+				}
+			}
+
+			if (subtypeBooleanFilter.hasClauses()) {
+				booleanFilter.add(
+					subtypeBooleanFilter, BooleanClauseOccur.MUST);
+			}
+		}
+
 		String ddmTemplateKey = (String)searchContext.getAttribute(
 			"ddmTemplateKey");
 
@@ -195,10 +253,19 @@ public class JournalArticleModelPreFilterContributor
 		JournalArticleModelPreFilterContributor.class);
 
 	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
 	private DDMIndexer _ddmIndexer;
 
 	@Reference
+	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference
 	private FilterBuilders _filterBuilders;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Portal _portal;

@@ -15,6 +15,7 @@ import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
 import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.account.service.AccountGroupRelLocalService;
+import com.liferay.commerce.constants.CommerceAddressConstants;
 import com.liferay.commerce.exception.NoSuchCountryException;
 import com.liferay.commerce.price.list.exception.NoSuchPriceListException;
 import com.liferay.commerce.price.list.model.CommercePriceList;
@@ -124,14 +125,10 @@ public class CommerceAccountsImporter {
 		// Add Commerce Account
 
 		accountEntry = _accountEntryLocalService.addAccountEntry(
-			serviceContext.getUserId(),
+			_friendlyURLNormalizer.normalize(name), serviceContext.getUserId(),
 			AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT, name, null, null,
 			email, null, taxId, accountType, WorkflowConstants.STATUS_APPROVED,
 			serviceContext);
-
-		accountEntry = _accountEntryLocalService.updateExternalReferenceCode(
-			accountEntry.getAccountEntryId(),
-			_friendlyURLNormalizer.normalize(accountEntry.getName()));
 
 		String twoLetterISOCode = jsonObject.getString("country");
 
@@ -153,17 +150,17 @@ public class CommerceAccountsImporter {
 			}
 		}
 
-		String street1 = jsonObject.getString("street1");
-		String city = jsonObject.getString("city");
-		String zip = jsonObject.getString("zip");
-
 		// Add Commerce Address
 
 		_commerceAddressLocalService.addCommerceAddress(
-			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-			accountEntry.getName(), StringPool.BLANK, street1, StringPool.BLANK,
-			StringPool.BLANK, city, zip, regionId, country.getCountryId(),
-			StringPool.BLANK, true, true, serviceContext);
+			StringPool.BLANK, AccountEntry.class.getName(),
+			accountEntry.getAccountEntryId(), country.getCountryId(), regionId,
+			jsonObject.getString("city"), StringPool.BLANK,
+			accountEntry.getName(), StringPool.BLANK,
+			jsonObject.getString("street1"), StringPool.BLANK, StringPool.BLANK,
+			StringPool.BLANK,
+			CommerceAddressConstants.ADDRESS_TYPE_BILLING_AND_SHIPPING,
+			jsonObject.getString("zip"), serviceContext);
 
 		// Add Company Logo
 
@@ -181,6 +178,7 @@ public class CommerceAccountsImporter {
 				}
 
 				_accountEntryLocalService.updateAccountEntry(
+					accountEntry.getExternalReferenceCode(),
 					accountEntry.getAccountEntryId(),
 					accountEntry.getParentAccountEntryId(),
 					accountEntry.getName(), accountEntry.getDescription(),
@@ -239,7 +237,7 @@ public class CommerceAccountsImporter {
 
 					CommercePriceList commercePriceList =
 						_commercePriceListLocalService.
-							fetchByExternalReferenceCode(
+							fetchCommercePriceListByExternalReferenceCode(
 								externalReferenceCode,
 								serviceContext.getCompanyId());
 
@@ -281,11 +279,10 @@ public class CommerceAccountsImporter {
 					if (accountGroup == null) {
 						accountGroup =
 							_accountGroupLocalService.addAccountGroup(
+								externalReferenceCode,
 								serviceContext.getUserId(), null,
 								accountGroupName, serviceContext);
 
-						accountGroup.setExternalReferenceCode(
-							externalReferenceCode);
 						accountGroup.setDefaultAccountGroup(false);
 						accountGroup.setType(
 							AccountConstants.ACCOUNT_GROUP_TYPE_GUEST);

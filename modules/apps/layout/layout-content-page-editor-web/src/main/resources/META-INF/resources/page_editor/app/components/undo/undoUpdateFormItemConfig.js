@@ -5,58 +5,66 @@
 
 import updateFormItemConfig from '../../actions/updateFormItemConfig';
 import LayoutService from '../../services/LayoutService';
-import getFragmentItem from '../../utils/getFragmentItem';
+import {getStepperChild} from '../../utils/getStepperChild';
 
 function undoAction({action, store}) {
 	const {
+		addedItemIds,
 		config,
 		deletedItems,
 		isMapping,
 		itemIds,
-		removedFragmentEntryLinkIds,
-		restoredFragmentEntryLinkIds,
+		movedItemIds,
+		removedItemIds,
+		stepperFragmentEntryLinkId,
 	} = action;
 
-	const {layoutData} = store;
 	const [itemId] = itemIds;
 
-	const removedItems = removedFragmentEntryLinkIds.map((id) => ({
-		itemId: getFragmentItem(layoutData, id).itemId,
-	}));
+	const nextMovedItems = [];
 
-	const restoredItemIds = restoredFragmentEntryLinkIds.map(
-		(id) => getFragmentItem(layoutData, id).itemId
-	);
+	movedItemIds.forEach((movedItem) => {
+		const item = store.layoutData.items[movedItem.itemId];
 
-	const item = layoutData.items[itemId];
-
-	const nextLayoutData = {
-		...layoutData,
-		deletedItems: [...deletedItems, ...removedItems],
-		items: {
-			...layoutData.items,
-			[itemId]: {
-				...item,
-				children: isMapping ? restoredItemIds : item.children,
-				config,
-			},
-		},
-	};
+		nextMovedItems.push({itemId: item.itemId, parentId: item.parentId});
+	});
 
 	return (dispatch) => {
-		return LayoutService.updateLayoutData({
-			layoutData: nextLayoutData,
+		return LayoutService.undoUpdateFormConfig({
+			addedItemIds: removedItemIds,
+			itemConfig: config,
+			itemId,
+			movedItemIds,
 			onNetworkStatus: dispatch,
+			removedItemIds: addedItemIds,
 			segmentsExperienceId: store.segmentsExperienceId,
-		}).then(() => {
+			stepperFragmentEntryLinkId,
+		}).then(({fragmentEntryLinks, layoutData}) => {
 			dispatch(
 				updateFormItemConfig({
+					addedItemIds: removedItemIds,
 					deletedItems,
+					fragmentEntryLinks,
 					isMapping,
 					itemIds: [itemId],
-					layoutData: nextLayoutData,
-					removedFragmentEntryLinkIds,
-					restoredFragmentEntryLinkIds,
+					layoutData,
+					movedItemIds: nextMovedItems,
+					removedFragmentEntryLinkIds: addedItemIds
+						.map((itemId) => {
+							const item = layoutData.items[itemId];
+
+							return item?.config?.fragmentEntryLinkId;
+						})
+						.filter(Boolean),
+					removedItemIds: addedItemIds,
+					restoredFragmentEntryLinkIds: removedItemIds
+						.map((itemId) => {
+							const item = layoutData.items[itemId];
+
+							return item?.config?.fragmentEntryLinkId;
+						})
+						.filter(Boolean),
+					triggerItemId: action.triggerItemId,
 				})
 			);
 		});
@@ -65,28 +73,32 @@ function undoAction({action, store}) {
 
 function getDerivedStateForUndo({action, state}) {
 	const {
-		addedFragmentEntryLinks,
+		addedItemIds,
 		isMapping,
 		itemIds,
-		removedFragmentEntryLinkIds,
-		restoredFragmentEntryLinkIds,
+		movedItemIds,
+		removedItemIds,
+		triggerItemId,
 	} = action;
 
-	const {layoutData} = state;
+	const {fragmentEntryLinks, layoutData} = state;
 	const [itemId] = itemIds;
 
 	const item = layoutData.items[itemId];
 
+	const stepper = getStepperChild(item, layoutData, fragmentEntryLinks);
+
 	return {
+		addedItemIds,
 		config: {...item.config, loading: false},
 		deletedItems: layoutData.deletedItems,
 		isMapping,
 		itemIds: [itemId],
-		removedFragmentEntryLinkIds: addedFragmentEntryLinks
-			? Object.keys(addedFragmentEntryLinks)
-			: restoredFragmentEntryLinkIds,
-		restoredFragmentEntryLinkIds: removedFragmentEntryLinkIds,
+		movedItemIds,
+		removedItemIds,
+		stepperFragmentEntryLinkId: stepper?.config.fragmentEntryLinkId,
+		triggerItemId,
 	};
 }
 
-export {undoAction, getDerivedStateForUndo};
+export {getDerivedStateForUndo, undoAction};

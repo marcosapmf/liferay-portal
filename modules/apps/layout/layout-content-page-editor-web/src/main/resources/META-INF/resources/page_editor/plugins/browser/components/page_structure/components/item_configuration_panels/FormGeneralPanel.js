@@ -8,8 +8,7 @@ import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput, ClayToggle} from '@clayui/form';
 import ClayPanel from '@clayui/panel';
 import {useIsMounted} from '@liferay/frontend-js-react-web';
-import {useId} from 'frontend-js-components-web';
-import {openToast} from 'frontend-js-web';
+import {openToast, useId} from 'frontend-js-components-web';
 import React, {useCallback, useEffect, useState} from 'react';
 
 import {CheckboxField} from '../../../../../../app/components/fragment_configuration_fields/CheckboxField';
@@ -20,12 +19,16 @@ import {
 	useItemLocalConfig,
 	useUpdateItemLocalConfig,
 } from '../../../../../../app/contexts/LocalConfigContext';
-import {useSelector} from '../../../../../../app/contexts/StoreContext';
+import {
+	useSelector,
+	useSelectorRef,
+} from '../../../../../../app/contexts/StoreContext';
 import selectLanguageId from '../../../../../../app/selectors/selectLanguageId';
 import {formIsMapped} from '../../../../../../app/utils/formIsMapped';
 import {formIsRestricted} from '../../../../../../app/utils/formIsRestricted';
 import {formIsUnavailable} from '../../../../../../app/utils/formIsUnavailable';
 import {getEditableLocalizedValue} from '../../../../../../app/utils/getEditableLocalizedValue';
+import {hasLocalizableFields} from '../../../../../../app/utils/hasLocalizableFields';
 import {setIn} from '../../../../../../app/utils/setIn';
 import {useSaveFormConfig} from '../../../../../../app/utils/useSaveFormConfig';
 import CurrentLanguageFlag from '../../../../../../common/components/CurrentLanguageFlag';
@@ -79,24 +82,33 @@ export function FormGeneralPanel({item}) {
 			<FormOptions item={item} onValueSelect={saveFormConfig} />
 
 			{formIsMapped(item) && (
-				<div className="mb-3 panel-group-sm">
-					<ClayPanel
-						collapsable
-						defaultExpanded
-						displayTitle={Liferay.Language.get(
-							'actions-after-submit'
-						)}
-						displayType="unstyled"
-						showCollapseIcon
-					>
-						<ClayPanel.Body>
-							<SuccessInteractionOptions
-								item={item}
-								onValueSelect={saveFormConfig}
-							/>
-						</ClayPanel.Body>
-					</ClayPanel>
-				</div>
+				<>
+					<div className="mb-3 panel-group-sm">
+						<ClayPanel
+							collapsable
+							defaultExpanded
+							displayTitle={Liferay.Language.get(
+								'actions-after-submit'
+							)}
+							displayType="unstyled"
+							showCollapseIcon
+						>
+							<ClayPanel.Body>
+								<SuccessInteractionOptions
+									item={item}
+									onValueSelect={saveFormConfig}
+								/>
+							</ClayPanel.Body>
+						</ClayPanel>
+					</div>
+
+					{Liferay.FeatureFlags['LPD-37927'] ? (
+						<LocalizationOptions
+							item={item}
+							onValueSelect={saveFormConfig}
+						/>
+					) : null}
+				</>
 			)}
 
 			<div className="mb-3 panel-group-sm">
@@ -141,7 +153,7 @@ function FormOptions({item, onValueSelect}) {
 						onValueSelect={onValueSelect}
 					/>
 
-					{formIsMapped(item) && Liferay.FeatureFlags['LPD-10727'] ? (
+					{formIsMapped(item) ? (
 						<FormMultistepOptions
 							item={item}
 							onValueSelect={onValueSelect}
@@ -445,4 +457,134 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 			)}
 		</>
 	);
+}
+
+const DISABLED_OPTION = 'disabled';
+const READ_ONLY_OPTION = 'read-only';
+
+const UNLOCALIZED_FIELDS_STATE_OPTIONS = [
+	{
+		label: Liferay.Language.get('disabled'),
+		value: DISABLED_OPTION,
+	},
+	{
+		label: Liferay.Language.get('read-only'),
+		value: READ_ONLY_OPTION,
+	},
+];
+
+function LocalizationOptions({item, onValueSelect}) {
+	const languageId = useSelector(selectLanguageId);
+
+	const stateRef = useSelectorRef((state) => state);
+
+	const {localizationConfig = {}} = item.config;
+
+	const {unlocalizedFieldsMessage, unlocalizedFieldsState} =
+		localizationConfig || {};
+
+	const unlocalizedMessage = getEditableLocalizedValue(
+		unlocalizedFieldsMessage,
+		languageId,
+		Liferay.Language.get('this-field-cannot-be-localized')
+	);
+
+	const helpTextId = useId();
+
+	const [showLocalizationOptions, setShowLocalizationOptions] =
+		useState(false);
+
+	useEffect(() => {
+		hasLocalizableFields(stateRef.current, item.itemId).then(
+			(hasLocalizableFields) => {
+				setShowLocalizationOptions(hasLocalizableFields);
+			}
+		);
+	}, [stateRef, item.itemId]);
+
+	return showLocalizationOptions ? (
+		<div className="mb-3 panel-group-sm">
+			<ClayPanel
+				collapsable
+				defaultExpanded
+				displayTitle={Liferay.Language.get('unlocalizable-fields')}
+				displayType="unstyled"
+				showCollapseIcon
+			>
+				<ClayPanel.Body>
+					<p className="text-secondary">
+						{Liferay.Language.get(
+							'configure-unlocalizable-fields-when-localization-action-is-taken'
+						)}
+					</p>
+
+					<ClayForm.Group small>
+						<SelectField
+							field={{
+								label: Liferay.Language.get(
+									'unlocalizable-fields-state'
+								),
+								name: 'unlocalizableFieldsState',
+								typeOptions: {
+									validValues:
+										UNLOCALIZED_FIELDS_STATE_OPTIONS,
+								},
+							}}
+							onValueSelect={(_name, value) =>
+								onValueSelect({
+									localizationConfig: {
+										...localizationConfig,
+										unlocalizedFieldsState: value,
+									},
+								})
+							}
+							value={unlocalizedFieldsState || DISABLED_OPTION}
+						/>
+					</ClayForm.Group>
+
+					<ClayForm.Group small>
+						<ClayInput.Group className="align-items-end" small>
+							<ClayInput.GroupItem>
+								<TextField
+									aria-describedby={helpTextId}
+									field={{
+										label: Liferay.Language.get(
+											'unlocalizable-fields-message'
+										),
+									}}
+									onValueSelect={(_, value) =>
+										onValueSelect({
+											localizationConfig: setIn(
+												localizationConfig || {},
+												[
+													'unlocalizedFieldsMessage',
+													languageId,
+												],
+
+												value
+											),
+										})
+									}
+									value={unlocalizedMessage}
+								/>
+							</ClayInput.GroupItem>
+
+							<ClayInput.GroupItem shrink>
+								<CurrentLanguageFlag />
+							</ClayInput.GroupItem>
+						</ClayInput.Group>
+
+						<p
+							className="m-0 mt-1 small text-secondary"
+							id={helpTextId}
+						>
+							{Liferay.Language.get(
+								'this-message-appears-over-the-help-icon-of-unlocalizable-fields'
+							)}
+						</p>
+					</ClayForm.Group>
+				</ClayPanel.Body>
+			</ClayPanel>
+		</div>
+	) : null;
 }

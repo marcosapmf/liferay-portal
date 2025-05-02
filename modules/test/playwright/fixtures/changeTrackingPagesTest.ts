@@ -39,12 +39,6 @@ const changeTrackingPages = test.extend<{
 						getRandomString()
 					);
 
-				// Checkout ctCollection
-
-				await apiHelpers.headlessChangeTracking.checkoutCTCollection(
-					ctCollection.id
-				);
-
 				await use(ctCollection);
 			}
 			catch {
@@ -54,13 +48,26 @@ const changeTrackingPages = test.extend<{
 
 				// Delete ctCollection
 
-				await apiHelpers.headlessChangeTracking.deleteCTCollection(
-					ctCollection.id
-				);
+				if (ctCollection && ctCollection.body) {
+					try {
+						await apiHelpers.headlessChangeTracking.deleteCTCollection(
+							ctCollection.body.id
+						);
+					}
+					catch (error) {
+						console.error('Error deleting CT Collection:', error);
+					}
+				}
 			}
 		},
 		{auto: true},
 	],
+});
+
+test.afterEach(async ({page}) => {
+	const apiHelpers = new ApiHelpers(page);
+
+	await apiHelpers.headlessChangeTracking.checkoutCTCollection(0);
 });
 
 const changeTrackingPagesTest = mergeTests(loginTest(), changeTrackingPages);

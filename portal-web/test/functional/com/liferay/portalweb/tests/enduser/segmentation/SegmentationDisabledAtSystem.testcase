@@ -1,10 +1,12 @@
-@component-name = "portal-segmentation"
+@component-name = "portal-analytics-cloud"
 definition {
 
-	property ci.retries.disabled = "true";
+	property analytics.cloud.release = "true";
+	property analytics.cloud.upstream = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property property.group = "analytics.cloud.profile";
 	property testray.main.component.name = "Segmentation";
 
 	setUp {
@@ -33,7 +35,7 @@ definition {
 	@description = "LPS-152541 Add an alert to Segments Service in Instance Settings when those configurations are disabled in System Settings"
 	@priority = 4
 	test CheckAssignRolesDisabledAlertAtInstanceSettings {
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -59,7 +61,7 @@ definition {
 	@description = "LPS-152541 Add an alert to Segments Service in Instance Settings when those configurations are disabled in System Settings"
 	@priority = 4
 	test CheckSegmentationDisabledAlertAtInstanceSettings {
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -85,6 +87,7 @@ definition {
 	@description = "LPS-152542: Add breadcrumbs to Instance Settings alerts"
 	@priority = 3
 	test ViewAssignRoleBySegmentDisabledWarningUserWithoutsPermissionToSystemSettings {
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -132,6 +135,7 @@ definition {
 	@description = "LPS-152542: Add breadcrumbs to Instance Settings alerts"
 	@priority = 3
 	test ViewSegmentationDisabledWarningUserWithoutsPermissionToSystemSettings {
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 

@@ -69,6 +69,10 @@ public class CustomUserAttributesFormNavigatorEntry
 
 	@Override
 	public boolean isVisible(User user, Object object) {
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-39304")) {
+			return false;
+		}
+
 		if (FeatureFlagManagerUtil.isEnabled(
 				user.getCompanyId(), "LPD-13311") &&
 			_isDynamicAssetSelection()) {
@@ -99,11 +103,7 @@ public class CustomUserAttributesFormNavigatorEntry
 		String selectionStyle = GetterUtil.getString(
 			portletPreferences.getValue("selectionStyle", null));
 
-		if (Objects.equals(selectionStyle, "dynamic")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(selectionStyle, "dynamic");
 	}
 
 	@Reference

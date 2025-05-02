@@ -65,14 +65,8 @@ public class ValidationHelper {
 			_objectDefinitionLocalService.getObjectDefinition(
 				objectEntry.getObjectDefinitionId());
 
-		if (!Objects.equals(
-				objectDefinition.getExternalReferenceCode(),
-				externalReferenceCode)) {
-
-			return false;
-		}
-
-		return true;
+		return Objects.equals(
+			objectDefinition.getExternalReferenceCode(), externalReferenceCode);
 	}
 
 	public void validateAPIEndpointRelationship(
@@ -83,7 +77,7 @@ public class ValidationHelper {
 			Map<String, Serializable> values = objectEntry.getValues();
 
 			long apiEndpointId = (long)values.get(
-				"r_" + relationshipName + "_c_apiEndpointId");
+				"r_" + relationshipName + "_l_apiEndpointId");
 
 			if (!isValidObjectEntry("L_API_ENDPOINT", apiEndpointId)) {
 				throw new ObjectEntryValuesException.InvalidObjectField(
@@ -130,7 +124,7 @@ public class ValidationHelper {
 						StringBundler.concat(
 							"id ne '", objectEntry.getObjectEntryId(),
 							"' and r_", relationshipName,
-							"_c_apiEndpointId eq '", apiEndpointId, "'"),
+							"_l_apiEndpointId eq '", apiEndpointId, "'"),
 						objectDefinition.getExternalReferenceCode()))) {
 
 				throw new ObjectEntryValuesException.InvalidObjectField(

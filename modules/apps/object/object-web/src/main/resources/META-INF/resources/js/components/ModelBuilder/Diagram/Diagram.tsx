@@ -5,8 +5,11 @@
 
 import {API} from '@liferay/object-js-components-web';
 import classNames from 'classnames';
-import {LearnMessage, LearnResourcesContext} from 'frontend-js-components-web';
-import {openToast} from 'frontend-js-web';
+import {
+	LearnMessage,
+	LearnResourcesContext,
+	openToast,
+} from 'frontend-js-components-web';
 import React, {useCallback, useState} from 'react';
 import ReactFlow, {
 	Background,
@@ -55,6 +58,7 @@ const NODE_TYPES = {
 const EDGE_TYPES = {
 	defaultObjectRelationshipEdge: DefaultObjectRelationshipEdge,
 	selfObjectRelationshipEdge: SelfObjectRelationshipEdge,
+	treeStructureObjectRelationshipEdge: DefaultObjectRelationshipEdge,
 };
 
 function DiagramBuilder() {
@@ -123,21 +127,23 @@ function DiagramBuilder() {
 			if (unsupportedObjectRelationship?.errorMessage) {
 				openToast({
 					message: unsupportedObjectRelationship?.errorMessage,
-					toastProps: unsupportedObjectRelationship.learnMessage && {
-						actions: (
-							<LearnResourcesContext.Provider
-								value={learnResourceContext}
-							>
-								<LearnMessage
-									className="alert-link"
-									resource="object-web"
-									resourceKey={
-										unsupportedObjectRelationship.learnMessage
-									}
-								/>
-							</LearnResourcesContext.Provider>
-						),
-					},
+					toastProps: unsupportedObjectRelationship.learnMessage
+						? {
+								actions: (
+									<LearnResourcesContext.Provider
+										value={learnResourceContext}
+									>
+										<LearnMessage
+											className="alert-link"
+											resource="object-web"
+											resourceKey={
+												unsupportedObjectRelationship.learnMessage
+											}
+										/>
+									</LearnResourcesContext.Provider>
+								),
+							}
+						: undefined,
 					type: 'warning',
 				});
 			}
@@ -244,6 +250,12 @@ function DiagramBuilder() {
 			},
 			type: TYPES.SET_SELECTED_OBJECT_RELATIONSHIP_EDGE,
 		});
+
+		openToast({
+			message: Liferay.Language.get(
+				'relationship-was-created-successfully'
+			),
+		});
 	};
 
 	return (
@@ -255,6 +267,7 @@ function DiagramBuilder() {
 						setShowAddObjectRelationshipModal(false)
 					}
 					hasDefinedObjectDefinitionTarget
+					learnResources={learnResourceContext}
 					objectDefinitionExternalReferenceCode1={
 						newObjectRelationshipSourceNodeProps?.sourceNode.erc!
 					}
@@ -276,10 +289,10 @@ function DiagramBuilder() {
 				connectionLineType={ConnectionLineType.SmoothStep}
 				connectionMode={ConnectionMode.Loose}
 				dir="ltr"
-				edgeTypes={EDGE_TYPES}
+				edgeTypes={EDGE_TYPES as any}
 				elements={elements}
 				minZoom={0.1}
-				nodeTypes={NODE_TYPES}
+				nodeTypes={NODE_TYPES as any}
 				onConnect={onConnect}
 				onConnectStart={() => setNodeHandleConnection(true)}
 				onConnectStop={() => setNodeHandleConnection(false)}

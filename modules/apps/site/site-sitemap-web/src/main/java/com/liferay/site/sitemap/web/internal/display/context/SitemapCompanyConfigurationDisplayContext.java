@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.comparator.GroupNameComparator;
 import com.liferay.site.configuration.manager.SitemapConfigurationManager;
-import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
+import com.liferay.site.item.selector.SiteItemSelectorCriterion;
 
 import java.util.List;
 
@@ -138,6 +138,11 @@ public class SitemapCompanyConfigurationDisplayContext {
 
 	public boolean includeWebContent() throws ConfigurationException {
 		return _sitemapConfigurationManager.includeWebContentCompanyEnabled(
+			_themeDisplay.getCompanyId());
+	}
+
+	public boolean xmlSitemapIndexEnabled() throws ConfigurationException {
+		return _sitemapConfigurationManager.xmlSitemapIndexCompanyEnabled(
 			_themeDisplay.getCompanyId());
 	}
 

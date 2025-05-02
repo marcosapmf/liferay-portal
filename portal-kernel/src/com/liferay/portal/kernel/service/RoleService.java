@@ -136,6 +136,11 @@ public interface RoleService extends BaseService {
 	public Role getRole(long companyId, String name) throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Role getRoleByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Role> getRoles(int type, String subtype) throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -265,9 +270,9 @@ public interface RoleService extends BaseService {
 	 * @return the role with the primary key
 	 */
 	public Role updateRole(
-			long roleId, String name, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String subtype,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long roleId, String name,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String subtype, ServiceContext serviceContext)
 		throws PortalException;
 
 }

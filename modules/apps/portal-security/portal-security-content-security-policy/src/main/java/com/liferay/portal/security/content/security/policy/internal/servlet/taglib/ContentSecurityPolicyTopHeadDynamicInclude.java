@@ -47,9 +47,8 @@ public class ContentSecurityPolicyTopHeadDynamicInclude
 			printWriter.print(StringPool.QUOTE);
 		}
 
-		printWriter.print(
-			" type=\"text/javascript\">window.Liferay = window.Liferay || ");
-		printWriter.print("{}; window.Liferay.CSP = {nonce: '");
+		printWriter.print(" type=\"text/javascript\">window.Liferay.CSP = ");
+		printWriter.print("{nonce: '");
 
 		ContentSecurityPolicyConfiguration contentSecurityPolicyConfiguration =
 			ContentSecurityPolicyConfigurationUtil.
@@ -70,7 +69,8 @@ public class ContentSecurityPolicyTopHeadDynamicInclude
 
 	@Override
 	public void register(DynamicIncludeRegistry dynamicIncludeRegistry) {
-		dynamicIncludeRegistry.register("/html/common/themes/top_head.jsp#pre");
+		dynamicIncludeRegistry.register(
+			"/html/common/themes/top_js.jspf#resources");
 	}
 
 	@Reference

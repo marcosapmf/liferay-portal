@@ -50,21 +50,21 @@ export default {
 
 	addFragmentComposition({
 		description,
+		fileEntryId,
 		fragmentCollectionId,
 		itemId,
 		name,
 		onNetworkStatus,
-		previewImageURL,
 		saveInlineContent,
 		saveMappingConfiguration,
 		segmentsExperienceId,
 	}: {
 		description: string;
+		fileEntryId?: string;
 		fragmentCollectionId: string;
 		itemId: string;
 		name: string;
 		onNetworkStatus: OnNetworkStatus;
-		previewImageURL?: string;
 		saveInlineContent: boolean;
 		saveMappingConfiguration: boolean;
 		segmentsExperienceId: string;
@@ -77,10 +77,10 @@ export default {
 			{
 				body: {
 					description,
+					fileEntryId,
 					fragmentCollectionId,
 					itemId,
 					name,
-					previewImageURL,
 					saveInlineContent,
 					saveMappingConfiguration,
 					segmentsExperienceId,
@@ -158,6 +158,43 @@ export default {
 		);
 	},
 
+	addStepperFragmentEntryLink({
+		fragmentEntryKey,
+		groupId,
+		numberOfSteps,
+		onNetworkStatus,
+		parentItemId,
+		position,
+		segmentsExperienceId,
+	}: {
+		fragmentEntryKey: string;
+		groupId: string;
+		numberOfSteps: number;
+		onNetworkStatus: OnNetworkStatus;
+		parentItemId: string;
+		position: number;
+		segmentsExperienceId: string;
+	}) {
+		return draftServiceFetch<{
+			addedItemId: string;
+			fragmentEntryLink: FragmentEntryLink;
+			layoutData: LayoutData;
+		}>(
+			config.addStepperFragmentEntryLinkURL,
+			{
+				body: {
+					fragmentEntryKey,
+					groupId,
+					numberOfSteps,
+					parentItemId,
+					position,
+					segmentsExperienceId,
+				},
+			},
+			onNetworkStatus
+		);
+	},
+
 	deleteComment({
 		commentId,
 		onNetworkStatus,
@@ -222,6 +259,35 @@ export default {
 		);
 	},
 
+	pasteItems({
+		itemIds,
+		onNetworkStatus,
+		parentItemId,
+		segmentsExperienceId,
+	}: {
+		itemIds: string[];
+		onNetworkStatus: OnNetworkStatus;
+		parentItemId: string;
+		segmentsExperienceId: string;
+	}) {
+		return draftServiceFetch<{
+			copiedFragmentEntryLinks: FragmentEntryLink[];
+			copiedItemIds: string[];
+			layoutData: LayoutData;
+			restrictedItemIds: string[];
+		}>(
+			config.copyItemsURL,
+			{
+				body: {
+					itemIds,
+					parentItemId,
+					segmentsExperienceId,
+				},
+			},
+			onNetworkStatus
+		);
+	},
+
 	renderFragmentEntryLinksContent({
 		data,
 		languageId,
@@ -233,12 +299,12 @@ export default {
 			itemClassPK?: string | null;
 			itemExternalReferenceCode?: string | null;
 		}>;
-		languageId: string;
+		languageId: Liferay.Language.Locale;
 		segmentsExperienceId: string;
 	}) {
 		const body: {
 			data: string;
-			languageId: string;
+			languageId: Liferay.Language.Locale;
 			segmentsExperienceId: string;
 		} = {
 			data: JSON.stringify(data),

@@ -1,7 +1,9 @@
 @component-name = "portal-core-infra"
 definition {
 
-	property portal.release = "true";
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Custom Fields";
 
@@ -9,6 +11,8 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
 	}
 
 	tearDown {
@@ -276,7 +280,7 @@ definition {
 
 	@priority = 5
 	test EditCustomFieldUserTextField {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property app.server.types = "jboss,tomcat,weblogic,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";

@@ -1,0 +1,477 @@
+{
+	"configuration": {
+		"className": "com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition",
+		"multiCompany": true,
+		"parameters": {
+			"containsHeaders": "true",
+			"createStrategy": "UPSERT",
+			"featureFlag": "LPD-17564",
+			"importStrategy": "ON_ERROR_FAIL",
+			"updateStrategy": "UPDATE"
+		},
+		"taskItemDelegateName": "DEFAULT"
+	},
+	"items": [
+		{
+			"className": "com.liferay.object.model.ObjectDefinition#Z7P5",
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableComments": true,
+			"enableFriendlyURLCustomization": true,
+			"enableIndexSearch": true,
+			"enableLocalization": true,
+			"enableObjectEntryDraft": true,
+			"enableObjectEntryHistory": true,
+			"externalReferenceCode": "L_BASIC_DOCUMENT",
+			"label": {
+				"en_US": "Basic Document"
+			},
+			"modifiable": true,
+			"name": "BasicDocument",
+			"objectActions": [
+			],
+			"objectDefinitionSettings": [
+				{
+					"name": "acceptAllGroups",
+					"value": "true"
+				}
+			],
+			"objectFields": [
+				{
+					"DBType": "Long",
+					"businessType": "Attachment",
+					"defaultValue": "null",
+					"externalReferenceCode": "FILE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "File"
+					},
+					"localized": false,
+					"name": "file",
+					"objectFieldSettings": [
+						{
+							"name": "acceptedFileExtensions",
+							"value": "jpeg, jpg, pdf, png"
+						},
+						{
+							"name": "maximumFileSize",
+							"value": 100
+						},
+						{
+							"name": "fileSource",
+							"value": "userComputer"
+						},
+						{
+							"name": "showFilesInDocumentsAndMedia",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"readOnlyConditionExpression": "",
+					"required": true,
+					"state": false,
+					"system": false,
+					"type": "Long",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"defaultValue": "null",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"objectFieldSettings": [
+					],
+					"readOnly": "false",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "L_CMS_FILE_TYPES",
+			"panelCategoryKey": "",
+			"parameterRequired": false,
+			"pluralLabel": {
+				"en_US": "Basic Documents"
+			},
+			"portlet": false,
+			"scope": "depot",
+			"status": {
+				"code": 0
+			},
+			"system": true,
+			"titleObjectFieldName": "title"
+		},
+		{
+			"className": "com.liferay.object.model.ObjectDefinition#H4T4",
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableComments": true,
+			"enableFriendlyURLCustomization": true,
+			"enableIndexSearch": true,
+			"enableLocalization": true,
+			"enableObjectEntryDraft": true,
+			"enableObjectEntryHistory": true,
+			"externalReferenceCode": "L_BASIC_WEB_CONTENT",
+			"label": {
+				"en_US": "Basic Web Content"
+			},
+			"modifiable": true,
+			"name": "BasicWebContent",
+			"objectDefinitionSettings": [
+				{
+					"name": "acceptAllGroups",
+					"value": "true"
+				}
+			],
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "RichText",
+					"defaultValue": "null",
+					"externalReferenceCode": "Content",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Content"
+					},
+					"localized": true,
+					"name": "content",
+					"readOnly": "false",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"defaultValue": "null",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "L_CMS_CONTENT_STRUCTURES",
+			"panelCategoryKey": "",
+			"parameterRequired": false,
+			"pluralLabel": {
+				"en_US": "Basic Web Contents"
+			},
+			"portlet": false,
+			"scope": "depot",
+			"status": {
+				"code": 0
+			},
+			"system": true,
+			"titleObjectFieldName": "title"
+		},
+		{
+			"className": "com.liferay.object.model.ObjectDefinition#Y8H4",
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableComments": true,
+			"enableFriendlyURLCustomization": true,
+			"enableIndexSearch": true,
+			"enableLocalization": true,
+			"enableObjectEntryDraft": true,
+			"enableObjectEntryHistory": true,
+			"externalReferenceCode": "L_BLOG",
+			"label": {
+				"en_US": "Blog"
+			},
+			"modifiable": true,
+			"name": "Blog",
+			"objectDefinitionSettings": [
+				{
+					"name": "acceptAllGroups",
+					"value": "true"
+				}
+			],
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "RichText",
+					"defaultValue": "null",
+					"externalReferenceCode": "CONTENT",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Content"
+					},
+					"localized": true,
+					"name": "content",
+					"readOnly": "false",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "Long",
+					"businessType": "Attachment",
+					"defaultValue": "null",
+					"externalReferenceCode": "COVER_IMAGE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Cover Image"
+					},
+					"localized": false,
+					"name": "coverImage",
+					"objectFieldSettings": [
+						{
+							"name": "acceptedFileExtensions",
+							"value": "jpeg, jpg, pdf, png"
+						},
+						{
+							"name": "maximumFileSize",
+							"value": 100
+						},
+						{
+							"name": "fileSource",
+							"value": "userComputer"
+						},
+						{
+							"name": "showFilesInDocumentsAndMedia",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"readOnlyConditionExpression": "",
+					"required": true,
+					"state": false,
+					"system": false,
+					"type": "Long",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"defaultValue": "null",
+					"externalReferenceCode": "SUBTITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Subtitle"
+					},
+					"localized": true,
+					"name": "subtitle",
+					"readOnly": "false",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"defaultValue": "null",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "L_CMS_CONTENT_STRUCTURES",
+			"panelCategoryKey": "",
+			"parameterRequired": false,
+			"pluralLabel": {
+				"en_US": "Blogs"
+			},
+			"portlet": false,
+			"scope": "depot",
+			"status": {
+				"code": 0
+			},
+			"system": true,
+			"titleObjectFieldName": "title"
+		},
+		{
+			"className": "com.liferay.object.model.ObjectDefinition#S1T1",
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableComments": true,
+			"enableFriendlyURLCustomization": true,
+			"enableIndexSearch": true,
+			"enableLocalization": true,
+			"enableObjectEntryDraft": true,
+			"enableObjectEntryHistory": true,
+			"externalReferenceCode": "L_EXTERNAL_VIDEO",
+			"label": {
+				"en_US": "External Video"
+			},
+			"modifiable": true,
+			"name": "ExternalVideo",
+			"objectDefinitionSettings": [
+				{
+					"name": "acceptAllGroups",
+					"value": "true"
+				}
+			],
+			"objectFields": [
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"defaultValue": "null",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "L_CMS_FILE_TYPES",
+			"panelCategoryKey": "",
+			"parameterRequired": false,
+			"pluralLabel": {
+				"en_US": "External Videos"
+			},
+			"portlet": false,
+			"scope": "depot",
+			"status": {
+				"code": 0
+			},
+			"system": true,
+			"titleObjectFieldName": "title"
+		},
+		{
+			"className": "com.liferay.object.model.ObjectDefinition#H6H2",
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableComments": true,
+			"enableFriendlyURLCustomization": true,
+			"enableIndexSearch": true,
+			"enableLocalization": true,
+			"enableObjectEntryDraft": true,
+			"enableObjectEntryHistory": true,
+			"externalReferenceCode": "L_KNOWLEDGE_BASE",
+			"label": {
+				"en_US": "Knowledge Base"
+			},
+			"modifiable": true,
+			"name": "KnowledgeBase",
+			"objectDefinitionSettings": [
+				{
+					"name": "acceptAllGroups",
+					"value": "true"
+				}
+			],
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "RichText",
+					"defaultValue": "null",
+					"externalReferenceCode": "Content",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Content"
+					},
+					"localized": true,
+					"name": "content",
+					"readOnly": "false",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"defaultValue": "null",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "L_CMS_CONTENT_STRUCTURES",
+			"panelCategoryKey": "",
+			"parameterRequired": false,
+			"pluralLabel": {
+				"en_US": "Knowledge Bases"
+			},
+			"portlet": false,
+			"scope": "depot",
+			"status": {
+				"code": 0
+			},
+			"system": true,
+			"titleObjectFieldName": "title"
+		}
+	]
+}

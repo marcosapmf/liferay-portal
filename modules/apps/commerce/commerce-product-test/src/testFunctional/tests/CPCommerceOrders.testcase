@@ -3,11 +3,14 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Order Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp();
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -75,9 +78,9 @@ definition {
 
 		CommerceAcceleratorsInitializer.createNewOrderFromAccountSelectorDropdown();
 
-		AssertTextEquals.assertText(
-			locator1 = "Message#ERROR",
-			value1 = "Close Error:Unable to create a new order as the open order limit has been reached.");
+		AssertTextPresent(
+			locator1 = "Message#ALERT_DISMISSIBLE",
+			value1 = "Error:Unable to create a new order as the open order limit has been reached.");
 	}
 
 	@description = "Verify users can add a minimum order amount rule that applies to order subtotals. Orders that have a subtotal less than the minimum cannot be checked out"
@@ -274,7 +277,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1);
 
-			CommerceCheckout.gotoCheckoutViaMiniCart();
+			CommerceCheckout.gotoCheckoutViaMiniCart(asGuest = "true");
 		}
 
 		task ("Then during the checkout process, the guest can set a new billing address which will be visible at the Order Summary") {
@@ -643,7 +646,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1);
 
-			CommerceCheckout.gotoCheckoutViaMiniCart();
+			CommerceCheckout.gotoCheckoutViaMiniCart(asGuest = "true");
 		}
 
 		task ("Then at the Order Summary, the guest can view the billing address of the order") {
@@ -1374,7 +1377,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = "1 grams",
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 
 		task ("Then the admin edits the UoM by choosing a different one via the opened order item's detail sidebar") {
@@ -1392,7 +1395,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = "1 meters",
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -2262,197 +2265,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = "1.2",
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
-		}
-	}
-
-	@description = "This is a test for COMMERCE-10147 The orders can be sorted by Create/Order Date in Pending and Placed Orders Pages"
-	@priority = 3
-	test CanSortOrdersByCreationDateInPendingAndPlacedOrdersPages {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
-		property portal.acceptance = "false";
-
-		task ("Given a Minium site with a buyer user") {
-			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				accountType = "Business",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("And a payment method is activated") {
-			CommerceChannels.openChannelsAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
-
-			CommerceChannels.activatePaymentMethod(paymentMethod = "Money Order");
-		}
-
-		task ("And the acccount has a pending and a placed order") {
-			CommerceJSONOrdersAPI._addCommerceOrder(
-				accountEntryName = "Commerce Account",
-				orderItems = "MIN55861:1",
-				orderStatus = 2,
-				paymentMethod = "money-order",
-				paymentStatus = 2);
-
-			CommerceJSONOrdersAPI._addCommerceOrder(
-				accountEntryName = "Commerce Account",
-				orderItems = "MIN55861:1",
-				orderStatus = 1,
-				paymentMethod = "money-order",
-				paymentStatus = 2);
-		}
-
-		task ("And the buyer has also a pending and a placed order") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			CommerceAcceleratorsInitializer.createNewOrderFromAccountSelectorDropdown();
-
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
-
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			CommerceCheckout.gotoCheckout();
-
-			CommerceCheckout.initializersCheckout(
-				newAddressAddress = "Test Address",
-				newAddressCity = "Test City",
-				newAddressCountry = "United States",
-				newAddressName = "Address Name",
-				newAddressZipCode = "Test Zip Code",
-				productName = "U-Joint",
-				productQuantity = 1,
-				productUnitPrice = 24,
-				shippingMethod = "Standard");
-
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
-
-			CommerceAcceleratorsInitializer.createNewOrderFromPendingOrders();
-		}
-
-		task ("When the buyer goes to the pending orders page") {
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Pending Orders");
-		}
-
-		task ("Then the orders in the pending orders page are sorted from the last to the first as default") {
-			for (var orderAuthorName : list "Buyer User,Test Test") {
-				ObjectPortlet.assertAuthorColumnDisplaysUserName(
-					authorName = ${orderAuthorName},
-					column = "Created By");
-			}
-
-			var firstDate = CommerceOrders.getOrderCreationDateFromTable(
-				columnIndex = 1,
-				rowIndex = 1);
-			var secondDate = CommerceOrders.getOrderCreationDateFromTable(
-				columnIndex = 1,
-				rowIndex = 2);
-
-			var compareDatesResult = CommerceUtilities.compareDates(
-				date1 = ${firstDate},
-				date2 = ${secondDate});
-
-			TestUtils.assertEquals(
-				actual = ${compareDatesResult},
-				expected = "True");
-		}
-
-		task ("When the buyer clicks Create Date button in the pending orders page") {
-			CommerceNavigator.sortField(sortFieldName = "Create Date");
-		}
-
-		task ("Then the orders are sorted from the first to the last order") {
-			for (var orderAuthorName : list "Test Test,Buyer User") {
-				ObjectPortlet.assertAuthorColumnDisplaysUserName(
-					authorName = ${orderAuthorName},
-					column = "Created By");
-			}
-
-			var firstDate = CommerceOrders.getOrderCreationDateFromTable(
-				columnIndex = 1,
-				rowIndex = 1);
-			var secondDate = CommerceOrders.getOrderCreationDateFromTable(
-				columnIndex = 1,
-				rowIndex = 2);
-
-			var compareDatesResult = CommerceUtilities.compareDates(
-				date1 = ${firstDate},
-				date2 = ${secondDate});
-
-			TestUtils.assertEquals(
-				actual = ${compareDatesResult},
-				expected = "False");
-		}
-
-		task ("When the buyer goes to the placed orders page") {
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Placed Orders");
-		}
-
-		task ("Then the orders are sorted from the last to the first as default") {
-			for (var orderAuthorName : list "Buyer User,Test Test") {
-				ObjectPortlet.assertAuthorColumnDisplaysUserName(
-					authorName = ${orderAuthorName},
-					column = "Submitted By");
-			}
-
-			var firstDate = CommerceOrders.getOrderCreationDateFromTable(
-				columnIndex = 1,
-				rowIndex = 1);
-			var secondDate = CommerceOrders.getOrderCreationDateFromTable(
-				columnIndex = 1,
-				rowIndex = 2);
-
-			var compareDatesResult = CommerceUtilities.compareDates(
-				date1 = ${firstDate},
-				date2 = ${secondDate});
-
-			TestUtils.assertEquals(
-				actual = ${compareDatesResult},
-				expected = "True");
-		}
-
-		task ("When the buyer clicks Order Date button in the placed orders page") {
-			CommerceNavigator.sortField(sortFieldName = "Order Date");
-		}
-
-		task ("Then the orders are sorted from the first to the last order") {
-			for (var orderAuthorName : list "Test Test,Buyer User") {
-				ObjectPortlet.assertAuthorColumnDisplaysUserName(
-					authorName = ${orderAuthorName},
-					column = "Submitted By");
-			}
-
-			var firstDate = CommerceOrders.getOrderCreationDateFromTable(
-				columnIndex = 1,
-				rowIndex = 1);
-			var secondDate = CommerceOrders.getOrderCreationDateFromTable(
-				columnIndex = 1,
-				rowIndex = 2);
-
-			var compareDatesResult = CommerceUtilities.compareDates(
-				date1 = ${firstDate},
-				date2 = ${secondDate});
-
-			TestUtils.assertEquals(
-				actual = ${compareDatesResult},
-				expected = "False");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -3018,7 +2831,7 @@ definition {
 
 			CommerceOrders.openOrdersAdmin();
 
-			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
+			CommerceNavigator.gotoOrderEntryViaAdminView(status = "Pending");
 
 			for (var titleName : list "Purchase Order Number,Payment Terms,Delivery Terms,Requested Delivery Date,Printed Note") {
 				AssertElementNotPresent(
@@ -3174,7 +2987,7 @@ definition {
 		}
 
 		task ("Then the admin can view the Transaction History") {
-			var timestamp = TestUtils.getElementTextContent(element = "//div[@class='dnd-tr']//div[@class='dnd-td'][3]");
+			var timestamp = TestUtils.getElementTextContent(element = "//tr//td[3]");
 
 			TestUtils.assertNotEquals(
 				actual = ${timestamp},
@@ -3312,7 +3125,7 @@ definition {
 			productName = "ABS Sensor",
 			productQuantity = 4,
 			productSku = "MIN93015",
-			productTotalPrice = "100.00");
+			productTotalPrice = "$ 100.00");
 	}
 
 	@description = "This is a workaround for an issue with Minium's sidebar on CI"
@@ -3377,7 +3190,7 @@ definition {
 			productName = "ABS Sensor",
 			productQuantity = 4,
 			productSku = "MIN93015",
-			productTotalPrice = "100.00");
+			productTotalPrice = "$ 100.00");
 	}
 
 	@description = "This is a test for COMMERCE-5980. As an order manager, I want to edit the payment method and payment status of a submitted order"
@@ -3493,8 +3306,8 @@ definition {
 		Click(locator1 = "CommerceEntry#FILTER_DROPDOWN_MENU");
 
 		AssertElementPresent(
-			key_productName = "Commerce Account 1",
-			locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
+			accountName = "Commerce Account 1",
+			locator1 = "CommerceAccelerators#ACCOUNT_ORDER_NAME");
 
 		Button.click(button = "Reset Filters");
 
@@ -3511,8 +3324,8 @@ definition {
 		Click(locator1 = "CommerceEntry#FILTER_DROPDOWN_MENU");
 
 		AssertElementPresent(
-			key_productName = "Commerce Account 2",
-			locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
+			accountName = "Commerce Account 2",
+			locator1 = "CommerceAccelerators#ACCOUNT_ORDER_NAME");
 
 		Button.click(button = "Reset Filters");
 
@@ -3533,8 +3346,8 @@ definition {
 			locator1 = "CommerceEntry#ANY_MENU_ITEM");
 
 		AssertElementPresent(
-			key_productName = "Commerce Account 2",
-			locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
+			accountName = "Commerce Account 2",
+			locator1 = "CommerceAccelerators#ACCOUNT_ORDER_NAME");
 
 		Button.click(button = "Reset Filters");
 
@@ -3549,8 +3362,8 @@ definition {
 			locator1 = "CommerceEntry#ANY_MENU_ITEM");
 
 		AssertElementNotPresent(
-			key_productName = "Commerce Account 2",
-			locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
+			accountName = "Commerce Account 2",
+			locator1 = "CommerceAccelerators#ACCOUNT_ORDER_NAME");
 
 		Button.click(button = "Reset Filters");
 
@@ -3573,8 +3386,8 @@ definition {
 		Click(locator1 = "CommerceEntry#FILTER_DROPDOWN_MENU");
 
 		AssertElementPresent(
-			key_productName = "Commerce Account 2",
-			locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
+			accountName = "Commerce Account 2",
+			locator1 = "CommerceAccelerators#ACCOUNT_ORDER_NAME");
 
 		Button.click(button = "Reset Filters");
 
@@ -3591,8 +3404,8 @@ definition {
 		Click(locator1 = "CommerceEntry#FILTER_DROPDOWN_MENU");
 
 		AssertElementPresent(
-			key_productName = "Commerce Account 1",
-			locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
+			accountName = "Commerce Account 1",
+			locator1 = "CommerceAccelerators#ACCOUNT_ORDER_NAME");
 	}
 
 	@description = "This is a test for COMMERCE-5997. As an order manager, I want to filter orders by Channel, Account, Order Data Range and Order Status"
@@ -4051,7 +3864,7 @@ definition {
 
 		CommerceOrders.openOrdersAdmin();
 
-		Button.click(button = "Order Date");
+		Click(locator1 = "//div[contains(@class,'autofit-col')]//button[@title='Sortable Column']");
 
 		var index = 1;
 

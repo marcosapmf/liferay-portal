@@ -62,6 +62,7 @@ import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -116,7 +117,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
@@ -127,7 +127,6 @@ import com.liferay.portal.security.permission.SimplePermissionChecker;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.util.PortalInstances;
 import com.liferay.portal.workflow.comparator.WorkflowComparatorFactory;
-import com.liferay.portal.workflow.kaleo.definition.util.WorkflowDefinitionContentUtil;
 import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
 import java.util.ArrayList;
@@ -841,9 +840,9 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 			RandomTestUtil.randomString(), null, _serviceContext);
 
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			_adminUser.getUserId(), 0L, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null, null, null,
-			RandomTestUtil.randomString(),
+			StringPool.BLANK, _adminUser.getUserId(), 0L,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
+			null, null, RandomTestUtil.randomString(),
 			AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
@@ -966,6 +965,56 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 
 		_userLocalService.deleteUser(user1);
 		_userLocalService.deleteUser(user2);
+	}
+
+	@Test
+	public void testIsNotifiableUser() throws Exception {
+		User user = UserTestUtil.addUser(RandomTestUtil.randomString());
+
+		_activateSingleApproverWorkflow(BlogsEntry.class.getName(), 0, 0);
+
+		_addBlogsEntry();
+
+		WorkflowTask workflowTask = _getWorkflowTask();
+
+		Assert.assertFalse(
+			_workflowTaskManager.isNotifiableUser(
+				user.getUserId(), workflowTask.getWorkflowTaskId()));
+
+		Role role = _roleLocalService.getRole(
+			_company.getCompanyId(), RoleConstants.ADMINISTRATOR);
+
+		_userLocalService.addRoleUser(role.getRoleId(), user.getUserId());
+
+		Assert.assertTrue(
+			_workflowTaskManager.isNotifiableUser(
+				user.getUserId(), workflowTask.getWorkflowTaskId()));
+
+		PermissionChecker originalPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		try {
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(user));
+
+			_workflowTaskManager.assignWorkflowTaskToUser(
+				_company.getCompanyId(), user.getUserId(),
+				workflowTask.getWorkflowTaskId(), user.getUserId(),
+				StringPool.BLANK, null, null);
+
+			_workflowTaskManager.completeWorkflowTask(
+				_company.getCompanyId(), user.getUserId(),
+				workflowTask.getWorkflowTaskId(), Constants.APPROVE,
+				StringPool.BLANK, null);
+		}
+		finally {
+			PermissionThreadLocal.setPermissionChecker(
+				originalPermissionChecker);
+		}
+
+		Assert.assertTrue(
+			_workflowTaskManager.isNotifiableUser(
+				user.getUserId(), workflowTask.getWorkflowTaskId()));
 	}
 
 	@Test
@@ -1790,17 +1839,16 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 			_workflowDefinitionManager.getWorkflowDefinition(
 				_adminUser.getCompanyId(), _JOIN_XOR, 1);
 		}
-		catch (WorkflowException workflowException) {
+		catch (NoSuchModelException noSuchModelException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(workflowException);
+				_log.debug(noSuchModelException);
 			}
 
-			String content = _readFileToJSON(
-				"join-xor-workflow-definition.xml");
+			String content = readFileToJSON("join-xor-workflow-definition.xml");
 
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				_adminUser.getCompanyId(), _adminUser.getUserId(), _JOIN_XOR,
-				_JOIN_XOR, content.getBytes());
+				null, _adminUser.getCompanyId(), _adminUser.getUserId(),
+				_JOIN_XOR, _JOIN_XOR, content.getBytes());
 		}
 	}
 
@@ -1825,16 +1873,16 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 			_workflowDefinitionManager.getWorkflowDefinition(
 				_adminUser.getCompanyId(), name, 1);
 		}
-		catch (WorkflowException workflowException) {
+		catch (NoSuchModelException noSuchModelException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(workflowException);
+				_log.debug(noSuchModelException);
 			}
 
-			String content = _readFileToJSON(fileName);
+			String content = readFileToJSON(fileName);
 
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				_adminUser.getCompanyId(), _adminUser.getUserId(), name, name,
-				content.getBytes());
+				null, _adminUser.getCompanyId(), _adminUser.getUserId(), name,
+				name, content.getBytes());
 		}
 	}
 
@@ -1843,16 +1891,16 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 			_workflowDefinitionManager.getWorkflowDefinition(
 				_adminUser.getCompanyId(), _SITE_MEMBER_SINGLE_APPROVER, 1);
 		}
-		catch (WorkflowException workflowException) {
+		catch (NoSuchModelException noSuchModelException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(workflowException);
+				_log.debug(noSuchModelException);
 			}
 
-			String content = _readFileToJSON(
+			String content = readFileToJSON(
 				"single-approver-site-member-workflow-definition.xml");
 
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				_adminUser.getCompanyId(), _adminUser.getUserId(),
+				null, _adminUser.getCompanyId(), _adminUser.getUserId(),
 				_SITE_MEMBER_SINGLE_APPROVER, _SITE_MEMBER_SINGLE_APPROVER,
 				content.getBytes());
 		}
@@ -1916,10 +1964,6 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 		return workflowInstanceLinkLocalService.fetchWorkflowInstanceLink(
 			_adminUser.getCompanyId(), _adminUser.getGroupId(), className,
 			classPK);
-	}
-
-	private String _getBasePath() {
-		return "com/liferay/portal/workflow/kaleo/dependencies/";
 	}
 
 	private DLFileEntryType _getBasicFileEntryType() throws Exception {
@@ -2023,13 +2067,6 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 
 		return _workflowTaskManager.hasAssignableUsers(
 			workflowTask.getWorkflowTaskId());
-	}
-
-	private String _readFileToJSON(String fileName) throws Exception {
-		Class<?> clazz = getClass();
-
-		return WorkflowDefinitionContentUtil.toJSON(
-			StringUtil.read(clazz.getClassLoader(), _getBasePath() + fileName));
 	}
 
 	private List<WorkflowTask> _searchByAssetTypesAndAssetPrimaryKeys(

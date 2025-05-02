@@ -15,10 +15,11 @@ export class ObjectEntryApiHelper {
 
 	async deleteObjectEntryByExternalReferenceCode(
 		applicationName: string,
+		scopeKey: string,
 		externalReferenceCode: string
 	) {
 		return this.apiHelpers.delete(
-			`${this.apiHelpers.baseUrl}${applicationName}/by-external-reference-code/${externalReferenceCode}`
+			`${this.apiHelpers.baseUrl}${applicationName}/scopes/${scopeKey}/by-external-reference-code/${externalReferenceCode}`
 		);
 	}
 
@@ -63,10 +64,29 @@ export class ObjectEntryApiHelper {
 
 	async postObjectEntry(
 		data: DataObject,
-		applicationName: string
+		applicationName: string,
+		scopeKey?: string
 	): Promise<ObjectEntry> {
+		if (scopeKey) {
+			return this.apiHelpers.post(
+				`${this.apiHelpers.baseUrl}${applicationName}/scopes/${scopeKey}`,
+				{data}
+			);
+		}
+
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${applicationName}/`,
+			{data}
+		);
+	}
+
+	async putObjectEntry(
+		data: DataObject,
+		applicationName: string,
+		objectEntryId: number
+	): Promise<ObjectEntry> {
+		return this.apiHelpers.put(
+			`${this.apiHelpers.baseUrl}${applicationName}/${objectEntryId}`,
 			{data}
 		);
 	}

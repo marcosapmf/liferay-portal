@@ -19,9 +19,11 @@ String widgetURL = ParamUtil.getString(request, "widgetURL");
 			<liferay-ui:message key="share-this-application-on-any-website" />
 		</p>
 
-		<textarea class="col-md-12 lfr-textarea" onClick="this.select();" rows="10">
-			<iframe frameborder="0" height="100%" src="<%= HtmlUtil.escapeAttribute(widgetURL) %>" width="100%"></iframe>
-		</textarea>
+		<liferay-ui:csp>
+			<textarea class="col-md-12 lfr-textarea" onClick="this.select();" rows="10">
+				<iframe frameborder="0" height="100%" src="<%= HtmlUtil.escapeAttribute(widgetURL) %>" width="100%"></iframe>
+			</textarea>
+		</liferay-ui:csp>
 	</c:when>
 	<c:when test="<%= Validator.isNotNull(netvibesURL) %>">
 		<p>

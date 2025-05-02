@@ -5,11 +5,14 @@ definition {
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Product Info Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp();
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -263,7 +266,7 @@ definition {
 			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "Hoses");
 
 			AssertElementPresent(
-				locator1 = "RaylifeMobile#MESSAGE_MORE_INFO_INFORMATION",
+				locator1 = "CommerceEntry#MESSAGE_MORE_INFO_INFORMATION",
 				value = "Hoses Full OLD");
 		}
 
@@ -316,7 +319,7 @@ definition {
 			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "Hoses");
 
 			AssertElementPresent(
-				locator1 = "RaylifeMobile#MESSAGE_MORE_INFO_INFORMATION",
+				locator1 = "CommerceEntry#MESSAGE_MORE_INFO_INFORMATION",
 				value = "Hoses Full NEW");
 		}
 	}

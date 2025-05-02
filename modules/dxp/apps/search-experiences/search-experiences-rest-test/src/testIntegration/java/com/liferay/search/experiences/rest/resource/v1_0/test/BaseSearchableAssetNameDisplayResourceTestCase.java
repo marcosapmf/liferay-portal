@@ -23,8 +23,9 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -42,7 +43,7 @@ import com.liferay.search.experiences.rest.client.serdes.v1_0.SearchableAssetNam
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,7 +82,7 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -95,14 +96,19 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 
 		_searchableAssetNameDisplayResource.setContextCompany(testCompany);
 
-		SearchableAssetNameDisplayResource.Builder builder =
-			SearchableAssetNameDisplayResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		searchableAssetNameDisplayResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
-		).locale(
-			LocaleUtil.getDefault()
-		).build();
+		searchableAssetNameDisplayResource =
+			SearchableAssetNameDisplayResource.builder(
+			).authentication(
+				_testCompanyAdminUser.getEmailAddress(),
+				PropsValues.DEFAULT_ADMIN_PASSWORD
+			).endpoint(
+				testCompany.getVirtualHostname(), 8080, "http"
+			).locale(
+				LocaleUtil.getDefault()
+			).build();
 	}
 
 	@After
@@ -113,21 +119,7 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				enable(SerializationFeature.INDENT_OUTPUT);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
 
 		SearchableAssetNameDisplay searchableAssetNameDisplay1 =
 			randomSearchableAssetNameDisplay();
@@ -144,20 +136,7 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 
 	@Test
 	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
 
 		SearchableAssetNameDisplay searchableAssetNameDisplay =
 			randomSearchableAssetNameDisplay();
@@ -169,6 +148,24 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 
 		Assert.assertEquals(
 			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
+			{
+				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
+				configure(
+					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
+				enable(SerializationFeature.INDENT_OUTPUT);
+				setDateFormat(new ISO8601DateFormat());
+				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+				setSerializationInclusion(JsonInclude.Include.NON_NULL);
+				setVisibility(
+					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+				setVisibility(
+					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
+			}
+		};
 	}
 
 	@Test
@@ -402,6 +399,14 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("hasSubtype", additionalAssertFieldName)) {
+				if (searchableAssetNameDisplay.getHasSubtype() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -538,6 +543,17 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 				if (!Objects.deepEquals(
 						searchableAssetNameDisplay1.getDisplayName(),
 						searchableAssetNameDisplay2.getDisplayName())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("hasSubtype", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						searchableAssetNameDisplay1.getHasSubtype(),
+						searchableAssetNameDisplay2.getHasSubtype())) {
 
 					return false;
 				}
@@ -747,6 +763,11 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("hasSubtype")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		throw new IllegalArgumentException(
 			"Invalid entity field " + entityFieldName);
 	}
@@ -798,6 +819,7 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 					RandomTestUtil.randomString());
 				displayName = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				hasSubtype = RandomTestUtil.randomBoolean();
 			}
 		};
 	}
@@ -829,12 +851,12 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -843,11 +865,16 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -879,6 +906,24 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -900,16 +945,6 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -1008,7 +1043,9 @@ public abstract class BaseSearchableAssetNameDisplayResourceTestCase {
 		LogFactoryUtil.getLog(
 			BaseSearchableAssetNameDisplayResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.search.experiences.rest.resource.v1_0.

@@ -9,6 +9,7 @@ import com.liferay.headless.admin.workflow.internal.graphql.mutation.v1_0.Mutati
 import com.liferay.headless.admin.workflow.internal.graphql.query.v1_0.Query;
 import com.liferay.headless.admin.workflow.internal.resource.v1_0.AssigneeResourceImpl;
 import com.liferay.headless.admin.workflow.internal.resource.v1_0.TransitionResourceImpl;
+import com.liferay.headless.admin.workflow.internal.resource.v1_0.WorkflowDefinitionLinkResourceImpl;
 import com.liferay.headless.admin.workflow.internal.resource.v1_0.WorkflowDefinitionResourceImpl;
 import com.liferay.headless.admin.workflow.internal.resource.v1_0.WorkflowInstanceResourceImpl;
 import com.liferay.headless.admin.workflow.internal.resource.v1_0.WorkflowLogResourceImpl;
@@ -17,6 +18,7 @@ import com.liferay.headless.admin.workflow.internal.resource.v1_0.WorkflowTaskRe
 import com.liferay.headless.admin.workflow.internal.resource.v1_0.WorkflowTaskTransitionsResourceImpl;
 import com.liferay.headless.admin.workflow.resource.v1_0.AssigneeResource;
 import com.liferay.headless.admin.workflow.resource.v1_0.TransitionResource;
+import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowDefinitionLinkResource;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowDefinitionResource;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowInstanceResource;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowLogResource;
@@ -50,6 +52,8 @@ public class ServletDataImpl implements ServletData {
 	public void activate(BundleContext bundleContext) {
 		Mutation.setWorkflowDefinitionResourceComponentServiceObjects(
 			_workflowDefinitionResourceComponentServiceObjects);
+		Mutation.setWorkflowDefinitionLinkResourceComponentServiceObjects(
+			_workflowDefinitionLinkResourceComponentServiceObjects);
 		Mutation.setWorkflowInstanceResourceComponentServiceObjects(
 			_workflowInstanceResourceComponentServiceObjects);
 		Mutation.setWorkflowLogResourceComponentServiceObjects(
@@ -67,6 +71,8 @@ public class ServletDataImpl implements ServletData {
 			_transitionResourceComponentServiceObjects);
 		Query.setWorkflowDefinitionResourceComponentServiceObjects(
 			_workflowDefinitionResourceComponentServiceObjects);
+		Query.setWorkflowDefinitionLinkResourceComponentServiceObjects(
+			_workflowDefinitionLinkResourceComponentServiceObjects);
 		Query.setWorkflowInstanceResourceComponentServiceObjects(
 			_workflowInstanceResourceComponentServiceObjects);
 		Query.setWorkflowLogResourceComponentServiceObjects(
@@ -110,10 +116,20 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
-						"mutation#createWorkflowDefinitionsPageExportBatch",
+						"mutation#deleteWorkflowDefinition",
 						new ObjectValuePair<>(
 							WorkflowDefinitionResourceImpl.class,
-							"postWorkflowDefinitionsPageExportBatch"));
+							"deleteWorkflowDefinition"));
+					put(
+						"mutation#deleteWorkflowDefinitionBatch",
+						new ObjectValuePair<>(
+							WorkflowDefinitionResourceImpl.class,
+							"deleteWorkflowDefinitionBatch"));
+					put(
+						"mutation#deleteWorkflowDefinitionUndeploy",
+						new ObjectValuePair<>(
+							WorkflowDefinitionResourceImpl.class,
+							"deleteWorkflowDefinitionUndeploy"));
 					put(
 						"mutation#createWorkflowDefinition",
 						new ObjectValuePair<>(
@@ -135,25 +151,15 @@ public class ServletDataImpl implements ServletData {
 							WorkflowDefinitionResourceImpl.class,
 							"postWorkflowDefinitionSave"));
 					put(
-						"mutation#deleteWorkflowDefinitionUndeploy",
-						new ObjectValuePair<>(
-							WorkflowDefinitionResourceImpl.class,
-							"deleteWorkflowDefinitionUndeploy"));
-					put(
 						"mutation#createWorkflowDefinitionUpdateActive",
 						new ObjectValuePair<>(
 							WorkflowDefinitionResourceImpl.class,
 							"postWorkflowDefinitionUpdateActive"));
 					put(
-						"mutation#deleteWorkflowDefinition",
+						"mutation#createWorkflowDefinitionsPageExportBatch",
 						new ObjectValuePair<>(
 							WorkflowDefinitionResourceImpl.class,
-							"deleteWorkflowDefinition"));
-					put(
-						"mutation#deleteWorkflowDefinitionBatch",
-						new ObjectValuePair<>(
-							WorkflowDefinitionResourceImpl.class,
-							"deleteWorkflowDefinitionBatch"));
+							"postWorkflowDefinitionsPageExportBatch"));
 					put(
 						"mutation#updateWorkflowDefinition",
 						new ObjectValuePair<>(
@@ -165,15 +171,30 @@ public class ServletDataImpl implements ServletData {
 							WorkflowDefinitionResourceImpl.class,
 							"putWorkflowDefinitionBatch"));
 					put(
-						"mutation#createWorkflowInstancesPageExportBatch",
+						"mutation#createWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink",
 						new ObjectValuePair<>(
-							WorkflowInstanceResourceImpl.class,
-							"postWorkflowInstancesPageExportBatch"));
+							WorkflowDefinitionLinkResourceImpl.class,
+							"postWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink"));
 					put(
-						"mutation#createWorkflowInstanceSubmit",
+						"mutation#createWorkflowDefinitionWorkflowDefinitionLink",
 						new ObjectValuePair<>(
-							WorkflowInstanceResourceImpl.class,
-							"postWorkflowInstanceSubmit"));
+							WorkflowDefinitionLinkResourceImpl.class,
+							"postWorkflowDefinitionWorkflowDefinitionLink"));
+					put(
+						"mutation#createWorkflowDefinitionWorkflowDefinitionLinkBatch",
+						new ObjectValuePair<>(
+							WorkflowDefinitionLinkResourceImpl.class,
+							"postWorkflowDefinitionWorkflowDefinitionLinkBatch"));
+					put(
+						"mutation#createWorkflowDefinitionWorkflowDefinitionLinksPageExportBatch",
+						new ObjectValuePair<>(
+							WorkflowDefinitionLinkResourceImpl.class,
+							"postWorkflowDefinitionWorkflowDefinitionLinksPageExportBatch"));
+					put(
+						"mutation#updateWorkflowDefinitionLinkByExternalReferenceCode",
+						new ObjectValuePair<>(
+							WorkflowDefinitionLinkResourceImpl.class,
+							"putWorkflowDefinitionLinkByExternalReferenceCode"));
 					put(
 						"mutation#deleteWorkflowInstance",
 						new ObjectValuePair<>(
@@ -190,6 +211,16 @@ public class ServletDataImpl implements ServletData {
 							WorkflowInstanceResourceImpl.class,
 							"postWorkflowInstanceChangeTransition"));
 					put(
+						"mutation#createWorkflowInstanceSubmit",
+						new ObjectValuePair<>(
+							WorkflowInstanceResourceImpl.class,
+							"postWorkflowInstanceSubmit"));
+					put(
+						"mutation#createWorkflowInstancesPageExportBatch",
+						new ObjectValuePair<>(
+							WorkflowInstanceResourceImpl.class,
+							"postWorkflowInstancesPageExportBatch"));
+					put(
 						"mutation#createWorkflowInstanceWorkflowLogsPageExportBatch",
 						new ObjectValuePair<>(
 							WorkflowLogResourceImpl.class,
@@ -199,16 +230,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WorkflowLogResourceImpl.class,
 							"postWorkflowTaskWorkflowLogsPageExportBatch"));
-					put(
-						"mutation#createWorkflowInstanceWorkflowTasksPageExportBatch",
-						new ObjectValuePair<>(
-							WorkflowTaskResourceImpl.class,
-							"postWorkflowInstanceWorkflowTasksPageExportBatch"));
-					put(
-						"mutation#createWorkflowTasksPage",
-						new ObjectValuePair<>(
-							WorkflowTaskResourceImpl.class,
-							"postWorkflowTasksPage"));
 					put(
 						"mutation#patchWorkflowTaskAssignToUser",
 						new ObjectValuePair<>(
@@ -224,6 +245,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WorkflowTaskResourceImpl.class,
 							"patchWorkflowTaskUpdateDueDate"));
+					put(
+						"mutation#createWorkflowInstanceWorkflowTasksPageExportBatch",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"postWorkflowInstanceWorkflowTasksPageExportBatch"));
 					put(
 						"mutation#createWorkflowTaskAssignToMe",
 						new ObjectValuePair<>(
@@ -249,6 +275,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WorkflowTaskResourceImpl.class,
 							"postWorkflowTaskUpdateDueDate"));
+					put(
+						"mutation#createWorkflowTasksPage",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"postWorkflowTasksPage"));
 					put(
 						"mutation#createWorkflowTaskAssignableUser",
 						new ObjectValuePair<>(
@@ -276,30 +307,40 @@ public class ServletDataImpl implements ServletData {
 							TransitionResourceImpl.class,
 							"getWorkflowTaskNextTransitionsPage"));
 					put(
-						"query#workflowDefinitions",
+						"query#workflowDefinition",
 						new ObjectValuePair<>(
 							WorkflowDefinitionResourceImpl.class,
-							"getWorkflowDefinitionsPage"));
+							"getWorkflowDefinition"));
 					put(
 						"query#workflowDefinitionByName",
 						new ObjectValuePair<>(
 							WorkflowDefinitionResourceImpl.class,
 							"getWorkflowDefinitionByName"));
 					put(
-						"query#workflowDefinition",
+						"query#workflowDefinitions",
 						new ObjectValuePair<>(
 							WorkflowDefinitionResourceImpl.class,
-							"getWorkflowDefinition"));
+							"getWorkflowDefinitionsPage"));
 					put(
-						"query#workflowInstances",
+						"query#workflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinks",
 						new ObjectValuePair<>(
-							WorkflowInstanceResourceImpl.class,
-							"getWorkflowInstancesPage"));
+							WorkflowDefinitionLinkResourceImpl.class,
+							"getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage"));
+					put(
+						"query#workflowDefinitionWorkflowDefinitionLinks",
+						new ObjectValuePair<>(
+							WorkflowDefinitionLinkResourceImpl.class,
+							"getWorkflowDefinitionWorkflowDefinitionLinksPage"));
 					put(
 						"query#workflowInstance",
 						new ObjectValuePair<>(
 							WorkflowInstanceResourceImpl.class,
 							"getWorkflowInstance"));
+					put(
+						"query#workflowInstances",
+						new ObjectValuePair<>(
+							WorkflowInstanceResourceImpl.class,
+							"getWorkflowInstancesPage"));
 					put(
 						"query#workflowInstanceWorkflowLogs",
 						new ObjectValuePair<>(
@@ -315,11 +356,6 @@ public class ServletDataImpl implements ServletData {
 							WorkflowLogResourceImpl.class,
 							"getWorkflowTaskWorkflowLogsPage"));
 					put(
-						"query#workflowInstanceWorkflowTasks",
-						new ObjectValuePair<>(
-							WorkflowTaskResourceImpl.class,
-							"getWorkflowInstanceWorkflowTasksPage"));
-					put(
 						"query#workflowInstanceWorkflowTasksAssignedToMe",
 						new ObjectValuePair<>(
 							WorkflowTaskResourceImpl.class,
@@ -329,6 +365,20 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WorkflowTaskResourceImpl.class,
 							"getWorkflowInstanceWorkflowTasksAssignedToUserPage"));
+					put(
+						"query#workflowInstanceWorkflowTasks",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"getWorkflowInstanceWorkflowTasksPage"));
+					put(
+						"query#workflowTask",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class, "getWorkflowTask"));
+					put(
+						"query#workflowTaskHasAssignableUsers",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"getWorkflowTaskHasAssignableUsers"));
 					put(
 						"query#workflowTasksAssignedToMe",
 						new ObjectValuePair<>(
@@ -359,15 +409,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WorkflowTaskResourceImpl.class,
 							"getWorkflowTasksSubmittingUserPage"));
-					put(
-						"query#workflowTask",
-						new ObjectValuePair<>(
-							WorkflowTaskResourceImpl.class, "getWorkflowTask"));
-					put(
-						"query#workflowTaskHasAssignableUsers",
-						new ObjectValuePair<>(
-							WorkflowTaskResourceImpl.class,
-							"getWorkflowTaskHasAssignableUsers"));
 
 					put(
 						"query#WorkflowInstance.workflowTasks",
@@ -375,30 +416,15 @@ public class ServletDataImpl implements ServletData {
 							WorkflowTaskResourceImpl.class,
 							"getWorkflowInstanceWorkflowTasksPage"));
 					put(
-						"query#WorkflowInstance.workflowLogs",
-						new ObjectValuePair<>(
-							WorkflowLogResourceImpl.class,
-							"getWorkflowInstanceWorkflowLogsPage"));
-					put(
 						"query#WorkflowTask.hasAssignableUsers",
 						new ObjectValuePair<>(
 							WorkflowTaskResourceImpl.class,
 							"getWorkflowTaskHasAssignableUsers"));
 					put(
-						"query#WorkflowInstance.workflowTasksAssignedToMe",
-						new ObjectValuePair<>(
-							WorkflowTaskResourceImpl.class,
-							"getWorkflowInstanceWorkflowTasksAssignedToMePage"));
-					put(
 						"query#WorkflowTask.workflowInstance",
 						new ObjectValuePair<>(
 							WorkflowInstanceResourceImpl.class,
 							"getWorkflowInstance"));
-					put(
-						"query#WorkflowTasksBulkSelection.workflowDefinition",
-						new ObjectValuePair<>(
-							WorkflowDefinitionResourceImpl.class,
-							"getWorkflowDefinition"));
 					put(
 						"query#WorkflowTaskAssignToUser.workflowTask",
 						new ObjectValuePair<>(
@@ -414,6 +440,11 @@ public class ServletDataImpl implements ServletData {
 							TransitionResourceImpl.class,
 							"getWorkflowTaskNextTransitionsPage"));
 					put(
+						"query#WorkflowDefinition.workflowDefinitionLinks",
+						new ObjectValuePair<>(
+							WorkflowDefinitionLinkResourceImpl.class,
+							"getWorkflowDefinitionWorkflowDefinitionLinksPage"));
+					put(
 						"query#WorkflowInstance.workflowTasksAssignedToUser",
 						new ObjectValuePair<>(
 							WorkflowTaskResourceImpl.class,
@@ -423,6 +454,21 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							TransitionResourceImpl.class,
 							"getWorkflowInstanceNextTransitionsPage"));
+					put(
+						"query#WorkflowInstance.workflowLogs",
+						new ObjectValuePair<>(
+							WorkflowLogResourceImpl.class,
+							"getWorkflowInstanceWorkflowLogsPage"));
+					put(
+						"query#WorkflowInstance.workflowTasksAssignedToMe",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"getWorkflowInstanceWorkflowTasksAssignedToMePage"));
+					put(
+						"query#WorkflowTasksBulkSelection.workflowDefinition",
+						new ObjectValuePair<>(
+							WorkflowDefinitionResourceImpl.class,
+							"getWorkflowDefinition"));
 					put(
 						"query#WorkflowTask.workflowLogs",
 						new ObjectValuePair<>(
@@ -434,6 +480,10 @@ public class ServletDataImpl implements ServletData {
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<WorkflowDefinitionResource>
 		_workflowDefinitionResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<WorkflowDefinitionLinkResource>
+		_workflowDefinitionLinkResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<WorkflowInstanceResource>

@@ -5,16 +5,14 @@
 		"parameters": {
 			"containsHeaders": "true",
 			"createStrategy": "UPSERT",
-			"featureFlag": "LPD-10588",
 			"importStrategy": "ON_ERROR_FAIL",
 			"updateStrategy": "UPDATE"
 		},
-		"taskItemDelegateName": "DEFAULT",
-		"userId": 0,
-		"version": "v1.0"
+		"taskItemDelegateName": "DEFAULT"
 	},
 	"items": [
 		{
+			"defaultLanguageId": "en_US",
 			"enableCategorization": true,
 			"externalReferenceCode": "L_FUNCTIONAL_COOKIE_ENTRY",
 			"label": {
@@ -183,6 +181,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableCategorization": true,
 			"externalReferenceCode": "L_NECESSARY_COOKIE_ENTRY",
 			"label": {
@@ -351,6 +350,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableCategorization": true,
 			"externalReferenceCode": "L_PERFORMANCE_COOKIE_ENTRY",
 			"label": {
@@ -519,6 +519,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableCategorization": true,
 			"externalReferenceCode": "L_PERSONALIZATION_COOKIE_ENTRY",
 			"label": {

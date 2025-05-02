@@ -5,23 +5,42 @@
 
 import '@testing-library/jest-dom/extend-expect';
 import {render, screen} from '@testing-library/react';
-import React from 'react';
+import React, {useEffect} from 'react';
+import {DndProvider} from 'react-dnd';
+import {HTML5Backend} from 'react-dnd-html5-backend';
 
 import {LayoutBreadcrumbs} from '../../../../src/main/resources/META-INF/resources/page_editor/app/components/LayoutBreadcrumbs';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/layoutDataItemTypes';
 import {
 	ControlsProvider,
+	useActivateMultiSelect,
 	useSelectItem,
+	useSelectMultipleItems,
 } from '../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ControlsContext';
 import StoreMother from '../../../../src/main/resources/META-INF/resources/page_editor/test_utils/StoreMother';
 
-const AutoSelect = ({itemId}) => {
-	useSelectItem()(itemId);
+const AutoSelect = ({itemId, multiSelect = null}) => {
+	useActivateMultiSelect()(multiSelect);
+
+	const selectMultipleItems = useSelectMultipleItems();
+	const selectItem = useSelectItem();
+
+	const select = multiSelect ? selectMultipleItems : selectItem;
+
+	useEffect(() => {
+		if (itemId) {
+			select(itemId);
+		}
+	}, [itemId, select]);
 
 	return null;
 };
 
-const renderComponent = ({multiSelect, activeItemId, activeItemIds = []}) => {
+const renderComponent = ({
+	multiSelect = null,
+	initialActiveItemIds = [],
+	activeItemId,
+}) => {
 	return render(
 		<StoreMother.Component
 			getState={() => ({
@@ -94,24 +113,26 @@ const renderComponent = ({multiSelect, activeItemId, activeItemIds = []}) => {
 				},
 			})}
 		>
-			<ControlsProvider
-				activeInitialState={{
-					activeItemIds,
-					multiSelect,
-				}}
-			>
-				<AutoSelect itemId={activeItemId} />
+			<DndProvider backend={HTML5Backend}>
+				<ControlsProvider
+					activeInitialState={{
+						activeItemIds: initialActiveItemIds,
+					}}
+				>
+					<AutoSelect
+						itemId={activeItemId || initialActiveItemIds[0]}
+						multiSelect={multiSelect}
+					/>
 
-				<LayoutBreadcrumbs />
-			</ControlsProvider>
+					<LayoutBreadcrumbs />
+				</ControlsProvider>
+			</DndProvider>
 		</StoreMother.Component>
 	);
 };
 
 describe('LayoutBreadcrumbs', () => {
 	beforeAll(() => {
-		Liferay.FeatureFlags['LPD-18221'] = true;
-
 		const wrapper = document.createElement('div');
 		wrapper.setAttribute('id', 'wrapper');
 		document.body.appendChild(wrapper);
@@ -120,45 +141,40 @@ describe('LayoutBreadcrumbs', () => {
 	afterAll(() => {
 		const wrapper = document.getElementById('wrapper');
 		document.body.removeChild(wrapper);
-
-		Liferay.FeatureFlags['LPD-18221'] = false;
 	});
 
 	it('renders item in breadcrumbs when selecting it', () => {
-		renderComponent({activeItemId: 'item-1'});
+		renderComponent({initialActiveItemIds: ['item-1']});
 
-		expect(screen.queryAllByText('Item 1')[0]).toBeInTheDocument();
+		expect(screen.getByText('Item 1')).toBeInTheDocument();
 	});
 
 	it('renders ancestors in breadcrumbs when selecting an item', () => {
-		renderComponent({activeItemId: 'item-3'});
+		renderComponent({initialActiveItemIds: ['item-3']});
 
-		expect(screen.queryAllByText('Item 3')[0]).toBeInTheDocument();
-
-		expect(screen.queryAllByText('Item 2')[0]).toBeInTheDocument();
-
-		expect(screen.queryAllByText('Item 1')[0]).toBeInTheDocument();
+		expect(screen.getByText('Item 3')).toBeInTheDocument();
+		expect(screen.getByText('Item 2')).toBeInTheDocument();
+		expect(screen.getByText('Item 1')).toBeInTheDocument();
 	});
 
 	it('does not render children in breadcrumbs when selecting an item', () => {
-		renderComponent({activeItemId: 'item-2'});
+		renderComponent({initialActiveItemIds: ['item-2']});
 
 		expect(screen.queryByText('Item 3')).not.toBeInTheDocument();
 	});
 
-	it('does not render columns in breadcrumbs even if they are in the path', () => {
-		renderComponent({activeItemId: 'item-4'});
+	it('renders column as Module in breadcrumbs even if they are in the path', () => {
+		renderComponent({initialActiveItemIds: ['item-4']});
 
-		expect(screen.queryAllByText('Item 4')[0]).toBeInTheDocument();
-		expect(screen.queryAllByText('grid')[0]).toBeInTheDocument();
-
-		expect(screen.queryByText('column')).not.toBeInTheDocument();
+		expect(screen.getByText('Item 4')).toBeInTheDocument();
+		expect(screen.getByText('grid')).toBeInTheDocument();
+		expect(screen.getByText('module')).toBeInTheDocument();
 	});
 
-	it('does not render anything when multiple elements are selected', () => {
+	it('does not render anything when multiple elements are selected', async () => {
 		renderComponent({
 			activeItemId: 'item-4',
-			activeItemIds: ['item-1'],
+			initialActiveItemIds: ['item-1'],
 			multiSelect: 'simple',
 		});
 

@@ -18,6 +18,7 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.OrderNote;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.DataGuard;
@@ -49,8 +50,8 @@ public class OrderNoteResourceTest extends BaseOrderNoteResourceTestCase {
 		_user = UserTestUtil.addUser(testCompany);
 
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			_user.getUserId(), 0, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null,
+			StringPool.BLANK, _user.getUserId(), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null, null,
 			"business", 1,
 			ServiceContextTestUtil.getServiceContext(
@@ -58,7 +59,7 @@ public class OrderNoteResourceTest extends BaseOrderNoteResourceTestCase {
 				_user.getUserId()));
 		CommerceCurrency commerceCurrency =
 			_commerceCurrencyLocalService.addCommerceCurrency(
-				_user.getUserId(), RandomTestUtil.randomString(),
+				null, _user.getUserId(), RandomTestUtil.randomString(),
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomString(), BigDecimal.ONE,
 				RandomTestUtil.randomLocaleStringMap(), 2, 2, "HALF_EVEN",
@@ -78,8 +79,7 @@ public class OrderNoteResourceTest extends BaseOrderNoteResourceTestCase {
 
 		_commerceOrder = _commerceOrderLocalService.addCommerceOrder(
 			_user.getUserId(), commerceChannel.getGroupId(),
-			accountEntry.getAccountEntryId(),
-			commerceCurrency.getCommerceCurrencyId(),
+			accountEntry.getAccountEntryId(), commerceCurrency.getCode(),
 			CommerceOrderConstants.TYPE_PK_FULFILLMENT);
 	}
 
@@ -88,6 +88,13 @@ public class OrderNoteResourceTest extends BaseOrderNoteResourceTestCase {
 	@Test
 	public void testDeleteOrderNote() throws Exception {
 		super.testDeleteOrderNote();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testDeleteOrderNoteBatch() throws Exception {
+		super.testDeleteOrderNoteBatch();
 	}
 
 	@Ignore

@@ -120,6 +120,8 @@ public abstract class UpgradeProcess
 					}
 
 					doUpgrade();
+
+					closeConnections();
 				});
 		}
 		catch (Throwable throwable) {

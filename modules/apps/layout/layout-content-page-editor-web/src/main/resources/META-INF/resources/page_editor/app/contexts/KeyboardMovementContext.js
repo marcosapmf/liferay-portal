@@ -3,76 +3,96 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import React, {useCallback, useContext, useState} from 'react';
+import {ScreenReaderAnnouncer} from '@liferay/layout-js-components-web';
+import React, {useCallback, useContext, useRef, useState} from 'react';
 
 import {TARGET_POSITIONS} from '../utils/drag_and_drop/constants/targetPositions';
 import isItemContainerFlex from '../utils/isItemContainerFlex';
 import {useSelectorRef} from './StoreContext';
 
 const INITIAL_STATE = {
-	setSource: () => {},
+	setSources: () => {},
 	setTarget: () => {},
-	setText: () => {},
-	source: null,
+	sources: [],
 	target: {
 		itemId: null,
 		position: null,
 	},
-	text: null,
 };
 
 const KeyboardMovementContext = React.createContext(INITIAL_STATE);
 
 function KeyboardMovementContextProvider({children}) {
-	const [source, setSource] = useState(null);
+	const [sources, setSources] = useState([]);
 	const [target, setTarget] = useState({
 		itemId: null,
 		position: null,
 	});
-	const [text, setText] = useState(null);
+	const screenReaderAnnouncerRef = useRef();
+
+	const setText = useCallback((text) => {
+		const ref = screenReaderAnnouncerRef;
+
+		if (ref.current) {
+			ref.current?.sendMessage(text);
+		}
+	}, []);
 
 	return (
 		<KeyboardMovementContext.Provider
 			value={{
-				setSource,
+				setSources,
 				setTarget,
 				setText,
-				source,
+				sources,
 				target,
-				text,
 			}}
 		>
+			<ScreenReaderAnnouncer
+				aria-live="assertive"
+				ref={screenReaderAnnouncerRef}
+			/>
+
 			{children}
 		</KeyboardMovementContext.Provider>
 	);
 }
 
 function useDisableKeyboardMovement() {
-	const {setSource, setTarget} = useContext(KeyboardMovementContext);
+	const {setSources, setTarget} = useContext(KeyboardMovementContext);
 
 	return useCallback(() => {
-		setSource(null);
+		setSources([]);
 		setTarget({
 			itemId: null,
 			position: null,
 		});
-	}, [setSource, setTarget]);
+	}, [setSources, setTarget]);
 }
 
-function useMovementSource() {
-	return useContext(KeyboardMovementContext).source;
+function useMovementSources() {
+	return useContext(KeyboardMovementContext).sources;
 }
 
 function useMovementTarget() {
 	return useContext(KeyboardMovementContext).target;
 }
 
+function useIsMovementTarget() {
+	const {target} = useContext(KeyboardMovementContext);
+	const layoutDataRef = useSelectorRef((state) => state.layoutData);
+
+	const targetItem = layoutDataRef.current?.items[target.itemId];
+
+	return useCallback((itemId) => itemId === targetItem?.itemId, [targetItem]);
+}
+
 function useMovementTargetPosition() {
 	const {target} = useContext(KeyboardMovementContext);
 	const layoutDataRef = useSelectorRef((state) => state.layoutData);
 
-	const targetItem = layoutDataRef.current.items[target.itemId];
-	const parentItem = layoutDataRef.current.items[targetItem?.parentId];
+	const targetItem = layoutDataRef.current?.items[target.itemId];
+	const parentItem = layoutDataRef.current?.items[targetItem?.parentId];
 
 	if (!parentItem || !isItemContainerFlex(parentItem)) {
 		return target.position;
@@ -83,12 +103,8 @@ function useMovementTargetPosition() {
 		: TARGET_POSITIONS.LEFT;
 }
 
-function useMovementText() {
-	return useContext(KeyboardMovementContext).text;
-}
-
-function useSetMovementSource() {
-	return useContext(KeyboardMovementContext).setSource;
+function useSetMovementSources() {
+	return useContext(KeyboardMovementContext).setSources;
 }
 
 function useSetMovementTarget() {
@@ -102,11 +118,11 @@ function useSetMovementText() {
 export {
 	KeyboardMovementContextProvider,
 	useDisableKeyboardMovement,
-	useMovementSource,
+	useIsMovementTarget,
+	useMovementSources,
 	useMovementTarget,
 	useMovementTargetPosition,
-	useMovementText,
-	useSetMovementSource,
+	useSetMovementSources,
 	useSetMovementTarget,
 	useSetMovementText,
 };

@@ -11,8 +11,6 @@ import com.liferay.headless.admin.list.type.resource.v1_0.ListTypeDefinitionReso
 import com.liferay.headless.admin.list.type.resource.v1_0.ListTypeEntryResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -63,6 +61,43 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {listTypeDefinition(listTypeDefinitionId: ___){actions, dateCreated, dateModified, defaultLanguageId, externalReferenceCode, id, listTypeEntries, name, name_i18n, system}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ListTypeDefinition listTypeDefinition(
+			@GraphQLName("listTypeDefinitionId") Long listTypeDefinitionId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_listTypeDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			listTypeDefinitionResource ->
+				listTypeDefinitionResource.getListTypeDefinition(
+					listTypeDefinitionId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {listTypeDefinitionByExternalReferenceCode(externalReferenceCode: ___){actions, dateCreated, dateModified, defaultLanguageId, externalReferenceCode, id, listTypeEntries, name, name_i18n, system}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ListTypeDefinition listTypeDefinitionByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_listTypeDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			listTypeDefinitionResource ->
+				listTypeDefinitionResource.
+					getListTypeDefinitionByExternalReferenceCode(
+						externalReferenceCode));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {listTypeDefinitions(aggregation: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -88,43 +123,6 @@ public class Query {
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(
 						listTypeDefinitionResource, sortsString))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {listTypeDefinitionByExternalReferenceCode(externalReferenceCode: ___){actions, dateCreated, dateModified, externalReferenceCode, id, listTypeEntries, name, name_i18n, system}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public ListTypeDefinition listTypeDefinitionByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_listTypeDefinitionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			listTypeDefinitionResource ->
-				listTypeDefinitionResource.
-					getListTypeDefinitionByExternalReferenceCode(
-						externalReferenceCode));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {listTypeDefinition(listTypeDefinitionId: ___){actions, dateCreated, dateModified, externalReferenceCode, id, listTypeEntries, name, name_i18n, system}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public ListTypeDefinition listTypeDefinition(
-			@GraphQLName("listTypeDefinitionId") Long listTypeDefinitionId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_listTypeDefinitionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			listTypeDefinitionResource ->
-				listTypeDefinitionResource.getListTypeDefinition(
-					listTypeDefinitionId));
 	}
 
 	/**
@@ -385,12 +383,15 @@ public class Query {
 	private BiFunction<Object, List<String>, Aggregation>
 		_aggregationBiFunction;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

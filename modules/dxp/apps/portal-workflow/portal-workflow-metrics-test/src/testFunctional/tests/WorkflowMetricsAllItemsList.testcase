@@ -1,4 +1,4 @@
-@component-name = "portal-bpm-ee"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
@@ -110,7 +110,7 @@ definition {
 
 		Navigator.gotoNavTab(navTab = "Assigned to My Roles");
 
-		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to Me");
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Assign to Me");
 
 		WorkflowMetrics.goToWorkflowAllItems(workflowProcessName = "Single Approver");
 
@@ -266,7 +266,7 @@ definition {
 
 		Navigator.gotoNavTab(navTab = "Assigned to My Roles");
 
-		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to Me");
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Assign to Me");
 
 		Workflow.confirmWorkflowAction();
 
@@ -1334,7 +1334,7 @@ definition {
 	test FiltersDisplayedWhenReachingPageThroughPerformanceTab {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		Click(locator1 = "WorkflowMetrics#PERFORMANCE_TOTAL_COMPLETED_ITEMS_VALUE");
 
@@ -1481,7 +1481,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Navigator.gotoNavItem(navItem = "Performance");
+		WorkflowMetrics.goToPerformanceTab();
 
 		Click(
 			key_index = 2,
@@ -1541,7 +1541,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Navigator.gotoNavItem(navItem = "Performance");
+		WorkflowMetrics.goToPerformanceTab();
 
 		Click(
 			key_index = 4,
@@ -1656,7 +1656,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Navigator.gotoNavItem(navItem = "Performance");
+		WorkflowMetrics.goToPerformanceTab();
 
 		Click(locator1 = "WorkflowMetrics#PERFORMANCE_TOTAL_COMPLETED_ITEMS_VALUE");
 
@@ -2654,7 +2654,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		Click(locator1 = "WorkflowMetrics#DASHBOARD_TOTAL_COMPLETED_ITEMS_TITLE");
 
@@ -2836,7 +2836,7 @@ definition {
 		AssertElementPresent(locator1 = "WorkflowAllItems#DETAIL_PAGE_GO_TO_SUBMISSION_PAGE_TOOLTIP");
 	}
 
-	@description = "Verify that when the user make changes in the Workflow, the Track Approval displays the correct version"
+	@description = "Verify that when the user updates the Workflow definition, the Track Approval still displays the version of the Workflow instance"
 	@priority = 4
 	test TrackApprovalDisplayCorrectVersionAfterChange {
 		property test.liferay.virtual.instance = "false";
@@ -2888,7 +2888,7 @@ definition {
 
 		WorkflowMetricsAllItemsList.goToTrackWorkflowlink();
 
-		WorkflowMetricsAllItemsList.viewNodesDisplayed(nodesTrackWorkflow = "created,Review changed,update,approved");
+		WorkflowMetricsAllItemsList.viewNodesDisplayed(nodesTrackWorkflow = "Created,Review,Update,Approved");
 	}
 
 	@description = "Verify that when the user clicks the link in the detail modal, the Workflow in use is displayed"

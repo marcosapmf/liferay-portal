@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-const CUSTOM_DATE_RANGE_BUCKET_TEXT = 'custom-range';
+const CUSTOM_RANGE_BUCKET_TEXT = 'custom-range';
 
 const FACET_TERM_CLASS = 'facet-term';
 
@@ -86,9 +86,40 @@ export const FacetUtil = {
 
 				return isCurrentTarget ? !isSelected : isSelected;
 			})
-			.map((term) => _getTermId(term));
+			.map((term) => {
+				const termId = _getTermId(term);
+
+				const isCurrentTarget = termId === currentSelectedTermId;
+
+				return this.getSelectedTerm(termId, form, isCurrentTarget);
+			});
 
 		this.selectTerms(form, selectedTerms);
+	},
+
+	changeSingleSelection(event) {
+		event.preventDefault();
+
+		const form = event.currentTarget.form;
+
+		if (!form) {
+			return;
+		}
+
+		// Disable checkboxes across all facets to avoid multiple
+		// selections. Only the most recent selection will be added
+		// since the page needs to be reloaded before another selection
+		// can be made.
+
+		const allFacetTerms = document.querySelectorAll(`.${FACET_TERM_CLASS}`);
+
+		allFacetTerms.forEach((term) => {
+			Liferay.Util.toggleDisabled(term, true);
+		});
+
+		const termId = _getTermId(event.currentTarget);
+
+		this.selectTerms(form, [this.getSelectedTerm(termId, form, true)]);
 	},
 
 	clearSelections(event) {
@@ -109,6 +140,67 @@ export const FacetUtil = {
 		inputs.forEach((term) => {
 			Liferay.Util.toggleDisabled(term, false);
 		});
+	},
+
+	getSelectedTerm(termId, form, isCurrentTarget) {
+		if (termId === CUSTOM_RANGE_BUCKET_TEXT) {
+
+			// For the special case of a range facet, the
+			// termId is 'custom-range' and the parameters are
+			// prefixed with 'from' and 'to'. This will return
+			// an array [from, to] for the custom range.
+
+			// If the term is not the current target, apply the
+			// existing range from the URL parameters. This is set
+			// in setURLParameters so use '[]' as a placeholder.
+
+			if (!isCurrentTarget) {
+				return [];
+			}
+
+			// If the term is the current target, use the current
+			// values in the inputs.
+			// General range defaults to [0, 0] if no value is set.
+			// Date range defaults to the last 24 hours if no value is set.
+
+			const fromValue = form.querySelector('[id$=fromInput]').value;
+			const toValue = form.querySelector('[id$=toInput]').value;
+
+			if (form.querySelector('.aggregation-type').value === 'range') {
+				return [fromValue || 0, toValue || 0];
+			}
+
+			let endDate = new Date();
+			let startDate = new Date(
+				endDate - 1000 * 60 * 60 * 24 // 24 hours
+			);
+
+			if (fromValue && toValue) {
+				endDate = new Date(toValue);
+				startDate = new Date(fromValue);
+			}
+
+			return [
+				startDate.toISOString().split('T')[0],
+				endDate.toISOString().split('T')[0],
+			];
+		}
+		else {
+			return termId;
+		}
+	},
+
+	isCustomRangeValid(event) {
+		const form = event.currentTarget.form;
+
+		const fromInputValue = form.querySelector('[id$=fromInput]').value;
+		const toInputValue = form.querySelector('[id$=toInput]').value;
+
+		return (
+			fromInputValue &&
+			toInputValue &&
+			Number(fromInputValue) <= Number(toInputValue)
+		);
 	},
 
 	queryParameterAndUpdateValue(form, search, selections) {
@@ -231,26 +323,31 @@ export const FacetUtil = {
 		newParameters = this.removeURLParameters(key + 'To', newParameters);
 
 		selections.forEach((item) => {
-			if (item === CUSTOM_DATE_RANGE_BUCKET_TEXT) {
+			if (Array.isArray(item)) {
+				if (!item.length) {
 
-				// For the special case of a date range facet, the
-				// termId is 'custom-range' and the parameters are
-				// prefixed with 'from' and 'to'.
+					// With empty ranges, grab the existing range
+					// from parameterArray.
 
-				const endDate = new Date();
-				const startDate = new Date(
-					endDate - 1000 * 60 * 60 * 24 // 24 hours
-				);
+					const from = parameterArray.find((param) =>
+						param.includes(key + 'From')
+					);
+					const to = parameterArray.find((param) =>
+						param.includes(key + 'To')
+					);
+
+					item = [from.split('=')[1], to.split('=')[1]];
+				}
 
 				newParameters = this.addURLParameter(
 					key + 'From',
-					startDate.toISOString().split('T')[0],
+					item[0],
 					newParameters
 				);
 
 				newParameters = this.addURLParameter(
 					key + 'To',
-					endDate.toISOString().split('T')[0],
+					item[1],
 					newParameters
 				);
 			}

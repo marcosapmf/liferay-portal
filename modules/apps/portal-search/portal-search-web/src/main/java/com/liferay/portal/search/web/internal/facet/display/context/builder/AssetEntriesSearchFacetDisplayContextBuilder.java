@@ -7,6 +7,7 @@ package com.liferay.portal.search.web.internal.facet.display.context.builder;
 
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
@@ -25,6 +26,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.facet.display.context.AssetEntriesSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
 import com.liferay.portal.search.web.internal.type.facet.configuration.TypeFacetPortletInstanceConfiguration;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
 import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayContextComparatorFactoryUtil;
 
 import java.io.Serializable;
@@ -99,6 +101,7 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 		bucketDisplayContext.setFilterValue(assetType);
 		bucketDisplayContext.setFrequency(frequency);
 		bucketDisplayContext.setFrequencyVisible(_frequenciesVisible);
+		bucketDisplayContext.setLocale(_locale);
 		bucketDisplayContext.setSelected(selected);
 
 		return bucketDisplayContext;
@@ -113,11 +116,7 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 	}
 
 	public boolean isNothingSelected() {
-		if (_parameterValues.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return _parameterValues.isEmpty();
 	}
 
 	public void setClassNames(String[] classNames) {
@@ -174,14 +173,10 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 	}
 
 	protected long getDisplayStyleGroupId() {
-		long displayStyleGroupId =
-			_typeFacetPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = _themeDisplay.getScopeGroupId();
-		}
-
-		return displayStyleGroupId;
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			_typeFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			_themeDisplay);
 	}
 
 	protected String getFirstParameterValue() {
@@ -211,13 +206,13 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 					_themeDisplay.getLocale());
 			}
 			else if (className.startsWith(
-						ObjectDefinition.class.getName() + "#")) {
-
-				String[] parts = StringUtil.split(className, "#");
+						ObjectDefinitionConstants.
+							CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION)) {
 
 				ObjectDefinition objectDefinition =
-					ObjectDefinitionLocalServiceUtil.fetchObjectDefinition(
-						Long.valueOf(parts[1]));
+					ObjectDefinitionLocalServiceUtil.
+						fetchObjectDefinitionByClassName(
+							_themeDisplay.getCompanyId(), className);
 
 				if (objectDefinition == null) {
 					continue;

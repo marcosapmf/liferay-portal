@@ -240,13 +240,6 @@ public class CommerceCatalogLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static CommerceCatalog fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	public static CommerceCatalog fetchCommerceCatalog(long commerceCatalogId) {
 		return getService().fetchCommerceCatalog(commerceCatalogId);
 	}
@@ -348,6 +341,10 @@ public class CommerceCatalogLocalServiceUtil {
 		int start, int end) {
 
 		return getService().getCommerceCatalogs(start, end);
+	}
+
+	public static List<CommerceCatalog> getCommerceCatalogs(long companyId) {
+		return getService().getCommerceCatalogs(companyId);
 	}
 
 	public static List<CommerceCatalog> getCommerceCatalogs(

@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.site.setting.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.site.setting.dto.v1_0.AvailabilityEstimate;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -57,14 +55,6 @@ public interface AvailabilityEstimateResource {
 	public AvailabilityEstimate getAvailabilityEstimate(Long id)
 		throws Exception;
 
-	public Response putAvailabilityEstimate(
-			Long id, AvailabilityEstimate availabilityEstimate)
-		throws Exception;
-
-	public Response putAvailabilityEstimateBatch(
-			String callbackURL, Object object)
-		throws Exception;
-
 	public Page<AvailabilityEstimate>
 			getCommerceAdminSiteSettingGroupAvailabilityEstimatePage(
 				Long groupId, Pagination pagination)
@@ -73,6 +63,14 @@ public interface AvailabilityEstimateResource {
 	public AvailabilityEstimate
 			postCommerceAdminSiteSettingGroupAvailabilityEstimate(
 				Long groupId, AvailabilityEstimate availabilityEstimate)
+		throws Exception;
+
+	public Response putAvailabilityEstimate(
+			Long id, AvailabilityEstimate availabilityEstimate)
+		throws Exception;
+
+	public Response putAvailabilityEstimateBatch(
+			String callbackURL, Object object)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -97,7 +95,8 @@ public interface AvailabilityEstimateResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -122,19 +121,23 @@ public interface AvailabilityEstimateResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

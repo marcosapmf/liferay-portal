@@ -39,38 +39,6 @@ components:
                 type: integer
             style: simple
     schemas:
-        CustomField:
-            # @review
-            description:
-                Represents the value of each custom field. Fields can contain different information types (e.g.,
-                geolocation, strings, etc.).
-            properties:
-                customValue:
-                    $ref: "#/components/schemas/CustomValue"
-                dataType:
-                    description:
-                        The field type (e.g., image, text, etc.).
-                    readOnly: true
-                    type: string
-                name:
-                    description:
-                        The field's internal name. This is valid for comparisons and unique in the structured content.
-                    type: string
-        CustomValue:
-            properties:
-                data:
-                    description:
-                        The field's content for simple types.
-                    type: object
-                data_i18n:
-                    additionalProperties:
-                        type: string
-                    type: object
-                geo:
-                    $ref: "#/components/schemas/Geo"
-                    description:
-                        A point determined by latitude and longitude.
-            type: object
         Error:
             properties:
                 errorCode:
@@ -94,25 +62,10 @@ components:
                     readOnly: true
                     type: integer
             required:
-                - errorCode
-                - errorDescription
-                - message
-                - status
-            type: object
-        Geo:
-            description:
-                A point determined by latitude and longitude.
-            properties:
-                latitude:
-                    description:
-                        The latitude of a point in space.
-                    format: double
-                    type: number
-                longitude:
-                    description:
-                        The longitude of a point in space.
-                    format: double
-                    type: number
+                -   errorCode
+                -   errorDescription
+                -   message
+                -   status
             type: object
         Shipment:
             properties:
@@ -130,7 +83,7 @@ components:
                     readOnly: true
                     type: object
                 carrier:
-                    example: "FedEx"
+                    example: FedEx
                     type: string
                 createDate:
                     format: date
@@ -138,7 +91,7 @@ components:
                     type: string
                 customFields:
                     items:
-                        $ref: "#/components/schemas/CustomField"
+                        type: customField
                     type: array
                 expectedDate:
                     format: date
@@ -154,6 +107,9 @@ components:
                 modifiedDate:
                     format: date
                     readOnly: true
+                    type: string
+                orderExternalReferenceCode:
+                    example: AB-34098-789-N
                     type: string
                 orderId:
                     example: 30130
@@ -180,20 +136,20 @@ components:
                     minimum: 0
                     type: integer
                 shippingOptionName:
-                    example: "Standard Delivery"
+                    example: Standard Delivery
                     readOnly: true
                     type: string
                 status:
                     $ref: "#/components/schemas/Status"
                     readOnly: true
                 trackingNumber:
-                    example: "123AD-asd"
+                    example: 123AD-asd
                     type: string
                 trackingURL:
-                    example: "Standard Delivery"
+                    example: Standard Delivery
                     type: string
                 userName:
-                    example: "John"
+                    example: John
                     readOnly: true
                     type: string
             type: object
@@ -246,7 +202,7 @@ components:
                     example: s
                     type: string
                 userName:
-                    example: "John"
+                    example: John
                     readOnly: true
                     type: string
                 validateInventory:
@@ -260,7 +216,7 @@ components:
                     minimum: 0
                     type: integer
             required:
-                - quantity
+                -   quantity
             type: object
         ShippingAddress:
             properties:
@@ -274,8 +230,7 @@ components:
                     example: right stairs, first room on the left
                     type: string
                 externalReferenceCode:
-                    example: "AB-34098-789-N"
-                    readOnly: true
+                    example: AB-34098-789-N
                     type: string
                 id:
                     example: 31130
@@ -312,10 +267,10 @@ components:
                     example: "91765"
                     type: string
             required:
-                - city
-                - countryISOCode
-                - name
-                - street1
+                -   city
+                -   countryISOCode
+                -   name
+                -   street1
             type: object
         Status:
             properties:
@@ -324,10 +279,10 @@ components:
                     readOnly: true
                     type: integer
                 label:
-                    example: "black"
+                    example: black
                     type: string
                 label_i18n:
-                    example: "black"
+                    example: black
                     type: string
             type: object
     securitySchemes:
@@ -353,28 +308,28 @@ info:
         name: Commerce Team
     description:
         "Liferay Commerce Admin Admin Shipment API. A Java client JAR is available for use with the group ID
-        'com.liferay', artifact ID 'com.liferay.headless.commerce.admin.shipment.client', and version '1.0.34'."
+        'com.liferay', artifact ID 'com.liferay.headless.commerce.admin.shipment.client', and version '1.0.37'."
     license:
-        name: "Apache 2.0"
-        url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-    title: "Liferay Commerce Admin Admin Shipment API"
-    version: "v1.0"
-openapi: "3.0.0"
+        name: Apache 2.0
+        url: http://www.apache.org/licenses/LICENSE-2.0.html
+    title: Liferay Commerce Admin Admin Shipment API
+    version: v1.0
+openapi: 3.0.0
 paths:
     /shipment-items/by-externalReferenceCode/{externalReferenceCode}:
         delete:
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 204:
                     content:
@@ -391,27 +346,27 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes a Shipment Item by external reference code.
             tags:
-                - ShipmentItem
+                -   ShipmentItem
         get:
             operationId: getShipmentByExternalReferenceCodeItem
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 200:
                     content:
@@ -457,26 +412,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a Shipment Item by external reference code.
             tags:
-                - ShipmentItem
+                -   ShipmentItem
         patch:
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -531,29 +486,29 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates a Shipment Item by external reference code.
             tags:
-                - ShipmentItem
+                -   ShipmentItem
     /shipment-items/{shipmentItemId}:
         delete:
             operationId: deleteShipmentItem
             parameters:
-                - in: path
-                  explode: false
-                  name: shipmentItemId
-                  required: true
-                  schema:
-                      description:
-                          "The shipment resource Id"
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: shipmentItemId
+                    required: true
+                    schema:
+                        description:
+                            "The shipment resource Id"
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             responses:
                 204:
                     content:
@@ -570,28 +525,28 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes a Shipment Item by ID.
             tags:
-                - ShipmentItem
+                -   ShipmentItem
         get:
             operationId: getShipmentItem
             parameters:
-                - in: path
-                  explode: false
-                  name: shipmentItemId
-                  required: true
-                  schema:
-                      description:
-                          The shipment resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: shipmentItemId
+                    required: true
+                    schema:
+                        description:
+                            The shipment resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -637,28 +592,28 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a Shipment Item by ID.
             tags:
-                - ShipmentItem
+                -   ShipmentItem
         patch:
             operationId: patchShipmentItem
             parameters:
-                - in: path
-                  explode: false
-                  name: shipmentItemId
-                  required: true
-                  schema:
-                      description:
-                          The shipment resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: shipmentItemId
+                    required: true
+                    schema:
+                        description:
+                            The shipment resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -713,44 +668,44 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates a Shipment Item by ID.
             tags:
-                - ShipmentItem
+                -   ShipmentItem
     /shipments:
         get:
             operationId: getShipmentsPage
             parameters:
-                - in: query
-                  name: filter
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  explode: true
-                  name: search
-                  required: false
-                  schema:
-                      type: string
-                  style: form
-                - in: query
-                  name: sort
-                  required: false
-                  schema:
-                      type: string
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    explode: true
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                    style: form
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -800,13 +755,13 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a List of Shipments.
             tags:
-                - Shipment
+                -   Shipment
         post:
             operationId: postShipment
             requestBody:
@@ -869,27 +824,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Creates a Shipment.
             tags:
-                - Shipment
+                -   Shipment
     /shipments/by-externalReferenceCode/{externalReferenceCode}:
         delete:
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 204:
                     content:
@@ -907,22 +862,22 @@ paths:
                         Authentication information is missing or invalid
             summary: Deletes a Shipment by external reference code.
             tags:
-                - Shipment
+                -   Shipment
         get:
             description:
                 Retrive information of the given Shipment.
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 200:
                     content:
@@ -963,20 +918,20 @@ paths:
                     description:
                         Unexpected error
             tags:
-                - Shipment
+                -   Shipment
         patch:
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -1039,20 +994,20 @@ paths:
                         Unexpected error
             summary: Updates a Shipment.
             tags:
-                - Shipment
+                -   Shipment
         put:
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -1115,31 +1070,31 @@ paths:
                         Unexpected error
             summary: Updates a Shipment.
             tags:
-                - Shipment
+                -   Shipment
     /shipments/by-externalReferenceCode/{externalReferenceCode}/items:
         get:
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
             responses:
                 200:
                     content:
@@ -1189,27 +1144,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a list of Shipment Items related to a Shipment.
             tags:
-                - ShipmentItem
+                -   ShipmentItem
         post:
             operationId: postShipmentItemByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          Shipment item external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            Shipment item external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -1270,26 +1225,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Creates a Shipment Item.
             tags:
-                - ShipmentItem
+                -   ShipmentItem
         put:
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -1350,27 +1305,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Creates a Shipment Item.
             tags:
-                - ShipmentItem
+                -   ShipmentItem
     /shipments/by-externalReferenceCode/{externalReferenceCode}/shipping-address:
         get:
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 200:
                     content:
@@ -1416,26 +1371,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a shipping Address related to an Order.
             tags:
-                - ShippingAddress
+                -   ShippingAddress
         patch:
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -1490,27 +1445,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates a Shipping Address by external reference code.
             tags:
-                - ShippingAddress
+                -   ShippingAddress
     /shipments/by-externalReferenceCode/{externalReferenceCode}/status-delivered:
         post:
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 200:
                     content:
@@ -1521,21 +1476,21 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/Shipment"
             tags:
-                - Shipment
+                -   Shipment
     /shipments/by-externalReferenceCode/{externalReferenceCode}/status-finish-processing:
         post:
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 200:
                     content:
@@ -1546,22 +1501,22 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/Shipment"
             tags:
-                - Shipment
+                -   Shipment
     /shipments/by-externalReferenceCode/{externalReferenceCode}/status-shipped:
         post:
             operationId: postShipmentByExternalReferenceCodeStatusShipped
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 200:
                     content:
@@ -1572,23 +1527,23 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/Shipment"
             tags:
-                - Shipment
+                -   Shipment
     /shipments/{shipmentId}:
         delete:
             operationId: deleteShipment
             parameters:
-                - in: path
-                  explode: false
-                  name: shipmentId
-                  required: true
-                  schema:
-                      description:
-                          The shipment resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: shipmentId
+                    required: true
+                    schema:
+                        description:
+                            The shipment resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             responses:
                 204:
                     content:
@@ -1605,28 +1560,28 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes a Shipment by ID.
             tags:
-                - Shipment
+                -   Shipment
         get:
             operationId: getShipment
             parameters:
-                - in: path
-                  explode: false
-                  name: shipmentId
-                  required: true
-                  schema:
-                      description:
-                          The shipment resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: shipmentId
+                    required: true
+                    schema:
+                        description:
+                            The shipment resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -1672,28 +1627,28 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a Shipment by ID.
             tags:
-                - Shipment
+                -   Shipment
         patch:
             operationId: patchShipment
             parameters:
-                - in: path
-                  explode: false
-                  name: shipmentId
-                  required: true
-                  schema:
-                      description:
-                          The shipment resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: shipmentId
+                    required: true
+                    schema:
+                        description:
+                            The shipment resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -1748,39 +1703,39 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates a Shipment by ID.
             tags:
-                - Shipment
+                -   Shipment
     /shipments/{shipmentId}/items:
         get:
             operationId: getShipmentItemsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: shipmentId
-                  required: true
-                  schema:
-                      description:
-                          The shipment resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
+                -   in: path
+                    explode: false
+                    name: shipmentId
+                    required: true
+                    schema:
+                        description:
+                            The shipment resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
             responses:
                 200:
                     content:
@@ -1830,28 +1785,28 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a list of Shipment Items related to a Shipment.
             tags:
-                - ShipmentItem
+                -   ShipmentItem
         post:
             operationId: postShipmentItem
             parameters:
-                - in: path
-                  explode: false
-                  name: shipmentId
-                  required: true
-                  schema:
-                      description:
-                          The shipment resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: shipmentId
+                    required: true
+                    schema:
+                        description:
+                            The shipment resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -1912,27 +1867,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Creates a Shipment Item.
             tags:
-                - ShipmentItem
+                -   ShipmentItem
     /shipments/{shipmentId}/shipping-address:
         get:
             operationId: getShipmentShippingAddress
             parameters:
-                - in: path
-                  name: shipmentId
-                  required: true
-                  schema:
-                      description:
-                          The shipment resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: shipmentId
+                    required: true
+                    schema:
+                        description:
+                            The shipment resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -1978,28 +1933,28 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a shipping Address related to an Order.
             tags:
-                - ShippingAddress
+                -   ShippingAddress
         patch:
             operationId: patchShipmentShippingAddress
             parameters:
-                - in: path
-                  explode: false
-                  name: shipmentId
-                  required: true
-                  schema:
-                      description:
-                          The shipment resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: shipmentId
+                    required: true
+                    schema:
+                        description:
+                            The shipment resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -2054,29 +2009,29 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates a Shipping Address by ID.
             tags:
-                - ShippingAddress
+                -   ShippingAddress
     /shipments/{shipmentId}/status-delivered:
         post:
             operationId: postShipmentStatusDelivered
             parameters:
-                - in: path
-                  explode: false
-                  name: shipmentId
-                  required: true
-                  schema:
-                      description:
-                          The shipment resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: shipmentId
+                    required: true
+                    schema:
+                        description:
+                            The shipment resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -2087,23 +2042,23 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/Shipment"
             tags:
-                - Shipment
+                -   Shipment
     /shipments/{shipmentId}/status-finish-processing:
         post:
             operationId: postShipmentStatusFinishProcessing
             parameters:
-                - in: path
-                  explode: false
-                  name: shipmentId
-                  required: true
-                  schema:
-                      description:
-                          The shipment resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: shipmentId
+                    required: true
+                    schema:
+                        description:
+                            The shipment resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -2114,23 +2069,23 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/Shipment"
             tags:
-                - Shipment
+                -   Shipment
     /shipments/{shipmentId}/status-shipped:
         post:
             operationId: postShipmentStatusShipped
             parameters:
-                - in: path
-                  explode: false
-                  name: shipmentId
-                  required: true
-                  schema:
-                      description:
-                          The shipment resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: shipmentId
+                    required: true
+                    schema:
+                        description:
+                            The shipment resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -2141,8 +2096,8 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/Shipment"
             tags:
-                - Shipment
+                -   Shipment
 servers:
-    - description:
-          SwaggerHub API Auto Mocking
-      url: https://virtserver.swaggerhub.com/liferayinc/commerce-admin-shipment-api/v1.0
+    -   description:
+            SwaggerHub API Auto Mocking
+        url: https://virtserver.swaggerhub.com/liferayinc/commerce-admin-shipment-api/v1.0

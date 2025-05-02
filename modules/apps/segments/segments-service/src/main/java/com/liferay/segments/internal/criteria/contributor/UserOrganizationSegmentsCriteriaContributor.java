@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.segments.criteria.Criteria;
 import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributor;
@@ -24,6 +25,8 @@ import com.liferay.segments.internal.odata.entity.OrganizationEntityModel;
 import com.liferay.segments.odata.retriever.ODataRetriever;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.portlet.PortletRequest;
 
@@ -56,6 +59,18 @@ public class UserOrganizationSegmentsCriteriaContributor
 		String newFilterString = null;
 
 		try {
+			Matcher matcher = _pattern.matcher(filterString);
+
+			while (matcher.find()) {
+				String date = matcher.group("date");
+
+				filterString = StringUtil.replace(
+					filterString, matcher.group(),
+					StringBundler.concat(
+						"dateModified ge ", date, "T00:00:00.000Z and ",
+						"dateModified le ", date, "T23:59:59.999Z"));
+			}
+
 			List<Organization> organizations = _oDataRetriever.getResults(
 				CompanyThreadLocal.getCompanyId(), filterString,
 				LocaleUtil.getDefault(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
@@ -125,6 +140,9 @@ public class UserOrganizationSegmentsCriteriaContributor
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		UserOrganizationSegmentsCriteriaContributor.class);
+
+	private static final Pattern _pattern = Pattern.compile(
+		"dateModified eq (?<date>\\d{4}-\\d{2}-\\d{2})T.*Z");
 
 	@Reference(
 		target = "(entity.model.name=" + OrganizationEntityModel.NAME + ")"

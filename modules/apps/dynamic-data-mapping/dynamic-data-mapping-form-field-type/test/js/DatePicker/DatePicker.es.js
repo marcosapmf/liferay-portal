@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event';
 import moment from 'moment';
 import React from 'react';
 
-import DatePicker from '../../../src/main/resources/META-INF/resources/DatePicker/DatePicker.es';
+import DatePicker from '../../../src/main/resources/META-INF/resources/DatePicker/DatePicker';
 
 describe('DatePicker', () => {
 	it('renders the help text', () => {
@@ -40,8 +40,9 @@ describe('DatePicker', () => {
 		render(<DatePicker label="Date picker" />);
 
 		const allByText = screen.getAllByText('Date picker');
-		expect(allByText).toHaveLength(1);
+		expect(allByText).toHaveLength(2);
 		expect(allByText[0]).toBeInTheDocument();
+		expect(allByText[1]).toBeInTheDocument();
 	});
 
 	it('renders the predefined value', () => {

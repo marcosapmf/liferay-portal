@@ -93,6 +93,27 @@ public class Payment implements Cloneable, Serializable {
 
 	protected String amountFormatted;
 
+	public String getAuthor() {
+		return author;
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
+	}
+
+	public void setAuthor(
+		UnsafeSupplier<String, Exception> authorUnsafeSupplier) {
+
+		try {
+			author = authorUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String author;
+
 	public String getCallbackURL() {
 		return callbackURL;
 	}
@@ -218,6 +239,52 @@ public class Payment implements Cloneable, Serializable {
 	}
 
 	protected String currencyCode;
+
+	public String getCurrencyExternalReferenceCode() {
+		return currencyExternalReferenceCode;
+	}
+
+	public void setCurrencyExternalReferenceCode(
+		String currencyExternalReferenceCode) {
+
+		this.currencyExternalReferenceCode = currencyExternalReferenceCode;
+	}
+
+	public void setCurrencyExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			currencyExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			currencyExternalReferenceCode =
+				currencyExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String currencyExternalReferenceCode;
+
+	public Long getCurrencyId() {
+		return currencyId;
+	}
+
+	public void setCurrencyId(Long currencyId) {
+		this.currencyId = currencyId;
+	}
+
+	public void setCurrencyId(
+		UnsafeSupplier<Long, Exception> currencyIdUnsafeSupplier) {
+
+		try {
+			currencyId = currencyIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long currencyId;
 
 	public String getErrorMessages() {
 		return errorMessages;

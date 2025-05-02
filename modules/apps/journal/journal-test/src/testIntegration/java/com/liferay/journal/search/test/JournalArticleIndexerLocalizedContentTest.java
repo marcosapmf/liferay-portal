@@ -19,7 +19,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.Document;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -79,8 +78,6 @@ public class JournalArticleIndexerLocalizedContentTest {
 		_journalArticles = _journalArticleSearchFixture.getJournalArticles();
 
 		UserTestUtil.setUser(TestPropsValues.getUser());
-
-		CompanyThreadLocal.setCompanyId(TestPropsValues.getCompanyId());
 	}
 
 	@After
@@ -148,12 +145,18 @@ public class JournalArticleIndexerLocalizedContentTest {
 
 					return originalTitle;
 				}),
-			name -> name.startsWith("localized_title"), searchResponse);
+			name ->
+				!name.contains(StringPool.PERIOD) &&
+				name.startsWith("localized_title"),
+			searchResponse);
 		FieldValuesAssert.assertFieldValues(
 			_getLocalizedKeywordSorteableMap(
 				null, "urlTitle", true,
 				locale -> journalArticle.getUrlTitle(locale)),
-			name -> name.startsWith("urlTitle_"), searchResponse);
+			name ->
+				!name.contains(StringPool.PERIOD) &&
+				name.startsWith("urlTitle_"),
+			searchResponse);
 	}
 
 	@Test
@@ -232,7 +235,10 @@ public class JournalArticleIndexerLocalizedContentTest {
 
 					return originalTitle;
 				}),
-			name -> name.startsWith("localized_title"), searchResponse);
+			name ->
+				!name.contains(StringPool.PERIOD) &&
+				name.startsWith("localized_title"),
+			searchResponse);
 		FieldValuesAssert.assertFieldValues(
 			Collections.emptyMap(), name -> name.startsWith("ddm__text"),
 			searchResponse);
@@ -289,7 +295,10 @@ public class JournalArticleIndexerLocalizedContentTest {
 				searchResponse);
 			FieldValuesAssert.assertFieldValues(
 				localizedTitleStrings,
-				name -> name.startsWith("localized_title"), searchResponse);
+				name ->
+					!name.contains(StringPool.PERIOD) &&
+					name.startsWith("localized_title"),
+				searchResponse);
 		}
 	}
 

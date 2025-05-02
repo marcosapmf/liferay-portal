@@ -768,6 +768,15 @@ public interface JournalArticleLocalService
 		long groupId, String externalReferenceCode);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int status,
+		boolean preferApproved);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int[] statuses);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public JournalArticle fetchLatestArticleByUrlTitle(
 		long groupId, String urlTitle, int status);
 
@@ -782,6 +791,9 @@ public interface JournalArticleLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public JournalArticle fetchLatestIndexableArticle(long resourcePrimKey);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public PersistedModel fetchPersistedModel(Serializable primaryKeyObj);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
@@ -1306,7 +1318,7 @@ public interface JournalArticleLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<JournalArticle> getArticlesByReviewDate(
-		Date previousCheckDate, Date reviewDate);
+		long companyId, Date previousCheckDate, Date reviewDate);
 
 	/**
 	 * Returns all the web content articles matching the small image ID.
@@ -1721,6 +1733,12 @@ public interface JournalArticleLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public JournalArticle getLatestArticleByExternalReferenceCode(
 			long groupId, String externalReferenceCode)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public JournalArticle getLatestArticleByExternalReferenceCode(
+			long groupId, String externalReferenceCode, int status,
+			boolean preferApproved)
 		throws PortalException;
 
 	/**

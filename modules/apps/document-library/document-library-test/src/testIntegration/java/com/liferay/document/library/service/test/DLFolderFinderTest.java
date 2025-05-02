@@ -69,7 +69,7 @@ public class DLFolderFinderTest {
 				_group.getGroupId(), TestPropsValues.getUserId());
 
 		RepositoryLocalServiceUtil.addRepository(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			PortalUtil.getClassNameId(PortletRepository.class.getName()),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Test Repository",
 			StringUtil.randomString(), StringUtil.randomString(),
@@ -97,7 +97,7 @@ public class DLFolderFinderTest {
 			ContentTypes.TEXT_PLAIN);
 
 		_fileShortcut = DLAppLocalServiceUtil.addFileShortcut(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			fileEntry.getFolderId(), fileEntry.getFileEntryId(),
 			serviceContext);
 

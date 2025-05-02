@@ -616,7 +616,6 @@ public class DDLRecordSetVersionPersistenceImpl
 		"ddlRecordSetVersion.recordSetId = ?";
 
 	private FinderPath _finderPathFetchByRS_V;
-	private FinderPath _finderPathCountByRS_V;
 
 	/**
 	 * Returns the ddl record set version where recordSetId = &#63; and version = &#63; or throws a <code>NoSuchRecordSetVersionException</code> if it could not be found.
@@ -805,68 +804,14 @@ public class DDLRecordSetVersionPersistenceImpl
 	 */
 	@Override
 	public int countByRS_V(long recordSetId, String version) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					DDLRecordSetVersion.class)) {
+		DDLRecordSetVersion ddlRecordSetVersion = fetchByRS_V(
+			recordSetId, version);
 
-			version = Objects.toString(version, "");
-
-			FinderPath finderPath = _finderPathCountByRS_V;
-
-			Object[] finderArgs = new Object[] {recordSetId, version};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_DDLRECORDSETVERSION_WHERE);
-
-				sb.append(_FINDER_COLUMN_RS_V_RECORDSETID_2);
-
-				boolean bindVersion = false;
-
-				if (version.isEmpty()) {
-					sb.append(_FINDER_COLUMN_RS_V_VERSION_3);
-				}
-				else {
-					bindVersion = true;
-
-					sb.append(_FINDER_COLUMN_RS_V_VERSION_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(recordSetId);
-
-					if (bindVersion) {
-						queryPos.add(version);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (ddlRecordSetVersion == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_RS_V_RECORDSETID_2 =
@@ -1561,8 +1506,6 @@ public class DDLRecordSetVersionPersistenceImpl
 			};
 
 			finderCache.putResult(
-				_finderPathCountByRS_V, args, Long.valueOf(1));
-			finderCache.putResult(
 				_finderPathFetchByRS_V, args, ddlRecordSetVersionModelImpl);
 		}
 	}
@@ -2237,6 +2180,7 @@ public class DDLRecordSetVersionPersistenceImpl
 
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -2246,19 +2190,20 @@ public class DDLRecordSetVersionPersistenceImpl
 		ctStrictColumnNames.add("userId");
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
-		ctStrictColumnNames.add("recordSetId");
-		ctStrictColumnNames.add("DDMStructureVersionId");
-		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("description");
-		ctStrictColumnNames.add("settings_");
-		ctStrictColumnNames.add("version");
-		ctStrictColumnNames.add("status");
-		ctStrictColumnNames.add("statusByUserId");
-		ctStrictColumnNames.add("statusByUserName");
-		ctStrictColumnNames.add("statusDate");
+		ctMergeColumnNames.add("recordSetId");
+		ctMergeColumnNames.add("DDMStructureVersionId");
+		ctMergeColumnNames.add("name");
+		ctMergeColumnNames.add("description");
+		ctMergeColumnNames.add("settings_");
+		ctMergeColumnNames.add("version");
+		ctMergeColumnNames.add("status");
+		ctMergeColumnNames.add("statusByUserId");
+		ctMergeColumnNames.add("statusByUserName");
+		ctMergeColumnNames.add("statusDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("recordSetVersionId"));
@@ -2310,11 +2255,6 @@ public class DDLRecordSetVersionPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByRS_V",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"recordSetId", "version"}, true);
-
-		_finderPathCountByRS_V = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByRS_V",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"recordSetId", "version"}, false);
 
 		_finderPathWithPaginationFindByRS_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByRS_S",

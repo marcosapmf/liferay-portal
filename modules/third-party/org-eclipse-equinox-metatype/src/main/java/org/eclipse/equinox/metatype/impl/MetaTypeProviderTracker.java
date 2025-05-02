@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2013 IBM Corporation and others.
+ * Copyright (c) 2005, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@ package org.eclipse.equinox.metatype.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.Map.Entry;
 import org.eclipse.equinox.metatype.*;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
@@ -24,7 +25,7 @@ import org.osgi.util.tracker.ServiceTracker;
 
 public class MetaTypeProviderTracker implements EquinoxMetaTypeInformation {
 	private final Bundle _bundle;
-	private final LogService log;
+	private final LogTracker log;
 	private final Map<Bundle, List<Map.Entry<ServiceReference<Object>, Object>>> _metaTypeProviders;
 
 	/**
@@ -34,7 +35,7 @@ public class MetaTypeProviderTracker implements EquinoxMetaTypeInformation {
 	 * @param bundle The bundle to track all MetaTypeProviders for.
 	 * @param log The {@code LogService} to use for logging messages.
 	 */
-	public MetaTypeProviderTracker(Bundle bundle, LogService log, Map<Bundle, List<Map.Entry<ServiceReference<Object>, Object>>> metaTypeProviders) {
+	public MetaTypeProviderTracker(Bundle bundle, LogTracker log, Map<Bundle, List<Map.Entry<ServiceReference<Object>, Object>>> metaTypeProviders) {
 		this._bundle = bundle;
 		_metaTypeProviders = metaTypeProviders;
 		this.log = log;

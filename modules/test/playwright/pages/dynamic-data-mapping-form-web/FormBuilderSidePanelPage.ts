@@ -5,27 +5,59 @@
 
 import {Locator, Page} from '@playwright/test';
 
+import {ApiHelpers} from '../../helpers/ApiHelpers';
+
 export class FormBuilderSidePanelPage {
+	readonly addMultipleSelectionButton: Locator;
+	readonly addSelectFromListButton: Locator;
 	readonly addSelectOptionButton: Locator;
+	readonly addSingleSelectionButton: Locator;
 	readonly advancedTab: Locator;
+	readonly allowGuestUsers: Locator;
 	readonly backButton: Locator;
 	readonly htmlAutocompleteAttributeField: Locator;
+	readonly label: Locator;
 	readonly objectFieldSelect: Locator;
 	readonly page: Page;
+	readonly paragraphFieldTextarea: Locator;
+	readonly paragraphFieldTitle: Locator;
+	readonly predefinedValueField: Locator;
+	readonly requireConfirmationToggleSwitch: Locator;
+	readonly requiredFieldToggleSwitch: Locator;
 
 	constructor(page: Page) {
-		this.advancedTab = page.getByRole('tab', {
-			name: 'Advanced',
+		this.addMultipleSelectionButton = page.getByRole('button', {
+			name: 'Press enter to add Multiple Selection field.',
+		});
+		this.addSelectFromListButton = page.getByRole('button', {
+			name: 'Press enter to add Select',
 		});
 		this.addSelectOptionButton = page.getByRole('button', {
 			name: 'Add Option',
 		});
+		this.addSingleSelectionButton = page.getByRole('button', {
+			name: 'Press enter to add Single',
+		});
+		this.advancedTab = page.getByRole('tab', {
+			name: 'Advanced',
+		});
+		this.allowGuestUsers = page.getByLabel('Allow Guest Users to Send');
 		this.backButton = page.getByRole('button', {name: 'Back'});
 		this.htmlAutocompleteAttributeField = page.getByLabel(
 			'HTML Autocomplete Attribute'
 		);
+		this.label = page.getByLabel('Label', {exact: true}).first();
 		this.objectFieldSelect = page.getByLabel('Object Field');
 		this.page = page;
+		this.paragraphFieldTextarea = page
+			.frameLocator('iframe')
+			.locator('.cke_editable');
+		this.paragraphFieldTitle = page.getByPlaceholder('Enter a title.');
+		this.predefinedValueField = page.getByLabel('Predefined Value');
+		this.requiredFieldToggleSwitch = page.getByText('Required Field');
+		this.requireConfirmationToggleSwitch = page.getByLabel(
+			'Require Confirmation'
+		);
 	}
 
 	async addFieldByDoubleClick(formFieldTypeTitle: FormFieldTypeTitle) {
@@ -34,12 +66,32 @@ export class FormBuilderSidePanelPage {
 			.dblclick();
 	}
 
+	async addFieldToFieldGroup(
+		sourceField: FormFieldTypeTitle,
+		position: number
+	) {
+		await this.page
+			.getByRole('tabpanel')
+			.getByTitle(sourceField, {exact: true})
+			.dragTo(this.page.locator('.ddm-drag').nth(position));
+	}
+
 	async clickAdvancedTab() {
 		await this.advancedTab.click();
 	}
 
 	async clickBackButton() {
 		await this.backButton.click();
+	}
+
+	async fillParagraphField(apiHelpers: ApiHelpers, text: string) {
+		await this.paragraphFieldTextarea.fill(text);
+
+		// filling is not enough, we need need a key event to make it work
+
+		await this.paragraphFieldTextarea.press('End');
+
+		await apiHelpers.dynamicDataMapping.waitForDDMEvaluate(this.page);
 	}
 
 	async selectObjectField(objectFieldLabel: string) {

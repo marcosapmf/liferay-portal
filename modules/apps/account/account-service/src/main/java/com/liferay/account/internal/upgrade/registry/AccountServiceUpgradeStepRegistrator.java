@@ -8,6 +8,7 @@ package com.liferay.account.internal.upgrade.registry;
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.constants.AccountListTypeConstants;
 import com.liferay.account.internal.upgrade.v1_1_0.SchemaUpgradeProcess;
+import com.liferay.account.internal.upgrade.v2_11_2.RoleResourceUpgradeProcess;
 import com.liferay.account.internal.upgrade.v2_4_0.AccountGroupResourceUpgradeProcess;
 import com.liferay.account.internal.upgrade.v2_5_0.AccountRoleResourceUpgradeProcess;
 import com.liferay.petra.string.StringBundler;
@@ -49,10 +50,11 @@ public class AccountServiceUpgradeStepRegistrator
 				RoleUpgradeProcess());
 
 		registry.register(
-			"1.0.3", "1.1.0",
+			"1.0.3", "1.0.4",
 			new com.liferay.account.internal.upgrade.v1_1_0.
-				AccountEntryUpgradeProcess(),
-			new SchemaUpgradeProcess());
+				AccountEntryUpgradeProcess());
+
+		registry.register("1.0.4", "1.1.0", new SchemaUpgradeProcess());
 
 		registry.register(
 			"1.1.0", "1.1.1",
@@ -199,6 +201,16 @@ public class AccountServiceUpgradeStepRegistrator
 				}
 
 			});
+
+		registry.register(
+			"2.11.0", "2.11.1",
+			new com.liferay.account.internal.upgrade.v2_11_1.
+				AccountRoleResourceUpgradeProcess());
+
+		registry.register(
+			"2.11.1", "2.11.2",
+			new RoleResourceUpgradeProcess(
+				_resourceActionLocalService, _resourcePermissionLocalService));
 	}
 
 	@Reference

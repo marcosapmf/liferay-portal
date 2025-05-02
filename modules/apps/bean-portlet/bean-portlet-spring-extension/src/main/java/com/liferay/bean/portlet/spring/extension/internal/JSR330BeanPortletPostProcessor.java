@@ -146,17 +146,19 @@ public class JSR330BeanPortletPostProcessor
 
 		Annotation[] annotations = accessibleObject.getAnnotations();
 
-		if (annotations.length > 0) {
-			for (Class<? extends Annotation> autowiredAnnotationType :
-					_autowiredAnnotationTypes) {
+		if (annotations.length <= 0) {
+			return null;
+		}
 
-				AnnotationAttributes mergedAnnotationAttributes =
-					AnnotatedElementUtils.getMergedAnnotationAttributes(
-						accessibleObject, autowiredAnnotationType);
+		for (Class<? extends Annotation> autowiredAnnotationType :
+				_autowiredAnnotationTypes) {
 
-				if (mergedAnnotationAttributes != null) {
-					return mergedAnnotationAttributes;
-				}
+			AnnotationAttributes mergedAnnotationAttributes =
+				AnnotatedElementUtils.getMergedAnnotationAttributes(
+					accessibleObject, autowiredAnnotationType);
+
+			if (mergedAnnotationAttributes != null) {
+				return mergedAnnotationAttributes;
 			}
 		}
 
@@ -164,12 +166,12 @@ public class JSR330BeanPortletPostProcessor
 	}
 
 	private InjectionMetadata _getInjectionMetadata(Class<?> beanClass) {
-		List<InjectionMetadata.InjectedElement> injectedElements =
+		List<InjectionMetadata.InjectedElement> injectedElements1 =
 			new ArrayList<>();
 		Class<?> curClass = beanClass;
 
 		while ((curClass != null) && (curClass != Object.class)) {
-			List<InjectionMetadata.InjectedElement> injectionElements =
+			List<InjectionMetadata.InjectedElement> injectedElements2 =
 				new ArrayList<>();
 
 			Field[] fields = curClass.getDeclaredFields();
@@ -186,7 +188,7 @@ public class JSR330BeanPortletPostProcessor
 					boolean required = determineRequiredStatus(
 						annotationAttributes);
 
-					injectionElements.add(
+					injectedElements2.add(
 						new JSR330InjectedFieldElement(
 							_configurableListableBeanFactory, field, required));
 				}
@@ -221,19 +223,19 @@ public class JSR330BeanPortletPostProcessor
 					boolean required = determineRequiredStatus(
 						annotationAttributes);
 
-					injectionElements.add(
+					injectedElements2.add(
 						new JSR330InjectedMethodElement(
 							_configurableListableBeanFactory, method,
 							propertyDescriptor, required));
 				}
 			}
 
-			injectedElements.addAll(0, injectionElements);
+			injectedElements1.addAll(0, injectedElements2);
 
 			curClass = curClass.getSuperclass();
 		}
 
-		return new InjectionMetadata(beanClass, injectedElements);
+		return new InjectionMetadata(beanClass, injectedElements1);
 	}
 
 	private InjectionMetadata _getInjectionMetadata(

@@ -12,9 +12,6 @@ const CONFIG_FILES = [
 	'**/.stylelintrc.js',
 	'**/gulpfile.js',
 	'**/liferay-npm-bundler.config.js',
-	'**/npmscripts.config.js',
-	'**/webpack.config.dev.js',
-	'**/webpack.config.js',
 	'**/node-scripts.config.js',
 ];
 
@@ -56,14 +53,13 @@ const config = {
 		},
 		ecmaVersion: 2023,
 	},
-	plugins: ['@liferay'],
+	plugins: ['@liferay', 'eslint-plugin-react-compiler'],
 	root: true,
 	rules: {
 		'@liferay/import-extensions': 'off',
 		'@liferay/no-extraneous-dependencies': [
 			'error',
 			[
-				'@liferay/npm-scripts',
 				'@testing-library/dom',
 				'@testing-library/jest-dom',
 				'@testing-library/react-hooks',
@@ -74,7 +70,6 @@ const config = {
 				'fs',
 				'path',
 				'process',
-				'webpack',
 				'~',
 			],
 		],
@@ -85,12 +80,13 @@ const config = {
 		'notice/notice': [
 			'error',
 			{
-				nonMatchingTolerance: 0.7,
+				nonMatchingTolerance: 0.95,
 				onNonMatchingHeader: 'replace',
 				templateFile: path.join(__dirname, 'copyright.js'),
 			},
 		],
 		'promise/catch-or-return': 'off',
+		'react-compiler/react-compiler': 'error',
 	},
 };
 

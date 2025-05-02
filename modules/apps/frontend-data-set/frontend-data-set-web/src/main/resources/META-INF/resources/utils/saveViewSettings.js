@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {fetch, openToast} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {fetch} from 'frontend-js-web';
 
 import {logError} from './logError';
 
@@ -14,8 +15,8 @@ export function saveViewSettings({appURL, id, portletId, settings}) {
 
 	const url = new URL(`${appURL}/data-set/${id}/save-active-view-settings`);
 
-	url.searchParams.append('groupId', themeDisplay.getScopeGroupId());
-	url.searchParams.append('plid', themeDisplay.getPlid());
+	url.searchParams.append('groupId', Liferay.ThemeDisplay.getScopeGroupId());
+	url.searchParams.append('plid', Liferay.ThemeDisplay.getPlid());
 	url.searchParams.append('portletId', portletId);
 
 	return fetch(url, {

@@ -3,7 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Depot";
+	property testray.main.component.name = "Asset Libraries";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -209,7 +209,7 @@ definition {
 			webContentText = "WC WebContent Text",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		DepotNavigator.openDepotExportImportAdmin(
 			depotName = "Test Depot Name",

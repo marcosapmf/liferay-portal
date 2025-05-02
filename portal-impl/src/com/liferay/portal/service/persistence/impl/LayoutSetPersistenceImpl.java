@@ -36,7 +36,6 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.impl.LayoutSetImpl;
 import com.liferay.portal.model.impl.LayoutSetModelImpl;
 
@@ -1163,7 +1162,6 @@ public class LayoutSetPersistenceImpl
 			"(layoutSet.layoutSetPrototypeUuid IS NULL OR layoutSet.layoutSetPrototypeUuid = '')";
 
 	private FinderPath _finderPathFetchByG_P;
-	private FinderPath _finderPathCountByG_P;
 
 	/**
 	 * Returns the layout set where groupId = &#63; and privateLayout = &#63; or throws a <code>NoSuchLayoutSetException</code> if it could not be found.
@@ -1335,55 +1333,13 @@ public class LayoutSetPersistenceImpl
 	 */
 	@Override
 	public int countByG_P(long groupId, boolean privateLayout) {
-		try (SafeCloseable safeCloseable =
-				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
-					LayoutSet.class)) {
+		LayoutSet layoutSet = fetchByG_P(groupId, privateLayout);
 
-			FinderPath finderPath = _finderPathCountByG_P;
-
-			Object[] finderArgs = new Object[] {groupId, privateLayout};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_LAYOUTSET_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_P_GROUPID_2);
-
-				sb.append(_FINDER_COLUMN_G_P_PRIVATELAYOUT_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					queryPos.add(privateLayout);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (layoutSet == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_G_P_GROUPID_2 =
@@ -1997,105 +1953,152 @@ public class LayoutSetPersistenceImpl
 	private static final String _FINDER_COLUMN_C_L_LAYOUTSETPROTOTYPEUUID_3 =
 		"(layoutSet.layoutSetPrototypeUuid IS NULL OR layoutSet.layoutSetPrototypeUuid = '')";
 
-	private FinderPath _finderPathFetchByP_L;
+	private FinderPath _finderPathWithPaginationFindByP_L;
+	private FinderPath _finderPathWithoutPaginationFindByP_L;
 	private FinderPath _finderPathCountByP_L;
 
 	/**
-	 * Returns the layout set where privateLayout = &#63; and logoId = &#63; or throws a <code>NoSuchLayoutSetException</code> if it could not be found.
+	 * Returns all the layout sets where privateLayout = &#63; and logoId = &#63;.
 	 *
 	 * @param privateLayout the private layout
 	 * @param logoId the logo ID
-	 * @return the matching layout set
-	 * @throws NoSuchLayoutSetException if a matching layout set could not be found
+	 * @return the matching layout sets
 	 */
 	@Override
-	public LayoutSet findByP_L(boolean privateLayout, long logoId)
-		throws NoSuchLayoutSetException {
-
-		LayoutSet layoutSet = fetchByP_L(privateLayout, logoId);
-
-		if (layoutSet == null) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("privateLayout=");
-			sb.append(privateLayout);
-
-			sb.append(", logoId=");
-			sb.append(logoId);
-
-			sb.append("}");
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
-			}
-
-			throw new NoSuchLayoutSetException(sb.toString());
-		}
-
-		return layoutSet;
+	public List<LayoutSet> findByP_L(boolean privateLayout, long logoId) {
+		return findByP_L(
+			privateLayout, logoId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
-	 * Returns the layout set where privateLayout = &#63; and logoId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 * Returns a range of all the layout sets where privateLayout = &#63; and logoId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutSetModelImpl</code>.
+	 * </p>
 	 *
 	 * @param privateLayout the private layout
 	 * @param logoId the logo ID
-	 * @return the matching layout set, or <code>null</code> if a matching layout set could not be found
+	 * @param start the lower bound of the range of layout sets
+	 * @param end the upper bound of the range of layout sets (not inclusive)
+	 * @return the range of matching layout sets
 	 */
 	@Override
-	public LayoutSet fetchByP_L(boolean privateLayout, long logoId) {
-		return fetchByP_L(privateLayout, logoId, true);
+	public List<LayoutSet> findByP_L(
+		boolean privateLayout, long logoId, int start, int end) {
+
+		return findByP_L(privateLayout, logoId, start, end, null);
 	}
 
 	/**
-	 * Returns the layout set where privateLayout = &#63; and logoId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 * Returns an ordered range of all the layout sets where privateLayout = &#63; and logoId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutSetModelImpl</code>.
+	 * </p>
 	 *
 	 * @param privateLayout the private layout
 	 * @param logoId the logo ID
+	 * @param start the lower bound of the range of layout sets
+	 * @param end the upper bound of the range of layout sets (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching layout sets
+	 */
+	@Override
+	public List<LayoutSet> findByP_L(
+		boolean privateLayout, long logoId, int start, int end,
+		OrderByComparator<LayoutSet> orderByComparator) {
+
+		return findByP_L(
+			privateLayout, logoId, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the layout sets where privateLayout = &#63; and logoId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutSetModelImpl</code>.
+	 * </p>
+	 *
+	 * @param privateLayout the private layout
+	 * @param logoId the logo ID
+	 * @param start the lower bound of the range of layout sets
+	 * @param end the upper bound of the range of layout sets (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @param useFinderCache whether to use the finder cache
-	 * @return the matching layout set, or <code>null</code> if a matching layout set could not be found
+	 * @return the ordered range of matching layout sets
 	 */
 	@Override
-	public LayoutSet fetchByP_L(
-		boolean privateLayout, long logoId, boolean useFinderCache) {
+	public List<LayoutSet> findByP_L(
+		boolean privateLayout, long logoId, int start, int end,
+		OrderByComparator<LayoutSet> orderByComparator,
+		boolean useFinderCache) {
 
 		try (SafeCloseable safeCloseable =
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					LayoutSet.class)) {
 
+			FinderPath finderPath = null;
 			Object[] finderArgs = null;
 
-			if (useFinderCache) {
-				finderArgs = new Object[] {privateLayout, logoId};
+			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
+
+				if (useFinderCache) {
+					finderPath = _finderPathWithoutPaginationFindByP_L;
+					finderArgs = new Object[] {privateLayout, logoId};
+				}
+			}
+			else if (useFinderCache) {
+				finderPath = _finderPathWithPaginationFindByP_L;
+				finderArgs = new Object[] {
+					privateLayout, logoId, start, end, orderByComparator
+				};
 			}
 
-			Object result = null;
+			List<LayoutSet> list = null;
 
 			if (useFinderCache) {
-				result = FinderCacheUtil.getResult(
-					_finderPathFetchByP_L, finderArgs, this);
-			}
+				list = (List<LayoutSet>)FinderCacheUtil.getResult(
+					finderPath, finderArgs, this);
 
-			if (result instanceof LayoutSet) {
-				LayoutSet layoutSet = (LayoutSet)result;
+				if ((list != null) && !list.isEmpty()) {
+					for (LayoutSet layoutSet : list) {
+						if ((privateLayout != layoutSet.isPrivateLayout()) ||
+							(logoId != layoutSet.getLogoId())) {
 
-				if ((privateLayout != layoutSet.isPrivateLayout()) ||
-					(logoId != layoutSet.getLogoId())) {
+							list = null;
 
-					result = null;
+							break;
+						}
+					}
 				}
 			}
 
-			if (result == null) {
-				StringBundler sb = new StringBundler(4);
+			if (list == null) {
+				StringBundler sb = null;
+
+				if (orderByComparator != null) {
+					sb = new StringBundler(
+						4 + (orderByComparator.getOrderByFields().length * 2));
+				}
+				else {
+					sb = new StringBundler(4);
+				}
 
 				sb.append(_SQL_SELECT_LAYOUTSET_WHERE);
 
 				sb.append(_FINDER_COLUMN_P_L_PRIVATELAYOUT_2);
 
 				sb.append(_FINDER_COLUMN_P_L_LOGOID_2);
+
+				if (orderByComparator != null) {
+					appendOrderByComparator(
+						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+				}
+				else {
+					sb.append(LayoutSetModelImpl.ORDER_BY_JPQL);
+				}
 
 				String sql = sb.toString();
 
@@ -2112,37 +2115,13 @@ public class LayoutSetPersistenceImpl
 
 					queryPos.add(logoId);
 
-					List<LayoutSet> list = query.list();
+					list = (List<LayoutSet>)QueryUtil.list(
+						query, getDialect(), start, end);
 
-					if (list.isEmpty()) {
-						if (useFinderCache) {
-							FinderCacheUtil.putResult(
-								_finderPathFetchByP_L, finderArgs, list);
-						}
-					}
-					else {
-						if (list.size() > 1) {
-							Collections.sort(list, Collections.reverseOrder());
+					cacheResult(list);
 
-							if (_log.isWarnEnabled()) {
-								if (!useFinderCache) {
-									finderArgs = new Object[] {
-										privateLayout, logoId
-									};
-								}
-
-								_log.warn(
-									"LayoutSetPersistenceImpl.fetchByP_L(boolean, long, boolean) with parameters (" +
-										StringUtil.merge(finderArgs) +
-											") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
-							}
-						}
-
-						LayoutSet layoutSet = list.get(0);
-
-						result = layoutSet;
-
-						cacheResult(layoutSet);
+					if (useFinderCache) {
+						FinderCacheUtil.putResult(finderPath, finderArgs, list);
 					}
 				}
 				catch (Exception exception) {
@@ -2153,29 +2132,309 @@ public class LayoutSetPersistenceImpl
 				}
 			}
 
-			if (result instanceof List<?>) {
-				return null;
-			}
-			else {
-				return (LayoutSet)result;
-			}
+			return list;
 		}
 	}
 
 	/**
-	 * Removes the layout set where privateLayout = &#63; and logoId = &#63; from the database.
+	 * Returns the first layout set in the ordered set where privateLayout = &#63; and logoId = &#63;.
 	 *
 	 * @param privateLayout the private layout
 	 * @param logoId the logo ID
-	 * @return the layout set that was removed
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching layout set
+	 * @throws NoSuchLayoutSetException if a matching layout set could not be found
 	 */
 	@Override
-	public LayoutSet removeByP_L(boolean privateLayout, long logoId)
+	public LayoutSet findByP_L_First(
+			boolean privateLayout, long logoId,
+			OrderByComparator<LayoutSet> orderByComparator)
 		throws NoSuchLayoutSetException {
 
-		LayoutSet layoutSet = findByP_L(privateLayout, logoId);
+		LayoutSet layoutSet = fetchByP_L_First(
+			privateLayout, logoId, orderByComparator);
 
-		return remove(layoutSet);
+		if (layoutSet != null) {
+			return layoutSet;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("privateLayout=");
+		sb.append(privateLayout);
+
+		sb.append(", logoId=");
+		sb.append(logoId);
+
+		sb.append("}");
+
+		throw new NoSuchLayoutSetException(sb.toString());
+	}
+
+	/**
+	 * Returns the first layout set in the ordered set where privateLayout = &#63; and logoId = &#63;.
+	 *
+	 * @param privateLayout the private layout
+	 * @param logoId the logo ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching layout set, or <code>null</code> if a matching layout set could not be found
+	 */
+	@Override
+	public LayoutSet fetchByP_L_First(
+		boolean privateLayout, long logoId,
+		OrderByComparator<LayoutSet> orderByComparator) {
+
+		List<LayoutSet> list = findByP_L(
+			privateLayout, logoId, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last layout set in the ordered set where privateLayout = &#63; and logoId = &#63;.
+	 *
+	 * @param privateLayout the private layout
+	 * @param logoId the logo ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching layout set
+	 * @throws NoSuchLayoutSetException if a matching layout set could not be found
+	 */
+	@Override
+	public LayoutSet findByP_L_Last(
+			boolean privateLayout, long logoId,
+			OrderByComparator<LayoutSet> orderByComparator)
+		throws NoSuchLayoutSetException {
+
+		LayoutSet layoutSet = fetchByP_L_Last(
+			privateLayout, logoId, orderByComparator);
+
+		if (layoutSet != null) {
+			return layoutSet;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("privateLayout=");
+		sb.append(privateLayout);
+
+		sb.append(", logoId=");
+		sb.append(logoId);
+
+		sb.append("}");
+
+		throw new NoSuchLayoutSetException(sb.toString());
+	}
+
+	/**
+	 * Returns the last layout set in the ordered set where privateLayout = &#63; and logoId = &#63;.
+	 *
+	 * @param privateLayout the private layout
+	 * @param logoId the logo ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching layout set, or <code>null</code> if a matching layout set could not be found
+	 */
+	@Override
+	public LayoutSet fetchByP_L_Last(
+		boolean privateLayout, long logoId,
+		OrderByComparator<LayoutSet> orderByComparator) {
+
+		int count = countByP_L(privateLayout, logoId);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<LayoutSet> list = findByP_L(
+			privateLayout, logoId, count - 1, count, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the layout sets before and after the current layout set in the ordered set where privateLayout = &#63; and logoId = &#63;.
+	 *
+	 * @param layoutSetId the primary key of the current layout set
+	 * @param privateLayout the private layout
+	 * @param logoId the logo ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next layout set
+	 * @throws NoSuchLayoutSetException if a layout set with the primary key could not be found
+	 */
+	@Override
+	public LayoutSet[] findByP_L_PrevAndNext(
+			long layoutSetId, boolean privateLayout, long logoId,
+			OrderByComparator<LayoutSet> orderByComparator)
+		throws NoSuchLayoutSetException {
+
+		LayoutSet layoutSet = findByPrimaryKey(layoutSetId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			LayoutSet[] array = new LayoutSetImpl[3];
+
+			array[0] = getByP_L_PrevAndNext(
+				session, layoutSet, privateLayout, logoId, orderByComparator,
+				true);
+
+			array[1] = layoutSet;
+
+			array[2] = getByP_L_PrevAndNext(
+				session, layoutSet, privateLayout, logoId, orderByComparator,
+				false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected LayoutSet getByP_L_PrevAndNext(
+		Session session, LayoutSet layoutSet, boolean privateLayout,
+		long logoId, OrderByComparator<LayoutSet> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(4);
+		}
+
+		sb.append(_SQL_SELECT_LAYOUTSET_WHERE);
+
+		sb.append(_FINDER_COLUMN_P_L_PRIVATELAYOUT_2);
+
+		sb.append(_FINDER_COLUMN_P_L_LOGOID_2);
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(LayoutSetModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(privateLayout);
+
+		queryPos.add(logoId);
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(layoutSet)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<LayoutSet> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the layout sets where privateLayout = &#63; and logoId = &#63; from the database.
+	 *
+	 * @param privateLayout the private layout
+	 * @param logoId the logo ID
+	 */
+	@Override
+	public void removeByP_L(boolean privateLayout, long logoId) {
+		for (LayoutSet layoutSet :
+				findByP_L(
+					privateLayout, logoId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null)) {
+
+			remove(layoutSet);
+		}
 	}
 
 	/**
@@ -2277,13 +2536,6 @@ public class LayoutSetPersistenceImpl
 				_finderPathFetchByG_P,
 				new Object[] {
 					layoutSet.getGroupId(), layoutSet.isPrivateLayout()
-				},
-				layoutSet);
-
-			FinderCacheUtil.putResult(
-				_finderPathFetchByP_L,
-				new Object[] {
-					layoutSet.isPrivateLayout(), layoutSet.getLogoId()
 				},
 				layoutSet);
 		}
@@ -2389,19 +2641,7 @@ public class LayoutSetPersistenceImpl
 			};
 
 			FinderCacheUtil.putResult(
-				_finderPathCountByG_P, args, Long.valueOf(1));
-			FinderCacheUtil.putResult(
 				_finderPathFetchByG_P, args, layoutSetModelImpl);
-
-			args = new Object[] {
-				layoutSetModelImpl.isPrivateLayout(),
-				layoutSetModelImpl.getLogoId()
-			};
-
-			FinderCacheUtil.putResult(
-				_finderPathCountByP_L, args, Long.valueOf(1));
-			FinderCacheUtil.putResult(
-				_finderPathFetchByP_L, args, layoutSetModelImpl);
 		}
 	}
 
@@ -3059,6 +3299,7 @@ public class LayoutSetPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -3067,20 +3308,21 @@ public class LayoutSetPersistenceImpl
 		ctStrictColumnNames.add("companyId");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("privateLayout");
-		ctStrictColumnNames.add("logoId");
-		ctStrictColumnNames.add("themeId");
-		ctStrictColumnNames.add("colorSchemeId");
-		ctStrictColumnNames.add("faviconFileEntryId");
-		ctStrictColumnNames.add("css");
-		ctStrictColumnNames.add("settings_");
-		ctStrictColumnNames.add("layoutSetPrototypeUuid");
-		ctStrictColumnNames.add("layoutSetPrototypeLinkEnabled");
+		ctMergeColumnNames.add("privateLayout");
+		ctMergeColumnNames.add("logoId");
+		ctMergeColumnNames.add("themeId");
+		ctMergeColumnNames.add("colorSchemeId");
+		ctMergeColumnNames.add("faviconFileEntryId");
+		ctMergeColumnNames.add("css");
+		ctMergeColumnNames.add("settings_");
+		ctMergeColumnNames.add("layoutSetPrototypeUuid");
+		ctMergeColumnNames.add("layoutSetPrototypeLinkEnabled");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK, Collections.singleton("layoutSetId"));
 		_ctColumnNamesMap.put(
@@ -3153,11 +3395,6 @@ public class LayoutSetPersistenceImpl
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"groupId", "privateLayout"}, true);
 
-		_finderPathCountByG_P = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_P",
-			new String[] {Long.class.getName(), Boolean.class.getName()},
-			new String[] {"groupId", "privateLayout"}, false);
-
 		_finderPathWithPaginationFindByC_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_L",
 			new String[] {
@@ -3177,8 +3414,17 @@ public class LayoutSetPersistenceImpl
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "layoutSetPrototypeUuid"}, false);
 
-		_finderPathFetchByP_L = new FinderPath(
-			FINDER_CLASS_NAME_ENTITY, "fetchByP_L",
+		_finderPathWithPaginationFindByP_L = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByP_L",
+			new String[] {
+				Boolean.class.getName(), Long.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			},
+			new String[] {"privateLayout", "logoId"}, true);
+
+		_finderPathWithoutPaginationFindByP_L = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByP_L",
 			new String[] {Boolean.class.getName(), Long.class.getName()},
 			new String[] {"privateLayout", "logoId"}, true);
 

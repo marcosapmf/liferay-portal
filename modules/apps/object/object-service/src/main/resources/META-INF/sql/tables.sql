@@ -39,15 +39,17 @@ create table ObjectDefinition (
 	titleObjectFieldId LONG,
 	accountEntryRestricted BOOLEAN,
 	active_ BOOLEAN,
-	dbTableName VARCHAR(75) null,
-	label STRING null,
 	className VARCHAR(255) null,
+	dbTableName VARCHAR(75) null,
 	enableCategorization BOOLEAN,
 	enableComments BOOLEAN,
+	enableFriendlyURLCustomization BOOLEAN,
 	enableIndexSearch BOOLEAN,
 	enableLocalization BOOLEAN,
 	enableObjectEntryDraft BOOLEAN,
 	enableObjectEntryHistory BOOLEAN,
+	enableObjectEntryVersioning BOOLEAN,
+	label STRING null,
 	modifiable BOOLEAN,
 	name VARCHAR(75) null,
 	panelAppOrder VARCHAR(75) null,
@@ -63,10 +65,24 @@ create table ObjectDefinition (
 	status INTEGER
 );
 
+create table ObjectDefinitionSetting (
+	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	objectDefinitionSettingId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	objectDefinitionId LONG,
+	name VARCHAR(75) null,
+	value VARCHAR(75) null
+);
+
 create table ObjectEntry (
 	mvccVersion LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	externalReferenceCode VARCHAR(75) null,
+	externalReferenceCode VARCHAR(1000) null,
 	objectEntryId LONG not null primary key,
 	groupId LONG,
 	companyId LONG,
@@ -75,12 +91,49 @@ create table ObjectEntry (
 	createDate DATE null,
 	modifiedDate DATE null,
 	objectDefinitionId LONG,
+	objectEntryFolderId LONG,
 	rootObjectEntryId LONG,
+	defaultLanguageId VARCHAR(75) null,
+	treePath STRING null,
+	version INTEGER,
 	lastPublishDate DATE null,
 	status INTEGER,
 	statusByUserId LONG,
 	statusByUserName VARCHAR(75) null,
 	statusDate DATE null
+);
+
+create table ObjectEntryFolder (
+	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
+	objectEntryFolderId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	parentObjectEntryFolderId LONG,
+	label STRING null,
+	name VARCHAR(75) null,
+	treePath STRING null
+);
+
+create table ObjectEntryVersion (
+	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	objectEntryVersionId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	objectDefinitionId LONG,
+	objectEntryId LONG,
+	content TEXT null,
+	version INTEGER,
+	status INTEGER
 );
 
 create table ObjectField (

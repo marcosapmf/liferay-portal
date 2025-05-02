@@ -10,6 +10,7 @@ import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.model.CPDefinitionInventory;
+import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.price.CommerceOrderItemPrice;
@@ -21,6 +22,7 @@ import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
 import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.service.CPDefinitionInventoryLocalService;
+import com.liferay.commerce.service.CommerceAddressLocalService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.util.CommerceQuantityFormatter;
 import com.liferay.expando.kernel.model.ExpandoBridge;
@@ -30,6 +32,7 @@ import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Price;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Settings;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.SkuUnitOfMeasure;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.language.LanguageResources;
@@ -83,6 +86,19 @@ public class CartItemDTOConverter
 								cartItemDTOConverterContext.getAccountId(),
 								commerceOrderItem.getCompanyId(),
 								commerceOrderItem.getCPInstanceId()));
+				setCartItems(
+					() -> {
+						CartItem[] cartItems =
+							(CartItem[])
+								cartItemDTOConverterContext.getAttribute(
+									"cartItems");
+
+						if (ArrayUtil.isEmpty(cartItems)) {
+							return null;
+						}
+
+						return cartItems;
+					});
 				setCustomFields(
 					() -> {
 						ExpandoBridge expandoBridge =
@@ -90,6 +106,8 @@ public class CartItemDTOConverter
 
 						return expandoBridge.getAttributes();
 					});
+				setDeliveryGroup(commerceOrderItem::getDeliveryGroupName);
+				setDeliveryGroupName(commerceOrderItem::getDeliveryGroupName);
 				setErrorMessages(
 					() -> _getErrorMessages(commerceOrderItem, locale));
 				setExternalReferenceCode(
@@ -113,9 +131,18 @@ public class CartItemDTOConverter
 						commerceOrderItem.getQuantity(),
 						commerceOrderItem.getUnitOfMeasureKey()));
 				setReplacedSku(commerceOrderItem::getReplacedSku);
+				setReplacedSkuExternalReferenceCode(
+					() -> _getReplacedSkuExternalReferenceCode(
+						commerceOrderItem.getReplacedCPInstanceId()));
 				setReplacedSkuId(commerceOrderItem::getReplacedCPInstanceId);
+				setRequestedDeliveryDate(
+					commerceOrderItem::getRequestedDeliveryDate);
 				setSettings(
 					() -> _getSettings(commerceOrderItem.getCPInstanceId()));
+				setShippingAddressExternalReferenceCode(
+					() -> _getShippingAddressExternalReferenceCode(
+						commerceOrderItem.getShippingAddressId()));
+				setShippingAddressId(commerceOrderItem::getShippingAddressId);
 				setSku(commerceOrderItem::getSku);
 				setSkuId(commerceOrderItem::getCPInstanceId);
 				setSkuUnitOfMeasure(
@@ -186,6 +213,27 @@ public class CartItemDTOConverter
 					() -> _cpInstanceHelper.getCPInstanceThumbnailSrc(
 						cartItemDTOConverterContext.getAccountId(),
 						commerceOrderItem.getCPInstanceId()));
+				setUnitOfMeasure(
+					() -> {
+						String unitOfMeasureKey =
+							commerceOrderItem.getUnitOfMeasureKey();
+
+						if (Validator.isNull(unitOfMeasureKey)) {
+							return null;
+						}
+
+						CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
+							_cpInstanceUnitOfMeasureLocalService.
+								fetchCPInstanceUnitOfMeasure(
+									commerceOrderItem.getCPInstanceId(),
+									unitOfMeasureKey);
+
+						if (cpInstanceUnitOfMeasure == null) {
+							return null;
+						}
+
+						return cpInstanceUnitOfMeasure.getName(locale);
+					});
 			}
 		};
 	}
@@ -195,17 +243,16 @@ public class CartItemDTOConverter
 
 		CPInstance cpInstance = commerceOrderItem.fetchCPInstance();
 
-		if (cpInstance == null) {
-			ResourceBundle resourceBundle = LanguageResources.getResourceBundle(
-				locale);
-
-			return new String[] {
-				_language.get(
-					resourceBundle, "the-product-is-no-longer-available")
-			};
+		if (cpInstance != null) {
+			return null;
 		}
 
-		return null;
+		ResourceBundle resourceBundle = LanguageResources.getResourceBundle(
+			locale);
+
+		return new String[] {
+			_language.get(resourceBundle, "the-product-is-no-longer-available")
+		};
 	}
 
 	private Price _getPrice(CommerceOrderItem commerceOrderItem, Locale locale)
@@ -296,6 +343,19 @@ public class CartItemDTOConverter
 		return price;
 	}
 
+	private String _getReplacedSkuExternalReferenceCode(
+		long replacedCPInstanceId) {
+
+		CPInstance cpInstance = _cpInstanceLocalService.fetchCPInstance(
+			replacedCPInstanceId);
+
+		if (cpInstance == null) {
+			return null;
+		}
+
+		return cpInstance.getExternalReferenceCode();
+	}
+
 	private Settings _getSettings(long cpInstanceId) {
 		Settings settings = new Settings();
 
@@ -357,6 +417,23 @@ public class CartItemDTOConverter
 
 		return settings;
 	}
+
+	private String _getShippingAddressExternalReferenceCode(
+		long shippingAddressId) {
+
+		CommerceAddress commerceAddress =
+			_commerceAddressLocalService.fetchCommerceAddress(
+				shippingAddressId);
+
+		if (commerceAddress == null) {
+			return null;
+		}
+
+		return commerceAddress.getExternalReferenceCode();
+	}
+
+	@Reference
+	private CommerceAddressLocalService _commerceAddressLocalService;
 
 	@Reference
 	private CommerceOrderItemService _commerceOrderItemService;

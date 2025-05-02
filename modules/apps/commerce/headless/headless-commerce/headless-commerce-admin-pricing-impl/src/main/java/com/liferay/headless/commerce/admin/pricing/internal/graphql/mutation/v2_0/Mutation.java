@@ -51,8 +51,6 @@ import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceModifierRe
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.TierPriceResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -258,22 +256,67 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Response createDiscountsPageExportBatch(
-			@GraphQLName("search") String search,
-			@GraphQLName("filter") String filterString,
-			@GraphQLName("sort") String sortsString,
+	public boolean deleteDiscount(@GraphQLName("id") Long id) throws Exception {
+		_applyVoidComponentServiceObjects(
+			_discountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			discountResource -> discountResource.deleteDiscount(id));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteDiscountBatch(
 			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("contentType") String contentType,
-			@GraphQLName("fieldNames") String fieldNames)
+			@GraphQLName("object") Object object)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_discountResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			discountResource -> discountResource.postDiscountsPageExportBatch(
-				search, _filterBiFunction.apply(discountResource, filterString),
-				_sortsBiFunction.apply(discountResource, sortsString),
-				callbackURL, contentType, fieldNames));
+			discountResource -> discountResource.deleteDiscountBatch(
+				callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deleteDiscountByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_discountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			discountResource ->
+				discountResource.deleteDiscountByExternalReferenceCode(
+					externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Discount patchDiscount(
+			@GraphQLName("id") Long id,
+			@GraphQLName("discount") Discount discount)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_discountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			discountResource -> discountResource.patchDiscount(id, discount));
+	}
+
+	@GraphQLField
+	public Discount patchDiscountByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("discount") Discount discount)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_discountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			discountResource ->
+				discountResource.patchDiscountByExternalReferenceCode(
+					externalReferenceCode, discount));
 	}
 
 	@GraphQLField
@@ -300,22 +343,26 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public boolean deleteDiscountByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+	public Response createDiscountsPageExportBatch(
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
 		throws Exception {
 
-		_applyVoidComponentServiceObjects(
+		return _applyComponentServiceObjects(
 			_discountResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			discountResource ->
-				discountResource.deleteDiscountByExternalReferenceCode(
-					externalReferenceCode));
-
-		return true;
+			discountResource -> discountResource.postDiscountsPageExportBatch(
+				search, _filterBiFunction.apply(discountResource, filterString),
+				_sortsBiFunction.apply(discountResource, sortsString),
+				callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
-	public Discount patchDiscountByExternalReferenceCode(
+	public Discount updateDiscountByExternalReferenceCode(
 			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("discount") Discount discount)
 		throws Exception {
@@ -324,43 +371,8 @@ public class Mutation {
 			_discountResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			discountResource ->
-				discountResource.patchDiscountByExternalReferenceCode(
+				discountResource.putDiscountByExternalReferenceCode(
 					externalReferenceCode, discount));
-	}
-
-	@GraphQLField
-	public boolean deleteDiscount(@GraphQLName("id") Long id) throws Exception {
-		_applyVoidComponentServiceObjects(
-			_discountResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			discountResource -> discountResource.deleteDiscount(id));
-
-		return true;
-	}
-
-	@GraphQLField
-	public Response deleteDiscountBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_discountResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			discountResource -> discountResource.deleteDiscountBatch(
-				callbackURL, object));
-	}
-
-	@GraphQLField
-	public Discount patchDiscount(
-			@GraphQLName("id") Long id,
-			@GraphQLName("discount") Discount discount)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_discountResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			discountResource -> discountResource.patchDiscount(id, discount));
 	}
 
 	@GraphQLField
@@ -1037,35 +1049,6 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public boolean deletePriceEntryByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_priceEntryResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceEntryResource ->
-				priceEntryResource.deletePriceEntryByExternalReferenceCode(
-					externalReferenceCode));
-
-		return true;
-	}
-
-	@GraphQLField
-	public PriceEntry patchPriceEntryByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("priceEntry") PriceEntry priceEntry)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_priceEntryResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceEntryResource ->
-				priceEntryResource.patchPriceEntryByExternalReferenceCode(
-					externalReferenceCode, priceEntry));
-	}
-
-	@GraphQLField
 	public boolean deletePriceEntry(
 			@GraphQLName("priceEntryId") Long priceEntryId)
 		throws Exception {
@@ -1093,6 +1076,21 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public boolean deletePriceEntryByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_priceEntryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceEntryResource ->
+				priceEntryResource.deletePriceEntryByExternalReferenceCode(
+					externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
 	public PriceEntry patchPriceEntry(
 			@GraphQLName("priceEntryId") Long priceEntryId,
 			@GraphQLName("priceEntry") PriceEntry priceEntry)
@@ -1103,6 +1101,20 @@ public class Mutation {
 			this::_populateResourceContext,
 			priceEntryResource -> priceEntryResource.patchPriceEntry(
 				priceEntryId, priceEntry));
+	}
+
+	@GraphQLField
+	public PriceEntry patchPriceEntryByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("priceEntry") PriceEntry priceEntry)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_priceEntryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceEntryResource ->
+				priceEntryResource.patchPriceEntryByExternalReferenceCode(
+					externalReferenceCode, priceEntry));
 	}
 
 	@GraphQLField
@@ -1148,24 +1160,70 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Response createPriceListsPageExportBatch(
-			@GraphQLName("search") String search,
-			@GraphQLName("filter") String filterString,
-			@GraphQLName("sort") String sortsString,
+	public boolean deletePriceList(@GraphQLName("id") Long id)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_priceListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceListResource -> priceListResource.deletePriceList(id));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deletePriceListBatch(
 			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("contentType") String contentType,
-			@GraphQLName("fieldNames") String fieldNames)
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_priceListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceListResource -> priceListResource.deletePriceListBatch(
+				callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deletePriceListByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_priceListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceListResource ->
+				priceListResource.deletePriceListByExternalReferenceCode(
+					externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public PriceList patchPriceList(
+			@GraphQLName("id") Long id,
+			@GraphQLName("priceList") PriceList priceList)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_priceListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceListResource -> priceListResource.patchPriceList(
+				id, priceList));
+	}
+
+	@GraphQLField
+	public PriceList patchPriceListByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("priceList") PriceList priceList)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_priceListResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			priceListResource ->
-				priceListResource.postPriceListsPageExportBatch(
-					search,
-					_filterBiFunction.apply(priceListResource, filterString),
-					_sortsBiFunction.apply(priceListResource, sortsString),
-					callbackURL, contentType, fieldNames));
+				priceListResource.patchPriceListByExternalReferenceCode(
+					externalReferenceCode, priceList));
 	}
 
 	@GraphQLField
@@ -1193,22 +1251,28 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public boolean deletePriceListByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+	public Response createPriceListsPageExportBatch(
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
 		throws Exception {
 
-		_applyVoidComponentServiceObjects(
+		return _applyComponentServiceObjects(
 			_priceListResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			priceListResource ->
-				priceListResource.deletePriceListByExternalReferenceCode(
-					externalReferenceCode));
-
-		return true;
+				priceListResource.postPriceListsPageExportBatch(
+					search,
+					_filterBiFunction.apply(priceListResource, filterString),
+					_sortsBiFunction.apply(priceListResource, sortsString),
+					callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
-	public PriceList patchPriceListByExternalReferenceCode(
+	public PriceList updatePriceListByExternalReferenceCode(
 			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("priceList") PriceList priceList)
 		throws Exception {
@@ -1217,46 +1281,8 @@ public class Mutation {
 			_priceListResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			priceListResource ->
-				priceListResource.patchPriceListByExternalReferenceCode(
+				priceListResource.putPriceListByExternalReferenceCode(
 					externalReferenceCode, priceList));
-	}
-
-	@GraphQLField
-	public boolean deletePriceList(@GraphQLName("id") Long id)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_priceListResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceListResource -> priceListResource.deletePriceList(id));
-
-		return true;
-	}
-
-	@GraphQLField
-	public Response deletePriceListBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_priceListResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceListResource -> priceListResource.deletePriceListBatch(
-				callbackURL, object));
-	}
-
-	@GraphQLField
-	public PriceList patchPriceList(
-			@GraphQLName("id") Long id,
-			@GraphQLName("priceList") PriceList priceList)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_priceListResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceListResource -> priceListResource.patchPriceList(
-				id, priceList));
 	}
 
 	@GraphQLField
@@ -1642,6 +1668,76 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public boolean deletePriceModifier(@GraphQLName("id") Long id)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_priceModifierResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceModifierResource -> priceModifierResource.deletePriceModifier(
+				id));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deletePriceModifierBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_priceModifierResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceModifierResource ->
+				priceModifierResource.deletePriceModifierBatch(
+					callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deletePriceModifierByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_priceModifierResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceModifierResource ->
+				priceModifierResource.
+					deletePriceModifierByExternalReferenceCode(
+						externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response patchPriceModifier(
+			@GraphQLName("id") Long id,
+			@GraphQLName("priceModifier") PriceModifier priceModifier)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_priceModifierResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceModifierResource -> priceModifierResource.patchPriceModifier(
+				id, priceModifier));
+	}
+
+	@GraphQLField
+	public Response patchPriceModifierByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("priceModifier") PriceModifier priceModifier)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_priceModifierResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceModifierResource ->
+				priceModifierResource.patchPriceModifierByExternalReferenceCode(
+					externalReferenceCode, priceModifier));
+	}
+
+	@GraphQLField
 	public PriceModifier createPriceListByExternalReferenceCodePriceModifier(
 			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("priceModifier") PriceModifier priceModifier)
@@ -1682,76 +1778,6 @@ public class Mutation {
 			priceModifierResource ->
 				priceModifierResource.postPriceListIdPriceModifierBatch(
 					callbackURL, object));
-	}
-
-	@GraphQLField
-	public boolean deletePriceModifierByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_priceModifierResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceModifierResource ->
-				priceModifierResource.
-					deletePriceModifierByExternalReferenceCode(
-						externalReferenceCode));
-
-		return true;
-	}
-
-	@GraphQLField
-	public Response patchPriceModifierByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("priceModifier") PriceModifier priceModifier)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_priceModifierResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceModifierResource ->
-				priceModifierResource.patchPriceModifierByExternalReferenceCode(
-					externalReferenceCode, priceModifier));
-	}
-
-	@GraphQLField
-	public boolean deletePriceModifier(@GraphQLName("id") Long id)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_priceModifierResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceModifierResource -> priceModifierResource.deletePriceModifier(
-				id));
-
-		return true;
-	}
-
-	@GraphQLField
-	public Response deletePriceModifierBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_priceModifierResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceModifierResource ->
-				priceModifierResource.deletePriceModifierBatch(
-					callbackURL, object));
-	}
-
-	@GraphQLField
-	public Response patchPriceModifier(
-			@GraphQLName("id") Long id,
-			@GraphQLName("priceModifier") PriceModifier priceModifier)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_priceModifierResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceModifierResource -> priceModifierResource.patchPriceModifier(
-				id, priceModifier));
 	}
 
 	@GraphQLField
@@ -1993,6 +2019,73 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public boolean deleteTierPrice(@GraphQLName("id") Long id)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_tierPriceResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			tierPriceResource -> tierPriceResource.deleteTierPrice(id));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteTierPriceBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_tierPriceResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			tierPriceResource -> tierPriceResource.deleteTierPriceBatch(
+				callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deleteTierPriceByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_tierPriceResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			tierPriceResource ->
+				tierPriceResource.deleteTierPriceByExternalReferenceCode(
+					externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response patchTierPrice(
+			@GraphQLName("id") Long id,
+			@GraphQLName("tierPrice") TierPrice tierPrice)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_tierPriceResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			tierPriceResource -> tierPriceResource.patchTierPrice(
+				id, tierPrice));
+	}
+
+	@GraphQLField
+	public Response patchTierPriceByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("tierPrice") TierPrice tierPrice)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_tierPriceResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			tierPriceResource ->
+				tierPriceResource.patchTierPriceByExternalReferenceCode(
+					externalReferenceCode, tierPrice));
+	}
+
+	@GraphQLField
 	public TierPrice createPriceEntryByExternalReferenceCodeTierPrice(
 			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("tierPrice") TierPrice tierPrice)
@@ -2033,73 +2126,6 @@ public class Mutation {
 			tierPriceResource ->
 				tierPriceResource.postPriceEntryIdTierPriceBatch(
 					priceEntryId, callbackURL, object));
-	}
-
-	@GraphQLField
-	public boolean deleteTierPriceByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_tierPriceResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			tierPriceResource ->
-				tierPriceResource.deleteTierPriceByExternalReferenceCode(
-					externalReferenceCode));
-
-		return true;
-	}
-
-	@GraphQLField
-	public Response patchTierPriceByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("tierPrice") TierPrice tierPrice)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_tierPriceResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			tierPriceResource ->
-				tierPriceResource.patchTierPriceByExternalReferenceCode(
-					externalReferenceCode, tierPrice));
-	}
-
-	@GraphQLField
-	public boolean deleteTierPrice(@GraphQLName("id") Long id)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_tierPriceResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			tierPriceResource -> tierPriceResource.deleteTierPrice(id));
-
-		return true;
-	}
-
-	@GraphQLField
-	public Response deleteTierPriceBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_tierPriceResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			tierPriceResource -> tierPriceResource.deleteTierPriceBatch(
-				callbackURL, object));
-	}
-
-	@GraphQLField
-	public Response patchTierPrice(
-			@GraphQLName("id") Long id,
-			@GraphQLName("tierPrice") TierPrice tierPrice)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_tierPriceResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			tierPriceResource -> tierPriceResource.patchTierPrice(
-				id, tierPrice));
 	}
 
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R
@@ -2660,12 +2686,15 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

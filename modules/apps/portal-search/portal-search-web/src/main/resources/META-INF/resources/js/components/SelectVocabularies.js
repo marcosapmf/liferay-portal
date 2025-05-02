@@ -12,7 +12,7 @@ import ClayLoadingIndicator from '@clayui/loading-indicator';
 import getCN from 'classnames';
 import {LearnMessage, LearnResourcesContext} from 'frontend-js-components-web';
 import {fetch} from 'frontend-js-web';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
 const CONFIGURATION = {
 	headers: new Headers({
@@ -34,8 +34,8 @@ const SELECT_OPTIONS = {
  * @param {string} idsString The list of IDs as a string
  * @return {Array} Array of IDs as strings
  */
-const convertToIDArray = (idsString) =>
-	idsString.split(',').filter((id) => id !== '');
+const transformCommaStringToArray = (commaString) =>
+	commaString.split(',').filter((item) => item !== '');
 
 function SiteRow({name, onSelect, vocabularies}) {
 	const _handleSelect =
@@ -118,20 +118,20 @@ function VocabularyTree({
 	const _handleSelect = (list, add = true) => {
 		const newList = new Set(selectedKeys);
 
-		list.forEach(({id}) => {
+		list.forEach(({externalReferenceCode}) => {
 			if (add) {
-				newList.add(id);
+				newList.add(externalReferenceCode);
 			}
 			else {
-				newList.delete(id);
+				newList.delete(externalReferenceCode);
 			}
 		});
 
 		setSelectedKeys(newList);
 	};
 
-	const _handleToggle = (id) => {
-		_handleSelect([{id}], !selectedKeys.has(id));
+	const _handleToggle = (item) => {
+		_handleSelect([item], !selectedKeys.has(item.externalReferenceCode));
 	};
 
 	if (loading || vocabularyTree === null) {
@@ -149,7 +149,7 @@ function VocabularyTree({
 			showExpanderOnHover={false}
 		>
 			{(item) => (
-				<TreeView.Item key={item.id}>
+				<TreeView.Item key={item.externalReferenceCode}>
 					<div className="treeview-link-site-row">
 						<SiteRow
 							name={
@@ -164,14 +164,16 @@ function VocabularyTree({
 
 					{item.children?.length ? (
 						<TreeView.Group items={item.children}>
-							{({id, name}) => (
+							{({externalReferenceCode, name}) => (
 								<TreeView.Item
-									key={id}
+									key={externalReferenceCode}
 									style={{cursor: 'unset'}}
 								>
 									<ClayCheckbox
-										checked={selectedKeys.has(id)}
-										onChange={() => _handleToggle(id)}
+										checked={selectedKeys.has(
+											externalReferenceCode
+										)}
+										onChange={() => _handleToggle(item)}
 									/>
 
 									{name}
@@ -198,28 +200,34 @@ function VocabularyTree({
 }
 
 function SelectVocabularies({
-	initialSelectedVocabularyIds = SELECT_OPTIONS.ALL,
+	initialSelectedVocabularyExternalReferenceCodes = SELECT_OPTIONS.ALL,
 	namespace = '',
-	vocabularyIdsInputName = '',
+	vocabularyExternalReferenceCodesInputName = '',
 }) {
-	const initialSelectedIdsRef = useRef(
-		new Set(
-			initialSelectedVocabularyIds === SELECT_OPTIONS.ALL
+	const initialSelectedVocabularyExternalReferenceCodesSet = useMemo(() => {
+		return new Set(
+			initialSelectedVocabularyExternalReferenceCodes ===
+			SELECT_OPTIONS.ALL
 				? []
-				: convertToIDArray(initialSelectedVocabularyIds)
-		)
-	);
+				: transformCommaStringToArray(
+						initialSelectedVocabularyExternalReferenceCodes
+					)
+		);
+	}, [initialSelectedVocabularyExternalReferenceCodes]);
 
 	const [selection, setSelection] = useState(
-		initialSelectedVocabularyIds === SELECT_OPTIONS.ALL
+		initialSelectedVocabularyExternalReferenceCodes === SELECT_OPTIONS.ALL
 			? SELECT_OPTIONS.ALL
 			: SELECT_OPTIONS.SELECT
 	);
 	const [selectedKeys, setSelectedKeys] = useState(
-		initialSelectedIdsRef.current
+		initialSelectedVocabularyExternalReferenceCodesSet
 	);
+	const [
+		unavailableVocabularyExternalReferenceCodes,
+		setUnavailableVocabularyExternalReferenceCodes,
+	] = useState([]);
 	const [vocabularyTree, setVocabularyTree] = useState(null);
-	const [vocabularyTreeIds, setVocabularyTreeIds] = useState([]);
 	const [vocabularyTreeLoading, setVocabularyTreeLoading] = useState(false);
 
 	useEffect(() => {
@@ -231,43 +239,41 @@ function SelectVocabularies({
 	const _handleFetchVocabularyTree = () => {
 		setVocabularyTreeLoading(true);
 
-		fetch(
-			'/o/headless-admin-user/v1.0/my-user-account/sites?page=0&pageSize=0',
-			CONFIGURATION
-		)
+		fetch(`/api/jsonws/invoke`, {
+			body: new URLSearchParams({
+				cmd: JSON.stringify({
+					'/group/get-user-sites-groups': {},
+				}),
+				p_auth: Liferay.authToken,
+			}),
+			headers: new Headers({
+				'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
+				'Content-Type':
+					'application/x-www-form-urlencoded;charset=UTF-8',
+			}),
+			method: 'POST',
+		})
 			.then((response) => response.json())
-			.then(({items}) => {
+			.then((items) => {
 
-				// Check for presence of Global Site. If unavailable, add to the list.
+				// Filter out results that are not a site.
 
-				const itemsWithGlobalSite = items.some(
-					({id}) =>
-						id.toString() ===
-						Liferay.ThemeDisplay.getCompanyGroupId().toString()
-				)
-					? items
-					: [
-							{
-								descriptiveName: Liferay.Language.get('global'),
-								id: Liferay.ThemeDisplay.getCompanyGroupId(),
-							},
-							...items,
-						];
+				const itemsFilteredForSites = items.filter(({site}) => !!site);
 
 				Promise.all(
-					itemsWithGlobalSite.map((site) =>
+					itemsFilteredForSites.map((site) =>
 						fetch(
-							`/o/headless-admin-taxonomy/v1.0/sites/${site.id}/taxonomy-vocabularies?page=0&pageSize=0`,
+							`/o/headless-admin-taxonomy/v1.0/sites/${site.groupId}/taxonomy-vocabularies?page=0&pageSize=0`,
 							CONFIGURATION
 						).then((response) => response.json())
 					)
 				)
 					.then((responses) => {
-						const ids = [];
+						const fetchedExternalReferenceCodes = [];
 
 						setVocabularyTree(
 							responses.map((response, index) => ({
-								...itemsWithGlobalSite[index],
+								...itemsFilteredForSites[index],
 								children: (response?.items || [])
 									.filter(({siteId}) => {
 
@@ -275,7 +281,8 @@ function SelectVocabularies({
 										// non-global sites.
 
 										const isGlobalSite =
-											itemsWithGlobalSite[index].id ===
+											itemsFilteredForSites[index]
+												.groupId ===
 											Liferay.ThemeDisplay.getCompanyGroupId();
 
 										if (
@@ -288,23 +295,49 @@ function SelectVocabularies({
 
 										return true;
 									})
-									.map(({id, name}) => {
-										ids.push(id.toString()); // Collect IDs for _isDisplayInfoSelectedVocabulariesHidden
+									.map((item) => {
+										const externalReferenceCode = `${itemsFilteredForSites[index].externalReferenceCode}&&${item.externalReferenceCode}`;
+
+										fetchedExternalReferenceCodes.push(
+											externalReferenceCode
+										); // Collect ExternalReferenceCodes to allow deselection of unavailable vocabularies
 
 										return {
-											id: id.toString(),
-											name,
+											externalReferenceCode,
+											id: item.id.toString(),
+											name: item.name,
 										};
 									}),
 							}))
 						);
 
-						setVocabularyTreeIds(ids);
+						setUnavailableVocabularyExternalReferenceCodes(
+							Array.from(
+								initialSelectedVocabularyExternalReferenceCodesSet
+							).filter(
+								(initialSelectedExternalReferenceCode) =>
+									!fetchedExternalReferenceCodes.includes(
+										initialSelectedExternalReferenceCode
+									)
+							)
+						);
 					})
 					.catch(() => setVocabularyTree([]));
 			})
 			.catch(() => setVocabularyTree([]))
 			.finally(() => setVocabularyTreeLoading(false));
+	};
+
+	const _handleDeselectUnavailableVocabularyExternalReferenceCodes = () => {
+		const newList = new Set(selectedKeys);
+
+		unavailableVocabularyExternalReferenceCodes.forEach(
+			(externalReferenceCode) => {
+				newList.delete(externalReferenceCode);
+			}
+		);
+
+		setSelectedKeys(newList);
 	};
 
 	const _handleSelectionChange = (value) => {
@@ -315,9 +348,9 @@ function SelectVocabularies({
 		}
 	};
 
-	const _isDisplayInfoSelectedVocabulariesHidden = () =>
-		Array.from(initialSelectedIdsRef.current).some(
-			(id) => !vocabularyTreeIds.includes(id)
+	const _isUnavailableVocabularyExternalReferenceCodesSelected = () =>
+		unavailableVocabularyExternalReferenceCodes.some(
+			(externalReferenceCode) => selectedKeys.has(externalReferenceCode)
 		);
 
 	return (
@@ -326,13 +359,15 @@ function SelectVocabularies({
 
 			<input
 				hidden
-				id={`${namespace}${vocabularyIdsInputName}`}
-				name={`${namespace}${vocabularyIdsInputName}`}
+				id={`${namespace}${vocabularyExternalReferenceCodesInputName}`}
+				name={`${namespace}${vocabularyExternalReferenceCodesInputName}`}
 				readOnly
 				value={
 					selection === SELECT_OPTIONS.ALL
 						? SELECT_OPTIONS.ALL
-						: Array.from(selectedKeys).toString()
+						: Array.from(selectedKeys)
+								.filter((item) => item.includes('&&')) // Filter out site headers ClayTreeView may select
+								.toString()
 				}
 			/>
 
@@ -363,22 +398,49 @@ function SelectVocabularies({
 			</ClayRadioGroup>
 
 			{selection === SELECT_OPTIONS.SELECT &&
-				_isDisplayInfoSelectedVocabulariesHidden() && (
-					<ClayAlert
-						displayType="info"
-						style={{opacity: 1}}
-						title={`${Liferay.Language.get('info')}:`}
-					>
-						{Liferay.Language.get(
-							'select-vocabularies-configuration-view-permission-alert'
-						)}
+				!!unavailableVocabularyExternalReferenceCodes.length && (
+					<>
+						{_isUnavailableVocabularyExternalReferenceCodesSelected() ? (
+							<ClayAlert
+								displayType="info"
+								style={{opacity: 1}}
+								title={`${Liferay.Language.get('info')}:`}
+							>
+								{Liferay.Language.get(
+									'select-vocabularies-configuration-alert'
+								)}
 
-						<LearnMessage
-							className="c-ml-1"
-							resource="portal-search-web"
-							resourceKey="tag-and-category-facet"
-						/>
-					</ClayAlert>
+								<LearnMessage
+									className="c-ml-1"
+									resource="portal-search-web"
+									resourceKey="tag-and-category-facet"
+								/>
+
+								<ClayAlert.Footer>
+									<ClayButton
+										alert
+										onClick={
+											_handleDeselectUnavailableVocabularyExternalReferenceCodes
+										}
+									>
+										{Liferay.Language.get(
+											'remove-unavailable-vocabularies'
+										)}
+									</ClayButton>
+								</ClayAlert.Footer>
+							</ClayAlert>
+						) : (
+							<ClayAlert
+								displayType="success"
+								style={{opacity: 1}}
+								title={`${Liferay.Language.get('success')}:`}
+							>
+								{Liferay.Language.get(
+									'unavailable-vocabularies-removed-from-selection'
+								)}
+							</ClayAlert>
+						)}
+					</>
 				)}
 
 			{selection === SELECT_OPTIONS.SELECT && (
@@ -394,17 +456,21 @@ function SelectVocabularies({
 }
 
 export default function ({
-	initialSelectedVocabularyIds,
+	initialSelectedVocabularyExternalReferenceCodes,
 	learnResources,
 	namespace,
-	vocabularyIdsInputName,
+	vocabularyExternalReferenceCodesInputName,
 }) {
 	return (
 		<LearnResourcesContext.Provider value={learnResources}>
 			<SelectVocabularies
-				initialSelectedVocabularyIds={initialSelectedVocabularyIds}
+				initialSelectedVocabularyExternalReferenceCodes={
+					initialSelectedVocabularyExternalReferenceCodes
+				}
 				namespace={namespace}
-				vocabularyIdsInputName={vocabularyIdsInputName}
+				vocabularyExternalReferenceCodesInputName={
+					vocabularyExternalReferenceCodesInputName
+				}
 			/>
 		</LearnResourcesContext.Provider>
 	);

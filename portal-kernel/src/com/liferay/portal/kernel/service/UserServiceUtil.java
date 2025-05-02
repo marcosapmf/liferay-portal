@@ -744,11 +744,11 @@ public class UserServiceUtil {
 	}
 
 	public static User fetchUserByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		return getService().fetchUserByExternalReferenceCode(
-			companyId, externalReferenceCode);
+			externalReferenceCode, companyId);
 	}
 
 	public static List<User> getCompanyUsers(long companyId, int start, int end)
@@ -977,19 +977,12 @@ public class UserServiceUtil {
 		return getService().getUserByEmailAddress(companyId, emailAddress);
 	}
 
-	/**
-	 * Returns the user with the external reference code.
-	 *
-	 * @param companyId the primary key of the user's company
-	 * @param externalReferenceCode the user's external reference code
-	 * @return the user with the external reference code
-	 */
 	public static User getUserByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		return getService().getUserByExternalReferenceCode(
-			companyId, externalReferenceCode);
+			externalReferenceCode, companyId);
 	}
 
 	/**
@@ -1479,21 +1472,6 @@ public class UserServiceUtil {
 		throws PortalException {
 
 		return getService().updateLockoutById(userId, lockout);
-	}
-
-	/**
-	 * Updates the user's OpenID.
-	 *
-	 * @param userId the primary key of the user
-	 * @param openId the new OpenID
-	 * @return the user
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static User updateOpenId(long userId, String openId)
-		throws PortalException {
-
-		return getService().updateOpenId(userId, openId);
 	}
 
 	/**

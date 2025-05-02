@@ -644,7 +644,6 @@ public class CalendarBookingPersistenceImpl
 		"(calendarBooking.uuid IS NULL OR calendarBooking.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the calendar booking where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchBookingException</code> if it could not be found.
@@ -829,68 +828,13 @@ public class CalendarBookingPersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					CalendarBooking.class)) {
+		CalendarBooking calendarBooking = fetchByUUID_G(uuid, groupId);
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUUID_G;
-
-			Object[] finderArgs = new Object[] {uuid, groupId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_CALENDARBOOKING_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (calendarBooking == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -3606,7 +3550,6 @@ public class CalendarBookingPersistenceImpl
 			"calendarBooking.recurringCalendarBookingId = ?";
 
 	private FinderPath _finderPathFetchByC_P;
-	private FinderPath _finderPathCountByC_P;
 
 	/**
 	 * Returns the calendar booking where calendarId = &#63; and parentCalendarBookingId = &#63; or throws a <code>NoSuchBookingException</code> if it could not be found.
@@ -3785,57 +3728,14 @@ public class CalendarBookingPersistenceImpl
 	 */
 	@Override
 	public int countByC_P(long calendarId, long parentCalendarBookingId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					CalendarBooking.class)) {
+		CalendarBooking calendarBooking = fetchByC_P(
+			calendarId, parentCalendarBookingId);
 
-			FinderPath finderPath = _finderPathCountByC_P;
-
-			Object[] finderArgs = new Object[] {
-				calendarId, parentCalendarBookingId
-			};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_CALENDARBOOKING_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_P_CALENDARID_2);
-
-				sb.append(_FINDER_COLUMN_C_P_PARENTCALENDARBOOKINGID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(calendarId);
-
-					queryPos.add(parentCalendarBookingId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (calendarBooking == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_C_P_CALENDARID_2 =
@@ -3845,7 +3745,6 @@ public class CalendarBookingPersistenceImpl
 		"calendarBooking.parentCalendarBookingId = ?";
 
 	private FinderPath _finderPathFetchByC_V;
-	private FinderPath _finderPathCountByC_V;
 
 	/**
 	 * Returns the calendar booking where calendarId = &#63; and vEventUid = &#63; or throws a <code>NoSuchBookingException</code> if it could not be found.
@@ -4031,68 +3930,13 @@ public class CalendarBookingPersistenceImpl
 	 */
 	@Override
 	public int countByC_V(long calendarId, String vEventUid) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					CalendarBooking.class)) {
+		CalendarBooking calendarBooking = fetchByC_V(calendarId, vEventUid);
 
-			vEventUid = Objects.toString(vEventUid, "");
-
-			FinderPath finderPath = _finderPathCountByC_V;
-
-			Object[] finderArgs = new Object[] {calendarId, vEventUid};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_CALENDARBOOKING_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_V_CALENDARID_2);
-
-				boolean bindVEventUid = false;
-
-				if (vEventUid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_C_V_VEVENTUID_3);
-				}
-				else {
-					bindVEventUid = true;
-
-					sb.append(_FINDER_COLUMN_C_V_VEVENTUID_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(calendarId);
-
-					if (bindVEventUid) {
-						queryPos.add(vEventUid);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (calendarBooking == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_C_V_CALENDARID_2 =
@@ -5645,8 +5489,6 @@ public class CalendarBookingPersistenceImpl
 			};
 
 			finderCache.putResult(
-				_finderPathCountByUUID_G, args, Long.valueOf(1));
-			finderCache.putResult(
 				_finderPathFetchByUUID_G, args, calendarBookingModelImpl);
 
 			args = new Object[] {
@@ -5654,7 +5496,6 @@ public class CalendarBookingPersistenceImpl
 				calendarBookingModelImpl.getParentCalendarBookingId()
 			};
 
-			finderCache.putResult(_finderPathCountByC_P, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByC_P, args, calendarBookingModelImpl);
 
@@ -5663,7 +5504,6 @@ public class CalendarBookingPersistenceImpl
 				calendarBookingModelImpl.getVEventUid()
 			};
 
-			finderCache.putResult(_finderPathCountByC_V, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByC_V, args, calendarBookingModelImpl);
 		}
@@ -6362,26 +6202,26 @@ public class CalendarBookingPersistenceImpl
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("calendarId");
-		ctStrictColumnNames.add("calendarResourceId");
-		ctStrictColumnNames.add("parentCalendarBookingId");
-		ctStrictColumnNames.add("recurringCalendarBookingId");
-		ctStrictColumnNames.add("vEventUid");
-		ctStrictColumnNames.add("title");
-		ctStrictColumnNames.add("description");
-		ctStrictColumnNames.add("location");
-		ctStrictColumnNames.add("startTime");
-		ctStrictColumnNames.add("endTime");
-		ctStrictColumnNames.add("allDay");
-		ctStrictColumnNames.add("recurrence");
-		ctStrictColumnNames.add("firstReminder");
-		ctStrictColumnNames.add("firstReminderType");
-		ctStrictColumnNames.add("secondReminder");
-		ctStrictColumnNames.add("secondReminderType");
-		ctStrictColumnNames.add("lastPublishDate");
-		ctStrictColumnNames.add("status");
-		ctStrictColumnNames.add("statusByUserId");
-		ctStrictColumnNames.add("statusByUserName");
+		ctMergeColumnNames.add("calendarId");
+		ctMergeColumnNames.add("calendarResourceId");
+		ctMergeColumnNames.add("parentCalendarBookingId");
+		ctMergeColumnNames.add("recurringCalendarBookingId");
+		ctMergeColumnNames.add("vEventUid");
+		ctMergeColumnNames.add("title");
+		ctMergeColumnNames.add("description");
+		ctMergeColumnNames.add("location");
+		ctMergeColumnNames.add("startTime");
+		ctMergeColumnNames.add("endTime");
+		ctMergeColumnNames.add("allDay");
+		ctMergeColumnNames.add("recurrence");
+		ctMergeColumnNames.add("firstReminder");
+		ctMergeColumnNames.add("firstReminderType");
+		ctMergeColumnNames.add("secondReminder");
+		ctMergeColumnNames.add("secondReminderType");
+		ctMergeColumnNames.add("lastPublishDate");
+		ctMergeColumnNames.add("status");
+		ctMergeColumnNames.add("statusByUserId");
+		ctMergeColumnNames.add("statusByUserName");
 		ctMergeColumnNames.add("statusDate");
 
 		_ctColumnNamesMap.put(
@@ -6445,11 +6285,6 @@ public class CalendarBookingPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
-
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
@@ -6556,20 +6391,10 @@ public class CalendarBookingPersistenceImpl
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"calendarId", "parentCalendarBookingId"}, true);
 
-		_finderPathCountByC_P = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_P",
-			new String[] {Long.class.getName(), Long.class.getName()},
-			new String[] {"calendarId", "parentCalendarBookingId"}, false);
-
 		_finderPathFetchByC_V = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_V",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"calendarId", "vEventUid"}, true);
-
-		_finderPathCountByC_V = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_V",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"calendarId", "vEventUid"}, false);
 
 		_finderPathWithPaginationFindByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_S",

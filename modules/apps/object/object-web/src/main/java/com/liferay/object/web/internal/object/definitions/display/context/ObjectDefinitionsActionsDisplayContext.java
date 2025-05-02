@@ -19,7 +19,10 @@ import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectWebKeys;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.object.web.internal.object.definitions.display.context.util.ObjectCodeEditorUtil;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
@@ -56,16 +59,21 @@ public class ObjectDefinitionsActionsDisplayContext
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ModelResourcePermission<ObjectDefinition>
 			objectDefinitionModelResourcePermission,
+		ObjectFieldLocalService objectFieldLocalService,
+		ObjectFolderLocalService objectFolderLocalService,
 		ScriptManagementConfigurationHelper
 			scriptManagementConfigurationHelper) {
 
-		super(httpServletRequest, objectDefinitionModelResourcePermission);
+		super(
+			httpServletRequest, objectDefinitionModelResourcePermission,
+			objectFolderLocalService);
 
 		_jsonFactory = jsonFactory;
 		_notificationTemplateLocalService = notificationTemplateLocalService;
 		_objectActionExecutorRegistry = objectActionExecutorRegistry;
 		_objectActionTriggerRegistry = objectActionTriggerRegistry;
 		_objectDefinitionLocalService = objectDefinitionLocalService;
+		_objectFieldLocalService = objectFieldLocalService;
 		_scriptManagementConfigurationHelper =
 			scriptManagementConfigurationHelper;
 	}
@@ -118,9 +126,11 @@ public class ObjectDefinitionsActionsDisplayContext
 			ObjectWebKeys.OBJECT_ACTION);
 	}
 
-	public List<Map<String, Object>> getObjectActionCodeEditorElements() {
+	public List<Map<String, Object>> getObjectActionCodeEditorElements()
+		throws PortalException {
+
 		return ObjectCodeEditorUtil.getCodeEditorElements(
-			true, true, objectRequestHelper.getLocale(),
+			true, true, false, objectRequestHelper.getLocale(),
 			getObjectDefinitionId(),
 			objectField -> !objectField.compareBusinessType(
 				ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION));
@@ -279,6 +289,11 @@ public class ObjectDefinitionsActionsDisplayContext
 		).buildString();
 	}
 
+	public List<ObjectField> getObjectFields() {
+		return _objectFieldLocalService.getObjectFields(
+			getObjectDefinitionId());
+	}
+
 	public String getScriptManagementConfigurationPortletURL()
 		throws PortalException {
 
@@ -330,6 +345,7 @@ public class ObjectDefinitionsActionsDisplayContext
 	private final ObjectActionExecutorRegistry _objectActionExecutorRegistry;
 	private final ObjectActionTriggerRegistry _objectActionTriggerRegistry;
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
+	private final ObjectFieldLocalService _objectFieldLocalService;
 	private final ScriptManagementConfigurationHelper
 		_scriptManagementConfigurationHelper;
 

@@ -3,12 +3,16 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Depot";
+	property testray.main.component.name = "Asset Libraries";
 
 	setUp {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -81,7 +85,7 @@ definition {
 			depotName = "Test Depot Name",
 			imageFileName = "Document_2.jpg");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Navigator.openSiteURL(siteName = "Site Name");
 
@@ -128,7 +132,7 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
 
@@ -191,8 +195,6 @@ definition {
 			menuItem = "Edit Web Content",
 			webContentTitle = "Web Content Title");
 
-		Panel.expandPanel(panel = "Friendly URL");
-
 		AssertTextEquals(
 			inputFieldId = "friendlyURL",
 			locator1 = "TextInput#INPUT_ID",
@@ -220,7 +222,7 @@ definition {
 
 		WebContent.editFriendlyURL(webContentFriendlyURL = "friendlyUrledit");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		DepotNavigator.switchStagingStatus(stagingItem = "Publish to Live");
 
@@ -233,8 +235,6 @@ definition {
 		WebContentDisplayPortletNavigator.gotoEdit(
 			menuItem = "Edit Web Content",
 			webContentTitle = "Web Content Title");
-
-		Panel.expandPanel(panel = "Friendly URL");
 
 		AssertTextEquals(
 			inputFieldId = "friendlyURL",
@@ -301,7 +301,7 @@ definition {
 			depotName = "Test Depot Name",
 			imageFileName = "Document_2.jpg");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Navigator.openSiteURL(siteName = "Site Name");
 
@@ -408,7 +408,7 @@ definition {
 			webContentText = "Text",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Navigator.openSiteURL(siteName = "Site Name");
 
@@ -493,7 +493,7 @@ definition {
 			webContentText = "Text",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Navigator.openSiteURL(siteName = "Site Name");
 
@@ -556,7 +556,7 @@ definition {
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		DepotNavigator.switchStagingStatus(stagingItem = "Publish to Live");
 
@@ -728,7 +728,7 @@ definition {
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		DepotNavigator.openDepotWebContentAdminStaging(depotName = "Test Embedded Video Depot Name");
 

@@ -125,7 +125,7 @@
 			"unique": false
 		},
 		{
-			"DBType": "String",
+			"DBType": "Integer",
 			"businessType": "Text",
 			"indexed": false,
 			"indexedAsKeyword": false,
@@ -142,12 +142,13 @@
 			"required": false,
 			"state": false,
 			"system": true,
-			"type": "String",
+			"type": "Integer",
 			"unique": false
 		},
 		{
 			"DBType": "String",
 			"businessType": "Text",
+			"externalReferenceCode": "TESTFIELD",
 			"indexed": true,
 			"indexedAsKeyword": false,
 			"indexedLanguageId": "en_US",

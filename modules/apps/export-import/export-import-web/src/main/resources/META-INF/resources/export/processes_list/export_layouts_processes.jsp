@@ -113,13 +113,11 @@ PortletURL portletURL = exportLayoutsProcessesDisplayContext.getPortletURL();
 								}
 								%>
 
-								<div class="active progress">
-									<div class="progress-bar" style="width: <%= percentage %>%;">
-										<c:if test="<%= allProgressBarCountersTotal > 0 %>">
-											<%= percentage + StringPool.PERCENT %>
-										</c:if>
-									</div>
-								</div>
+								<clay:progressbar
+									maxValue="<%= 100 %>"
+									minValue="<%= 0 %>"
+									value="<%= percentage %>"
+								/>
 
 								<%
 								String stagedModelName = (String)backgroundTaskStatus.getAttribute("stagedModelName");
@@ -145,9 +143,11 @@ PortletURL portletURL = exportLayoutsProcessesDisplayContext.getPortletURL();
 
 						<c:if test="<%= Validator.isNotNull(backgroundTask.getStatusMessage()) %>">
 							<span class="background-task-status-row">
-								<a class="details-link" href="javascript:void(0);" onclick="<portlet:namespace />viewBackgroundTaskDetails(<%= backgroundTask.getBackgroundTaskId() %>);">
-									<liferay-ui:message key="see-more-details" />
-								</a>
+								<liferay-ui:csp>
+									<a class="details-link" href="javascript:void(0);" onclick="<portlet:namespace />viewBackgroundTaskDetails(<%= backgroundTask.getBackgroundTaskId() %>);">
+										<liferay-ui:message key="see-more-details" />
+									</a>
+								</liferay-ui:csp>
 							</span>
 
 							<div class="background-task-status-message hide" id="<portlet:namespace />backgroundTaskStatusMessage<%= backgroundTask.getBackgroundTaskId() %>">

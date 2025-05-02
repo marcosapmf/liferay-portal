@@ -27,7 +27,7 @@ interface ModalAddObjectField {
 	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionName?: string;
 	onAfterSubmit: (value: ObjectField) => void;
-	setVisibility: (value: boolean) => void;
+	setVisible: (value: boolean) => void;
 }
 
 export function ModalAddObjectField({
@@ -35,7 +35,7 @@ export function ModalAddObjectField({
 	creationLanguageId,
 	objectDefinitionExternalReferenceCode,
 	onAfterSubmit,
-	setVisibility,
+	setVisible,
 }: ModalAddObjectField) {
 	const [error, setError] = useState<string>('');
 	const [objectDefinition, setObjectDefinition] =
@@ -43,7 +43,7 @@ export function ModalAddObjectField({
 	const [objectFieldBusinessTypes, setObjectFieldBusinessTypes] = useState<
 		ObjectFieldBusinessType[]
 	>([]);
-	const {observer, onClose} = useModal({onClose: () => setVisibility(false)});
+	const {observer, onClose} = useModal({onClose: () => setVisible(false)});
 	const formId = 'modalAddObjectField';
 	const initialValues: Partial<ObjectField> = {
 		indexed: true,
@@ -51,6 +51,7 @@ export function ModalAddObjectField({
 		indexedLanguageId: '',
 		listTypeDefinitionExternalReferenceCode: '',
 		listTypeDefinitionId: 0,
+		localized: false,
 		readOnly: 'false',
 		readOnlyConditionExpression: '',
 		required: false,
@@ -100,7 +101,18 @@ export function ModalAddObjectField({
 	const showEnableTranslationToggle =
 		values.businessType === 'LongText' ||
 		values.businessType === 'RichText' ||
-		values.businessType === 'Text';
+		values.businessType === 'Text' ||
+		(Liferay.FeatureFlags['LPD-32050'] &&
+			(values.businessType === 'Attachment' ||
+				values.businessType === 'Boolean' ||
+				values.businessType === 'Date' ||
+				values.businessType === 'DateTime' ||
+				values.businessType === 'Decimal' ||
+				values.businessType === 'Integer' ||
+				values.businessType === 'LongInteger' ||
+				values.businessType === 'MultiselectPicklist' ||
+				values.businessType === 'Picklist' ||
+				values.businessType === 'PrecisionDecimal'));
 
 	useEffect(() => {
 		const makeFetch = async () => {
@@ -138,12 +150,6 @@ export function ModalAddObjectField({
 		};
 
 		makeFetch();
-
-		setValues({
-			localized:
-				objectDefinition?.enableLocalization &&
-				showEnableTranslationToggle,
-		});
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [objectDefinitionExternalReferenceCode, values.businessType]);
@@ -195,17 +201,19 @@ export function ModalAddObjectField({
 									<div className="lfr-objects__modal-add-object-field-enable-translations-toggle">
 										<Toggle
 											disabled={
-												!objectDefinition?.enableLocalization
+												!objectDefinition?.enableLocalization ||
+												(!Liferay.FeatureFlags[
+													'LPD-32050'
+												] &&
+													values.required)
 											}
 											label={Liferay.Language.get(
 												'enable-entry-translations'
 											)}
+											name="enableEntryTranslations"
 											onToggle={(localized) =>
 												setValues({
 													localized,
-													required:
-														!localized &&
-														values.required,
 												})
 											}
 											toggled={values.localized}

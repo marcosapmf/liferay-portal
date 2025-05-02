@@ -9,12 +9,11 @@
 			"importStrategy": "ON_ERROR_FAIL",
 			"updateStrategy": "UPDATE"
 		},
-		"taskItemDelegateName": "DEFAULT",
-		"userId": 0,
-		"version": "v1.0"
+		"taskItemDelegateName": "DEFAULT"
 	},
 	"items": [
 		{
+			"defaultLanguageId": "en_US",
 			"enableCategorization": true,
 			"externalReferenceCode": "L_API_SORT",
 			"label": {
@@ -60,6 +59,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableCategorization": true,
 			"externalReferenceCode": "L_API_FILTER",
 			"label": {
@@ -105,6 +105,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableCategorization": true,
 			"externalReferenceCode": "L_API_ENDPOINT",
 			"label": {
@@ -138,35 +139,10 @@
 					"label": {
 						"en_US": "HTTP Method"
 					},
-					"listTypeDefinitionExternalReferenceCode": "HTTP_METHOD_PICKLIST",
+					"listTypeDefinitionExternalReferenceCode": "L_API_ENDPOINT_HTTP_METHODS",
 					"name": "httpMethod",
-					"objectFieldSettings": [
-						{
-							"name": "stateFlow",
-							"value": {
-								"objectStates": [
-									{
-										"key": "get",
-										"objectStateTransitions": [
-											{
-												"key": "post"
-											}
-										]
-									},
-									{
-										"key": "post",
-										"objectStateTransitions": [
-											{
-												"key": "get"
-											}
-										]
-									}
-								]
-							}
-						}
-					],
 					"required": true,
-					"state": true,
+					"state": false,
 					"system": true,
 					"type": "String"
 				},
@@ -240,35 +216,10 @@
 					"label": {
 						"en_US": "Retrieve Type"
 					},
-					"listTypeDefinitionExternalReferenceCode": "RETRIEVE_TYPE_PICKLIST",
+					"listTypeDefinitionExternalReferenceCode": "L_API_ENDPOINT_RETRIEVE_TYPES",
 					"name": "retrieveType",
-					"objectFieldSettings": [
-						{
-							"name": "stateFlow",
-							"value": {
-								"objectStates": [
-									{
-										"key": "collection",
-										"objectStateTransitions": [
-											{
-												"key": "singleElement"
-											}
-										]
-									},
-									{
-										"key": "singleElement",
-										"objectStateTransitions": [
-											{
-												"key": "collection"
-											}
-										]
-									}
-								]
-							}
-						}
-					],
 					"required": true,
-					"state": true,
+					"state": false,
 					"system": true,
 					"type": "String"
 				},
@@ -282,35 +233,10 @@
 					"label": {
 						"en_US": "Scope"
 					},
-					"listTypeDefinitionExternalReferenceCode": "SCOPE_PICKLIST",
+					"listTypeDefinitionExternalReferenceCode": "L_API_ENDPOINT_SCOPES",
 					"name": "scope",
-					"objectFieldSettings": [
-						{
-							"name": "stateFlow",
-							"value": {
-								"objectStates": [
-									{
-										"key": "company",
-										"objectStateTransitions": [
-											{
-												"key": "site"
-											}
-										]
-									},
-									{
-										"key": "site",
-										"objectStateTransitions": [
-											{
-												"key": "company"
-											}
-										]
-									}
-								]
-							}
-						}
-					],
 					"required": true,
-					"state": true,
+					"state": false,
 					"system": true,
 					"type": "String"
 				}
@@ -362,6 +288,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableCategorization": true,
 			"enableComments": false,
 			"externalReferenceCode": "L_API_PROPERTY",
@@ -480,6 +407,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableCategorization": true,
 			"externalReferenceCode": "L_API_SCHEMA",
 			"label": {
@@ -597,6 +525,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableCategorization": true,
 			"externalReferenceCode": "L_API_APPLICATION",
 			"label": {
@@ -615,35 +544,10 @@
 					"label": {
 						"en_US": "Application Status"
 					},
-					"listTypeDefinitionExternalReferenceCode": "APPLICATION_STATUS_PICKLIST",
+					"listTypeDefinitionExternalReferenceCode": "L_API_APPLICATION_STATUSES",
 					"name": "applicationStatus",
-					"objectFieldSettings": [
-						{
-							"name": "stateFlow",
-							"value": {
-								"objectStates": [
-									{
-										"key": "published",
-										"objectStateTransitions": [
-											{
-												"key": "unpublished"
-											}
-										]
-									},
-									{
-										"key": "unpublished",
-										"objectStateTransitions": [
-											{
-												"key": "published"
-											}
-										]
-									}
-								]
-							}
-						}
-					],
 					"required": true,
-					"state": true,
+					"state": false,
 					"system": true,
 					"type": "String"
 				},

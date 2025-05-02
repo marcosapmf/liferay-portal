@@ -79,7 +79,7 @@ public class UserAnalyticsDXPEntityBatchEngineTaskItemDelegate
 		}
 
 		if (pagination.getPage() == 1) {
-			_lastSeenUserIdThreadLocal.set(0L);
+			_lastSeenUserId.set(0L);
 		}
 
 		List<User> users = _userLocalService.dslQuery(
@@ -89,7 +89,7 @@ public class UserAnalyticsDXPEntityBatchEngineTaskItemDelegate
 		Long[] userIds = ListUtil.toArray(users, User.USER_ID_ACCESSOR);
 
 		if (userIds.length != 0) {
-			_lastSeenUserIdThreadLocal.set(userIds[userIds.length - 1]);
+			_lastSeenUserId.set(userIds[userIds.length - 1]);
 		}
 
 		Set<Serializable> contactIds = new HashSet<>();
@@ -176,7 +176,7 @@ public class UserAnalyticsDXPEntityBatchEngineTaskItemDelegate
 			String[] syncedOrganizationIds =
 				analyticsConfiguration.syncedOrganizationIds();
 
-			if (!ArrayUtil.isEmpty(syncedOrganizationIds)) {
+			if (ArrayUtil.isNotEmpty(syncedOrganizationIds)) {
 				joinStep = joinStep.leftJoinOn(
 					Users_OrgsTable.INSTANCE,
 					Users_OrgsTable.INSTANCE.userId.eq(userTableAlias.userId));
@@ -189,7 +189,7 @@ public class UserAnalyticsDXPEntityBatchEngineTaskItemDelegate
 			String[] syncedUserGroupIds =
 				analyticsConfiguration.syncedUserGroupIds();
 
-			if (!ArrayUtil.isEmpty(syncedUserGroupIds)) {
+			if (ArrayUtil.isNotEmpty(syncedUserGroupIds)) {
 				joinStep = joinStep.leftJoinOn(
 					Users_UserGroupsTable.INSTANCE,
 					Users_UserGroupsTable.INSTANCE.userId.eq(
@@ -237,7 +237,7 @@ public class UserAnalyticsDXPEntityBatchEngineTaskItemDelegate
 			String[] syncedOrganizationIds =
 				analyticsConfiguration.syncedOrganizationIds();
 
-			if (!ArrayUtil.isEmpty(syncedOrganizationIds)) {
+			if (ArrayUtil.isNotEmpty(syncedOrganizationIds)) {
 				joinStep = joinStep.leftJoinOn(
 					Users_OrgsTable.INSTANCE,
 					Users_OrgsTable.INSTANCE.userId.eq(userTableAlias.userId));
@@ -250,7 +250,7 @@ public class UserAnalyticsDXPEntityBatchEngineTaskItemDelegate
 			String[] syncedUserGroupIds =
 				analyticsConfiguration.syncedUserGroupIds();
 
-			if (!ArrayUtil.isEmpty(syncedUserGroupIds)) {
+			if (ArrayUtil.isNotEmpty(syncedUserGroupIds)) {
 				joinStep = joinStep.leftJoinOn(
 					Users_UserGroupsTable.INSTANCE,
 					Users_UserGroupsTable.INSTANCE.userId.eq(
@@ -274,7 +274,7 @@ public class UserAnalyticsDXPEntityBatchEngineTaskItemDelegate
 				).and(
 					Predicate.withParentheses(predicate)
 				).and(
-					userTableAlias.userId.gt(_lastSeenUserIdThreadLocal.get())
+					userTableAlias.userId.gt(_lastSeenUserId.get())
 				))
 		).orderBy(
 			orderByStep -> orderByStep.orderBy(
@@ -419,10 +419,10 @@ public class UserAnalyticsDXPEntityBatchEngineTaskItemDelegate
 		return idsMap;
 	}
 
-	private static final ThreadLocal<Long> _lastSeenUserIdThreadLocal =
+	private static final ThreadLocal<Long> _lastSeenUserId =
 		new CentralizedThreadLocal<>(
 			UserAnalyticsDXPEntityBatchEngineTaskItemDelegate.class.getName() +
-				"._lastSeenUserIdThreadLocal");
+				"._lastSeenUserId");
 
 	@Reference
 	private AnalyticsConfigurationRegistry _analyticsConfigurationRegistry;

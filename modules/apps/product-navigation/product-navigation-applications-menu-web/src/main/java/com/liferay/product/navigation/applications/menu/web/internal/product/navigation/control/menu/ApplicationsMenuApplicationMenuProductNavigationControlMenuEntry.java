@@ -38,7 +38,7 @@ public class ApplicationsMenuApplicationMenuProductNavigationControlMenuEntry
 
 	@Override
 	public String getIconJspPath() {
-		return "/applications_menu/applications_menu.jsp";
+		return "/applications_menu/applications_menu_control_menu_entry.jsp";
 	}
 
 	@Override
@@ -62,13 +62,8 @@ public class ApplicationsMenuApplicationMenuProductNavigationControlMenuEntry
 			return false;
 		}
 
-		if (ApplicationsMenuUtil.hasChildPanelApps(
-				_panelAppRegistry, themeDisplay)) {
-
-			return true;
-		}
-
-		return false;
+		return ApplicationsMenuUtil.hasChildPanelApps(
+			_panelAppRegistry, themeDisplay);
 	}
 
 	@Override

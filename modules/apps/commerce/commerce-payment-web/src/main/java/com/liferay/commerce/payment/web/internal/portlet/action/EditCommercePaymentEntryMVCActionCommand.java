@@ -126,6 +126,8 @@ public class EditCommercePaymentEntryMVCActionCommand
 				PortletProvider.Action.EDIT)
 		).setMVCRenderCommandName(
 			"/commerce_payment/edit_commerce_payment_entry"
+		).setBackURL(
+			ParamUtil.getString(actionRequest, "backURL")
 		).setParameter(
 			"commercePaymentEntryId", commercePaymentEntryId
 		).buildString();
@@ -139,7 +141,8 @@ public class EditCommercePaymentEntryMVCActionCommand
 			actionRequest, "commercePaymentEntryId");
 
 		BigDecimal amount = _commercePriceFormatter.parse(
-			actionRequest, "amount");
+			actionRequest, false, CommercePaymentEntry.class.getName(),
+			"amount");
 
 		String reasonKey = ParamUtil.getString(actionRequest, "reasonKey");
 

@@ -12,8 +12,6 @@ import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -34,10 +32,12 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -67,7 +67,80 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BaseObjectViewResourceImpl
 	implements EntityModelResource, ObjectViewResource,
-			   VulcanBatchEngineTaskItemDelegate<ObjectView> {
+			   VulcanBatchEngineTaskItemDelegate<ObjectView>,
+			   VulcanCRUDItemDelegate<ObjectView> {
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/object-admin/v1.0/object-views/{objectViewId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "objectViewId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectView")}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/object-views/{objectViewId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteObjectView(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("objectViewId")
+			Long objectViewId)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/object-admin/v1.0/object-views/batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectView")}
+	)
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/object-views/batch")
+	@javax.ws.rs.Produces("application/json")
+	@Override
+	public Response deleteObjectViewBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			Object object)
+		throws Exception {
+
+		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineImportTaskResource.deleteImportTask(
+				ObjectView.class.getName(), callbackURL, object)
+		).build();
+	}
 
 	/**
 	 * Invoke this method with the command line:
@@ -117,44 +190,11 @@ public abstract class BaseObjectViewResourceImpl
 				@javax.ws.rs.QueryParam("search")
 				String search,
 				@javax.ws.rs.core.Context Pagination pagination,
-				@javax.ws.rs.core.Context Sort[] sorts)
+				@javax.ws.rs.core.Context
+					com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/by-external-reference-code/{externalReferenceCode}/object-views' -d $'{"defaultObjectView": ___, "name": ___, "objectDefinitionExternalReferenceCode": ___, "objectDefinitionId": ___, "objectViewColumns": ___, "objectViewFilterColumns": ___, "objectViewSortColumns": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectView")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/object-definitions/by-external-reference-code/{externalReferenceCode}/object-views"
-	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public ObjectView postObjectDefinitionByExternalReferenceCodeObjectView(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode,
-			ObjectView objectView)
-		throws Exception {
-
-		return new ObjectView();
 	}
 
 	/**
@@ -202,7 +242,8 @@ public abstract class BaseObjectViewResourceImpl
 			@javax.ws.rs.QueryParam("search")
 			String search,
 			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -211,84 +252,65 @@ public abstract class BaseObjectViewResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}/object-views/export-batch'  -u 'test@liferay.com:test'
+	 * curl -X 'GET' 'http://localhost:8080/o/object-admin/v1.0/object-views/{objectViewId}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "objectDefinitionId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "search"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "sort"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "contentType"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fieldNames"
+				name = "objectViewId"
 			)
 		}
 	)
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectView")}
 	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path(
-		"/object-definitions/{objectDefinitionId}/object-views/export-batch"
-	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/json")
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/object-views/{objectViewId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Response postObjectDefinitionObjectViewsPageExportBatch(
+	public ObjectView getObjectView(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("objectDefinitionId")
-			Long objectDefinitionId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("search")
-			String search,
-			@javax.ws.rs.core.Context Sort[] sorts,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.DefaultValue("JSON")
-			@javax.ws.rs.QueryParam("contentType")
-			String contentType,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("fieldNames")
-			String fieldNames)
+			@javax.ws.rs.PathParam("objectViewId")
+			Long objectViewId)
 		throws Exception {
 
-		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
-		vulcanBatchEngineExportTaskResource.setGroupLocalService(
-			groupLocalService);
+		return new ObjectView();
+	}
 
-		Response.ResponseBuilder responseBuilder = Response.accepted();
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/by-external-reference-code/{externalReferenceCode}/object-views' -d $'{"defaultObjectView": ___, "name": ___, "objectDefinitionExternalReferenceCode": ___, "objectDefinitionId": ___, "objectViewColumns": ___, "objectViewFilterColumns": ___, "objectViewSortColumns": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectView")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path(
+		"/object-definitions/by-external-reference-code/{externalReferenceCode}/object-views"
+	)
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public ObjectView postObjectDefinitionByExternalReferenceCodeObjectView(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			ObjectView objectView)
+		throws Exception {
 
-		return responseBuilder.entity(
-			vulcanBatchEngineExportTaskResource.postExportTask(
-				ObjectView.class.getName(), callbackURL, contentType,
-				fieldNames)
-		).build();
+		return new ObjectView();
 	}
 
 	/**
@@ -380,41 +402,33 @@ public abstract class BaseObjectViewResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/object-admin/v1.0/object-views/{objectViewId}'  -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}/object-views/export-batch'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "objectViewId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectView")}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/object-views/{objectViewId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteObjectView(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("objectViewId")
-			Long objectViewId)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/object-admin/v1.0/object-views/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
+				name = "objectDefinitionId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
+			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "contentType"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fieldNames"
 			)
 		}
 	)
@@ -422,37 +436,57 @@ public abstract class BaseObjectViewResourceImpl
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectView")}
 	)
 	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/object-views/batch")
+	@javax.ws.rs.Path(
+		"/object-definitions/{objectDefinitionId}/object-views/export-batch"
+	)
+	@javax.ws.rs.POST
 	@javax.ws.rs.Produces("application/json")
 	@Override
-	public Response deleteObjectViewBatch(
+	public Response postObjectDefinitionObjectViewsPageExportBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("objectDefinitionId")
+			Long objectDefinitionId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("search")
+			String search,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
-			Object object)
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.DefaultValue("JSON")
+			@javax.ws.rs.QueryParam("contentType")
+			String contentType,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("fieldNames")
+			String fieldNames)
 		throws Exception {
 
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
 			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
 			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setGroupLocalService(
+			groupLocalService);
 
 		Response.ResponseBuilder responseBuilder = Response.accepted();
 
 		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.deleteImportTask(
-				ObjectView.class.getName(), callbackURL, object)
+			vulcanBatchEngineExportTaskResource.postExportTask(
+				ObjectView.class.getName(), callbackURL, contentType,
+				fieldNames)
 		).build();
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/object-admin/v1.0/object-views/{objectViewId}'  -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-views/{objectViewId}/copy'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -465,11 +499,11 @@ public abstract class BaseObjectViewResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectView")}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/object-views/{objectViewId}")
+	@javax.ws.rs.Path("/object-views/{objectViewId}/copy")
+	@javax.ws.rs.POST
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public ObjectView getObjectView(
+	public ObjectView postObjectViewCopy(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
 			@javax.ws.rs.PathParam("objectViewId")
@@ -555,36 +589,6 @@ public abstract class BaseObjectViewResourceImpl
 		).build();
 	}
 
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-views/{objectViewId}/copy'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "objectViewId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectView")}
-	)
-	@javax.ws.rs.Path("/object-views/{objectViewId}/copy")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public ObjectView postObjectViewCopy(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("objectViewId")
-			Long objectViewId)
-		throws Exception {
-
-		return new ObjectView();
-	}
-
 	@Override
 	@SuppressWarnings("PMD.UnusedLocalVariable")
 	public void create(
@@ -645,8 +649,25 @@ public abstract class BaseObjectViewResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (ObjectView objectView : objectViews) {
-			deleteObjectView(objectView.getId());
+		UnsafeFunction<ObjectView, ObjectView, Exception>
+			objectViewUnsafeFunction = objectView -> {
+				deleteObjectView(objectView.getId());
+
+				return objectView;
+			};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				objectViews, objectViewUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				objectViews, objectViewUnsafeFunction::apply);
+		}
+		else {
+			for (ObjectView objectView : objectViews) {
+				objectViewUnsafeFunction.apply(objectView);
+			}
 		}
 	}
 
@@ -683,7 +704,9 @@ public abstract class BaseObjectViewResourceImpl
 
 	@Override
 	public Page<ObjectView> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -768,6 +791,11 @@ public abstract class BaseObjectViewResourceImpl
 		return null;
 	}
 
+	@Override
+	public ObjectView getItem(Long id) throws Exception {
+		return getObjectView(id);
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
 	}
@@ -808,7 +836,8 @@ public abstract class BaseObjectViewResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -818,7 +847,8 @@ public abstract class BaseObjectViewResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -853,6 +883,10 @@ public abstract class BaseObjectViewResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "object-admin";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -870,7 +904,7 @@ public abstract class BaseObjectViewResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -895,7 +929,7 @@ public abstract class BaseObjectViewResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -913,13 +947,13 @@ public abstract class BaseObjectViewResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -930,7 +964,7 @@ public abstract class BaseObjectViewResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1056,7 +1090,8 @@ public abstract class BaseObjectViewResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

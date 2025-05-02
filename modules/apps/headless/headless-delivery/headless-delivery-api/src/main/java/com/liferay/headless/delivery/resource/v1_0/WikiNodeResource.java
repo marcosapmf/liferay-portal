@@ -7,8 +7,6 @@ package com.liferay.headless.delivery.resource.v1_0;
 
 import com.liferay.headless.delivery.dto.v1_0.WikiNode;
 import com.liferay.portal.kernel.change.tracking.CTAware;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -50,15 +48,35 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface WikiNodeResource {
 
+	public void deleteSiteWikiNodeByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public void deleteWikiNode(Long wikiNodeId) throws Exception;
+
+	public Response deleteWikiNodeBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public WikiNode getSiteWikiNodeByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getSiteWikiNodePermissionsPage(Long siteId, String roleNames)
+		throws Exception;
+
 	public Page<WikiNode> getSiteWikiNodesPage(
 			Long siteId, String search,
 			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
-	public Response postSiteWikiNodesPageExportBatch(
-			Long siteId, String search, Filter filter, Sort[] sorts,
-			String callbackURL, String contentType, String fieldNames)
+	public WikiNode getWikiNode(Long wikiNodeId) throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getWikiNodePermissionsPage(Long wikiNodeId, String roleNames)
 		throws Exception;
 
 	public WikiNode postSiteWikiNode(Long siteId, WikiNode wikiNode)
@@ -68,20 +86,15 @@ public interface WikiNodeResource {
 			Long siteId, String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteSiteWikiNodeByExternalReferenceCode(
-			Long siteId, String externalReferenceCode)
-		throws Exception;
-
-	public WikiNode getSiteWikiNodeByExternalReferenceCode(
-			Long siteId, String externalReferenceCode)
+	public Response postSiteWikiNodesPageExportBatch(
+			Long siteId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public WikiNode putSiteWikiNodeByExternalReferenceCode(
 			Long siteId, String externalReferenceCode, WikiNode wikiNode)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getSiteWikiNodePermissionsPage(Long siteId, String roleNames)
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
@@ -90,21 +103,10 @@ public interface WikiNodeResource {
 				com.liferay.portal.vulcan.permission.Permission[] permissions)
 		throws Exception;
 
-	public void deleteWikiNode(Long wikiNodeId) throws Exception;
-
-	public Response deleteWikiNodeBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public WikiNode getWikiNode(Long wikiNodeId) throws Exception;
-
 	public WikiNode putWikiNode(Long wikiNodeId, WikiNode wikiNode)
 		throws Exception;
 
 	public Response putWikiNodeBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getWikiNodePermissionsPage(Long wikiNodeId, String roleNames)
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
@@ -139,7 +141,8 @@ public interface WikiNodeResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -164,19 +167,23 @@ public interface WikiNodeResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

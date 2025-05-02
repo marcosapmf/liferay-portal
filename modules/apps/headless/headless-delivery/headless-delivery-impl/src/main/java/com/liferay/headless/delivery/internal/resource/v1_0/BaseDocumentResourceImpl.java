@@ -20,8 +20,6 @@ import com.liferay.portal.kernel.model.Resource;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -30,6 +28,7 @@ import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -48,6 +47,7 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -55,6 +55,7 @@ import com.liferay.portal.vulcan.permission.ModelPermissionsUtil;
 import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -86,7 +87,319 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BaseDocumentResourceImpl
 	implements DocumentResource, EntityModelResource,
-			   VulcanBatchEngineTaskItemDelegate<Document> {
+			   VulcanBatchEngineTaskItemDelegate<Document>,
+			   VulcanCRUDItemDelegate<Document> {
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes the asset library's document by external reference code."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "assetLibraryId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path(
+		"/asset-libraries/{assetLibraryId}/documents/by-external-reference-code/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteAssetLibraryDocumentByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("assetLibraryId")
+			Long assetLibraryId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes the document and returns a 204 if the operation succeeds."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/documents/{documentId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteDocument(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentId")
+			Long documentId)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/documents/batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/documents/batch")
+	@javax.ws.rs.Produces("application/json")
+	@Override
+	public Response deleteDocumentBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			Object object)
+		throws Exception {
+
+		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineImportTaskResource.deleteImportTask(
+				Document.class.getName(), callbackURL, object)
+		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}/my-rating'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes the document's rating and returns a 204 if the operation succeeded."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/documents/{documentId}/my-rating")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteDocumentMyRating(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentId")
+			Long documentId)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes the site's document by external reference code returns a 204 if the operation succeeds."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path(
+		"/sites/{siteId}/documents/by-external-reference-code/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteSiteDocumentByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the asset library's document by external reference code."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "assetLibraryId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/asset-libraries/{assetLibraryId}/documents/by-external-reference-code/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Document getAssetLibraryDocumentByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("assetLibraryId")
+			Long assetLibraryId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+
+		return new Document();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/permissions'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "assetLibraryId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "roleNames"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/asset-libraries/{assetLibraryId}/documents/permissions")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<Permission> getAssetLibraryDocumentPermissionsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("assetLibraryId")
+			Long assetLibraryId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("roleNames")
+			String roleNames)
+		throws Exception {
+
+		String portletName = getPermissionCheckerPortletName(assetLibraryId);
+
+		PermissionServiceUtil.checkPermission(
+			assetLibraryId, portletName, assetLibraryId);
+
+		return toPermissionPage(
+			HashMapBuilder.put(
+				"get",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"getAssetLibraryDocumentPermissionsPage", portletName,
+					assetLibraryId)
+			).put(
+				"replace",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"putAssetLibraryDocumentPermissionsPage", portletName,
+					assetLibraryId)
+			).build(),
+			assetLibraryId, portletName, roleNames);
+	}
 
 	/**
 	 * Invoke this method with the command line:
@@ -161,9 +474,11 @@ public abstract class BaseDocumentResourceImpl
 			String search,
 			@javax.ws.rs.core.Context
 				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			@javax.ws.rs.core.Context Filter filter,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
 			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -172,8 +487,11 @@ public abstract class BaseDocumentResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/export-batch'  -u 'test@liferay.com:test'
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/rated-by-me'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the documents rated by the user."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -182,7 +500,122 @@ public abstract class BaseDocumentResourceImpl
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/asset-libraries/{assetLibraryId}/documents/rated-by-me")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<Document> getAssetLibraryDocumentsRatedByMePage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("assetLibraryId")
+			Long assetLibraryId,
+			@javax.ws.rs.core.Context Pagination pagination)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the document."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/documents/{documentId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Document getDocument(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentId")
+			Long documentId)
+		throws Exception {
+
+		return new Document();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/document-folders/{documentFolderId}/documents'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the folder's documents. Results can be paginated, filtered, searched, and sorted."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentFolderId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "aggregationTerms"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "filter"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "flatten"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
@@ -191,69 +624,484 @@ public abstract class BaseDocumentResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "sort"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "contentType"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fieldNames"
 			)
 		}
 	)
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
 	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path(
-		"/asset-libraries/{assetLibraryId}/documents/export-batch"
-	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/json")
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/document-folders/{documentFolderId}/documents")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Response postAssetLibraryDocumentsPageExportBatch(
+	public Page<Document> getDocumentFolderDocumentsPage(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("assetLibraryId")
-			Long assetLibraryId,
+			@javax.ws.rs.PathParam("documentFolderId")
+			Long documentFolderId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("flatten")
+			Boolean flatten,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.DefaultValue("JSON")
-			@javax.ws.rs.QueryParam("contentType")
-			String contentType,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("fieldNames")
-			String fieldNames)
+			@javax.ws.rs.core.Context
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context Pagination pagination,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
-		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
-		vulcanBatchEngineExportTaskResource.setGroupLocalService(
-			groupLocalService);
+		return Page.of(Collections.emptyList());
+	}
 
-		Response.ResponseBuilder responseBuilder = Response.accepted();
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}/my-rating'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the document's rating."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/documents/{documentId}/my-rating")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Rating getDocumentMyRating(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentId")
+			Long documentId)
+		throws Exception {
 
-		return responseBuilder.entity(
-			vulcanBatchEngineExportTaskResource.postExportTask(
-				Document.class.getName(), callbackURL, contentType, fieldNames)
-		).build();
+		return new Rating();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}/permissions'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "roleNames"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/documents/{documentId}/permissions")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<Permission> getDocumentPermissionsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentId")
+			Long documentId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("roleNames")
+			String roleNames)
+		throws Exception {
+
+		String resourceName = getPermissionCheckerResourceName(documentId);
+		Long resourceId = getPermissionCheckerResourceId(documentId);
+
+		PermissionServiceUtil.checkPermission(
+			getPermissionCheckerGroupId(documentId), resourceName, resourceId);
+
+		return toPermissionPage(
+			HashMapBuilder.put(
+				"get",
+				addAction(
+					ActionKeys.PERMISSIONS, "getDocumentPermissionsPage",
+					resourceName, resourceId)
+			).put(
+				"replace",
+				addAction(
+					ActionKeys.PERMISSIONS, "putDocumentPermissionsPage",
+					resourceName, resourceId)
+			).build(),
+			resourceId, resourceName, roleNames);
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}/rendered-content-by-display-page/{displayPageKey}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the document's rendered display page"
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "displayPageKey"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/documents/{documentId}/rendered-content-by-display-page/{displayPageKey}"
+	)
+	@javax.ws.rs.Produces("text/html")
+	@Override
+	public String getDocumentRenderedContentByDisplayPageDisplayPageKey(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentId")
+			Long documentId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("displayPageKey")
+			String displayPageKey)
+		throws Exception {
+
+		return StringPool.BLANK;
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the site's document by external reference code."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/sites/{siteId}/documents/by-external-reference-code/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Document getSiteDocumentByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+
+		return new Document();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents/permissions'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "roleNames"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/sites/{siteId}/documents/permissions")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<Permission> getSiteDocumentPermissionsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("roleNames")
+			String roleNames)
+		throws Exception {
+
+		String portletName = getPermissionCheckerPortletName(siteId);
+
+		PermissionServiceUtil.checkPermission(siteId, portletName, siteId);
+
+		return toPermissionPage(
+			HashMapBuilder.put(
+				"get",
+				addAction(
+					ActionKeys.PERMISSIONS, "getSiteDocumentPermissionsPage",
+					portletName, siteId)
+			).put(
+				"replace",
+				addAction(
+					ActionKeys.PERMISSIONS, "putSiteDocumentPermissionsPage",
+					portletName, siteId)
+			).build(),
+			siteId, portletName, roleNames);
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the documents in the site's root folder. Results can be paginated, filtered, searched, flattened, and sorted."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "aggregationTerms"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "filter"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "flatten"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/sites/{siteId}/documents")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<Document> getSiteDocumentsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("flatten")
+			Boolean flatten,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("search")
+			String search,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context Pagination pagination,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents/rated-by-me'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the documents rated by the user."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/sites/{siteId}/documents/rated-by-me")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<Document> getSiteDocumentsRatedByMePage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
+			@javax.ws.rs.core.Context Pagination pagination)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Updates only the fields received in the request body, leaving any other fields untouched. The request body must be `multipart/form-data` with two parts, the file's bytes (`file`), and an optional JSON string (`document`) with the metadata.",
+		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "multipart/form-data", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = PatchDocumentRequestBody.class)))
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.Consumes("multipart/form-data")
+	@javax.ws.rs.PATCH
+	@javax.ws.rs.Path("/documents/{documentId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Document patchDocument(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentId")
+			Long documentId,
+			MultipartBody multipartBody)
+		throws Exception {
+
+		return new Document();
 	}
 
 	/**
@@ -347,408 +1195,13 @@ public abstract class BaseDocumentResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Deletes the asset library's document by external reference code."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "assetLibraryId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path(
-		"/asset-libraries/{assetLibraryId}/documents/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteAssetLibraryDocumentByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("assetLibraryId")
-			Long assetLibraryId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the asset library's document by external reference code."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "assetLibraryId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/asset-libraries/{assetLibraryId}/documents/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Document getAssetLibraryDocumentByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("assetLibraryId")
-			Long assetLibraryId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-
-		return new Document();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Replaces the document by external reference code with the information sent in the request body, or replaces it if it not exists. Any missing fields are deleted, unless they are required. The request body must be `multipart/form-data` with two parts, the file'sbytes (`file`), and an optional JSON string (`document`) with the metadata.",
-		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "multipart/form-data", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = PutAssetLibraryDocumentByExternalReferenceCodeRequestBody.class)))
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "assetLibraryId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.Consumes("multipart/form-data")
-	@javax.ws.rs.Path(
-		"/asset-libraries/{assetLibraryId}/documents/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
-	@Override
-	public Document putAssetLibraryDocumentByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("assetLibraryId")
-			Long assetLibraryId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode,
-			MultipartBody multipartBody)
-		throws Exception {
-
-		return new Document();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/permissions'  -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/export-batch'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "assetLibraryId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "roleNames"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/asset-libraries/{assetLibraryId}/documents/permissions")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<Permission> getAssetLibraryDocumentPermissionsPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("assetLibraryId")
-			Long assetLibraryId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("roleNames")
-			String roleNames)
-		throws Exception {
-
-		String portletName = getPermissionCheckerPortletName(assetLibraryId);
-
-		PermissionServiceUtil.checkPermission(
-			assetLibraryId, portletName, assetLibraryId);
-
-		return toPermissionPage(
-			HashMapBuilder.put(
-				"get",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"getAssetLibraryDocumentPermissionsPage", portletName,
-					assetLibraryId)
-			).put(
-				"replace",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"putAssetLibraryDocumentPermissionsPage", portletName,
-					assetLibraryId)
-			).build(),
-			assetLibraryId, portletName, roleNames);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/permissions'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "assetLibraryId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/asset-libraries/{assetLibraryId}/documents/permissions")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
-	@Override
-	public Page<Permission> putAssetLibraryDocumentPermissionsPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("assetLibraryId")
-			Long assetLibraryId,
-			Permission[] permissions)
-		throws Exception {
-
-		String portletName = getPermissionCheckerPortletName(assetLibraryId);
-
-		PermissionServiceUtil.checkPermission(
-			assetLibraryId, portletName, assetLibraryId);
-
-		resourcePermissionLocalService.updateResourcePermissions(
-			contextCompany.getCompanyId(), assetLibraryId, portletName,
-			String.valueOf(assetLibraryId),
-			ModelPermissionsUtil.toModelPermissions(
-				contextCompany.getCompanyId(), permissions, assetLibraryId,
-				portletName, resourceActionLocalService,
-				resourcePermissionLocalService, roleLocalService));
-
-		return toPermissionPage(
-			HashMapBuilder.put(
-				"get",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"getAssetLibraryDocumentPermissionsPage", portletName,
-					assetLibraryId)
-			).put(
-				"replace",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"putAssetLibraryDocumentPermissionsPage", portletName,
-					assetLibraryId)
-			).build(),
-			assetLibraryId, portletName, null);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/rated-by-me'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the documents rated by the user."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "assetLibraryId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/asset-libraries/{assetLibraryId}/documents/rated-by-me")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<Document> getAssetLibraryDocumentsRatedByMePage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("assetLibraryId")
-			Long assetLibraryId,
-			@javax.ws.rs.core.Context Pagination pagination)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/document-folders/{documentFolderId}/documents'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the folder's documents. Results can be paginated, filtered, searched, and sorted."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "documentFolderId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "aggregationTerms"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "filter"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "flatten"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "search"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "sort"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/document-folders/{documentFolderId}/documents")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<Document> getDocumentFolderDocumentsPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("documentFolderId")
-			Long documentFolderId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("flatten")
-			Boolean flatten,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("search")
-			String search,
-			@javax.ws.rs.core.Context
-				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/document-folders/{documentFolderId}/documents/export-batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "documentFolderId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
@@ -781,21 +1234,23 @@ public abstract class BaseDocumentResourceImpl
 	)
 	@javax.ws.rs.Consumes("application/json")
 	@javax.ws.rs.Path(
-		"/document-folders/{documentFolderId}/documents/export-batch"
+		"/asset-libraries/{assetLibraryId}/documents/export-batch"
 	)
 	@javax.ws.rs.POST
 	@javax.ws.rs.Produces("application/json")
 	@Override
-	public Response postDocumentFolderDocumentsPageExportBatch(
+	public Response postAssetLibraryDocumentsPageExportBatch(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("documentFolderId")
-			Long documentFolderId,
+			@javax.ws.rs.PathParam("assetLibraryId")
+			Long assetLibraryId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -918,44 +1373,37 @@ public abstract class BaseDocumentResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}'  -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/document-folders/{documentFolderId}/documents/export-batch'  -u 'test@liferay.com:test'
 	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Deletes the document and returns a 204 if the operation succeeds."
-	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "documentId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/documents/{documentId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteDocument(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("documentId")
-			Long documentId)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/documents/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
+				name = "documentFolderId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "filter"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
+			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "contentType"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fieldNames"
 			)
 		}
 	)
@@ -963,265 +1411,52 @@ public abstract class BaseDocumentResourceImpl
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
 	)
 	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/documents/batch")
+	@javax.ws.rs.Path(
+		"/document-folders/{documentFolderId}/documents/export-batch"
+	)
+	@javax.ws.rs.POST
 	@javax.ws.rs.Produces("application/json")
 	@Override
-	public Response deleteDocumentBatch(
+	public Response postDocumentFolderDocumentsPageExportBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentFolderId")
+			Long documentFolderId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("search")
+			String search,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
-			Object object)
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.DefaultValue("JSON")
+			@javax.ws.rs.QueryParam("contentType")
+			String contentType,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("fieldNames")
+			String fieldNames)
 		throws Exception {
 
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
 			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
 			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setGroupLocalService(
+			groupLocalService);
 
 		Response.ResponseBuilder responseBuilder = Response.accepted();
 
 		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.deleteImportTask(
-				Document.class.getName(), callbackURL, object)
+			vulcanBatchEngineExportTaskResource.postExportTask(
+				Document.class.getName(), callbackURL, contentType, fieldNames)
 		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the document."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "documentId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/documents/{documentId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Document getDocument(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("documentId")
-			Long documentId)
-		throws Exception {
-
-		return new Document();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Updates only the fields received in the request body, leaving any other fields untouched. The request body must be `multipart/form-data` with two parts, the file's bytes (`file`), and an optional JSON string (`document`) with the metadata.",
-		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "multipart/form-data", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = PatchDocumentRequestBody.class)))
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "documentId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.Consumes("multipart/form-data")
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path("/documents/{documentId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Document patchDocument(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("documentId")
-			Long documentId,
-			MultipartBody multipartBody)
-		throws Exception {
-
-		return new Document();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Replaces the document with the information sent in the request body. Any missing fields are deleted, unless they are required. The request body must be `multipart/form-data` with two parts, the file's bytes (`file`), and an optional JSON string (`document`) with the metadata.",
-		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "multipart/form-data", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = PutDocumentRequestBody.class)))
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "documentId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.Consumes("multipart/form-data")
-	@javax.ws.rs.Path("/documents/{documentId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
-	@Override
-	public Document putDocument(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("documentId")
-			Long documentId,
-			MultipartBody multipartBody)
-		throws Exception {
-
-		return new Document();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/documents/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/documents/batch")
-	@javax.ws.rs.Produces("application/json")
-	@javax.ws.rs.PUT
-	@Override
-	public Response putDocumentBatch(
-			MultipartBody multipartBody,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			Object object)
-		throws Exception {
-
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.putImportTask(
-				Document.class.getName(), callbackURL, object)
-		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}/my-rating'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Deletes the document's rating and returns a 204 if the operation succeeded."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "documentId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/documents/{documentId}/my-rating")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteDocumentMyRating(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("documentId")
-			Long documentId)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}/my-rating'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the document's rating."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "documentId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/documents/{documentId}/my-rating")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Rating getDocumentMyRating(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("documentId")
-			Long documentId)
-		throws Exception {
-
-		return new Rating();
 	}
 
 	/**
@@ -1257,391 +1492,6 @@ public abstract class BaseDocumentResourceImpl
 		throws Exception {
 
 		return new Rating();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}/my-rating' -d $'{"ratingValue": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Replaces the rating with the information sent in the request body. Any missing fields are deleted, unless they are required."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "documentId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/documents/{documentId}/my-rating")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
-	@Override
-	public Rating putDocumentMyRating(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("documentId")
-			Long documentId,
-			Rating rating)
-		throws Exception {
-
-		return new Rating();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}/permissions'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "documentId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "roleNames"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/documents/{documentId}/permissions")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<Permission> getDocumentPermissionsPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("documentId")
-			Long documentId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("roleNames")
-			String roleNames)
-		throws Exception {
-
-		String resourceName = getPermissionCheckerResourceName(documentId);
-		Long resourceId = getPermissionCheckerResourceId(documentId);
-
-		PermissionServiceUtil.checkPermission(
-			getPermissionCheckerGroupId(documentId), resourceName, resourceId);
-
-		return toPermissionPage(
-			HashMapBuilder.put(
-				"get",
-				addAction(
-					ActionKeys.PERMISSIONS, "getDocumentPermissionsPage",
-					resourceName, resourceId)
-			).put(
-				"replace",
-				addAction(
-					ActionKeys.PERMISSIONS, "putDocumentPermissionsPage",
-					resourceName, resourceId)
-			).build(),
-			resourceId, resourceName, roleNames);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}/permissions'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "documentId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/documents/{documentId}/permissions")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
-	@Override
-	public Page<Permission> putDocumentPermissionsPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("documentId")
-			Long documentId,
-			Permission[] permissions)
-		throws Exception {
-
-		String resourceName = getPermissionCheckerResourceName(documentId);
-		Long resourceId = getPermissionCheckerResourceId(documentId);
-
-		PermissionServiceUtil.checkPermission(
-			getPermissionCheckerGroupId(documentId), resourceName, resourceId);
-
-		resourcePermissionLocalService.updateResourcePermissions(
-			contextCompany.getCompanyId(),
-			getPermissionCheckerGroupId(documentId), resourceName,
-			String.valueOf(resourceId),
-			ModelPermissionsUtil.toModelPermissions(
-				contextCompany.getCompanyId(), permissions, resourceId,
-				resourceName, resourceActionLocalService,
-				resourcePermissionLocalService, roleLocalService));
-
-		return toPermissionPage(
-			HashMapBuilder.put(
-				"get",
-				addAction(
-					ActionKeys.PERMISSIONS, "getDocumentPermissionsPage",
-					resourceName, resourceId)
-			).put(
-				"replace",
-				addAction(
-					ActionKeys.PERMISSIONS, "putDocumentPermissionsPage",
-					resourceName, resourceId)
-			).build(),
-			resourceId, resourceName, null);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}/rendered-content-by-display-page/{displayPageKey}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the document's rendered display page"
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "documentId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "displayPageKey"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/documents/{documentId}/rendered-content-by-display-page/{displayPageKey}"
-	)
-	@javax.ws.rs.Produces("text/html")
-	@Override
-	public String getDocumentRenderedContentByDisplayPageDisplayPageKey(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("documentId")
-			Long documentId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("displayPageKey")
-			String displayPageKey)
-		throws Exception {
-
-		return StringPool.BLANK;
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the documents in the site's root folder. Results can be paginated, filtered, searched, flattened, and sorted."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "aggregationTerms"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "filter"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "flatten"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "search"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "sort"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/sites/{siteId}/documents")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<Document> getSiteDocumentsPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("flatten")
-			Boolean flatten,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("search")
-			String search,
-			@javax.ws.rs.core.Context
-				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents/export-batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "filter"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "search"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "sort"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "contentType"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fieldNames"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/sites/{siteId}/documents/export-batch")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/json")
-	@Override
-	public Response postSiteDocumentsPageExportBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("search")
-			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.DefaultValue("JSON")
-			@javax.ws.rs.QueryParam("contentType")
-			String contentType,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("fieldNames")
-			String fieldNames)
-		throws Exception {
-
-		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
-		vulcanBatchEngineExportTaskResource.setGroupLocalService(
-			groupLocalService);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineExportTaskResource.postExportTask(
-				Document.class.getName(), callbackURL, contentType, fieldNames)
-		).build();
 	}
 
 	/**
@@ -1736,11 +1586,8 @@ public abstract class BaseDocumentResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents/export-batch'  -u 'test@liferay.com:test'
 	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Deletes the site's document by external reference code returns a 204 if the operation succeeds."
-	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -1748,85 +1595,417 @@ public abstract class BaseDocumentResourceImpl
 				name = "siteId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "filter"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "contentType"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fieldNames"
 			)
 		}
 	)
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
 	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path(
-		"/sites/{siteId}/documents/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.Path("/sites/{siteId}/documents/export-batch")
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces("application/json")
 	@Override
-	public void deleteSiteDocumentByExternalReferenceCode(
+	public Response postSiteDocumentsPageExportBatch(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
 			@javax.ws.rs.PathParam("siteId")
 			Long siteId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
+			@javax.ws.rs.QueryParam("search")
+			String search,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.DefaultValue("JSON")
+			@javax.ws.rs.QueryParam("contentType")
+			String contentType,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("fieldNames")
+			String fieldNames)
 		throws Exception {
+
+		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setGroupLocalService(
+			groupLocalService);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineExportTaskResource.postExportTask(
+				Document.class.getName(), callbackURL, contentType, fieldNames)
+		).build();
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the site's document by external reference code."
+		description = "Replaces the document by external reference code with the information sent in the request body, or replaces it if it not exists. Any missing fields are deleted, unless they are required. The request body must be `multipart/form-data` with two parts, the file'sbytes (`file`), and an optional JSON string (`document`) with the metadata.",
+		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "multipart/form-data", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = PutAssetLibraryDocumentByExternalReferenceCodeRequestBody.class)))
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
+				name = "assetLibraryId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
 			)
 		}
 	)
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
 	)
-	@javax.ws.rs.GET
+	@javax.ws.rs.Consumes("multipart/form-data")
 	@javax.ws.rs.Path(
-		"/sites/{siteId}/documents/by-external-reference-code/{externalReferenceCode}"
+		"/asset-libraries/{assetLibraryId}/documents/by-external-reference-code/{externalReferenceCode}"
 	)
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
 	@Override
-	public Document getSiteDocumentByExternalReferenceCode(
+	public Document putAssetLibraryDocumentByExternalReferenceCode(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
+			@javax.ws.rs.PathParam("assetLibraryId")
+			Long assetLibraryId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
 			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
+			String externalReferenceCode,
+			MultipartBody multipartBody)
 		throws Exception {
 
 		return new Document();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/permissions'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "assetLibraryId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path("/asset-libraries/{assetLibraryId}/documents/permissions")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public Page<Permission> putAssetLibraryDocumentPermissionsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("assetLibraryId")
+			Long assetLibraryId,
+			Permission[] permissions)
+		throws Exception {
+
+		String portletName = getPermissionCheckerPortletName(assetLibraryId);
+
+		PermissionServiceUtil.checkPermission(
+			assetLibraryId, portletName, assetLibraryId);
+
+		ModelPermissions modelPermissions =
+			ModelPermissionsUtil.toModelPermissions(
+				contextCompany.getCompanyId(), permissions, assetLibraryId,
+				portletName, resourceActionLocalService,
+				resourcePermissionLocalService, roleLocalService);
+
+		Collection<String> roleNames = modelPermissions.getRoleNames();
+
+		for (ResourcePermission resourcePermission :
+				resourcePermissionLocalService.getResourcePermissions(
+					contextCompany.getCompanyId(), portletName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(assetLibraryId))) {
+
+			com.liferay.portal.kernel.model.Role role =
+				roleLocalService.fetchRole(resourcePermission.getRoleId());
+
+			if ((role == null) || roleNames.contains(role.getName())) {
+				continue;
+			}
+
+			for (ResourceAction resourceAction :
+					resourceActionLocalService.getResourceActions(
+						portletName)) {
+
+				resourcePermissionLocalService.removeResourcePermission(
+					contextCompany.getCompanyId(), portletName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(assetLibraryId), role.getRoleId(),
+					resourceAction.getActionId());
+			}
+		}
+
+		resourcePermissionLocalService.updateResourcePermissions(
+			contextCompany.getCompanyId(), assetLibraryId, portletName,
+			String.valueOf(assetLibraryId), modelPermissions);
+
+		return toPermissionPage(
+			HashMapBuilder.put(
+				"get",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"getAssetLibraryDocumentPermissionsPage", portletName,
+					assetLibraryId)
+			).put(
+				"replace",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"putAssetLibraryDocumentPermissionsPage", portletName,
+					assetLibraryId)
+			).build(),
+			assetLibraryId, portletName, null);
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Replaces the document with the information sent in the request body. Any missing fields are deleted, unless they are required. The request body must be `multipart/form-data` with two parts, the file's bytes (`file`), and an optional JSON string (`document`) with the metadata.",
+		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "multipart/form-data", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = PutDocumentRequestBody.class)))
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.Consumes("multipart/form-data")
+	@javax.ws.rs.Path("/documents/{documentId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public Document putDocument(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentId")
+			Long documentId,
+			MultipartBody multipartBody)
+		throws Exception {
+
+		return new Document();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/documents/batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.Path("/documents/batch")
+	@javax.ws.rs.Produces("application/json")
+	@javax.ws.rs.PUT
+	@Override
+	public Response putDocumentBatch(
+			MultipartBody multipartBody,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			Object object)
+		throws Exception {
+
+		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineImportTaskResource.putImportTask(
+				Document.class.getName(), callbackURL, object)
+		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}/my-rating' -d $'{"ratingValue": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Replaces the rating with the information sent in the request body. Any missing fields are deleted, unless they are required."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path("/documents/{documentId}/my-rating")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public Rating putDocumentMyRating(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentId")
+			Long documentId,
+			Rating rating)
+		throws Exception {
+
+		return new Rating();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}/permissions'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "documentId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path("/documents/{documentId}/permissions")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public Page<Permission> putDocumentPermissionsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("documentId")
+			Long documentId,
+			Permission[] permissions)
+		throws Exception {
+
+		String resourceName = getPermissionCheckerResourceName(documentId);
+		Long resourceId = getPermissionCheckerResourceId(documentId);
+
+		PermissionServiceUtil.checkPermission(
+			getPermissionCheckerGroupId(documentId), resourceName, resourceId);
+
+		ModelPermissions modelPermissions =
+			ModelPermissionsUtil.toModelPermissions(
+				contextCompany.getCompanyId(), permissions, resourceId,
+				resourceName, resourceActionLocalService,
+				resourcePermissionLocalService, roleLocalService);
+
+		Collection<String> roleNames = modelPermissions.getRoleNames();
+
+		for (ResourcePermission resourcePermission :
+				resourcePermissionLocalService.getResourcePermissions(
+					contextCompany.getCompanyId(), resourceName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(resourceId))) {
+
+			com.liferay.portal.kernel.model.Role role =
+				roleLocalService.fetchRole(resourcePermission.getRoleId());
+
+			if ((role == null) || roleNames.contains(role.getName())) {
+				continue;
+			}
+
+			for (ResourceAction resourceAction :
+					resourceActionLocalService.getResourceActions(
+						resourceName)) {
+
+				resourcePermissionLocalService.removeResourcePermission(
+					contextCompany.getCompanyId(), resourceName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(resourceId), role.getRoleId(),
+					resourceAction.getActionId());
+			}
+		}
+
+		resourcePermissionLocalService.updateResourcePermissions(
+			contextCompany.getCompanyId(),
+			getPermissionCheckerGroupId(documentId), resourceName,
+			String.valueOf(resourceId), modelPermissions);
+
+		return toPermissionPage(
+			HashMapBuilder.put(
+				"get",
+				addAction(
+					ActionKeys.PERMISSIONS, "getDocumentPermissionsPage",
+					resourceName, resourceId)
+			).put(
+				"replace",
+				addAction(
+					ActionKeys.PERMISSIONS, "putDocumentPermissionsPage",
+					resourceName, resourceId)
+			).build(),
+			resourceId, resourceName, null);
 	}
 
 	/**
@@ -1878,71 +2057,6 @@ public abstract class BaseDocumentResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents/permissions'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "roleNames"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/sites/{siteId}/documents/permissions")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<Permission> getSiteDocumentPermissionsPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("roleNames")
-			String roleNames)
-		throws Exception {
-
-		String portletName = getPermissionCheckerPortletName(siteId);
-
-		PermissionServiceUtil.checkPermission(siteId, portletName, siteId);
-
-		return toPermissionPage(
-			HashMapBuilder.put(
-				"get",
-				addAction(
-					ActionKeys.PERMISSIONS, "getSiteDocumentPermissionsPage",
-					portletName, siteId)
-			).put(
-				"replace",
-				addAction(
-					ActionKeys.PERMISSIONS, "putSiteDocumentPermissionsPage",
-					portletName, siteId)
-			).build(),
-			siteId, portletName, roleNames);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents/permissions'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -1973,13 +2087,41 @@ public abstract class BaseDocumentResourceImpl
 
 		PermissionServiceUtil.checkPermission(siteId, portletName, siteId);
 
-		resourcePermissionLocalService.updateResourcePermissions(
-			contextCompany.getCompanyId(), siteId, portletName,
-			String.valueOf(siteId),
+		ModelPermissions modelPermissions =
 			ModelPermissionsUtil.toModelPermissions(
 				contextCompany.getCompanyId(), permissions, siteId, portletName,
 				resourceActionLocalService, resourcePermissionLocalService,
-				roleLocalService));
+				roleLocalService);
+
+		Collection<String> roleNames = modelPermissions.getRoleNames();
+
+		for (ResourcePermission resourcePermission :
+				resourcePermissionLocalService.getResourcePermissions(
+					contextCompany.getCompanyId(), portletName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(siteId))) {
+
+			com.liferay.portal.kernel.model.Role role =
+				roleLocalService.fetchRole(resourcePermission.getRoleId());
+
+			if ((role == null) || roleNames.contains(role.getName())) {
+				continue;
+			}
+
+			for (ResourceAction resourceAction :
+					resourceActionLocalService.getResourceActions(
+						portletName)) {
+
+				resourcePermissionLocalService.removeResourcePermission(
+					contextCompany.getCompanyId(), portletName,
+					ResourceConstants.SCOPE_INDIVIDUAL, String.valueOf(siteId),
+					role.getRoleId(), resourceAction.getActionId());
+			}
+		}
+
+		resourcePermissionLocalService.updateResourcePermissions(
+			contextCompany.getCompanyId(), siteId, portletName,
+			String.valueOf(siteId), modelPermissions);
 
 		return toPermissionPage(
 			HashMapBuilder.put(
@@ -1994,48 +2136,6 @@ public abstract class BaseDocumentResourceImpl
 					portletName, siteId)
 			).build(),
 			siteId, portletName, null);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents/rated-by-me'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the documents rated by the user."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Document")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/sites/{siteId}/documents/rated-by-me")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<Document> getSiteDocumentsRatedByMePage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
-			@javax.ws.rs.core.Context Pagination pagination)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
 	}
 
 	@Override
@@ -2076,14 +2176,6 @@ public abstract class BaseDocumentResourceImpl
 		if (StringUtil.equalsIgnoreCase(createStrategy, "UPSERT")) {
 			String updateStrategy = (String)parameters.getOrDefault(
 				"updateStrategy", "UPDATE");
-
-			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
-				documentUnsafeFunction =
-					document -> putSiteDocumentByExternalReferenceCode(
-						document.getSiteId() != null ? document.getSiteId() :
-							(Long)parameters.get("siteId"),
-						document.getExternalReferenceCode(), null);
-			}
 
 			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
 				documentUnsafeFunction = document -> {
@@ -2129,6 +2221,14 @@ public abstract class BaseDocumentResourceImpl
 					return persistedDocument;
 				};
 			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				documentUnsafeFunction =
+					document -> putSiteDocumentByExternalReferenceCode(
+						document.getSiteId() != null ? document.getSiteId() :
+							(Long)parameters.get("siteId"),
+						document.getExternalReferenceCode(), null);
+			}
 		}
 
 		if (documentUnsafeFunction == null) {
@@ -2158,8 +2258,25 @@ public abstract class BaseDocumentResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (Document document : documents) {
-			deleteDocument(document.getId());
+		UnsafeFunction<Document, Document, Exception> documentUnsafeFunction =
+			document -> {
+				deleteDocument(document.getId());
+
+				return document;
+			};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				documents, documentUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				documents, documentUnsafeFunction::apply);
+		}
+		else {
+			for (Document document : documents) {
+				documentUnsafeFunction.apply(document);
+			}
 		}
 	}
 
@@ -2196,7 +2313,9 @@ public abstract class BaseDocumentResourceImpl
 
 	@Override
 	public Page<Document> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -2309,6 +2428,11 @@ public abstract class BaseDocumentResourceImpl
 		return null;
 	}
 
+	@Override
+	public Document getItem(Long id) throws Exception {
+		return getDocument(id);
+	}
+
 	protected String getPermissionCheckerActionsResourceName(Object id)
 		throws Exception {
 
@@ -2361,6 +2485,9 @@ public abstract class BaseDocumentResourceImpl
 				resourceName, null));
 	}
 
+	/**
+	 * @see com.liferay.portal.vulcan.permission.PermissionUtil#getPermissions(long, List, long, String, String[])
+	 */
 	private Collection<Permission> _getPermissions(
 			long companyId, List<ResourceAction> resourceActions,
 			long resourceId, String resourceName, String[] roleNames)
@@ -2512,7 +2639,8 @@ public abstract class BaseDocumentResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -2522,7 +2650,8 @@ public abstract class BaseDocumentResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -2557,6 +2686,10 @@ public abstract class BaseDocumentResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "headless-delivery";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -2574,7 +2707,7 @@ public abstract class BaseDocumentResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -2599,7 +2732,7 @@ public abstract class BaseDocumentResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -2617,13 +2750,13 @@ public abstract class BaseDocumentResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -2634,7 +2767,7 @@ public abstract class BaseDocumentResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -2759,7 +2892,8 @@ public abstract class BaseDocumentResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;
@@ -2774,7 +2908,7 @@ public abstract class BaseDocumentResourceImpl
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseDocumentResourceImpl.class);
 
-	private class PostAssetLibraryDocumentRequestBody {
+	private class PatchDocumentRequestBody {
 
 		public Document document;
 
@@ -2785,7 +2919,7 @@ public abstract class BaseDocumentResourceImpl
 
 	}
 
-	private class PutAssetLibraryDocumentByExternalReferenceCodeRequestBody {
+	private class PostAssetLibraryDocumentRequestBody {
 
 		public Document document;
 
@@ -2807,7 +2941,18 @@ public abstract class BaseDocumentResourceImpl
 
 	}
 
-	private class PatchDocumentRequestBody {
+	private class PostSiteDocumentRequestBody {
+
+		public Document document;
+
+		@io.swagger.v3.oas.annotations.media.Schema(
+			description = "File", format = "binary", type = "string"
+		)
+		public String file;
+
+	}
+
+	private class PutAssetLibraryDocumentByExternalReferenceCodeRequestBody {
 
 		public Document document;
 
@@ -2819,17 +2964,6 @@ public abstract class BaseDocumentResourceImpl
 	}
 
 	private class PutDocumentRequestBody {
-
-		public Document document;
-
-		@io.swagger.v3.oas.annotations.media.Schema(
-			description = "File", format = "binary", type = "string"
-		)
-		public String file;
-
-	}
-
-	private class PostSiteDocumentRequestBody {
 
 		public Document document;
 

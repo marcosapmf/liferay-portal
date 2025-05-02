@@ -120,10 +120,6 @@ public class CommercePriceModifierLocalServiceImpl
 			boolean neverExpire, ServiceContext serviceContext)
 		throws PortalException {
 
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
-
 		// Commerce price modifier
 
 		User user = _userLocalService.getUser(serviceContext.getUserId());
@@ -332,18 +328,6 @@ public class CommercePriceModifierLocalServiceImpl
 			commercePriceModifierLocalService.deleteCommercePriceModifier(
 				commercePriceModifier);
 		}
-	}
-
-	@Override
-	public CommercePriceModifier fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			return null;
-		}
-
-		return commercePriceModifierPersistence.fetchByERC_C(
-			externalReferenceCode, companyId);
 	}
 
 	@Override

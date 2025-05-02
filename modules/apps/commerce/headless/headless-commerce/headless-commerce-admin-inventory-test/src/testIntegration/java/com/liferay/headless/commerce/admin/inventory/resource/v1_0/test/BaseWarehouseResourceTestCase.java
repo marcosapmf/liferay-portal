@@ -30,8 +30,9 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -46,7 +47,7 @@ import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,7 +86,7 @@ public abstract class BaseWarehouseResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -99,10 +100,15 @@ public abstract class BaseWarehouseResourceTestCase {
 
 		_warehouseResource.setContextCompany(testCompany);
 
-		WarehouseResource.Builder builder = WarehouseResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		warehouseResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		warehouseResource = WarehouseResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -116,7 +122,32 @@ public abstract class BaseWarehouseResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Warehouse warehouse1 = randomWarehouse();
+
+		String json = objectMapper.writeValueAsString(warehouse1);
+
+		Warehouse warehouse2 = WarehouseSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(warehouse1, warehouse2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Warehouse warehouse = randomWarehouse();
+
+		String json1 = objectMapper.writeValueAsString(warehouse);
+		String json2 = WarehouseSerDes.toJSON(warehouse);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -131,40 +162,6 @@ public abstract class BaseWarehouseResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Warehouse warehouse1 = randomWarehouse();
-
-		String json = objectMapper.writeValueAsString(warehouse1);
-
-		Warehouse warehouse2 = WarehouseSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(warehouse1, warehouse2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Warehouse warehouse = randomWarehouse();
-
-		String json1 = objectMapper.writeValueAsString(warehouse);
-		String json2 = WarehouseSerDes.toJSON(warehouse);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -198,6 +195,299 @@ public abstract class BaseWarehouseResourceTestCase {
 		Assert.assertEquals(regex, warehouse.getStreet3());
 		Assert.assertEquals(regex, warehouse.getType());
 		Assert.assertEquals(regex, warehouse.getZip());
+	}
+
+	@Test
+	public void testDeleteWarehouseByExternalReferenceCode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Warehouse warehouse =
+			testDeleteWarehouseByExternalReferenceCode_addWarehouse();
+
+		assertHttpResponseStatusCode(
+			204,
+			warehouseResource.
+				deleteWarehouseByExternalReferenceCodeHttpResponse(
+					warehouse.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			warehouseResource.getWarehouseByExternalReferenceCodeHttpResponse(
+				warehouse.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			warehouseResource.getWarehouseByExternalReferenceCodeHttpResponse(
+				"-"));
+	}
+
+	protected Warehouse
+			testDeleteWarehouseByExternalReferenceCode_addWarehouse()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteWarehouseId() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Warehouse warehouse = testDeleteWarehouseId_addWarehouse();
+
+		assertHttpResponseStatusCode(
+			204,
+			warehouseResource.deleteWarehouseIdHttpResponse(warehouse.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			warehouseResource.getWarehouseIdHttpResponse(warehouse.getId()));
+		assertHttpResponseStatusCode(
+			404, warehouseResource.getWarehouseIdHttpResponse(0L));
+	}
+
+	protected Warehouse testDeleteWarehouseId_addWarehouse() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetWarehouseByExternalReferenceCode() throws Exception {
+		Warehouse postWarehouse =
+			testGetWarehouseByExternalReferenceCode_addWarehouse();
+
+		Warehouse getWarehouse =
+			warehouseResource.getWarehouseByExternalReferenceCode(
+				postWarehouse.getExternalReferenceCode());
+
+		assertEquals(postWarehouse, getWarehouse);
+		assertValid(getWarehouse);
+	}
+
+	protected Warehouse testGetWarehouseByExternalReferenceCode_addWarehouse()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetWarehouseByExternalReferenceCode()
+		throws Exception {
+
+		Warehouse warehouse =
+			testGraphQLGetWarehouseByExternalReferenceCode_addWarehouse();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				warehouse,
+				WarehouseSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"warehouseByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												warehouse.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/warehouseByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertTrue(
+			equals(
+				warehouse,
+				WarehouseSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminInventory_v1_0",
+								new GraphQLField(
+									"warehouseByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													warehouse.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminInventory_v1_0",
+						"Object/warehouseByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetWarehouseByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"warehouseByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"warehouseByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Warehouse
+			testGraphQLGetWarehouseByExternalReferenceCode_addWarehouse()
+		throws Exception {
+
+		return testGraphQLWarehouse_addWarehouse();
+	}
+
+	@Test
+	public void testGetWarehouseId() throws Exception {
+		Warehouse postWarehouse = testGetWarehouseId_addWarehouse();
+
+		Warehouse getWarehouse = warehouseResource.getWarehouseId(
+			postWarehouse.getId());
+
+		assertEquals(postWarehouse, getWarehouse);
+		assertValid(getWarehouse);
+	}
+
+	protected Warehouse testGetWarehouseId_addWarehouse() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetWarehouseId() throws Exception {
+		Warehouse warehouse = testGraphQLGetWarehouseId_addWarehouse();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				warehouse,
+				WarehouseSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"warehouseId",
+								new HashMap<String, Object>() {
+									{
+										put("id", warehouse.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/warehouseId"))));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertTrue(
+			equals(
+				warehouse,
+				WarehouseSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminInventory_v1_0",
+								new GraphQLField(
+									"warehouseId",
+									new HashMap<String, Object>() {
+										{
+											put("id", warehouse.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminInventory_v1_0",
+						"Object/warehouseId"))));
+	}
+
+	@Test
+	public void testGraphQLGetWarehouseIdNotFound() throws Exception {
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"warehouseId",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"warehouseId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Warehouse testGraphQLGetWarehouseId_addWarehouse()
+		throws Exception {
+
+		return testGraphQLWarehouse_addWarehouse();
 	}
 
 	@Test
@@ -312,10 +602,10 @@ public abstract class BaseWarehouseResourceTestCase {
 
 	@Test
 	public void testGetWarehousesPageWithPagination() throws Exception {
-		Page<Warehouse> warehousePage = warehouseResource.getWarehousesPage(
+		Page<Warehouse> warehousesPage = warehouseResource.getWarehousesPage(
 			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(warehousePage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(warehousesPage.getTotalCount());
 
 		Warehouse warehouse1 = testGetWarehousesPage_addWarehouse(
 			randomWarehouse());
@@ -594,6 +884,16 @@ public abstract class BaseWarehouseResourceTestCase {
 	}
 
 	@Test
+	public void testPatchWarehouseByExternalReferenceCode() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPatchWarehouseId() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
 	public void testPostWarehouse() throws Exception {
 		Warehouse randomWarehouse = randomWarehouse();
 
@@ -612,309 +912,57 @@ public abstract class BaseWarehouseResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteWarehouseByExternalReferenceCode() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Warehouse warehouse =
-			testDeleteWarehouseByExternalReferenceCode_addWarehouse();
-
-		assertHttpResponseStatusCode(
-			204,
-			warehouseResource.
-				deleteWarehouseByExternalReferenceCodeHttpResponse(
-					warehouse.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			warehouseResource.getWarehouseByExternalReferenceCodeHttpResponse(
-				warehouse.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			warehouseResource.getWarehouseByExternalReferenceCodeHttpResponse(
-				warehouse.getExternalReferenceCode()));
-	}
-
-	protected Warehouse
-			testDeleteWarehouseByExternalReferenceCode_addWarehouse()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetWarehouseByExternalReferenceCode() throws Exception {
+	public void testPutWarehouseByExternalReferenceCode() throws Exception {
 		Warehouse postWarehouse =
-			testGetWarehouseByExternalReferenceCode_addWarehouse();
+			testPutWarehouseByExternalReferenceCode_addWarehouse();
+
+		Warehouse randomWarehouse = randomWarehouse();
+
+		Warehouse putWarehouse =
+			warehouseResource.putWarehouseByExternalReferenceCode(
+				postWarehouse.getExternalReferenceCode(), randomWarehouse);
+
+		assertEquals(randomWarehouse, putWarehouse);
+		assertValid(putWarehouse);
 
 		Warehouse getWarehouse =
 			warehouseResource.getWarehouseByExternalReferenceCode(
-				postWarehouse.getExternalReferenceCode());
+				putWarehouse.getExternalReferenceCode());
 
-		assertEquals(postWarehouse, getWarehouse);
+		assertEquals(randomWarehouse, getWarehouse);
 		assertValid(getWarehouse);
-	}
 
-	protected Warehouse testGetWarehouseByExternalReferenceCode_addWarehouse()
-		throws Exception {
+		Warehouse newWarehouse =
+			testPutWarehouseByExternalReferenceCode_createWarehouse();
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
+		putWarehouse = warehouseResource.putWarehouseByExternalReferenceCode(
+			newWarehouse.getExternalReferenceCode(), newWarehouse);
 
-	@Test
-	public void testGraphQLGetWarehouseByExternalReferenceCode()
-		throws Exception {
+		assertEquals(newWarehouse, putWarehouse);
+		assertValid(putWarehouse);
 
-		Warehouse warehouse =
-			testGraphQLGetWarehouseByExternalReferenceCode_addWarehouse();
+		getWarehouse = warehouseResource.getWarehouseByExternalReferenceCode(
+			putWarehouse.getExternalReferenceCode());
 
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				warehouse,
-				WarehouseSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"warehouseByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												warehouse.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/warehouseByExternalReferenceCode"))));
-
-		// Using the namespace headlessCommerceAdminInventory_v1_0
-
-		Assert.assertTrue(
-			equals(
-				warehouse,
-				WarehouseSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminInventory_v1_0",
-								new GraphQLField(
-									"warehouseByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													warehouse.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminInventory_v1_0",
-						"Object/warehouseByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetWarehouseByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
+		assertEquals(newWarehouse, getWarehouse);
 
 		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"warehouseByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminInventory_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminInventory_v1_0",
-						new GraphQLField(
-							"warehouseByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
+			newWarehouse.getExternalReferenceCode(),
+			putWarehouse.getExternalReferenceCode());
 	}
 
 	protected Warehouse
-			testGraphQLGetWarehouseByExternalReferenceCode_addWarehouse()
+			testPutWarehouseByExternalReferenceCode_createWarehouse()
 		throws Exception {
 
-		return testGraphQLWarehouse_addWarehouse();
+		return randomWarehouse();
 	}
 
-	@Test
-	public void testPatchWarehouseByExternalReferenceCode() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testDeleteWarehouseId() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Warehouse warehouse = testDeleteWarehouseId_addWarehouse();
-
-		assertHttpResponseStatusCode(
-			204,
-			warehouseResource.deleteWarehouseIdHttpResponse(warehouse.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			warehouseResource.getWarehouseIdHttpResponse(warehouse.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			warehouseResource.getWarehouseIdHttpResponse(warehouse.getId()));
-	}
-
-	protected Warehouse testDeleteWarehouseId_addWarehouse() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetWarehouseId() throws Exception {
-		Warehouse postWarehouse = testGetWarehouseId_addWarehouse();
-
-		Warehouse getWarehouse = warehouseResource.getWarehouseId(
-			postWarehouse.getId());
-
-		assertEquals(postWarehouse, getWarehouse);
-		assertValid(getWarehouse);
-	}
-
-	protected Warehouse testGetWarehouseId_addWarehouse() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetWarehouseId() throws Exception {
-		Warehouse warehouse = testGraphQLGetWarehouseId_addWarehouse();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				warehouse,
-				WarehouseSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"warehouseId",
-								new HashMap<String, Object>() {
-									{
-										put("id", warehouse.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/warehouseId"))));
-
-		// Using the namespace headlessCommerceAdminInventory_v1_0
-
-		Assert.assertTrue(
-			equals(
-				warehouse,
-				WarehouseSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminInventory_v1_0",
-								new GraphQLField(
-									"warehouseId",
-									new HashMap<String, Object>() {
-										{
-											put("id", warehouse.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminInventory_v1_0",
-						"Object/warehouseId"))));
-	}
-
-	@Test
-	public void testGraphQLGetWarehouseIdNotFound() throws Exception {
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"warehouseId",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminInventory_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminInventory_v1_0",
-						new GraphQLField(
-							"warehouseId",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected Warehouse testGraphQLGetWarehouseId_addWarehouse()
+	protected Warehouse testPutWarehouseByExternalReferenceCode_addWarehouse()
 		throws Exception {
 
-		return testGraphQLWarehouse_addWarehouse();
-	}
-
-	@Test
-	public void testPatchWarehouseId() throws Exception {
-		Assert.assertTrue(false);
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Rule
@@ -2073,12 +2121,12 @@ public abstract class BaseWarehouseResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2087,11 +2135,16 @@ public abstract class BaseWarehouseResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2123,6 +2176,24 @@ public abstract class BaseWarehouseResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2144,16 +2215,6 @@ public abstract class BaseWarehouseResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -2251,7 +2312,9 @@ public abstract class BaseWarehouseResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseWarehouseResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.commerce.admin.inventory.resource.v1_0.

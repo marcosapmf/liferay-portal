@@ -1,22 +1,27 @@
 {
-	"@generated": "c716a3f50f85431ef66f1dd236ceadf6752c7719",
+	"@generated": "4fb5fd87736a5b6c0b0c45e4ac37a0179fdaa85a",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 			"commerce-frontend-js": [
 				"../../../../../../commerce-frontend-js/src/main/resources/META-INF/resources/index.js"
 			],
+			"frontend-js-components-web": [
+				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
+			],
 			"frontend-js-web": [
-				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/index.d.ts"
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/main/index.d.ts"
+			],
+			"frontend-js-web/legacy": [
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/legacy/index.ts"
 			]
 		},
 		"rootDir": "../../../../../../../..",
@@ -37,6 +42,9 @@
 	"references": [
 		{
 			"path": "../../../../../../commerce-frontend-js/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},
 		{
 			"path": "../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/tsconfig.json"

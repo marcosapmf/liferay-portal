@@ -22,10 +22,14 @@ if (Validator.isNotNull(assetCategoryIdsString)) {
 
 String accountIds = "[]";
 
-AccountEntry accountEntry = commerceContext.getAccountEntry();
+AccountEntry accountEntry = null;
 
-if (accountEntry != null) {
-	accountIds = jsonSerializer.serializeDeep(new Long[] {accountEntry.getAccountEntryId()});
+if (commerceContext != null) {
+	accountEntry = commerceContext.getAccountEntry();
+
+	if (accountEntry != null) {
+		accountIds = jsonSerializer.serializeDeep(new Long[] {accountEntry.getAccountEntryId()});
+	}
 }
 %>
 

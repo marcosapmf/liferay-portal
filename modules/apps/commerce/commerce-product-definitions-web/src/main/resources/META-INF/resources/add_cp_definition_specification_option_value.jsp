@@ -26,6 +26,8 @@ CommerceCatalog commerceCatalog = cpDefinition.getCommerceCatalog();
 					"catalogDefaultLanguageId", commerceCatalog.getCatalogDefaultLanguageId()
 				).put(
 					"createNewSpecification", ParamUtil.getBoolean(request, "createNewSpecification")
+				).put(
+					"siteLanguage", LanguageUtil.getLanguageId(LocaleUtil.getSiteDefault())
 				).build()
 			%>'
 		/>

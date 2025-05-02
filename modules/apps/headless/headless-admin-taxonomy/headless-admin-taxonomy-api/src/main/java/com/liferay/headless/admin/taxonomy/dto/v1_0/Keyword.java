@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -46,11 +44,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 	description = "Represents a keyword that describes content. Properties follow the [keywords](https://schema.org/keywords) specification.",
 	value = "Keyword"
 )
-@JsonFilter("Liferay.Vulcan")
-@Schema(
+@io.swagger.v3.oas.annotations.media.Schema(
 	description = "Represents a keyword that describes content. Properties follow the [keywords](https://schema.org/keywords) specification.",
 	requiredProperties = {"name"}
 )
+@JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Keyword")
 public class Keyword implements Serializable {
 
@@ -62,7 +60,7 @@ public class Keyword implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Keyword.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
 		if (_actionsSupplier != null) {
@@ -105,7 +103,54 @@ public class Keyword implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A list of asset libraries that are associated with this keyword."
+	)
+	@Valid
+	public AssetLibrary[] getAssetLibraries() {
+		if (_assetLibrariesSupplier != null) {
+			assetLibraries = _assetLibrariesSupplier.get();
+
+			_assetLibrariesSupplier = null;
+		}
+
+		return assetLibraries;
+	}
+
+	public void setAssetLibraries(AssetLibrary[] assetLibraries) {
+		this.assetLibraries = assetLibraries;
+
+		_assetLibrariesSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setAssetLibraries(
+		UnsafeSupplier<AssetLibrary[], Exception>
+			assetLibrariesUnsafeSupplier) {
+
+		_assetLibrariesSupplier = () -> {
+			try {
+				return assetLibrariesUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "A list of asset libraries that are associated with this keyword."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected AssetLibrary[] assetLibraries;
+
+	@JsonIgnore
+	private Supplier<AssetLibrary[]> _assetLibrariesSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getAssetLibraryKey() {
 		if (_assetLibraryKeySupplier != null) {
 			assetLibraryKey = _assetLibraryKeySupplier.get();
@@ -146,7 +191,9 @@ public class Keyword implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _assetLibraryKeySupplier;
 
-	@Schema(description = "The keyword's creator.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The keyword's creator."
+	)
 	@Valid
 	public Creator getCreator() {
 		if (_creatorSupplier != null) {
@@ -188,7 +235,9 @@ public class Keyword implements Serializable {
 	@JsonIgnore
 	private Supplier<Creator> _creatorSupplier;
 
-	@Schema(description = "The keyword's creation date.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The keyword's creation date."
+	)
 	public Date getDateCreated() {
 		if (_dateCreatedSupplier != null) {
 			dateCreated = _dateCreatedSupplier.get();
@@ -229,7 +278,9 @@ public class Keyword implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateCreatedSupplier;
 
-	@Schema(description = "The keyword's most recent modification date.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The keyword's most recent modification date."
+	)
 	public Date getDateModified() {
 		if (_dateModifiedSupplier != null) {
 			dateModified = _dateModifiedSupplier.get();
@@ -270,7 +321,52 @@ public class Keyword implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateModifiedSupplier;
 
-	@Schema(description = "The keyword's ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The keyword's external reference code"
+	)
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCodeSupplier != null) {
+			externalReferenceCode = _externalReferenceCodeSupplier.get();
+
+			_externalReferenceCodeSupplier = null;
+		}
+
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+
+		_externalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		_externalReferenceCodeSupplier = () -> {
+			try {
+				return externalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The keyword's external reference code")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String externalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _externalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The keyword's ID."
+	)
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -309,7 +405,7 @@ public class Keyword implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The number of times this keyword has been used with other assets."
 	)
 	public Integer getKeywordUsageCount() {
@@ -354,7 +450,9 @@ public class Keyword implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _keywordUsageCountSupplier;
 
-	@Schema(description = "The keyword's name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The keyword's name."
+	)
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -394,7 +492,56 @@ public class Keyword implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema(description = "The ID of the site to which this keyword is scoped.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The external reference code of the site to which this keyword is scoped."
+	)
+	public String getSiteExternalReferenceCode() {
+		if (_siteExternalReferenceCodeSupplier != null) {
+			siteExternalReferenceCode =
+				_siteExternalReferenceCodeSupplier.get();
+
+			_siteExternalReferenceCodeSupplier = null;
+		}
+
+		return siteExternalReferenceCode;
+	}
+
+	public void setSiteExternalReferenceCode(String siteExternalReferenceCode) {
+		this.siteExternalReferenceCode = siteExternalReferenceCode;
+
+		_siteExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setSiteExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			siteExternalReferenceCodeUnsafeSupplier) {
+
+		_siteExternalReferenceCodeSupplier = () -> {
+			try {
+				return siteExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The external reference code of the site to which this keyword is scoped."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String siteExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _siteExternalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The ID of the site to which this keyword is scoped."
+	)
 	public Long getSiteId() {
 		if (_siteIdSupplier != null) {
 			siteId = _siteIdSupplier.get();
@@ -437,7 +584,7 @@ public class Keyword implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _siteIdSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether the user making the requests is subscribed to this keyword."
 	)
 	public Boolean getSubscribed() {
@@ -524,6 +671,28 @@ public class Keyword implements Serializable {
 			sb.append(_toJSON(actions));
 		}
 
+		AssetLibrary[] assetLibraries = getAssetLibraries();
+
+		if (assetLibraries != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assetLibraries\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < assetLibraries.length; i++) {
+				sb.append(String.valueOf(assetLibraries[i]));
+
+				if ((i + 1) < assetLibraries.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		String assetLibraryKey = getAssetLibraryKey();
 
 		if (assetLibraryKey != null) {
@@ -584,6 +753,22 @@ public class Keyword implements Serializable {
 			sb.append("\"");
 		}
 
+		String externalReferenceCode = getExternalReferenceCode();
+
+		if (externalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		Long id = getId();
 
 		if (id != null) {
@@ -624,6 +809,22 @@ public class Keyword implements Serializable {
 			sb.append("\"");
 		}
 
+		String siteExternalReferenceCode = getSiteExternalReferenceCode();
+
+		if (siteExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"siteExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(siteExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		Long siteId = getSiteId();
 
 		if (siteId != null) {
@@ -653,8 +854,8 @@ public class Keyword implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.taxonomy.dto.v1_0.Keyword",
 		name = "x-class-name"
 	)

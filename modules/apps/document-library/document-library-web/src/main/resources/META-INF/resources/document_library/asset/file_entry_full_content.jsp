@@ -18,7 +18,7 @@ DLViewFileVersionDisplayContext dlViewFileVersionDisplayContext = dlDisplayConte
 <liferay-util:html-top
 	outputKey="com.liferay.document.library.web#/document_library/asset/file_entry_full_content.jsp"
 >
-	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/document_library/css/document_library_preview.css") %>" rel="stylesheet" type="text/css" />
+	<aui:link href='<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/document_library/css/document_library_preview.css") %>' rel="stylesheet" type="text/css" />
 </liferay-util:html-top>
 
 <c:choose>
@@ -28,7 +28,7 @@ DLViewFileVersionDisplayContext dlViewFileVersionDisplayContext = dlDisplayConte
 	<c:otherwise>
 
 		<%
-		DLAdminDisplayContextProvider dlAdminDisplayContextProvider = DLWebComponentProvider.getDlAdminDisplayContextProvider();
+		DLAdminDisplayContextProvider dlAdminDisplayContextProvider = DLWebComponentProvider.getDLAdminDisplayContextProvider();
 
 		renderRequest.setAttribute(DLViewFileEntryDisplayContext.class.getName(), new DLViewFileEntryDisplayContext(dlAdminDisplayContextProvider.getDLAdminDisplayContext(request, response), dlDisplayContextProvider, request, LanguageUtil.getLanguage(), PortalUtil.getPortal(), renderRequest, renderResponse));
 		%>

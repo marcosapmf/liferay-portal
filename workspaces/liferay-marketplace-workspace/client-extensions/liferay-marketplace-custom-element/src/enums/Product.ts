@@ -5,19 +5,70 @@
 
 import i18n from '../i18n';
 
-export enum PRODUCT_CATEGORIES {
+export enum LicenseType {
+	SUBSCRIPTION = 'subscription',
+	PERPETUAL = 'perpetual',
+}
+
+export enum ProductCategoies {
 	MARKETPLACE_APP_CATEGORY = 'marketplace-app-category',
 	MARKETPLACE_APP_TAGS = 'marketplace-app-tags',
+	MARKETPLACE_LIFERAY_VERSION = 'marketplace-liferay-version',
+	MARKETPLACE_PRODUCT_TYPE = 'marketplace-product-type',
 	MARKETPLACE_SOLUTION_CATEGORY = 'marketplace-solution-category',
 	MARKETPLACE_SOLUTION_TAGS = 'marketplace-solution-tags',
 }
 
-export enum PRODUCT_PRICE_MODEL {
+export enum ProductEditionOption {
+	EE = 'EE',
+}
+
+export enum ProductImageFallbackCategories {
+	PRODUCT_ICON = 'productIcon',
+	PRODUCT_IMAGE = 'productImage',
+}
+
+export enum ProductLicense {
+	BASE = 'base-license-usage-type',
+	CLOUD = 'cloud-license-usage-type',
+	DXP = 'dxp-license-usage-type',
+}
+
+export enum ProductLicenseType {
+	SUBSCRIPTION = 'Subscription',
+	PERPETUAL = 'Perpetual',
+}
+
+export enum ProductOfferingTypes {
+	LIFERAY_PAAS = 'Liferay PaaS',
+	LIFERAY_SAAS = 'Liferay SaaS',
+	LIFERAY_SELF_HOSTED = 'Liferay Self-Hosted',
+}
+
+export enum ProductPriceModel {
 	FREE = 'Free',
 	PAID = 'Paid',
 }
 
-export enum PRODUCT_SPECIFICATION_KEY {
+export enum ProductSpecificationKey {
+	APP_BUILD_NUMBER_OF_CPUS = 'cpu',
+	APP_BUILD_RAM_IN_GBS = 'ram',
+	APP_DEVELOPER_NAME = 'developer-name',
+	APP_ENTRY_UUID = 'app-entry-uuid',
+	APP_LICENSING_TYPE = 'license-type',
+	APP_PRICING_MODEL = 'price-model',
+	APP_SETTINGS = 'app-settings',
+	APP_SUPPORT_DOCUMENTATION_URL = 'appdocumentationurl',
+	APP_SUPPORT_EMAIL = 'supportemailaddress',
+	APP_SUPPORT_INSTALLATION_GUIDE_URL = 'appinstallationguideurl',
+	APP_SUPPORT_PHONE = 'supportphone',
+	APP_SUPPORT_PUBLISHER_WEBSITE_URL = 'publisherwebsiteurl',
+	APP_SUPPORT_URL = 'supporturl',
+	APP_SUPPORT_USAGE_TERMS_URL = 'appusagetermsurl',
+	APP_TYPE = 'type',
+	APP_VERSION = 'latest-version',
+	APP_VERSION_NOTES = 'product-notes',
+	LIFERAY_VERSION = 'liferay-version',
 	SOLUTION_COMPANY_DESCRIPTION = 'solution-company-description',
 	SOLUTION_COMPANY_EMAIL = 'solution-company-email',
 	SOLUTION_COMPANY_PHONE = 'solution-company-phone',
@@ -28,9 +79,10 @@ export enum PRODUCT_SPECIFICATION_KEY {
 	SOLUTION_HEADER_TITLE = 'solution-header-title',
 	SOLUTION_HEADER_VIDEO_DESCRIPTION = 'solution-header-video-description',
 	SOLUTION_HEADER_VIDEO_URL = 'solution-header-video-url',
+	SOLUTION_TYPE = 'solution-type',
 }
 
-export enum PRODUCT_SUPPORT_SPECIFICATION_KEY {
+export enum ProductSupportSpecificationKey {
 	APP_DOCUMENTATION_URL = 'appdocumentationurl',
 	APP_INSTALLATION_GUIDE_URL = 'appinstallationguideurl',
 	APP_USAGE_TERMS_URL = 'appusagetermsurl',
@@ -40,20 +92,77 @@ export enum PRODUCT_SUPPORT_SPECIFICATION_KEY {
 	SUPPORT_URL = 'supporturl',
 }
 
-export enum PRODUCT_TAGS {
-	SOLUTION_PROFILE_APP_ICON = 'solution-profile-app-icon',
+export enum ProductTags {
+	APP_ICON = 'app-icon',
 	SOLUTION_DETAILS = 'solution-details',
 	SOLUTION_HEADER = 'solution-header',
+	SOLUTION_PROFILE_APP_ICON = 'solution-profile-app-icon',
 }
 
-export enum PRODUCT_WORKFLOW_STATUS_CODE {
+export enum ProductType {
+	CLIENT_EXTENSION = 'client-extension',
+	CLOUD = 'cloud',
+	COMPOSITE_APP = 'composite-app',
+	DXP = 'dxp',
+	LOW_CODE_CONFIGURATION = 'low-code-configuration',
+	OTHER = 'other',
+}
+
+export enum ProductTypeVocabulary {
+	APP = 'App',
+	SOLUTION = 'Solution',
+}
+
+export enum ProductUploadType {
+	LXC = 'Liferay SaaS',
+	GITHUB = 'GitHub',
+	ZIP_UPLOAD = 'upload',
+}
+
+export enum ProductVersionOption {
+	'7.4x' = '7.4',
+}
+
+export enum ProductVocabulary {
+	APP_AREA = 'Marketplace App Category',
+	APP_CATEGORY = 'Marketplace Category',
+	APP_TAGS = 'Marketplace App Tags',
+	EDITION = 'Marketplace Edition',
+	LIFERAY_PLATFORM_OFFERING = 'Marketplace Liferay Platform Offering',
+	PRODUCT_TYPE = 'Marketplace Product Type',
+	LIFERAY_VERSION = 'Marketplace Liferay Version',
+	SOLUTION_CATEGORY = 'Marketplace Solution Category',
+	SOLUTION_TAGS = 'Marketplace Solution Tags',
+}
+
+export enum ProductWorkflowStatusCode {
 	APPROVED = 0,
-	PENDING = 1,
 	DRAFT = 2,
+	PENDING = 1,
 }
 
-export const PRODUCT_WORKFLOW_STATUS_LABEL = {
-	[PRODUCT_WORKFLOW_STATUS_CODE.APPROVED]: i18n.translate('approved'),
-	[PRODUCT_WORKFLOW_STATUS_CODE.PENDING]: i18n.translate('under-review'),
-	[PRODUCT_WORKFLOW_STATUS_CODE.DRAFT]: i18n.translate('draft'),
+export enum SkuOptions {
+	DEVELOPER = 'developer',
+	STANDARD = 'standard',
+	TRIAL = 'trial',
+}
+
+export enum SolutionTypes {
+	ANALYTICS = 'analytics',
+	PRE_BUILT_TRIAL = 'pre-built-trial',
+}
+
+export const ProductTypeLabels = {
+	[ProductType.CLIENT_EXTENSION]: 'Client Extension',
+	[ProductType.CLOUD]: 'Cloud',
+	[ProductType.COMPOSITE_APP]: 'Composite App',
+	[ProductType.DXP]: 'DXP',
+	[ProductType.LOW_CODE_CONFIGURATION]: 'Low-Code Configuration',
+	[ProductType.OTHER]: 'Other',
+} as const;
+
+export const ProductWorkflowStatusLabel = {
+	[ProductWorkflowStatusCode.APPROVED]: i18n.translate('approved'),
+	[ProductWorkflowStatusCode.DRAFT]: i18n.translate('draft'),
+	[ProductWorkflowStatusCode.PENDING]: i18n.translate('under-review'),
 };

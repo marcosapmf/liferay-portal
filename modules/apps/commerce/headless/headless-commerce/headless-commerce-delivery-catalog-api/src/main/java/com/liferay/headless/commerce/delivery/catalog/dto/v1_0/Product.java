@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -55,7 +53,7 @@ public class Product implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Product.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Attachment[] getAttachments() {
 		if (_attachmentsSupplier != null) {
@@ -97,7 +95,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<Attachment[]> _attachmentsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getCatalogName() {
 		if (_catalogNameSupplier != null) {
 			catalogName = _catalogNameSupplier.get();
@@ -138,7 +136,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _catalogNameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Category[] getCategories() {
 		if (_categoriesSupplier != null) {
@@ -180,7 +178,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<Category[]> _categoriesSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getCreateDate() {
 		if (_createDateSupplier != null) {
 			createDate = _createDateSupplier.get();
@@ -221,9 +219,11 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _createDateSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
-	public CustomField[] getCustomFields() {
+	public com.liferay.portal.vulcan.custom.field.CustomField[]
+		getCustomFields() {
+
 		if (_customFieldsSupplier != null) {
 			customFields = _customFieldsSupplier.get();
 
@@ -233,7 +233,9 @@ public class Product implements Serializable {
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields) {
+
 		this.customFields = customFields;
 
 		_customFieldsSupplier = null;
@@ -241,7 +243,9 @@ public class Product implements Serializable {
 
 	@JsonIgnore
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.custom.field.CustomField[], Exception>
+				customFieldsUnsafeSupplier) {
 
 		_customFieldsSupplier = () -> {
 			try {
@@ -258,12 +262,13 @@ public class Product implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected CustomField[] customFields;
+	protected com.liferay.portal.vulcan.custom.field.CustomField[] customFields;
 
 	@JsonIgnore
-	private Supplier<CustomField[]> _customFieldsSupplier;
+	private Supplier<com.liferay.portal.vulcan.custom.field.CustomField[]>
+		_customFieldsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getDescription() {
 		if (_descriptionSupplier != null) {
 			description = _descriptionSupplier.get();
@@ -304,7 +309,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _descriptionSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, ?> getExpando() {
 		if (_expandoSupplier != null) {
@@ -346,7 +351,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, ?>> _expandoSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -388,7 +393,7 @@ public class Product implements Serializable {
 	private Supplier<String> _externalReferenceCodeSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "30130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -427,7 +432,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Attachment[] getImages() {
 		if (_imagesSupplier != null) {
@@ -469,7 +474,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<Attachment[]> _imagesSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public LinkedProduct[] getLinkedProducts() {
 		if (_linkedProductsSupplier != null) {
@@ -512,7 +517,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<LinkedProduct[]> _linkedProductsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getMetaDescription() {
 		if (_metaDescriptionSupplier != null) {
 			metaDescription = _metaDescriptionSupplier.get();
@@ -553,7 +558,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _metaDescriptionSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getMetaKeyword() {
 		if (_metaKeywordSupplier != null) {
 			metaKeyword = _metaKeywordSupplier.get();
@@ -594,7 +599,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _metaKeywordSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getMetaTitle() {
 		if (_metaTitleSupplier != null) {
 			metaTitle = _metaTitleSupplier.get();
@@ -635,7 +640,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _metaTitleSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getModifiedDate() {
 		if (_modifiedDateSupplier != null) {
 			modifiedDate = _modifiedDateSupplier.get();
@@ -676,7 +681,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _modifiedDateSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Integer getMultipleOrderQuantity() {
 		if (_multipleOrderQuantitySupplier != null) {
 			multipleOrderQuantity = _multipleOrderQuantitySupplier.get();
@@ -718,7 +723,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _multipleOrderQuantitySupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -757,7 +762,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public ProductConfiguration getProductConfiguration() {
 		if (_productConfigurationSupplier != null) {
@@ -802,7 +807,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<ProductConfiguration> _productConfigurationSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getProductId() {
 		if (_productIdSupplier != null) {
 			productId = _productIdSupplier.get();
@@ -843,7 +848,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _productIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public ProductOption[] getProductOptions() {
 		if (_productOptionsSupplier != null) {
@@ -886,7 +891,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<ProductOption[]> _productOptionsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public ProductSpecification[] getProductSpecifications() {
 		if (_productSpecificationsSupplier != null) {
@@ -931,7 +936,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<ProductSpecification[]> _productSpecificationsSupplier;
 
-	@Schema(example = "simple")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "simple")
 	public String getProductType() {
 		if (_productTypeSupplier != null) {
 			productType = _productTypeSupplier.get();
@@ -972,7 +977,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _productTypeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public RelatedProduct[] getRelatedProducts() {
 		if (_relatedProductsSupplier != null) {
@@ -1015,7 +1020,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<RelatedProduct[]> _relatedProductsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getShortDescription() {
 		if (_shortDescriptionSupplier != null) {
 			shortDescription = _shortDescriptionSupplier.get();
@@ -1056,7 +1061,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _shortDescriptionSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Sku[] getSkus() {
 		if (_skusSupplier != null) {
@@ -1096,7 +1101,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<Sku[]> _skusSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getSlug() {
 		if (_slugSupplier != null) {
 			slug = _slugSupplier.get();
@@ -1135,7 +1140,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _slugSupplier;
 
-	@Schema(example = "[tag1, tag2, tag3]")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "[tag1, tag2, tag3]")
 	public String[] getTags() {
 		if (_tagsSupplier != null) {
 			tags = _tagsSupplier.get();
@@ -1176,7 +1181,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _tagsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getUrlImage() {
 		if (_urlImageSupplier != null) {
 			urlImage = _urlImageSupplier.get();
@@ -1217,7 +1222,7 @@ public class Product implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _urlImageSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		example = "{en_US=product-url-us, hr_HR=product-url-hr, hu_HU=product-url-hu}"
 	)
 	@Valid
@@ -1367,7 +1372,8 @@ public class Product implements Serializable {
 			sb.append("\"");
 		}
 
-		CustomField[] customFields = getCustomFields();
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields =
+			getCustomFields();
 
 		if (customFields != null) {
 			if (sb.length() > 1) {
@@ -1379,7 +1385,7 @@ public class Product implements Serializable {
 			sb.append("[");
 
 			for (int i = 0; i < customFields.length; i++) {
-				sb.append(String.valueOf(customFields[i]));
+				sb.append(customFields[i]);
 
 				if ((i + 1) < customFields.length) {
 					sb.append(", ");
@@ -1801,8 +1807,8 @@ public class Product implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Product",
 		name = "x-class-name"
 	)

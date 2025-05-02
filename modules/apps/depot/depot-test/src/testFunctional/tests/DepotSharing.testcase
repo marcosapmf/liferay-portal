@@ -4,8 +4,7 @@ definition {
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Asset Sharing";
-	property testray.main.component.name = "Depot";
+	property testray.main.component.name = "Asset Libraries";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -26,6 +25,10 @@ definition {
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
+
+		JSONDepot.connectSite(
+			depotName = "Test Depot Name",
+			groupName = "Guest");
 	}
 
 	tearDown {

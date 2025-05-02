@@ -8,29 +8,36 @@ import {FDS_EVENT} from '@liferay/frontend-data-set-web';
 export const ADD_ITEM_TO_CART = 'add-item-to-cart';
 export const AUTOCOMPLETE_VALUE_UPDATED = 'autocomplete-updated';
 export const CART_PRODUCT_QUANTITY_CHANGED = 'quantity-changed-from-cart';
+export const CART_RESET = 'cart-reset';
+export const CART_UPDATED = 'cart-updated';
 export const CLOSE_MODAL = 'close-modal';
 export const CLOSE_SIDE_PANEL = 'close-side-panel';
 export const CP_INSTANCE_CHANGED = 'product-instance-changed';
-
 export const CP_OPTION_CHANGED = 'product-option-changed';
 export const CP_QUANTITY_SELECTOR_CHANGED =
 	'quantity-changed-from-quantity-selector';
 export const CP_UNIT_OF_MEASURE_SELECTOR_CHANGED =
 	'unit-of-measure-changed-from-unit-of-measure-selector';
 export const CURRENT_ACCOUNT_UPDATED = 'current-account-updated';
+export const CURRENT_ORDER_DELETED = 'current-order-deleted';
 export const CURRENT_ORDER_UPDATED = 'current-order-updated';
 export const CURRENT_PRODUCT_STATUS_CHANGED = 'current-product-status-changed';
 export const CURRENT_PRODUCT_UPDATED = 'current-product-updated';
 export const IFRAME_LOADED = 'iframe-loaded';
+export const GUEST_ORDER_ENABLED = 'guest-order-enabled';
 export const IS_LOADING_MODAL = 'is-loading-modal';
 export const ITEM_REMOVED_FROM_COMPARE = 'item-removed-from-compare';
+export const OPEN_MINI_CART = 'open-cart';
 export const OPEN_MINICART_FOR_EDITING = 'open-minicart-for-editing';
 export const OPEN_MODAL = 'open-modal';
 export const OPEN_SIDE_PANEL = 'open-side-panel';
+export const ORDER_INFORMATION_ALTERED = 'order-information-altered';
 export const PRODUCT_COMPARISON_TOGGLED = 'product-comparison-toggled';
 export const PRODUCT_OPTIONS_CHANGED = 'product-options-changed';
 export const PRODUCT_REMOVED_FROM_CART = 'product-removed-from-cart';
+export const SELECTED_RETURNABLE_ITEMS = 'selected-returnable-items';
 export const SIDE_PANEL_CLOSED = 'side-panel-closed';
+export const PERFORM_SIGN_IN = 'perform-sign-in';
 export const TOGGLE_ITEM_IN_PRODUCT_COMPARISON = 'toggle-item-in-compare';
 
 const FDS_UPDATE_DISPLAY = FDS_EVENT.UPDATE_DISPLAY;

@@ -6,7 +6,6 @@
 package com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0;
 
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Attachment;
-import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.CustomField;
 import com.liferay.headless.commerce.admin.catalog.client.json.BaseJSONParser;
 
 import java.text.DateFormat;
@@ -113,7 +112,7 @@ public class AttachmentSerDes {
 			sb.append("[");
 
 			for (int i = 0; i < attachment.getCustomFields().length; i++) {
-				sb.append(String.valueOf(attachment.getCustomFields()[i]));
+				sb.append(attachment.getCustomFields()[i]);
 
 				if ((i + 1) < attachment.getCustomFields().length) {
 					sb.append(", ");
@@ -163,6 +162,35 @@ public class AttachmentSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(attachment.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
+		if (attachment.getFileEntryExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fileEntryExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(attachment.getFileEntryExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
+		if (attachment.getFileEntryGroupExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fileEntryGroupExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(attachment.getFileEntryGroupExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -365,6 +393,25 @@ public class AttachmentSerDes {
 				String.valueOf(attachment.getExternalReferenceCode()));
 		}
 
+		if (attachment.getFileEntryExternalReferenceCode() == null) {
+			map.put("fileEntryExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"fileEntryExternalReferenceCode",
+				String.valueOf(attachment.getFileEntryExternalReferenceCode()));
+		}
+
+		if (attachment.getFileEntryGroupExternalReferenceCode() == null) {
+			map.put("fileEntryGroupExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"fileEntryGroupExternalReferenceCode",
+				String.valueOf(
+					attachment.getFileEntryGroupExternalReferenceCode()));
+		}
+
 		if (attachment.getFileEntryId() == null) {
 			map.put("fileEntryId", null);
 		}
@@ -481,6 +528,18 @@ public class AttachmentSerDes {
 
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"fileEntryExternalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"fileEntryGroupExternalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "fileEntryId")) {
 				return false;
 			}
@@ -545,12 +604,17 @@ public class AttachmentSerDes {
 					Object[] jsonParserFieldValues =
 						(Object[])jsonParserFieldValue;
 
-					CustomField[] customFieldsArray =
-						new CustomField[jsonParserFieldValues.length];
+					com.liferay.headless.commerce.admin.catalog.client.custom.
+						field.CustomField[] customFieldsArray = new
+						com.liferay.headless.commerce.admin.catalog.client.
+							custom.field.CustomField
+							[jsonParserFieldValues.length];
 
 					for (int i = 0; i < customFieldsArray.length; i++) {
-						customFieldsArray[i] = CustomFieldSerDes.toDTO(
-							(String)jsonParserFieldValues[i]);
+						customFieldsArray[i] =
+							com.liferay.headless.commerce.admin.catalog.client.
+								custom.field.CustomField.toDTO(
+									(String)jsonParserFieldValues[i]);
 					}
 
 					attachment.setCustomFields(customFieldsArray);
@@ -573,6 +637,24 @@ public class AttachmentSerDes {
 
 				if (jsonParserFieldValue != null) {
 					attachment.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"fileEntryExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					attachment.setFileEntryExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"fileEntryGroupExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					attachment.setFileEntryGroupExternalReferenceCode(
 						(String)jsonParserFieldValue);
 				}
 			}
@@ -678,6 +760,10 @@ public class AttachmentSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

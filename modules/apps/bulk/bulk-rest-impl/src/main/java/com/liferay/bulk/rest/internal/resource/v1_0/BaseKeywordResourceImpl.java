@@ -12,7 +12,6 @@ import com.liferay.bulk.rest.resource.v1_0.KeywordResource;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -24,6 +23,7 @@ import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -65,23 +65,6 @@ public abstract class BaseKeywordResourceImpl implements KeywordResource {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/bulk/v1.0/keywords/batch' -d $'{"documentBulkSelection": ___, "keywordsToAdd": ___, "keywordsToRemove": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Keyword")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/keywords/batch")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
-	@Override
-	public void putKeywordBatch(KeywordBulkSelection keywordBulkSelection)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/bulk/v1.0/keywords/common' -d $'{"documentIds": ___, "selectionScope": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.tags.Tags(
@@ -97,6 +80,23 @@ public abstract class BaseKeywordResourceImpl implements KeywordResource {
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/bulk/v1.0/keywords/batch' -d $'{"documentBulkSelection": ___, "keywordsToAdd": ___, "keywordsToRemove": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Keyword")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path("/keywords/batch")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public void putKeywordBatch(KeywordBulkSelection keywordBulkSelection)
+		throws Exception {
 	}
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
@@ -122,7 +122,8 @@ public abstract class BaseKeywordResourceImpl implements KeywordResource {
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -132,7 +133,8 @@ public abstract class BaseKeywordResourceImpl implements KeywordResource {
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -165,6 +167,10 @@ public abstract class BaseKeywordResourceImpl implements KeywordResource {
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider) {
 		this.sortParserProvider = sortParserProvider;
+	}
+
+	protected String getApplicationPath() {
+		return "bulk";
 	}
 
 	protected Map<String, String> addAction(
@@ -282,7 +288,8 @@ public abstract class BaseKeywordResourceImpl implements KeywordResource {
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

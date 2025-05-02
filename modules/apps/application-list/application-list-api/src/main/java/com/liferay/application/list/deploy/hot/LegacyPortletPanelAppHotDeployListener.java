@@ -134,7 +134,7 @@ public class LegacyPortletPanelAppHotDeployListener
 			return Collections.emptyList();
 		}
 
-		List<Dictionary<String, Object>> propertiesList = new ArrayList<>();
+		List<Dictionary<String, Object>> properties = new ArrayList<>();
 
 		Document document = UnsecureSAXReaderUtil.read(xml, true);
 
@@ -156,7 +156,7 @@ public class LegacyPortletPanelAppHotDeployListener
 				PortletCategoryUtil.getPortletCategoryKey(
 					controlPanelEntryCategory);
 
-			propertiesList.add(
+			properties.add(
 				HashMapDictionaryBuilder.<String, Object>put(
 					"panel.app.order",
 					() -> {
@@ -164,13 +164,13 @@ public class LegacyPortletPanelAppHotDeployListener
 							portletElement.elementText(
 								"control-panel-entry-weight");
 
-						if (Validator.isNotNull(controlPanelEntryWeight)) {
-							return (int)Math.ceil(
-								GetterUtil.getDouble(controlPanelEntryWeight) *
-									100);
+						if (Validator.isNull(controlPanelEntryWeight)) {
+							return null;
 						}
 
-						return null;
+						return (int)Math.ceil(
+							GetterUtil.getDouble(controlPanelEntryWeight) *
+								100);
 					}
 				).put(
 					"panel.app.portlet.id",
@@ -182,7 +182,7 @@ public class LegacyPortletPanelAppHotDeployListener
 				).build());
 		}
 
-		return propertiesList;
+		return properties;
 	}
 
 	private BundleContext _bundleContext;

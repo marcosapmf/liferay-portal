@@ -1,0 +1,24 @@
+defaults:
+    run:
+        shell: bash
+jobs:
+    test-cloud-helm-chart:
+        if: (github.repository == 'liferay/liferay-portal')
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v4
+            -   name: Create Kind cluster
+                run: kind create cluster
+            -   name: Run Helm test
+                run: |
+                    helm upgrade -i liferay --wait .
+
+                    helm test liferay
+                working-directory: ./cloud/helm
+on:
+    push:
+        branches:
+            -   master
+        paths:
+            -   cloud/**

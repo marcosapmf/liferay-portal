@@ -111,16 +111,24 @@ public class Attachment implements Cloneable, Serializable {
 
 	protected String contentType;
 
-	public CustomField[] getCustomFields() {
+	public com.liferay.headless.commerce.admin.catalog.client.custom.field.
+		CustomField[] getCustomFields() {
+
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.headless.commerce.admin.catalog.client.custom.field.
+			CustomField[] customFields) {
+
 		this.customFields = customFields;
 	}
 
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.headless.commerce.admin.catalog.client.custom.field.
+				CustomField[],
+			 Exception> customFieldsUnsafeSupplier) {
 
 		try {
 			customFields = customFieldsUnsafeSupplier.get();
@@ -130,7 +138,8 @@ public class Attachment implements Cloneable, Serializable {
 		}
 	}
 
-	protected CustomField[] customFields;
+	protected com.liferay.headless.commerce.admin.catalog.client.custom.field.
+		CustomField[] customFields;
 
 	public Date getDisplayDate() {
 		return displayDate;
@@ -194,6 +203,57 @@ public class Attachment implements Cloneable, Serializable {
 	}
 
 	protected String externalReferenceCode;
+
+	public String getFileEntryExternalReferenceCode() {
+		return fileEntryExternalReferenceCode;
+	}
+
+	public void setFileEntryExternalReferenceCode(
+		String fileEntryExternalReferenceCode) {
+
+		this.fileEntryExternalReferenceCode = fileEntryExternalReferenceCode;
+	}
+
+	public void setFileEntryExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			fileEntryExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			fileEntryExternalReferenceCode =
+				fileEntryExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String fileEntryExternalReferenceCode;
+
+	public String getFileEntryGroupExternalReferenceCode() {
+		return fileEntryGroupExternalReferenceCode;
+	}
+
+	public void setFileEntryGroupExternalReferenceCode(
+		String fileEntryGroupExternalReferenceCode) {
+
+		this.fileEntryGroupExternalReferenceCode =
+			fileEntryGroupExternalReferenceCode;
+	}
+
+	public void setFileEntryGroupExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			fileEntryGroupExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			fileEntryGroupExternalReferenceCode =
+				fileEntryGroupExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String fileEntryGroupExternalReferenceCode;
 
 	public Long getFileEntryId() {
 		return fileEntryId;

@@ -387,14 +387,15 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 	 */
 	@Override
 	public FileShortcut addFileShortcut(
-			long userId, long repositoryId, long folderId, long toFileEntryId,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long repositoryId,
+			long folderId, long toFileEntryId, ServiceContext serviceContext)
 		throws PortalException {
 
 		LocalRepository localRepository = getLocalRepository(repositoryId);
 
 		return localRepository.addFileShortcut(
-			userId, folderId, toFileEntryId, serviceContext);
+			externalReferenceCode, userId, folderId, toFileEntryId,
+			serviceContext);
 	}
 
 	/**
@@ -476,6 +477,22 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 			localRepository.getFileEntry(fileEntryId));
 
 		localRepository.deleteFileEntry(fileEntryId);
+	}
+
+	@Override
+	public void deleteFileEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		LocalRepository localRepository = getLocalRepository(groupId);
+
+		FileEntry fileEntry =
+			localRepository.getFileEntryByExternalReferenceCode(
+				externalReferenceCode);
+
+		_dlAppHelperLocalService.deleteFileEntry(fileEntry);
+
+		localRepository.deleteFileEntry(fileEntry.getFileEntryId());
 	}
 
 	/**
@@ -585,6 +602,28 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 	}
 
 	@Override
+	public FileShortcut fetchFileShortcut(long fileShortcutId)
+		throws PortalException {
+
+		LocalRepository localRepository =
+			RepositoryProviderUtil.getFileShortcutLocalRepository(
+				fileShortcutId);
+
+		return localRepository.fetchFileShortcut(fileShortcutId);
+	}
+
+	@Override
+	public FileShortcut fetchFileShortcutByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		LocalRepository localRepository = getLocalRepository(groupId);
+
+		return localRepository.fetchFileShortcutByExternalReferenceCode(
+			externalReferenceCode);
+	}
+
+	@Override
 	public Folder fetchFolderByExternalReferenceCode(
 			String externalReferenceCode, long groupId)
 		throws PortalException {
@@ -650,7 +689,7 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 	 */
 	@Override
 	public FileEntry getFileEntryByExternalReferenceCode(
-			long groupId, String externalReferenceCode)
+			String externalReferenceCode, long groupId)
 		throws PortalException {
 
 		LocalRepository localRepository = getLocalRepository(groupId);
@@ -764,6 +803,17 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 				fileShortcutId);
 
 		return localRepository.getFileShortcut(fileShortcutId);
+	}
+
+	@Override
+	public FileShortcut getFileShortcutByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		LocalRepository localRepository = getLocalRepository(groupId);
+
+		return localRepository.getFileShortcutByExternalReferenceCode(
+			externalReferenceCode);
 	}
 
 	/**
@@ -931,6 +981,11 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 		}
 	}
 
+	@Override
+	public void subscribeFileEntry(long userId, long groupId, long fileEntryId)
+		throws PortalException {
+	}
+
 	/**
 	 * Subscribe the user to changes in documents of the file entry type. This
 	 * method is only supported by the Liferay repository.
@@ -957,6 +1012,11 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 	 */
 	@Override
 	public void subscribeFolder(long userId, long groupId, long folderId)
+		throws PortalException {
+	}
+
+	public void unsubscribeFileEntry(
+			long userId, long groupId, long fileEntryId)
 		throws PortalException {
 	}
 
@@ -1467,7 +1527,7 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 					FileShortcut fileShortcut = (FileShortcut)repositoryEntry;
 
 					targetLocalRepository.addFileShortcut(
-						userId, targetFolder.getFolderId(),
+						null, userId, targetFolder.getFolderId(),
 						fileShortcut.getToFileEntryId(), serviceContext);
 				}
 			}

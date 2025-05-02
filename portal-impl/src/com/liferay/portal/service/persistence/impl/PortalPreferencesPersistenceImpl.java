@@ -29,7 +29,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.impl.PortalPreferencesImpl;
 import com.liferay.portal.model.impl.PortalPreferencesModelImpl;
 
@@ -37,7 +36,6 @@ import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -577,7 +575,6 @@ public class PortalPreferencesPersistenceImpl
 		"portalPreferences.ownerType = ?";
 
 	private FinderPath _finderPathFetchByO_O;
-	private FinderPath _finderPathCountByO_O;
 
 	/**
 	 * Returns the portal preferences where ownerId = &#63; and ownerType = &#63; or throws a <code>NoSuchPreferencesException</code> if it could not be found.
@@ -696,21 +693,6 @@ public class PortalPreferencesPersistenceImpl
 					}
 				}
 				else {
-					if (list.size() > 1) {
-						Collections.sort(list, Collections.reverseOrder());
-
-						if (_log.isWarnEnabled()) {
-							if (!useFinderCache) {
-								finderArgs = new Object[] {ownerId, ownerType};
-							}
-
-							_log.warn(
-								"PortalPreferencesPersistenceImpl.fetchByO_O(long, int, boolean) with parameters (" +
-									StringUtil.merge(finderArgs) +
-										") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
-						}
-					}
-
 					PortalPreferences portalPreferences = list.get(0);
 
 					result = portalPreferences;
@@ -759,50 +741,13 @@ public class PortalPreferencesPersistenceImpl
 	 */
 	@Override
 	public int countByO_O(long ownerId, int ownerType) {
-		FinderPath finderPath = _finderPathCountByO_O;
+		PortalPreferences portalPreferences = fetchByO_O(ownerId, ownerType);
 
-		Object[] finderArgs = new Object[] {ownerId, ownerType};
-
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_PORTALPREFERENCES_WHERE);
-
-			sb.append(_FINDER_COLUMN_O_O_OWNERID_2);
-
-			sb.append(_FINDER_COLUMN_O_O_OWNERTYPE_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(ownerId);
-
-				queryPos.add(ownerType);
-
-				count = (Long)query.uniqueResult();
-
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (portalPreferences == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_O_O_OWNERID_2 =
@@ -919,7 +864,6 @@ public class PortalPreferencesPersistenceImpl
 			portalPreferencesModelImpl.getOwnerType()
 		};
 
-		FinderCacheUtil.putResult(_finderPathCountByO_O, args, Long.valueOf(1));
 		FinderCacheUtil.putResult(
 			_finderPathFetchByO_O, args, portalPreferencesModelImpl);
 	}
@@ -1382,11 +1326,6 @@ public class PortalPreferencesPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByO_O",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"ownerId", "ownerType"}, true);
-
-		_finderPathCountByO_O = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByO_O",
-			new String[] {Long.class.getName(), Integer.class.getName()},
-			new String[] {"ownerId", "ownerType"}, false);
 
 		PortalPreferencesUtil.setPersistence(this);
 	}

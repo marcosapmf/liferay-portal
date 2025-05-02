@@ -32,6 +32,11 @@ public interface ExportTaskResource {
 		return new Builder();
 	}
 
+	public ExportTask getExportTask(Long exportTaskId) throws Exception;
+
+	public HttpInvoker.HttpResponse getExportTaskHttpResponse(Long exportTaskId)
+		throws Exception;
+
 	public ExportTask getExportTaskByExternalReferenceCode(
 			String externalReferenceCode)
 		throws Exception;
@@ -50,27 +55,22 @@ public interface ExportTaskResource {
 				String externalReferenceCode)
 		throws Exception;
 
-	public ExportTask postExportTask(
-			String className, String contentType, String callbackURL,
-			String externalReferenceCode, String fieldNames,
-			String taskItemDelegateName)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse postExportTaskHttpResponse(
-			String className, String contentType, String callbackURL,
-			String externalReferenceCode, String fieldNames,
-			String taskItemDelegateName)
-		throws Exception;
-
-	public ExportTask getExportTask(Long exportTaskId) throws Exception;
-
-	public HttpInvoker.HttpResponse getExportTaskHttpResponse(Long exportTaskId)
-		throws Exception;
-
 	public void getExportTaskContent(Long exportTaskId) throws Exception;
 
 	public HttpInvoker.HttpResponse getExportTaskContentHttpResponse(
 			Long exportTaskId)
+		throws Exception;
+
+	public ExportTask postExportTask(
+			String className, String contentType, String batchNestedFields,
+			String callbackURL, String externalReferenceCode, String fieldNames,
+			String taskItemDelegateName)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse postExportTaskHttpResponse(
+			String className, String contentType, String batchNestedFields,
+			String callbackURL, String externalReferenceCode, String fieldNames,
+			String taskItemDelegateName)
 		throws Exception;
 
 	public static class Builder {
@@ -171,8 +171,8 @@ public interface ExportTaskResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -180,6 +180,109 @@ public interface ExportTaskResource {
 	}
 
 	public static class ExportTaskResourceImpl implements ExportTaskResource {
+
+		public ExportTask getExportTask(Long exportTaskId) throws Exception {
+			HttpInvoker.HttpResponse httpResponse = getExportTaskHttpResponse(
+				exportTaskId);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return ExportTaskSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse getExportTaskHttpResponse(
+				Long exportTaskId)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-batch-engine/v1.0/export-task/{exportTaskId}");
+
+			httpInvoker.path("exportTaskId", exportTaskId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
 
 		public ExportTask getExportTaskByExternalReferenceCode(
 				String externalReferenceCode)
@@ -281,8 +384,10 @@ public interface ExportTaskResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -376,242 +481,10 @@ public interface ExportTaskResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public ExportTask postExportTask(
-				String className, String contentType, String callbackURL,
-				String externalReferenceCode, String fieldNames,
-				String taskItemDelegateName)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse = postExportTaskHttpResponse(
-				className, contentType, callbackURL, externalReferenceCode,
-				fieldNames, taskItemDelegateName);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return ExportTaskSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse postExportTaskHttpResponse(
-				String className, String contentType, String callbackURL,
-				String externalReferenceCode, String fieldNames,
-				String taskItemDelegateName)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body("[]", "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
-
-			if (callbackURL != null) {
-				httpInvoker.parameter(
-					"callbackURL", String.valueOf(callbackURL));
-			}
-
-			if (externalReferenceCode != null) {
-				httpInvoker.parameter(
-					"externalReferenceCode",
-					String.valueOf(externalReferenceCode));
-			}
-
-			if (fieldNames != null) {
-				httpInvoker.parameter("fieldNames", String.valueOf(fieldNames));
-			}
-
-			if (taskItemDelegateName != null) {
-				httpInvoker.parameter(
-					"taskItemDelegateName",
-					String.valueOf(taskItemDelegateName));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-batch-engine/v1.0/export-task/{className}/{contentType}");
-
-			httpInvoker.path("className", className);
-			httpInvoker.path("contentType", contentType);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public ExportTask getExportTask(Long exportTaskId) throws Exception {
-			HttpInvoker.HttpResponse httpResponse = getExportTaskHttpResponse(
-				exportTaskId);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return ExportTaskSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse getExportTaskHttpResponse(
-				Long exportTaskId)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-batch-engine/v1.0/export-task/{exportTaskId}");
-
-			httpInvoker.path("exportTaskId", exportTaskId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}
@@ -700,8 +573,150 @@ public interface ExportTaskResource {
 
 			httpInvoker.path("exportTaskId", exportTaskId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public ExportTask postExportTask(
+				String className, String contentType, String batchNestedFields,
+				String callbackURL, String externalReferenceCode,
+				String fieldNames, String taskItemDelegateName)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse = postExportTaskHttpResponse(
+				className, contentType, batchNestedFields, callbackURL,
+				externalReferenceCode, fieldNames, taskItemDelegateName);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return ExportTaskSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse postExportTaskHttpResponse(
+				String className, String contentType, String batchNestedFields,
+				String callbackURL, String externalReferenceCode,
+				String fieldNames, String taskItemDelegateName)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body("[]", "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (batchNestedFields != null) {
+				httpInvoker.parameter(
+					"batchNestedFields", String.valueOf(batchNestedFields));
+			}
+
+			if (callbackURL != null) {
+				httpInvoker.parameter(
+					"callbackURL", String.valueOf(callbackURL));
+			}
+
+			if (externalReferenceCode != null) {
+				httpInvoker.parameter(
+					"externalReferenceCode",
+					String.valueOf(externalReferenceCode));
+			}
+
+			if (fieldNames != null) {
+				httpInvoker.parameter("fieldNames", String.valueOf(fieldNames));
+			}
+
+			if (taskItemDelegateName != null) {
+				httpInvoker.parameter(
+					"taskItemDelegateName",
+					String.valueOf(taskItemDelegateName));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-batch-engine/v1.0/export-task/{className}/{contentType}");
+
+			httpInvoker.path("className", className);
+			httpInvoker.path("contentType", contentType);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

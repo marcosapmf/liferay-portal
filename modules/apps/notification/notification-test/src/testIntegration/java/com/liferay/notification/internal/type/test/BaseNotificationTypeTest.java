@@ -5,6 +5,7 @@
 
 package com.liferay.notification.internal.type.test;
 
+import com.liferay.info.type.KeyLocalizedLabelPair;
 import com.liferay.list.type.entry.util.ListTypeEntryUtil;
 import com.liferay.list.type.model.ListTypeDefinition;
 import com.liferay.list.type.model.ListTypeEntry;
@@ -107,12 +108,10 @@ public class BaseNotificationTypeTest {
 	public static void setUpClass() throws Exception {
 		ListTypeEntry listTypeEntry1 = ListTypeEntryUtil.createListTypeEntry(
 			RandomTestUtil.randomString(),
-			Collections.singletonMap(
-				LocaleUtil.US, RandomTestUtil.randomString()));
+			Collections.singletonMap(LocaleUtil.US, "listTypeEntry1Value"));
 		ListTypeEntry listTypeEntry2 = ListTypeEntryUtil.createListTypeEntry(
 			RandomTestUtil.randomString(),
-			Collections.singletonMap(
-				LocaleUtil.US, RandomTestUtil.randomString()));
+			Collections.singletonMap(LocaleUtil.US, "listTypeEntry2Value"));
 
 		_listTypeDefinition =
 			_listTypeDefinitionLocalService.addListTypeDefinition(
@@ -122,31 +121,17 @@ public class BaseNotificationTypeTest {
 				false, Arrays.asList(listTypeEntry1, listTypeEntry2));
 
 		childObjectEntryValues = LinkedHashMapBuilder.<String, Object>put(
-			"booleanObjectField", RandomTestUtil.randomBoolean()
+			"booleanObjectField", "true"
 		).put(
-			"dateObjectField",
-			() -> {
-				SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
-					"yyyy-MM-dd");
-
-				return simpleDateFormat.format(RandomTestUtil.nextDate());
-			}
+			"dateObjectField", "2024-09-25"
 		).put(
-			"dateTimeObjectField",
-			() -> {
-				SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
-					"yyyy-MM-dd 00:00:00.0");
-
-				return simpleDateFormat.format(RandomTestUtil.nextDate());
-			}
+			"dateTimeObjectField", "2024-09-25 00:00:00.0"
 		).put(
-			"emailTextObjectField",
-			StringUtil.toLowerCase(RandomTestUtil.randomString()) +
-				"@liferay.com"
+			"emailTextObjectField", "test@liferay.com"
 		).put(
-			"integerObjectField", RandomTestUtil.nextInt()
+			"integerObjectField", "12345"
 		).put(
-			"longIntegerObjectField", RandomTestUtil.nextLong()
+			"longIntegerObjectField", "123456789"
 		).put(
 			"multiselectPicklistObjectField",
 			Arrays.asList(
@@ -171,7 +156,7 @@ public class BaseNotificationTypeTest {
 				}
 			}
 		).put(
-			"textObjectField", RandomTestUtil.randomString()
+			"textObjectField", "textObjectFieldValue"
 		).build();
 
 		group = GroupTestUtil.addGroup();
@@ -257,12 +242,14 @@ public class BaseNotificationTypeTest {
 	public void setUp() throws Exception {
 		childObjectDefinition =
 			objectDefinitionLocalService.addCustomObjectDefinition(
-				user1.getUserId(), 0, false, true, false, false,
+				user1.getUserId(), 0, null, false, false, true, false, false,
+				false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, ObjectDefinitionConstants.SCOPE_SITE,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(),
 				Arrays.asList(
 					new AttachmentObjectFieldBuilder(
 					).labelMap(
@@ -376,12 +363,14 @@ public class BaseNotificationTypeTest {
 
 		parentObjectDefinition =
 			objectDefinitionLocalService.addCustomObjectDefinition(
-				user1.getUserId(), 0, false, true, false, false,
+				user1.getUserId(), 0, null, false, false, true, false, false,
+				false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				ObjectDefinitionTestUtil.getRandomName(), null, null,
+				"ParentObjectDefinition", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				false, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(),
 				Arrays.asList(
 					new DateObjectFieldBuilder(
 					).labelMap(
@@ -455,9 +444,9 @@ public class BaseNotificationTypeTest {
 				null, TestPropsValues.getUserId(),
 				parentObjectDefinition.getObjectDefinitionId(),
 				childObjectDefinition.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
+				ObjectRelationshipConstants.DELETION_TYPE_PREVENT, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				StringUtil.randomId(), false,
+				"oneToManyObjectRelationship", false,
 				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		_childAuthorTermValues = HashMapBuilder.<String, Object>put(
@@ -652,6 +641,24 @@ public class BaseNotificationTypeTest {
 
 	protected String parseTermValueToString(Object termValue) {
 		if (termValue instanceof List) {
+			List<?> list = (List<?>)termValue;
+
+			if (list.isEmpty()) {
+				return StringPool.BLANK;
+			}
+
+			if (list.get(0) instanceof KeyLocalizedLabelPair) {
+				List<KeyLocalizedLabelPair> keyLocalizedLabelPairs =
+					(List<KeyLocalizedLabelPair>)termValue;
+
+				return StringUtil.merge(
+					TransformUtil.transform(
+						keyLocalizedLabelPairs,
+						keyLocalizedLabelPair -> keyLocalizedLabelPair.getLabel(
+							LocaleUtil.US)),
+					StringPool.COMMA);
+			}
+
 			List<ListEntry> listTypeEntries = (List<ListEntry>)termValue;
 
 			return StringUtil.merge(

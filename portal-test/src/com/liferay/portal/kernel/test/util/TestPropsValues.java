@@ -5,6 +5,7 @@
 
 package com.liferay.portal.kernel.test.util;
 
+import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.exception.LoggedExceptionInInitializerError;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
@@ -37,6 +38,13 @@ public class TestPropsValues {
 
 	public static final String COMPANY_WEB_ID;
 
+	public static final boolean DATABASE_PARTITION_COPY = GetterUtil.getBoolean(
+		TestPropsUtil.get("database.partition.copy"));
+
+	public static final boolean DATABASE_PARTITION_EXTRACT_AND_INSERT =
+		GetterUtil.getBoolean(
+			TestPropsUtil.get("database.partition.extract.and.insert"));
+
 	public static final boolean DL_FILE_ENTRY_PROCESSORS_TRIGGER_SYNCHRONOUSLY =
 		GetterUtil.getBoolean(
 			TestPropsUtil.get(
@@ -54,12 +62,16 @@ public class TestPropsValues {
 		String companyWebId = TestPropsUtil.get("company.web.id");
 
 		try {
-			if (Validator.isNull(companyWebId)) {
+			if (DBPartition.isPartitionEnabled()) {
+				companyWebId = TestPropsUtil.get(
+					"database.partition.company.web.id");
+			}
+			else if (Validator.isNull(companyWebId)) {
 				companyWebId = GetterUtil.getString(
 					PropsUtil.get(PropsKeys.COMPANY_DEFAULT_WEB_ID));
-
-				TestPropsUtil.set("company.web.id", companyWebId);
 			}
+
+			TestPropsUtil.set("company.web.id", companyWebId);
 		}
 		catch (Exception exception) {
 			throw new LoggedExceptionInInitializerError(exception);

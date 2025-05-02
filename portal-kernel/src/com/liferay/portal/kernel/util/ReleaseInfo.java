@@ -5,7 +5,6 @@
 
 package com.liferay.portal.kernel.util;
 
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 
 import java.text.DateFormat;
@@ -109,9 +108,17 @@ public class ReleaseInfo {
 
 	public static String getReleaseInfo() {
 		if (_releaseInfo == null) {
-			_releaseInfo = StringBundler.concat(
-				_RELEASE_INFO_PREFIX, _NAME, " ", _VERSION_DISPLAY_NAME, " (",
-				_DATE, ")", _RELEASE_INFO_SUFFIX);
+			StringBuilder sb = new StringBuilder(_RELEASE_INFO_PREFIX);
+
+			sb.append(_NAME);
+			sb.append(" ");
+			sb.append(_VERSION_DISPLAY_NAME);
+			sb.append(" (");
+			sb.append(_DATE);
+			sb.append(")");
+			sb.append(_RELEASE_INFO_SUFFIX);
+
+			_releaseInfo = sb.toString();
 		}
 
 		return _releaseInfo;
@@ -126,11 +133,7 @@ public class ReleaseInfo {
 	}
 
 	public static boolean isDXP() {
-		if (_NAME.contains("Community")) {
-			return false;
-		}
-
-		return true;
+		return !_NAME.contains("Community");
 	}
 
 	public static String getVendor() {

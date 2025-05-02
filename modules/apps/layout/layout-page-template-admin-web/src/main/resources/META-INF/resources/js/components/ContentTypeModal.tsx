@@ -6,7 +6,8 @@
 import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayModal, {useModal} from '@clayui/modal';
-import {fetch, navigate, openModal} from 'frontend-js-web';
+import {openModal} from 'frontend-js-components-web';
+import {fetch, navigate} from 'frontend-js-web';
 import React, {useCallback, useRef, useState} from 'react';
 
 import openInUseModal from '../commands/openInUseModal';
@@ -101,7 +102,7 @@ export default function ContentTypeModal({
 	const formRef = useRef<HTMLFormElement>(null);
 
 	const validateForm = useCallback(
-		(form) => {
+		(form: any) => {
 			const {elements} = form;
 			const error: ValidationError = {};
 
@@ -131,7 +132,7 @@ export default function ContentTypeModal({
 	);
 
 	const handleSubmit = useCallback(
-		(event) => {
+		(event: any) => {
 			event.preventDefault();
 
 			const form = formRef.current;

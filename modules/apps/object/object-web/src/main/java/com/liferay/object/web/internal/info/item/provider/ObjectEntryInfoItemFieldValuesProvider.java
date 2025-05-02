@@ -7,6 +7,7 @@ package com.liferay.object.web.internal.info.item.provider;
 
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.util.DLURLHelper;
+import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.ERCInfoItemIdentifier;
@@ -33,11 +34,13 @@ import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.web.internal.model.ProxyObjectEntry;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.template.info.item.provider.TemplateInfoItemFieldSetProvider;
 
@@ -56,6 +59,7 @@ public class ObjectEntryInfoItemFieldValuesProvider
 	public ObjectEntryInfoItemFieldValuesProvider(
 		DisplayPageInfoItemFieldSetProvider displayPageInfoItemFieldSetProvider,
 		DLAppLocalService dlAppLocalService, DLURLHelper dlURLHelper,
+		FriendlyURLEntryLocalService friendlyURLEntryLocalService,
 		InfoItemFieldReaderFieldSetProvider infoItemFieldReaderFieldSetProvider,
 		ListTypeEntryLocalService listTypeEntryLocalService,
 		ObjectActionLocalService objectActionLocalService,
@@ -66,7 +70,7 @@ public class ObjectEntryInfoItemFieldValuesProvider
 		ObjectEntryManagerRegistry objectEntryManagerRegistry,
 		ObjectFieldLocalService objectFieldLocalService,
 		ObjectRelationshipLocalService objectRelationshipLocalService,
-		ObjectScopeProviderRegistry objectScopeProviderRegistry,
+		ObjectScopeProviderRegistry objectScopeProviderRegistry, Portal portal,
 		TemplateInfoItemFieldSetProvider templateInfoItemFieldSetProvider,
 		UserLocalService userLocalService) {
 
@@ -74,6 +78,7 @@ public class ObjectEntryInfoItemFieldValuesProvider
 			displayPageInfoItemFieldSetProvider;
 		_dlAppLocalService = dlAppLocalService;
 		_dlURLHelper = dlURLHelper;
+		_friendlyURLEntryLocalService = friendlyURLEntryLocalService;
 		_infoItemFieldReaderFieldSetProvider =
 			infoItemFieldReaderFieldSetProvider;
 		_listTypeEntryLocalService = listTypeEntryLocalService;
@@ -86,6 +91,7 @@ public class ObjectEntryInfoItemFieldValuesProvider
 		_objectFieldLocalService = objectFieldLocalService;
 		_objectRelationshipLocalService = objectRelationshipLocalService;
 		_objectScopeProviderRegistry = objectScopeProviderRegistry;
+		_portal = portal;
 		_templateInfoItemFieldSetProvider = templateInfoItemFieldSetProvider;
 		_userLocalService = userLocalService;
 	}
@@ -112,7 +118,7 @@ public class ObjectEntryInfoItemFieldValuesProvider
 			).build();
 		}
 		catch (Exception exception) {
-			throw new RuntimeException("Unexpected exception", exception);
+			throw new RuntimeException(exception);
 		}
 	}
 
@@ -183,15 +189,31 @@ public class ObjectEntryInfoItemFieldValuesProvider
 
 		objectEntryFieldValues.addAll(
 			ObjectEntryInfoItemValuesProviderUtil.getInfoFieldValues(
-				_dlAppLocalService, _dlURLHelper, _listTypeEntryLocalService,
-				_objectActionLocalService, _objectDefinition,
-				_objectDefinitionLocalService, _objectEntryLocalService,
-				_objectEntryManagerRegistry, _objectFieldInfoFieldConverter,
-				_objectFieldLocalService,
+				_dlAppLocalService, _dlURLHelper, _friendlyURLEntryLocalService,
+				_listTypeEntryLocalService, _objectActionLocalService,
+				_objectDefinition, _objectDefinitionLocalService,
+				_objectEntryLocalService, _objectEntryManagerRegistry,
+				_objectFieldInfoFieldConverter, _objectFieldLocalService,
 				_objectFieldLocalService.getObjectFields(
 					objectEntry.getObjectDefinitionId()),
 				_objectRelationshipLocalService, _objectScopeProviderRegistry,
-				themeDisplay, properties));
+				_portal, themeDisplay, properties));
+
+		if (FeatureFlagManagerUtil.isEnabled(
+				_objectDefinition.getCompanyId(), "LPD-21926")) {
+
+			objectEntryFieldValues.add(
+				new InfoFieldValue<>(
+					ObjectEntryInfoItemFields.getFriendlyURLInfoField(
+						_objectDefinition),
+					() ->
+						ObjectEntryInfoItemValuesProviderUtil.
+							getFriendlyURLInfoFieldValue(
+								_portal.getClassNameId(
+									_objectDefinition.getClassName()),
+								_friendlyURLEntryLocalService,
+								objectEntry.getObjectEntryId())));
+		}
 
 		return objectEntryFieldValues;
 	}
@@ -227,15 +249,15 @@ public class ObjectEntryInfoItemFieldValuesProvider
 				objectEntry.getDateModified()));
 		objectEntryFieldValues.addAll(
 			ObjectEntryInfoItemValuesProviderUtil.getInfoFieldValues(
-				_dlAppLocalService, _dlURLHelper, _listTypeEntryLocalService,
-				_objectActionLocalService, _objectDefinition,
-				_objectDefinitionLocalService, _objectEntryLocalService,
-				_objectEntryManagerRegistry, _objectFieldInfoFieldConverter,
-				_objectFieldLocalService,
+				_dlAppLocalService, _dlURLHelper, _friendlyURLEntryLocalService,
+				_listTypeEntryLocalService, _objectActionLocalService,
+				_objectDefinition, _objectDefinitionLocalService,
+				_objectEntryLocalService, _objectEntryManagerRegistry,
+				_objectFieldInfoFieldConverter, _objectFieldLocalService,
 				_objectFieldLocalService.getObjectFields(
 					serviceBuilderObjectEntry.getObjectDefinitionId()),
 				_objectRelationshipLocalService, _objectScopeProviderRegistry,
-				themeDisplay, objectEntry.getProperties()));
+				_portal, themeDisplay, objectEntry.getProperties()));
 
 		return objectEntryFieldValues;
 	}
@@ -292,21 +314,22 @@ public class ObjectEntryInfoItemFieldValuesProvider
 
 		ThemeDisplay themeDisplay = _getThemeDisplay();
 
-		if (themeDisplay != null) {
-			WebImage webImage = new WebImage(user.getPortraitURL(themeDisplay));
-
-			webImage.setAlt(user.getFullName());
-
-			return webImage;
+		if (themeDisplay == null) {
+			return null;
 		}
 
-		return null;
+		WebImage webImage = new WebImage(user.getPortraitURL(themeDisplay));
+
+		webImage.setAlt(user.getFullName());
+
+		return webImage;
 	}
 
 	private final DisplayPageInfoItemFieldSetProvider
 		_displayPageInfoItemFieldSetProvider;
 	private final DLAppLocalService _dlAppLocalService;
 	private final DLURLHelper _dlURLHelper;
+	private final FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
 	private final InfoItemFieldReaderFieldSetProvider
 		_infoItemFieldReaderFieldSetProvider;
 	private final ListTypeEntryLocalService _listTypeEntryLocalService;
@@ -320,6 +343,7 @@ public class ObjectEntryInfoItemFieldValuesProvider
 	private final ObjectRelationshipLocalService
 		_objectRelationshipLocalService;
 	private final ObjectScopeProviderRegistry _objectScopeProviderRegistry;
+	private final Portal _portal;
 	private final TemplateInfoItemFieldSetProvider
 		_templateInfoItemFieldSetProvider;
 	private final UserLocalService _userLocalService;

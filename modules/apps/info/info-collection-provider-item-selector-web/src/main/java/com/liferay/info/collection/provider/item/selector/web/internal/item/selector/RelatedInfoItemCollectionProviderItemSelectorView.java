@@ -6,7 +6,7 @@
 package com.liferay.info.collection.provider.item.selector.web.internal.item.selector;
 
 import com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider;
-import com.liferay.info.collection.provider.item.selector.criterion.RelatedInfoItemCollectionProviderItemSelectorCriterion;
+import com.liferay.info.collection.provider.item.selector.RelatedInfoItemCollectionProviderItemSelectorCriterion;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorReturnType;
@@ -82,14 +82,14 @@ public class RelatedInfoItemCollectionProviderItemSelectorView
 				relatedInfoItemCollectionProviderItemSelectorCriterion) {
 
 		List<RelatedInfoItemCollectionProvider<?, ?>>
-			itemRelatedItemsProviders = new ArrayList<>();
+			relatedInfoItemCollectionProviders = new ArrayList<>();
 
 		List<String> itemTypes =
 			relatedInfoItemCollectionProviderItemSelectorCriterion.
 				getSourceItemTypes();
 
 		for (String itemType : itemTypes) {
-			itemRelatedItemsProviders.addAll(
+			relatedInfoItemCollectionProviders.addAll(
 				ListUtil.filter(
 					_infoItemServiceRegistry.getAllInfoItemServices(
 						(Class<RelatedInfoItemCollectionProvider<?, ?>>)
@@ -98,7 +98,7 @@ public class RelatedInfoItemCollectionProviderItemSelectorView
 					RelatedInfoItemCollectionProvider::isAvailable));
 		}
 
-		return Collections.unmodifiableList(itemRelatedItemsProviders);
+		return Collections.unmodifiableList(relatedInfoItemCollectionProviders);
 	}
 
 	private static final List<ItemSelectorReturnType>

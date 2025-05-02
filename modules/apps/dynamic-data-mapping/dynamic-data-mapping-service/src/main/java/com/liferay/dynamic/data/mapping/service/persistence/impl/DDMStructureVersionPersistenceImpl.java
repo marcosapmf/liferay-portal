@@ -616,7 +616,6 @@ public class DDMStructureVersionPersistenceImpl
 		"ddmStructureVersion.structureId = ?";
 
 	private FinderPath _finderPathFetchByS_V;
-	private FinderPath _finderPathCountByS_V;
 
 	/**
 	 * Returns the ddm structure version where structureId = &#63; and version = &#63; or throws a <code>NoSuchStructureVersionException</code> if it could not be found.
@@ -805,68 +804,14 @@ public class DDMStructureVersionPersistenceImpl
 	 */
 	@Override
 	public int countByS_V(long structureId, String version) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					DDMStructureVersion.class)) {
+		DDMStructureVersion ddmStructureVersion = fetchByS_V(
+			structureId, version);
 
-			version = Objects.toString(version, "");
-
-			FinderPath finderPath = _finderPathCountByS_V;
-
-			Object[] finderArgs = new Object[] {structureId, version};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_DDMSTRUCTUREVERSION_WHERE);
-
-				sb.append(_FINDER_COLUMN_S_V_STRUCTUREID_2);
-
-				boolean bindVersion = false;
-
-				if (version.isEmpty()) {
-					sb.append(_FINDER_COLUMN_S_V_VERSION_3);
-				}
-				else {
-					bindVersion = true;
-
-					sb.append(_FINDER_COLUMN_S_V_VERSION_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(structureId);
-
-					if (bindVersion) {
-						queryPos.add(version);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (ddmStructureVersion == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_S_V_STRUCTUREID_2 =
@@ -1573,7 +1518,6 @@ public class DDMStructureVersionPersistenceImpl
 				ddmStructureVersionModelImpl.getVersion()
 			};
 
-			finderCache.putResult(_finderPathCountByS_V, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByS_V, args, ddmStructureVersionModelImpl);
 		}
@@ -2249,6 +2193,7 @@ public class DDMStructureVersionPersistenceImpl
 
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -2258,21 +2203,22 @@ public class DDMStructureVersionPersistenceImpl
 		ctStrictColumnNames.add("userId");
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
-		ctStrictColumnNames.add("structureId");
-		ctStrictColumnNames.add("version");
-		ctStrictColumnNames.add("parentStructureId");
-		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("description");
-		ctStrictColumnNames.add("definition");
-		ctStrictColumnNames.add("storageType");
-		ctStrictColumnNames.add("type_");
-		ctStrictColumnNames.add("status");
-		ctStrictColumnNames.add("statusByUserId");
-		ctStrictColumnNames.add("statusByUserName");
-		ctStrictColumnNames.add("statusDate");
+		ctMergeColumnNames.add("structureId");
+		ctMergeColumnNames.add("version");
+		ctMergeColumnNames.add("parentStructureId");
+		ctMergeColumnNames.add("name");
+		ctMergeColumnNames.add("description");
+		ctMergeColumnNames.add("definition");
+		ctMergeColumnNames.add("storageType");
+		ctMergeColumnNames.add("type_");
+		ctMergeColumnNames.add("status");
+		ctMergeColumnNames.add("statusByUserId");
+		ctMergeColumnNames.add("statusByUserName");
+		ctMergeColumnNames.add("statusDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("structureVersionId"));
@@ -2324,11 +2270,6 @@ public class DDMStructureVersionPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByS_V",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"structureId", "version"}, true);
-
-		_finderPathCountByS_V = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByS_V",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"structureId", "version"}, false);
 
 		_finderPathWithPaginationFindByS_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByS_S",

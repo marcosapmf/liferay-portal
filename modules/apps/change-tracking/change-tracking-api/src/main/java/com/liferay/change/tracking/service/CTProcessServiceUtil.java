@@ -31,14 +31,10 @@ public class CTProcessServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.change.tracking.service.impl.CTProcessServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static List<CTProcess> getCTProcesses(
-			long companyId, long userId, String keywords, int status, int type,
-			int start, int end, OrderByComparator<CTProcess> orderByComparator)
+	public static CTProcess deleteCTProcess(long ctProcessId)
 		throws PortalException {
 
-		return getService().getCTProcesses(
-			companyId, userId, keywords, status, type, start, end,
-			orderByComparator);
+		return getService().deleteCTProcess(ctProcessId);
 	}
 
 	public static List<CTProcess> getCTProcesses(
@@ -55,13 +51,6 @@ public class CTProcessServiceUtil {
 
 		return getService().getCTProcessesCount(
 			companyId, userId, keywords, status);
-	}
-
-	public static int getCTProcessesCount(
-		long companyId, long userId, String keywords, int status, int type) {
-
-		return getService().getCTProcessesCount(
-			companyId, userId, keywords, status, type);
 	}
 
 	/**

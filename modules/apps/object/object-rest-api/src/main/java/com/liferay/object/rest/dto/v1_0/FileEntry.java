@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -50,7 +48,7 @@ public class FileEntry implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(FileEntry.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -85,13 +83,13 @@ public class FileEntry implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String externalReferenceCode;
 
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "optional field with the content of the document in Base64, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.fileBase64`)"
 	)
 	public String getFileBase64() {
@@ -136,7 +134,52 @@ public class FileEntry implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _fileBase64Supplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "optional field that specifies the source of the file to be downloaded, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.fileURL`)"
+	)
+	public String getFileURL() {
+		if (_fileURLSupplier != null) {
+			fileURL = _fileURLSupplier.get();
+
+			_fileURLSupplier = null;
+		}
+
+		return fileURL;
+	}
+
+	public void setFileURL(String fileURL) {
+		this.fileURL = fileURL;
+
+		_fileURLSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setFileURL(
+		UnsafeSupplier<String, Exception> fileURLUnsafeSupplier) {
+
+		_fileURLSupplier = () -> {
+			try {
+				return fileURLUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "optional field that specifies the source of the file to be downloaded, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.fileURL`)"
+	)
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+	protected String fileURL;
+
+	@JsonIgnore
+	private Supplier<String> _fileURLSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Folder getFolder() {
 		if (_folderSupplier != null) {
@@ -178,7 +221,7 @@ public class FileEntry implements Serializable {
 	@JsonIgnore
 	private Supplier<Folder> _folderSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -217,7 +260,7 @@ public class FileEntry implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Link getLink() {
 		if (_linkSupplier != null) {
@@ -257,7 +300,7 @@ public class FileEntry implements Serializable {
 	@JsonIgnore
 	private Supplier<Link> _linkSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -296,7 +339,7 @@ public class FileEntry implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Scope getScope() {
 		if (_scopeSupplier != null) {
@@ -330,11 +373,56 @@ public class FileEntry implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Scope scope;
 
 	@JsonIgnore
 	private Supplier<Scope> _scopeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "optional field that specifies the thumbnail of the file to be used, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.thumbnailURL`)"
+	)
+	public String getThumbnailURL() {
+		if (_thumbnailURLSupplier != null) {
+			thumbnailURL = _thumbnailURLSupplier.get();
+
+			_thumbnailURLSupplier = null;
+		}
+
+		return thumbnailURL;
+	}
+
+	public void setThumbnailURL(String thumbnailURL) {
+		this.thumbnailURL = thumbnailURL;
+
+		_thumbnailURLSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setThumbnailURL(
+		UnsafeSupplier<String, Exception> thumbnailURLUnsafeSupplier) {
+
+		_thumbnailURLSupplier = () -> {
+			try {
+				return thumbnailURLUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "optional field that specifies the thumbnail of the file to be used, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.thumbnailURL`)"
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String thumbnailURL;
+
+	@JsonIgnore
+	private Supplier<String> _thumbnailURLSupplier;
 
 	@Override
 	public boolean equals(Object object) {
@@ -391,6 +479,22 @@ public class FileEntry implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(fileBase64));
+
+			sb.append("\"");
+		}
+
+		String fileURL = getFileURL();
+
+		if (fileURL != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fileURL\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fileURL));
 
 			sb.append("\"");
 		}
@@ -459,13 +563,29 @@ public class FileEntry implements Serializable {
 			sb.append(String.valueOf(scope));
 		}
 
+		String thumbnailURL = getThumbnailURL();
+
+		if (thumbnailURL != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"thumbnailURL\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(thumbnailURL));
+
+			sb.append("\"");
+		}
+
 		sb.append("}");
 
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.object.rest.dto.v1_0.FileEntry",
 		name = "x-class-name"
 	)

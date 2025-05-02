@@ -6,12 +6,13 @@
 import {ClayButtonWithIcon} from '@clayui/button';
 import {Text} from '@clayui/core';
 import ClayPanel from '@clayui/panel';
-import {API, openToast, stringUtils} from '@liferay/object-js-components-web';
+import {API, stringUtils} from '@liferay/object-js-components-web';
+import {openToast} from 'frontend-js-components-web';
 import {sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 import {useStore} from 'react-flow-renderer';
 
-import ModalObjectFieldDeletionNotAllowed from '../../ModalObjectFieldDeletionNotAllowed';
+import ModalDeletionNotAllowed from '../../ModalDeletionNotAllowed';
 import {objectFieldInitialValues} from '../../ObjectField/EditObjectField';
 import {EditObjectFieldContent} from '../../ObjectField/EditObjectFieldContent';
 import {ModalDeleteObjectField} from '../../ObjectField/ModalDeleteObjectField';
@@ -121,6 +122,7 @@ export function RightSidebarObjectFieldDetails() {
 			}
 			catch (error) {
 				openToast({
+					autoClose: 15000,
 					message: (error as Error).message,
 					type: 'danger',
 				});
@@ -156,11 +158,13 @@ export function RightSidebarObjectFieldDetails() {
 										baseResourceURL,
 										objectFieldId: selectedObjectField?.id!,
 										objectFieldLabel:
-											stringUtils.getLocalizableLabel(
-												objectDefinitionNodeData.defaultLanguageId,
-												objectDefinitionNodeData.label,
-												objectDefinitionNodeData.name
-											),
+											stringUtils.getLocalizableLabel({
+												fallbackLabel:
+													objectDefinitionNodeData.name,
+												fallbackLanguageId:
+													objectDefinitionNodeData.defaultLanguageId,
+												labels: objectDefinitionNodeData.label,
+											}),
 										onAfterDelete: () => {
 											if (
 												selectedObjectField &&
@@ -255,7 +259,7 @@ export function RightSidebarObjectFieldDetails() {
 			)}
 
 			{objectFieldDeleteInfo?.showObjectFieldDeletionNotAllowedModal && (
-				<ModalObjectFieldDeletionNotAllowed
+				<ModalDeletionNotAllowed
 					content={
 						objectFieldDeleteInfo?.deleteObjectFieldObjectValidationRuleSetting ? (
 							<Text>
@@ -263,11 +267,12 @@ export function RightSidebarObjectFieldDetails() {
 									Liferay.Language.get(
 										'the-object-field-x-cannot-be-deleted-because-it-is-the-only-custom-object-field-of-the-published-object-definition'
 									),
-									`${stringUtils.getLocalizableLabel(
-										objectDefinitionNodeData.defaultLanguageId as Liferay.Language.Locale,
-										values.label,
-										values.name
-									)}`
+									`${stringUtils.getLocalizableLabel({
+										fallbackLabel: values.name,
+										fallbackLanguageId:
+											objectDefinitionNodeData.defaultLanguageId as Liferay.Language.Locale,
+										labels: values.label,
+									})}`
 								)}
 							</Text>
 						) : (
@@ -276,16 +281,17 @@ export function RightSidebarObjectFieldDetails() {
 									Liferay.Language.get(
 										'the-object-field-x-cannot-be-deleted-because-it-is-used-in-a-unique-composite-key-validation'
 									),
-									`${stringUtils.getLocalizableLabel(
-										objectDefinitionNodeData.defaultLanguageId as Liferay.Language.Locale,
-										values.label,
-										values.name
-									)}`
+									`${stringUtils.getLocalizableLabel({
+										fallbackLabel: values.name,
+										fallbackLanguageId:
+											objectDefinitionNodeData.defaultLanguageId as Liferay.Language.Locale,
+										labels: values.label,
+									})}`
 								)}
 							</Text>
 						)
 					}
-					onVisibilityChange={() =>
+					onModalClose={() =>
 						setObjectFieldDeleteInfo({
 							...objectFieldDeleteInfo,
 							showObjectFieldDeletionNotAllowedModal: false,

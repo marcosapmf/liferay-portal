@@ -10,10 +10,9 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
-import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
-import com.liferay.info.collection.provider.item.selector.criterion.RelatedInfoItemCollectionProviderItemSelectorCriterion;
-import com.liferay.info.collection.provider.item.selector.criterion.RepeatableFieldInfoCollectionProviderItemSelectorCriterion;
+import com.liferay.info.collection.provider.item.selector.RelatedInfoItemCollectionProviderItemSelectorCriterion;
+import com.liferay.info.collection.provider.item.selector.RepeatableFieldInfoCollectionProviderItemSelectorCriterion;
 import com.liferay.info.item.InfoItemClassDetails;
 import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.InfoItemServiceRegistry;
@@ -43,9 +42,9 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -84,7 +83,6 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		FragmentCollectionManager fragmentCollectionManager,
 		FragmentEntryLinkManager fragmentEntryLinkManager,
 		FragmentEntryLinkLocalService fragmentEntryLinkLocalService,
-		FragmentEntryLocalService fragmentEntryLocalService,
 		FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
 		HttpServletRequest httpServletRequest,
 		InfoItemServiceRegistry infoItemServiceRegistry,
@@ -98,6 +96,7 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		LayoutPermission layoutPermission,
 		PageEditorConfiguration pageEditorConfiguration,
 		boolean pageIsDisplayPage, Portal portal, PortletRequest portletRequest,
+		PortletResourcePermission portletResourcePermission,
 		PortletURLFactory portletURLFactory, RenderResponse renderResponse,
 		SegmentsConfigurationProvider segmentsConfigurationProvider,
 		SegmentsExperienceManager segmentsExperienceManager,
@@ -106,24 +105,22 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		SegmentsEntryService segmentsEntryService, Staging staging,
 		StagingGroupHelper stagingGroupHelper,
 		StyleBookEntryLocalService styleBookEntryLocalService,
-		UserLocalService userLocalService,
 		WorkflowDefinitionLinkLocalService workflowDefinitionLinkLocalService) {
 
 		super(
 			contentPageEditorSidebarPanels, contentManager,
 			fragmentCollectionManager, fragmentEntryLinkManager,
-			fragmentEntryLinkLocalService, fragmentEntryLocalService,
-			frontendTokenDefinitionRegistry, httpServletRequest,
-			infoItemServiceRegistry, infoSearchClassMapperRegistry,
-			itemSelector, jsonFactory, language, layoutLocalService,
-			layoutLockManager, layoutPageTemplateEntryLocalService,
-			layoutPageTemplateEntryService, layoutPermission,
-			layoutSetLocalService, pageEditorConfiguration, portal,
-			portletRequest, portletURLFactory, renderResponse,
-			segmentsConfigurationProvider, segmentsExperienceManager,
-			segmentsExperienceLocalService, segmentsExperimentRelLocalService,
-			segmentsEntryService, staging, stagingGroupHelper,
-			styleBookEntryLocalService, userLocalService,
+			fragmentEntryLinkLocalService, frontendTokenDefinitionRegistry,
+			httpServletRequest, infoItemServiceRegistry,
+			infoSearchClassMapperRegistry, itemSelector, jsonFactory, language,
+			layoutLocalService, layoutLockManager,
+			layoutPageTemplateEntryLocalService, layoutPageTemplateEntryService,
+			layoutPermission, layoutSetLocalService, pageEditorConfiguration,
+			portal, portletRequest, portletResourcePermission,
+			portletURLFactory, renderResponse, segmentsConfigurationProvider,
+			segmentsExperienceManager, segmentsExperienceLocalService,
+			segmentsExperimentRelLocalService, segmentsEntryService, staging,
+			stagingGroupHelper, styleBookEntryLocalService,
 			workflowDefinitionLinkLocalService);
 
 		_itemSelector = itemSelector;

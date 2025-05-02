@@ -37,11 +37,12 @@ export function EntryDisplayContainer({
 	const titleFieldOptions = useMemo(() => {
 		return nonRelationshipObjectFieldsInfo?.map(({label, name}) => {
 			return {
-				label: stringUtils.getLocalizableLabel(
-					values.defaultLanguageId as Liferay.Language.Locale,
-					label,
-					name
-				),
+				label: stringUtils.getLocalizableLabel({
+					fallbackLabel: name,
+					fallbackLanguageId:
+						values.defaultLanguageId as Liferay.Language.Locale,
+					labels: label,
+				}),
 				value: name,
 			};
 		});
@@ -66,6 +67,7 @@ export function EntryDisplayContainer({
 			className={className}
 			disabled={isLinkedObjectDefinition}
 			error={errors.titleObjectFieldId}
+			id="lfr-objects__object-display-container-entry-title-field"
 			items={titleFieldOptions}
 			label={Liferay.Language.get('entry-title-field')}
 			onSelectionChange={(itemKey) => {

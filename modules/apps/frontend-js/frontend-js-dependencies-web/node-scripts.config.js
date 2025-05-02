@@ -1,16 +1,13 @@
 /**
- * SPDX-FileCopyrightText: [(c) 2000 Liferay, Inc. https://liferay.com
- * SPDX-License-Identifier: [LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ * SPDX-FileCopyrightText: (c) 2024 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 module.exports = {
 	exports: [
-		'html-to-image',
-		'jspdf',
 		'@liferay/js-api',
 		'@liferay/js-api/data-set',
 		'cropperjs/dist/cropper.css',
-		'date-fns',
 		'graphql-hooks-memcache',
 		'graphql-hooks',
 		'graphql',
@@ -35,10 +32,7 @@ module.exports = {
 		'highlight.js/lib/languages/java',
 		'highlight.js/lib/languages/javascript',
 		'highlight.js/lib/languages/plaintext',
-		'image-promise',
 		'liferay-ckeditor',
-		'lodash.groupby',
-		'lodash.isequal',
 		'moment',
 		'moment/min/moment-with-locales',
 		'numeral',
@@ -49,4 +43,34 @@ module.exports = {
 		'text-mask-addons',
 		'text-mask-core',
 	],
+	symbols: {
+		'axe-core': ['*', 'default'],
+		'clipboard': ['*', 'default'],
+		'cropperjs': ['*', 'default'],
+		'dagre': ['*', 'default'],
+		'fuzzy': ['*', 'default'],
+		'graphql-hooks-memcache': ['*', 'default'],
+		'highlight.js': ['*', 'default'],
+		'highlight.js/lib/core': ['*', 'default'],
+		'highlight.js/lib/languages/java': ['*', 'default'],
+		'highlight.js/lib/languages/javascript': ['*', 'default'],
+		'highlight.js/lib/languages/plaintext': ['*', 'default'],
+		'liferay-ckeditor': [],
+		'moment': ['*', 'default'],
+		'moment/min/moment-with-locales': ['*', 'default'],
+		'numeral': ['*', 'default'],
+		'object-hash': ['*', 'default'],
+		'qrcode': [
+
+			// Need to explicitly list exports because the package differs in browser and server
+
+			'create',
+			'toCanvas',
+			'toString',
+			'toDataURL',
+		],
+		'qs': ['*', 'default'],
+		'text-mask-addons': ['*', 'default'],
+		'text-mask-core': ['*', 'default'],
+	},
 };

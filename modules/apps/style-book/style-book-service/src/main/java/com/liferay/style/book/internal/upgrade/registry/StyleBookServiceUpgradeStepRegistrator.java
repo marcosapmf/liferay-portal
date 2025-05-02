@@ -5,15 +5,21 @@
 
 package com.liferay.style.book.internal.upgrade.registry;
 
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 import com.liferay.style.book.internal.upgrade.v1_1_0.StyleBookEntryUpgradeProcess;
 import com.liferay.style.book.internal.upgrade.v1_2_0.StyleBookEntryVersionUpgradeProcess;
+import com.liferay.style.book.internal.upgrade.v1_7_0.StyleBookEntryThemeIdUpgradeProcess;
+import com.liferay.style.book.internal.upgrade.v1_8_0.StyleBookEntryVersionThemeIdUpgradeProcess;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Jürgen Kappler
@@ -73,6 +79,28 @@ public class StyleBookServiceUpgradeStepRegistrator
 				}
 
 			});
+
+		registry.register(
+			"1.5.0", "1.6.0",
+			UpgradeProcessFactory.addColumns(
+				"StyleBookEntry", "themeId VARCHAR(255) null"),
+			UpgradeProcessFactory.addColumns(
+				"StyleBookEntryVersion", "themeId VARCHAR(255) null"));
+
+		registry.register(
+			"1.6.0", "1.7.0",
+			new StyleBookEntryThemeIdUpgradeProcess(
+				_frontendTokenDefinitionRegistry, _groupLocalService));
+
+		registry.register(
+			"1.7.0", "1.8.0",
+			new StyleBookEntryVersionThemeIdUpgradeProcess(_groupLocalService));
 	}
+
+	@Reference
+	private FrontendTokenDefinitionRegistry _frontendTokenDefinitionRegistry;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 }

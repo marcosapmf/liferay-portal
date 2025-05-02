@@ -19,55 +19,52 @@ if (rssFeeds.isEmpty()) {
 }
 %>
 
-			<c:choose>
-				<c:when test="<%= rssFeeds.isEmpty() %>">
-					<clay:alert
-						displayType="info"
-					>
-						<liferay-ui:message key="this-application-is-not-visible-to-users-yet" />
+<c:choose>
+	<c:when test="<%= rssFeeds.isEmpty() %>">
+		<clay:alert
+			displayType="info"
+		>
+			<liferay-ui:message key="this-application-is-not-visible-to-users-yet" />
 
-						<c:if test="<%= rssDisplayContext.isShowConfigurationLink() %>">
-								<clay:button
-									cssClass="align-text-bottom border-0 p-0"
-									displayType="link"
-									label="select-at-least-one-valid-rss-feed-to-make-it-visible"
-									onClick="<%= portletDisplay.getURLConfigurationJS() %>"
-									small="<%= true %>"
-								/>
-						</c:if>
-					</clay:alert>
-				</c:when>
-				<c:otherwise>
-					<liferay-ddm:template-renderer
-						className="<%= RSSFeed.class.getName() %>"
-						contextObjects="<%= contextObjects %>"
-						displayStyle="<%= rssPortletInstanceConfiguration.displayStyle() %>"
-						displayStyleGroupId="<%= rssDisplayContext.getDisplayStyleGroupId() %>"
-						entries="<%= rssFeeds %>"
-					>
+			<c:if test="<%= rssDisplayContext.isShowConfigurationLink() %>">
+				<clay:button
+					cssClass="align-text-bottom border-0 p-0"
+					displayType="link"
+					label="select-at-least-one-valid-rss-feed-to-make-it-visible"
+					onClick="<%= portletDisplay.getURLConfigurationJS() %>"
+					small="<%= true %>"
+				/>
+			</c:if>
+		</clay:alert>
+	</c:when>
+	<c:otherwise>
+		<liferay-ddm:template-renderer
+			className="<%= RSSFeed.class.getName() %>"
+			contextObjects="<%= contextObjects %>"
+			displayStyle="<%= rssPortletInstanceConfiguration.displayStyle() %>"
+			displayStyleGroupId="<%= rssDisplayContext.getDisplayStyleGroupId() %>"
+			entries="<%= rssFeeds %>"
+		>
 
-						<%
-						for (int i = 0; i < rssFeeds.size(); i++) {
-							RSSFeed rssFeed = rssFeeds.get(i);
+			<%
+			for (int i = 0; i < rssFeeds.size(); i++) {
+				RSSFeed rssFeed = rssFeeds.get(i);
 
-							boolean last = false;
+				boolean last = false;
 
-							if (i == (rssFeeds.size() - 1)) {
-								last = true;
-							}
+				if (i == (rssFeeds.size() - 1)) {
+					last = true;
+				}
 
-							SyndFeed syndFeed = rssFeed.getSyndFeed();
-						%>
+				SyndFeed syndFeed = rssFeed.getSyndFeed();
+			%>
 
-						<%@ include file="/feed.jspf" %>
+				<%@ include file="/feed.jspf" %>
 
-						<%
-						}
-						%>
+			<%
+			}
+			%>
 
-					</liferay-ddm:template-renderer>
-				</c:otherwise>
-			</c:choose></String,
-		></String,
-	></RSSFeed
->
+		</liferay-ddm:template-renderer>
+	</c:otherwise>
+</c:choose>

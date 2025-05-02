@@ -11,6 +11,7 @@ import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.util.AssetRendererFactoryLookup;
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -20,15 +21,19 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.search.result.SearchResultContributor;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -58,6 +63,7 @@ import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -72,6 +78,10 @@ import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+
 /**
  * @author André de Oliveira
  */
@@ -85,15 +95,25 @@ public class SearchResultSummaryDisplayContextBuilder {
 				).build();
 			}
 
-			String className = _getFieldValueString(Field.ENTRY_CLASS_NAME);
+			String entryClassName = _getFieldValueString(
+				Field.ENTRY_CLASS_NAME);
 
-			long classPK = _getEntryClassPK();
+			long entryClassPK = _getEntryClassPK();
 
-			if (Validator.isBlank(className) && (classPK == 0)) {
+			if (Validator.isBlank(entryClassName) && (entryClassPK == 0)) {
 				return _buildFromPlainDocument();
 			}
 
-			return build(className, classPK);
+			SearchResultSummaryDisplayContext
+				searchResultSummaryDisplayContext = build(
+					entryClassName, entryClassPK);
+
+			_checkViewURL(
+				GetterUtil.getLong(_legacyDocument.get(Field.CLASS_NAME_ID)),
+				GetterUtil.getLong(_legacyDocument.get(Field.CLASS_PK)),
+				entryClassName, searchResultSummaryDisplayContext);
+
+			return searchResultSummaryDisplayContext;
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -128,6 +148,14 @@ public class SearchResultSummaryDisplayContextBuilder {
 			AssetRendererFactoryLookup assetRendererFactoryLookup) {
 
 		_assetRendererFactoryLookup = assetRendererFactoryLookup;
+
+		return this;
+	}
+
+	public SearchResultSummaryDisplayContextBuilder setClassNameLocalService(
+		ClassNameLocalService classNameLocalService) {
+
+		_classNameLocalService = classNameLocalService;
 
 		return this;
 	}
@@ -770,15 +798,18 @@ public class SearchResultSummaryDisplayContextBuilder {
 		String modelResource = _resourceActions.getModelResource(
 			_themeDisplay.getLocale(), className);
 
-		if (className.startsWith(ObjectDefinition.class.getName() + "#")) {
-			String[] parts = StringUtil.split(className, "#");
+		if (className.startsWith(
+				ObjectDefinitionConstants.
+					CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION)) {
 
 			ObjectDefinition objectDefinition =
-				_objectDefinitionLocalService.fetchObjectDefinition(
-					Long.valueOf(parts[1]));
+				_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
+					_themeDisplay.getCompanyId(), className);
 
-			modelResource = objectDefinition.getLabel(
-				_themeDisplay.getLocale());
+			if (objectDefinition != null) {
+				modelResource = objectDefinition.getLabel(
+					_themeDisplay.getLocale());
+			}
 		}
 
 		if (!Validator.isBlank(modelResource)) {
@@ -888,6 +919,23 @@ public class SearchResultSummaryDisplayContextBuilder {
 
 		searchResultSummaryDisplayContext.setViewURL(
 			getSearchResultViewURL(className, classPK));
+	}
+
+	private void _checkViewURL(
+			long classNameId, long classPK, String entryClassName,
+			SearchResultSummaryDisplayContext searchResultSummaryDisplayContext)
+		throws Exception {
+
+		if ((classNameId > 0) && (classPK > 0) &&
+			_hasSearchResultContributor(entryClassName)) {
+
+			ClassName className = _classNameLocalService.getClassName(
+				classNameId);
+
+			_buildViewURL(
+				className.getClassName(), classPK,
+				searchResultSummaryDisplayContext);
+		}
 	}
 
 	private String _formatDate(Date date) {
@@ -1028,6 +1076,39 @@ public class SearchResultSummaryDisplayContextBuilder {
 		return true;
 	}
 
+	private boolean _hasSearchResultContributor(String entryClassName) {
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		try {
+			Collection<ServiceReference<SearchResultContributor>>
+				serviceReferences = bundleContext.getServiceReferences(
+					SearchResultContributor.class, null);
+
+			if (!serviceReferences.isEmpty()) {
+				return true;
+			}
+
+			for (ServiceReference<SearchResultContributor> serviceReference :
+					serviceReferences) {
+
+				SearchResultContributor searchResultContributor =
+					bundleContext.getService(serviceReference);
+
+				if (StringUtil.equals(
+						entryClassName,
+						searchResultContributor.getEntryClassName())) {
+
+					return true;
+				}
+			}
+		}
+		catch (InvalidSyntaxException invalidSyntaxException) {
+			_log.error(invalidSyntaxException);
+		}
+
+		return false;
+	}
+
 	private boolean _isFieldPresent(String fieldName) {
 		if (_document != null) {
 			Map<String, com.liferay.portal.search.document.Field> map =
@@ -1058,6 +1139,7 @@ public class SearchResultSummaryDisplayContextBuilder {
 	private boolean _abridged;
 	private AssetEntryLocalService _assetEntryLocalService;
 	private AssetRendererFactoryLookup _assetRendererFactoryLookup;
+	private ClassNameLocalService _classNameLocalService;
 	private String _currentURL;
 	private Document _document;
 	private DocumentBuilderFactory _documentBuilderFactory;

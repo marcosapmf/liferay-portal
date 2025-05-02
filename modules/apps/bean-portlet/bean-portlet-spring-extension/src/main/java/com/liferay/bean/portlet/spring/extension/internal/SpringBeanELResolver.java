@@ -30,7 +30,6 @@ public class SpringBeanELResolver extends ELResolver {
 		return null;
 	}
 
-	@Override
 	public Iterator<FeatureDescriptor> getFeatureDescriptors(
 		ELContext elContext, Object base) {
 
@@ -44,28 +43,32 @@ public class SpringBeanELResolver extends ELResolver {
 
 	@Override
 	public Object getValue(ELContext elContext, Object base, Object property) {
-		if ((base == null) && (property != null)) {
-			String beanName = property.toString();
-
-			if (_beanFactory.containsBean(beanName)) {
-				PortletRequest portletRequest = _beanFactory.getBean(
-					"portletRequest", PortletRequest.class);
-
-				Object bean = portletRequest.getAttribute(beanName);
-
-				if (bean == null) {
-					bean = _beanFactory.getBean(beanName);
-				}
-
-				if (bean != null) {
-					elContext.setPropertyResolved(true);
-
-					return bean;
-				}
-			}
+		if ((base != null) || (property == null)) {
+			return null;
 		}
 
-		return null;
+		String beanName = property.toString();
+
+		if (!_beanFactory.containsBean(beanName)) {
+			return null;
+		}
+
+		PortletRequest portletRequest = _beanFactory.getBean(
+			"portletRequest", PortletRequest.class);
+
+		Object bean = portletRequest.getAttribute(beanName);
+
+		if (bean == null) {
+			bean = _beanFactory.getBean(beanName);
+		}
+
+		if (bean == null) {
+			return null;
+		}
+
+		elContext.setPropertyResolved(true);
+
+		return bean;
 	}
 
 	@Override

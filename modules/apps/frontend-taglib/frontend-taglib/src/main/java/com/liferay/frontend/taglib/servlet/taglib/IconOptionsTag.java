@@ -8,6 +8,7 @@ package com.liferay.frontend.taglib.servlet.taglib;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.internal.servlet.ServletContextUtil;
+import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIconTracker;
 import com.liferay.portal.kernel.theme.PortletDisplay;
@@ -22,6 +23,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.util.comparator.PortletConfigurationIconComparator;
 import com.liferay.taglib.util.IncludeTag;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.portlet.PortletRequest;
@@ -103,62 +105,29 @@ public class IconOptionsTag extends IncludeTag {
 	private List<DropdownItem> _getDropdownItems() {
 		return new DropdownItemList() {
 			{
-				for (PortletConfigurationIcon portletConfigurationIcon :
-						_getPortletConfigurationIcons()) {
+				for (List<PortletConfigurationIcon> portletConfigurationIcons :
+						_getPortletConfigurationIconsList()) {
 
-					add(
-						dropdownItem -> {
-							String url = portletConfigurationIcon.getURL(
-								_getPortletRequest(), _getPortletResponse());
-
-							if (portletConfigurationIcon.isUseDialog()) {
-								dropdownItem.setData(
-									HashMapBuilder.<String, Object>put(
-										"action", "openDialog"
-									).put(
-										"portletId", _getId()
-									).put(
-										"senna-off", "true"
-									).put(
-										"title",
-										portletConfigurationIcon.getMessage(
-											_getPortletRequest())
-									).put(
-										"url", url
-									).build());
-							}
-							else if (Validator.isNotNull(url)) {
-								if (_isForcePush(
-										portletConfigurationIcon.getMethod(),
-										url)) {
-
-									dropdownItem.setData(
-										HashMapBuilder.<String, Object>put(
-											"action", "send"
-										).put(
-											"senna-off", "true"
-										).put(
-											"url", url
-										).build());
-								}
-								else {
-									dropdownItem.setHref(url);
-								}
-							}
-							else {
-								dropdownItem.setData(
-									portletConfigurationIcon.getContext(
-										_getPortletRequest()));
-							}
-
-							dropdownItem.setIcon(
-								portletConfigurationIcon.getIconCssClass());
-							dropdownItem.setLabel(
-								portletConfigurationIcon.getMessage(
-									_getPortletRequest()));
-							dropdownItem.setTarget(
-								portletConfigurationIcon.getTarget());
+					addGroup(
+						dropdownGroupItem -> {
+							dropdownGroupItem.setDropdownItems(
+								_getDropdownItems(portletConfigurationIcons));
+							dropdownGroupItem.setSeparator(true);
 						});
+				}
+			}
+		};
+	}
+
+	private List<DropdownItem> _getDropdownItems(
+		List<PortletConfigurationIcon> portletConfigurationIcons) {
+
+		return new DropdownItemList() {
+			{
+				for (PortletConfigurationIcon portletConfigurationIcon :
+						portletConfigurationIcons) {
+
+					add(_getUnsafeConsumer(portletConfigurationIcon));
 				}
 			}
 		};
@@ -189,6 +158,32 @@ public class IconOptionsTag extends IncludeTag {
 		return _portletConfigurationIcons;
 	}
 
+	private List<List<PortletConfigurationIcon>>
+		_getPortletConfigurationIconsList() {
+
+		List<List<PortletConfigurationIcon>> portletConfigurationIconsList =
+			new ArrayList<>();
+
+		List<PortletConfigurationIcon> portletConfigurationIcons =
+			new ArrayList<>();
+
+		portletConfigurationIconsList.add(portletConfigurationIcons);
+
+		for (PortletConfigurationIcon portletConfigurationIcon :
+				_getPortletConfigurationIcons()) {
+
+			portletConfigurationIcons.add(portletConfigurationIcon);
+
+			if (portletConfigurationIcon.hasSeparator()) {
+				portletConfigurationIcons = new ArrayList<>();
+
+				portletConfigurationIconsList.add(portletConfigurationIcons);
+			}
+		}
+
+		return portletConfigurationIconsList;
+	}
+
 	private String _getPortletId() {
 		HttpServletRequest httpServletRequest = getRequest();
 
@@ -213,6 +208,56 @@ public class IconOptionsTag extends IncludeTag {
 
 		return (PortletResponse)httpServletRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_RESPONSE);
+	}
+
+	private UnsafeConsumer<DropdownItem, Exception> _getUnsafeConsumer(
+		PortletConfigurationIcon portletConfigurationIcon) {
+
+		return dropdownItem -> {
+			String url = portletConfigurationIcon.getURL(
+				_getPortletRequest(), _getPortletResponse());
+
+			if (portletConfigurationIcon.isUseDialog()) {
+				dropdownItem.setData(
+					HashMapBuilder.<String, Object>put(
+						"action", "openDialog"
+					).put(
+						"portletId", _getId()
+					).put(
+						"senna-off", "true"
+					).put(
+						"title",
+						portletConfigurationIcon.getMessage(
+							_getPortletRequest())
+					).put(
+						"url", url
+					).build());
+			}
+			else if (Validator.isNotNull(url)) {
+				if (_isForcePush(portletConfigurationIcon.getMethod(), url)) {
+					dropdownItem.setData(
+						HashMapBuilder.<String, Object>put(
+							"action", "send"
+						).put(
+							"senna-off", "true"
+						).put(
+							"url", url
+						).build());
+				}
+				else {
+					dropdownItem.setHref(url);
+				}
+			}
+			else {
+				dropdownItem.setData(
+					portletConfigurationIcon.getContext(_getPortletRequest()));
+			}
+
+			dropdownItem.setIcon(portletConfigurationIcon.getIconCssClass());
+			dropdownItem.setLabel(
+				portletConfigurationIcon.getMessage(_getPortletRequest()));
+			dropdownItem.setTarget(portletConfigurationIcon.getTarget());
+		};
 	}
 
 	private boolean _isForcePush(String method, String url) {

@@ -7,7 +7,7 @@ import {Page} from '@playwright/test';
 
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import {PORTLET_URLS} from '../../utils/portletUrls';
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../utils/waitForAlert';
 
 export class WorkflowPage {
 	readonly page: Page;
@@ -24,10 +24,10 @@ export class WorkflowPage {
 
 	async changeWorkflow(
 		asset: string,
-		value: 'Single Approver' | 'No Workflow',
+		value: string,
 		{disable} = {disable: false}
 	) {
-		const row = await this.page.getByRole('row').filter({hasText: asset});
+		const row = this.page.getByRole('row').filter({hasText: asset});
 
 		await clickAndExpectToBeVisible({
 			target: row.getByRole('button', {name: 'Save'}),
@@ -40,7 +40,7 @@ export class WorkflowPage {
 
 		await this.page.getByRole('button', {name: 'Save'}).click();
 
-		await waitForSuccessAlert(
+		await waitForAlert(
 			this.page,
 			disable
 				? `Success:Workflow unassigned from ${asset}.`

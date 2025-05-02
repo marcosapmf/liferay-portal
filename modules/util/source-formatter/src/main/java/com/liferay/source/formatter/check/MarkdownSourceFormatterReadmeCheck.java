@@ -49,7 +49,7 @@ public class MarkdownSourceFormatterReadmeCheck extends BaseFileCheck {
 			String fileName, String absolutePath, String content)
 		throws IOException {
 
-		if (!absolutePath.endsWith("/source-formatter/README.markdown")) {
+		if (!absolutePath.endsWith("/source-formatter/README.md")) {
 			return content;
 		}
 
@@ -615,19 +615,29 @@ public class MarkdownSourceFormatterReadmeCheck extends BaseFileCheck {
 			fileExtensions.addAll(_getFileExtensions(sourceProcessorName));
 		}
 
+		if (fileExtensions.size() == 1) {
+			return fileExtensions.get(0);
+		}
+
 		Collections.sort(fileExtensions);
+
+		if (fileExtensions.size() == 2) {
+			return fileExtensions.get(0) + " or " + fileExtensions.get(1);
+		}
 
 		StringBundler sb = new StringBundler();
 
 		for (int i = 0; i < fileExtensions.size(); i++) {
 			sb.append(fileExtensions.get(i));
+			sb.append(", ");
 
 			if (i == (fileExtensions.size() - 2)) {
-				sb.append(" or ");
+				sb.append("or ");
 			}
-			else if (i < (fileExtensions.size() - 1)) {
-				sb.append(", ");
-			}
+		}
+
+		if (sb.length() > 0) {
+			sb.setIndex(sb.index() - 1);
 		}
 
 		return sb.toString();

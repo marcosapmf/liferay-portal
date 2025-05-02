@@ -20,6 +20,7 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.util.CommerceCheckoutStep;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Group;
@@ -84,7 +85,7 @@ public class CommerceCheckoutStepTest {
 		_user = UserTestUtil.addUser();
 
 		_commerceCurrency = _commerceCurrencyLocalService.addCommerceCurrency(
-			_user.getUserId(), RandomTestUtil.randomString(),
+			null, _user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomString(), BigDecimal.ONE,
 			RandomTestUtil.randomLocaleStringMap(), 2, 2, "HALF_EVEN", false,
@@ -131,7 +132,7 @@ public class CommerceCheckoutStepTest {
 		String emailAddress = "buyer@liferay.com";
 
 		AccountEntry accountEntry1 = _accountEntryLocalService.addAccountEntry(
-			_serviceContext.getUserId(),
+			StringPool.BLANK, _serviceContext.getUserId(),
 			AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 			RandomTestUtil.randomString(), null, null, emailAddress, null, null,
 			AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
@@ -142,15 +143,15 @@ public class CommerceCheckoutStepTest {
 		CommerceOrder commerceOrder1 =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(),
-				accountEntry1.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				accountEntry1.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		Assert.assertFalse(commerceOrder1.isGuestOrder());
 
 		CommerceOrder commerceOrder2 =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(), -1,
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				_commerceCurrency.getCode(), 0);
 
 		Assert.assertTrue(commerceOrder2.isGuestOrder());
 
@@ -200,7 +201,7 @@ public class CommerceCheckoutStepTest {
 		CommerceOrder commerceOrder1 =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(), -1,
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				_commerceCurrency.getCode(), 0);
 
 		Assert.assertTrue(commerceOrder1.isGuestOrder());
 
@@ -215,7 +216,7 @@ public class CommerceCheckoutStepTest {
 		CommerceOrder commerceOrder2 =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(), -1,
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				_commerceCurrency.getCode(), 0);
 
 		Assert.assertTrue(commerceOrder2.isGuestOrder());
 
@@ -275,9 +276,9 @@ public class CommerceCheckoutStepTest {
 		mockLiferayPortletActionRequest.setAttribute(
 			CommerceWebKeys.COMMERCE_CONTEXT,
 			_commerceContextFactory.create(
-				_serviceContext.getCompanyId(), _group.getGroupId(),
-				_serviceContext.getUserId(), commerceOrder.getCommerceOrderId(),
-				commerceOrder.getCommerceAccountId()));
+				commerceOrder.getCommerceAccountId(), _group.getGroupId(), null,
+				commerceOrder.getCommerceOrderId(),
+				_serviceContext.getCompanyId()));
 		mockLiferayPortletActionRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay());
 		mockLiferayPortletActionRequest.setParameter(

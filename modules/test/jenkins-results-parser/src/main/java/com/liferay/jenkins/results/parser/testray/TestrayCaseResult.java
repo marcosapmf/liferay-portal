@@ -322,8 +322,8 @@ public class TestrayCaseResult {
 	public static enum Status {
 
 		BLOCKED(4, "blocked"), DIDNOTRUN(6, "dnr"), FAILED(3, "failed"),
-		INPROGRESS(1, "in-progress"), PASSED(2, "passed"),
-		TESTFIX(7, "test-fix"), UNTESTED(1, "untested");
+		INCOMPLETE(1, "incomplete"), INPROGRESS(1, "in-progress"),
+		PASSED(2, "passed"), TESTFIX(7, "test-fix"), UNTESTED(1, "untested");
 
 		public static Status get(Integer id) {
 			return _statuses.get(id);
@@ -448,11 +448,7 @@ public class TestrayCaseResult {
 			return false;
 		}
 		catch (IllegalArgumentException illegalArgumentException) {
-			if (Objects.equals(thisErrors, previousErrors)) {
-				return true;
-			}
-
-			return false;
+			return Objects.equals(thisErrors, previousErrors);
 		}
 	}
 
@@ -461,7 +457,7 @@ public class TestrayCaseResult {
 		"Failed for unknown reason", "timed out after 2 hours"
 	};
 
-	private static final double _MAX_JARO_WINKLER_DISTANCE = 0.8;
+	private static final double _MAX_JARO_WINKLER_DISTANCE = 0.93;
 
 	private ErrorType _errorType;
 	private final JSONObject _jsonObject;

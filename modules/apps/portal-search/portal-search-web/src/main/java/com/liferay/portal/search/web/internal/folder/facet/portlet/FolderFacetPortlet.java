@@ -7,6 +7,7 @@ package com.liferay.portal.search.web.internal.folder.facet.portlet;
 
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.searcher.SearchRequest;
@@ -20,6 +21,8 @@ import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRe
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 
 import java.io.IOException;
+
+import java.util.Locale;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
@@ -112,11 +115,13 @@ public class FolderFacetPortlet extends MVCPortlet {
 			folderFacetPortletPreferences.isFrequenciesVisible());
 		folderSearchFacetDisplayContextBuilder.setFrequencyThreshold(
 			folderFacetPortletPreferences.getFrequencyThreshold());
+
+		folderSearchFacetDisplayContextBuilder.setLocale(
+			_getLocale(portletSharedSearchResponse, renderRequest));
 		folderSearchFacetDisplayContextBuilder.setMaxTerms(
 			folderFacetPortletPreferences.getMaxTerms());
 		folderSearchFacetDisplayContextBuilder.setOrder(
 			folderFacetPortletPreferences.getOrder());
-
 		folderSearchFacetDisplayContextBuilder.setPaginationStartParameterName(
 			_getPaginationStartParameterName(portletSharedSearchResponse));
 
@@ -144,6 +149,16 @@ public class FolderFacetPortlet extends MVCPortlet {
 
 	private String _getAggregationName(RenderRequest renderRequest) {
 		return portal.getPortletId(renderRequest);
+	}
+
+	private Locale _getLocale(
+		PortletSharedSearchResponse portletSharedSearchResponse,
+		RenderRequest renderRequest) {
+
+		ThemeDisplay themeDisplay = portletSharedSearchResponse.getThemeDisplay(
+			renderRequest);
+
+		return themeDisplay.getLocale();
 	}
 
 	private String _getPaginationStartParameterName(

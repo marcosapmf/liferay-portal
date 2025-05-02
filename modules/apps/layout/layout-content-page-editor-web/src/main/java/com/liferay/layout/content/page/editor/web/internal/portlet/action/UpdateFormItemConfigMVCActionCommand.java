@@ -13,7 +13,7 @@ import com.liferay.fragment.util.configuration.FragmentConfigurationField;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.content.page.editor.web.internal.manager.FormItemManager;
-import com.liferay.layout.content.page.editor.web.internal.manager.FragmentEntryLinkManager;
+import com.liferay.layout.manager.FormManager;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureService;
@@ -22,11 +22,11 @@ import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructureItemUtil;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
-import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -136,6 +136,8 @@ public class UpdateFormItemConfigMVCActionCommand
 			actionRequest, "segmentsExperienceId");
 		String itemConfig = ParamUtil.getString(actionRequest, "itemConfig");
 		String formItemId = ParamUtil.getString(actionRequest, "itemId");
+		long stepperFragmentEntryLinkId = ParamUtil.getLong(
+			actionRequest, "stepperFragmentEntryLinkId");
 
 		JSONObject jsonObject = _jsonFactory.createJSONObject();
 
@@ -164,26 +166,22 @@ public class UpdateFormItemConfigMVCActionCommand
 			(FormStyledLayoutStructureItem)layoutStructure.updateItemConfig(
 				_jsonFactory.createJSONObject(itemConfig), formItemId);
 
-		JSONArray removedLayoutStructureItemsJSONArray =
-			_jsonFactory.createJSONArray();
-
 		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			actionRequest);
 
 		List<FragmentEntryLink> addedFragmentEntryLinks = new ArrayList<>();
 
-		if (!Objects.equals(
+		FormItemManager.LayoutStructureItemChanges layoutStructureItemChanges =
+			_updateFormStyledLayoutStructureItemFormType(
+				addedFragmentEntryLinks, formStyledLayoutStructureItem,
+				_portal.getHttpServletRequest(actionRequest),
+				_portal.getHttpServletResponse(actionResponse),
 				formStyledLayoutStructureItem.getFormType(),
-				previousFormType) ||
-			!Objects.equals(
+				themeDisplay.getLayout(), layoutStructure,
 				formStyledLayoutStructureItem.getNumberOfSteps(),
-				previousNumberOfSteps)) {
-
-			layoutStructure.updateFormStyledLayoutStructureItemFormType(
-				formStyledLayoutStructureItem.getItemId(),
-				formStyledLayoutStructureItem.getFormType(),
-				formStyledLayoutStructureItem.getNumberOfSteps());
-		}
+				previousFormType, previousNumberOfSteps, segmentsExperienceId,
+				ServiceContextFactory.getInstance(actionRequest),
+				stepperFragmentEntryLinkId);
 
 		if (!Objects.equals(
 				formStyledLayoutStructureItem.getClassNameId(),
@@ -192,25 +190,24 @@ public class UpdateFormItemConfigMVCActionCommand
 				formStyledLayoutStructureItem.getClassTypeId(),
 				previousClassTypeId)) {
 
-			removedLayoutStructureItemsJSONArray =
-				_formItemManager.removeLayoutStructureItemsJSONArray(
-					formStyledLayoutStructureItem, layoutStructure, null);
+			layoutStructureItemChanges.addRemovedLayoutStructureItems(
+				_formItemManager.removeLayoutStructureItems(
+					formStyledLayoutStructureItem, layoutStructure, null));
 
 			if (formStyledLayoutStructureItem.getClassNameId() > 0) {
 				String[] uniqueInfoFieldIds = StringUtil.split(
 					ParamUtil.getString(actionRequest, "fields"));
 
-				if (!FeatureFlagManagerUtil.isEnabled("LPD-20213") ||
-					ArrayUtil.isNotEmpty(uniqueInfoFieldIds)) {
-
-					addedFragmentEntryLinks =
-						_formItemManager.addFragmentEntryLinks(
-							jsonObject, formStyledLayoutStructureItem, true,
+				if (ArrayUtil.isNotEmpty(uniqueInfoFieldIds)) {
+					layoutStructureItemChanges.addAddedLayoutStructureItems(
+						_formManager.addFragmentEntryLinksLayoutStructureItems(
+							addedFragmentEntryLinks, jsonObject,
+							formStyledLayoutStructureItem, true,
 							themeDisplay.getLayout(), layoutStructure,
 							themeDisplay.getLocale(), segmentsExperienceId,
 							ServiceContextFactory.getInstance(
 								httpServletRequest),
-							uniqueInfoFieldIds);
+							uniqueInfoFieldIds));
 				}
 			}
 		}
@@ -219,7 +216,6 @@ public class UpdateFormItemConfigMVCActionCommand
 				actionRequest.getParameterMap();
 
 			if (parameterMap.containsKey("fields") &&
-				FeatureFlagManagerUtil.isEnabled("LPD-20213") &&
 				(formStyledLayoutStructureItem.getClassNameId() > 0)) {
 
 				List<String> newUniqueInfoFieldIds = new ArrayList<>();
@@ -243,14 +239,15 @@ public class UpdateFormItemConfigMVCActionCommand
 				}
 
 				if (ListUtil.isNotEmpty(newUniqueInfoFieldIds)) {
-					addedFragmentEntryLinks =
-						_formItemManager.addFragmentEntryLinks(
-							jsonObject, formStyledLayoutStructureItem, false,
+					layoutStructureItemChanges.addAddedLayoutStructureItems(
+						_formManager.addFragmentEntryLinksLayoutStructureItems(
+							addedFragmentEntryLinks, jsonObject,
+							formStyledLayoutStructureItem, false,
 							themeDisplay.getLayout(), layoutStructure,
 							themeDisplay.getLocale(), segmentsExperienceId,
 							ServiceContextFactory.getInstance(
 								httpServletRequest),
-							newUniqueInfoFieldIds.toArray(new String[0]));
+							newUniqueInfoFieldIds.toArray(new String[0])));
 				}
 
 				List<String> removedItemIds = new ArrayList<>();
@@ -267,19 +264,18 @@ public class UpdateFormItemConfigMVCActionCommand
 				}
 
 				if (ListUtil.isNotEmpty(removedItemIds)) {
-					removedLayoutStructureItemsJSONArray =
-						_formItemManager.removeLayoutStructureItemsJSONArray(
+					layoutStructureItemChanges.addRemovedLayoutStructureItems(
+						_formItemManager.removeLayoutStructureItems(
 							formStyledLayoutStructureItem, layoutStructure,
-							removedItemIds);
+							removedItemIds));
 				}
 			}
 		}
 
-		layoutPageTemplateStructure =
-			_layoutPageTemplateStructureService.
-				updateLayoutPageTemplateStructureData(
-					themeDisplay.getScopeGroupId(), themeDisplay.getPlid(),
-					segmentsExperienceId, layoutStructure.toString());
+		_layoutPageTemplateStructureService.
+			updateLayoutPageTemplateStructureData(
+				themeDisplay.getScopeGroupId(), themeDisplay.getPlid(),
+				segmentsExperienceId, layoutStructure.toString());
 
 		for (FragmentEntryLink addedFragmentEntryLink :
 				addedFragmentEntryLinks) {
@@ -293,36 +289,72 @@ public class UpdateFormItemConfigMVCActionCommand
 			}
 		}
 
-		JSONObject addedFragmentEntryLinksJSONObject =
-			_jsonFactory.createJSONObject();
+		FragmentEntryLink stepperFragmentEntryLink =
+			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
+				stepperFragmentEntryLinkId);
 
-		HttpServletResponse httpServletResponse =
-			_portal.getHttpServletResponse(actionResponse);
+		if (stepperFragmentEntryLink != null) {
+			stepperFragmentEntryLink = _formItemManager.updateNumberOfStepps(
+				httpServletRequest,
+				_portal.getHttpServletResponse(actionResponse),
+				formStyledLayoutStructureItem.getNumberOfSteps(),
+				stepperFragmentEntryLink);
 
-		LayoutStructure updatedLayoutStructure = LayoutStructure.of(
-			layoutPageTemplateStructure.getData(segmentsExperienceId));
-
-		for (FragmentEntryLink addedFragmentEntryLink :
-				addedFragmentEntryLinks) {
-
-			addedFragmentEntryLinksJSONObject.put(
-				String.valueOf(addedFragmentEntryLink.getFragmentEntryLinkId()),
-				_fragmentEntryLinkManager.getFragmentEntryLinkJSONObject(
-					addedFragmentEntryLink, httpServletRequest,
-					httpServletResponse, updatedLayoutStructure));
+			addedFragmentEntryLinks.add(stepperFragmentEntryLink);
 		}
 
-		return jsonObject.put(
-			"addedFragmentEntryLinks", addedFragmentEntryLinksJSONObject
-		).put(
-			"layoutData", updatedLayoutStructure.toJSONObject()
-		).put(
-			"removedFragmentEntryLinkIds", removedLayoutStructureItemsJSONArray
-		);
+		return _formItemManager.getLayoutStructureItemChangesJSONObject(
+			addedFragmentEntryLinks, httpServletRequest,
+			_portal.getHttpServletResponse(actionResponse), jsonObject,
+			layoutStructure, layoutStructureItemChanges);
+	}
+
+	private FormItemManager.LayoutStructureItemChanges
+			_updateFormStyledLayoutStructureItemFormType(
+				List<FragmentEntryLink> addedFragmentEntryLinks,
+				FormStyledLayoutStructureItem formStyledLayoutStructureItem,
+				HttpServletRequest httpServletRequest,
+				HttpServletResponse httpServletResponse, String formType,
+				Layout layout, LayoutStructure layoutStructure,
+				int numberOfSteps, String previousFormType,
+				int previousNumberOfSteps, long segmentsExperienceId,
+				ServiceContext serviceContext, long stepperFragmentEntryLinkId)
+		throws Exception {
+
+		if (!Objects.equals(formType, previousFormType)) {
+			if (Objects.equals(formType, "multistep")) {
+				return _formItemManager.changeToMultistepFormType(
+					addedFragmentEntryLinks, formStyledLayoutStructureItem,
+					httpServletRequest, httpServletResponse, layout,
+					layoutStructure, numberOfSteps, segmentsExperienceId,
+					serviceContext, stepperFragmentEntryLinkId);
+			}
+
+			return _formItemManager.changeToSimpleFormType(
+				formStyledLayoutStructureItem, layoutStructure);
+		}
+
+		if (numberOfSteps != previousNumberOfSteps) {
+			if (numberOfSteps > previousNumberOfSteps) {
+				return _formItemManager.addFormStepLayoutStructureItems(
+					addedFragmentEntryLinks, formStyledLayoutStructureItem,
+					httpServletRequest, httpServletResponse, layout,
+					layoutStructure, numberOfSteps, segmentsExperienceId,
+					serviceContext);
+			}
+
+			return _formItemManager.removeFormStepLayoutStructureItems(
+				formStyledLayoutStructureItem, layoutStructure, numberOfSteps);
+		}
+
+		return new FormItemManager.LayoutStructureItemChanges();
 	}
 
 	@Reference
 	private FormItemManager _formItemManager;
+
+	@Reference
+	private FormManager _formManager;
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
@@ -333,9 +365,6 @@ public class UpdateFormItemConfigMVCActionCommand
 
 	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
-
-	@Reference
-	private FragmentEntryLinkManager _fragmentEntryLinkManager;
 
 	@Reference
 	private JSONFactory _jsonFactory;

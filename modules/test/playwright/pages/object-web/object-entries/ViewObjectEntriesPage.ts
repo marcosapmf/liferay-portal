@@ -3,21 +3,30 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ObjectField} from '@liferay/object-admin-rest-client-js';
 import {FrameLocator, Locator, Page, expect} from '@playwright/test';
+import path from 'path';
 
 import {PORTLET_URLS} from '../../../utils/portletUrls';
 
 export class ViewObjectEntriesPage {
 	readonly addObjectEntryButton: Locator;
 	readonly backButton: Locator;
+	readonly deletionConfirmationModal: Locator;
 	readonly deleteFileButton: Locator;
 	readonly duplicateEntryErrorMessage: Locator;
 	readonly editObjectEntryForm: Locator;
+	readonly frameSelect: FrameLocator;
+	readonly frontendDatasetActions: Locator;
+	readonly frontendDatasetDeleteAction: Locator;
 	readonly page: Page;
 	readonly richTextIFrame: FrameLocator;
 	readonly richTextInput: Locator;
 	readonly saveObjectEntryButton: Locator;
 	readonly saveObjectEntryButtonArabic: Locator;
+	readonly searchBar: Locator;
+	readonly searchButton: Locator;
+	readonly searchContainer: Locator;
 	readonly selectFileButton: Locator;
 	readonly selectFileButtonArabic: Locator;
 	readonly selectFileIframe: FrameLocator;
@@ -31,17 +40,36 @@ export class ViewObjectEntriesPage {
 			.first();
 		this.backButton = page.getByTitle('Back');
 		this.deleteFileButton = page.getByRole('button', {name: 'Delete'});
+		this.deletionConfirmationModal = page
+			.getByRole('dialog')
+			.and(page.getByLabel('Delete Entry'));
 		this.duplicateEntryErrorMessage = page.getByText(
 			'Error:The field values are already in use. Please choose unique values.'
 		);
 		this.editObjectEntryForm = page.locator('[id="editObjectEntry"]');
+		this.frameSelect = page
+			.locator('iframe[title="Select"]')
+			.contentFrame();
+		this.frontendDatasetActions = page.getByRole('button', {
+			name: 'Actions',
+		});
+		this.frontendDatasetDeleteAction = page.getByRole('menuitem', {
+			name: 'Delete',
+		});
 		this.page = page;
 		this.richTextIFrame = page
 			.getByRole('application', {
-				name: /Rich Text Editor, _com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_.*_ddm\$\$.*\$.*\$en_US/,
+				name: 'Rich Text Editor',
 			})
 			.frameLocator('iframe');
 		this.richTextInput = this.richTextIFrame.getByRole('textbox');
+		this.searchBar = this.frameSelect.getByPlaceholder('Search for');
+		this.searchButton = this.frameSelect.getByRole('button', {
+			name: 'Search for',
+		});
+		this.searchContainer = this.frameSelect.locator(
+			'[id="_com_liferay_item_selector_web_portlet_ItemSelectorPortlet_entriesSearchContainer"]'
+		);
 		this.saveObjectEntryButton = page.getByRole('button', {name: 'Save'});
 		this.saveObjectEntryButtonArabic = page.getByRole('button', {
 			name: 'إحفظ',
@@ -80,7 +108,7 @@ export class ViewObjectEntriesPage {
 		objectFieldLabel,
 		objectFieldValue,
 	}: {
-		objectFieldBusinessType?: ObjectFieldBusinessTypeName;
+		objectFieldBusinessType?: ObjectField['businessType'];
 		objectFieldLabel?: string;
 		objectFieldValue: string;
 	}) {
@@ -106,9 +134,12 @@ export class ViewObjectEntriesPage {
 		await this.page.getByRole('option', {name: optionName}).click();
 	}
 
-	async selectFileFromDocumentsAndMedia(fileName: string) {
-		await this.selectFileButton.click();
+	async selectDropdownItemWithSearch(optionName: string) {
+		await this.page.getByPlaceholder('Search').click();
+		await this.page.getByRole('menuitem', {name: optionName}).click();
+	}
 
+	async selectFileFromDocumentsAndMedia(fileName: string) {
 		await this.selectFileIframe
 			.getByRole('link', {name: 'Sites and Libraries'})
 			.click();
@@ -121,13 +152,11 @@ export class ViewObjectEntriesPage {
 			.getByRole('link', {name: 'Provided by Liferay'})
 			.click();
 
-		await this.selectFileIframe
-			.locator(
-				'[id="_com_liferay_item_selector_web_portlet_ItemSelectorPortlet_repositoryEntriesSearchContainer_1"] div'
-			)
-			.filter({hasText: fileName})
-			.first()
-			.click();
+		await expect(
+			this.selectFileIframe.getByLabel('Search for', {exact: true})
+		).toBeEnabled();
+
+		await this.selectFileIframe.getByText(fileName).dblclick();
 	}
 
 	async selectFileFromDocumentsAndMediaArabic() {
@@ -153,8 +182,22 @@ export class ViewObjectEntriesPage {
 			.click();
 	}
 
+	async selectFileFromUserComputer(dirName: string, fileName: string) {
+		const fileChooserPromise = this.page.waitForEvent('filechooser');
+
+		await this.selectFileButton.click();
+
+		const fileChooser = await fileChooserPromise;
+
+		await fileChooser.setFiles(
+			path.join(dirName, 'dependencies', fileName)
+		);
+
+		await this.page.getByText(fileName).waitFor({state: 'visible'});
+	}
+
 	async goto(
-		objectDefinitionId: number,
+		objectDefinitionClassName: string,
 		regionalCode?: string,
 		siteUrl?: Site['friendlyUrlPath']
 	) {
@@ -162,11 +205,14 @@ export class ViewObjectEntriesPage {
 			regionalCode = 'en';
 		}
 
+		const [_, objectDefinitionClassNameSuffix] =
+			objectDefinitionClassName.split('#');
+
 		await this.page.goto(
 			`/${regionalCode}/group${siteUrl ?? '/guest'}${
 				PORTLET_URLS.objects
-			}_${objectDefinitionId}`,
-			{waitUntil: 'load'}
+			}_${objectDefinitionClassNameSuffix}`,
+			{waitUntil: 'networkidle'}
 		);
 	}
 }

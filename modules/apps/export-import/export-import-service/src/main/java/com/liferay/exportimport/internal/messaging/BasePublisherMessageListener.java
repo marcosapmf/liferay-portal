@@ -5,10 +5,10 @@
 
 package com.liferay.exportimport.internal.messaging;
 
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.messaging.MessageListener;
-import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -31,13 +31,14 @@ import java.util.Map;
  */
 public abstract class BasePublisherMessageListener implements MessageListener {
 
-	protected void initThreadLocals(
+	protected SafeCloseable initThreadLocals(
 			long userId, Map<String, String[]> parameterMap)
 		throws PortalException {
 
 		User user = UserLocalServiceUtil.getUserById(userId);
 
-		CompanyThreadLocal.setCompanyId(user.getCompanyId());
+		SafeCloseable safeCloseable = CompanyThreadLocal.lock(
+			user.getCompanyId());
 
 		PrincipalThreadLocal.setName(userId);
 
@@ -84,13 +85,14 @@ public abstract class BasePublisherMessageListener implements MessageListener {
 		serviceContext.setAttributes(attributes);
 
 		ServiceContextThreadLocal.pushServiceContext(serviceContext);
-	}
 
-	protected void resetThreadLocals() {
-		CompanyThreadLocal.setCompanyId(CompanyConstants.SYSTEM);
-		PermissionThreadLocal.setPermissionChecker(null);
-		PrincipalThreadLocal.setName(null);
-		ServiceContextThreadLocal.popServiceContext();
+		return () -> {
+			safeCloseable.close();
+
+			PermissionThreadLocal.setPermissionChecker(null);
+			PrincipalThreadLocal.setName(null);
+			ServiceContextThreadLocal.popServiceContext();
+		};
 	}
 
 }

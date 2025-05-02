@@ -10,6 +10,7 @@ import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.exception.NoSuchOrderException;
+import com.liferay.commerce.frontend.helper.CommerceOrderStepTrackerHelper;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.notification.service.CommerceNotificationQueueEntryLocalService;
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
@@ -74,7 +75,7 @@ public class EditCommerceOrderMVCRenderCommand implements MVCRenderCommand {
 					_commerceOrderItemService, _commerceOrderNoteService,
 					_commerceOrderPortletResourcePermission,
 					_commerceOrderService, _commerceOrderStatusRegistry,
-					_commerceOrderTypeService,
+					_commerceOrderStepTrackerHelper, _commerceOrderTypeService,
 					_commercePaymentMethodGroupRelLocalService,
 					_commercePriceFormatter, _commerceShipmentService,
 					_commerceTermEntryLocalService, _cpMeasurementUnitService,
@@ -141,6 +142,9 @@ public class EditCommerceOrderMVCRenderCommand implements MVCRenderCommand {
 
 	@Reference
 	private CommerceOrderStatusRegistry _commerceOrderStatusRegistry;
+
+	@Reference
+	private CommerceOrderStepTrackerHelper _commerceOrderStepTrackerHelper;
 
 	@Reference
 	private CommerceOrderTypeService _commerceOrderTypeService;

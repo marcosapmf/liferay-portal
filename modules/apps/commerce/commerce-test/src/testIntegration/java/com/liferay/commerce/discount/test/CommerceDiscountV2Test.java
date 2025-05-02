@@ -14,6 +14,7 @@ import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
+import com.liferay.commerce.currency.service.CommerceCurrencyLocalServiceUtil;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.discount.CommerceDiscountValue;
 import com.liferay.commerce.discount.constants.CommerceDiscountConstants;
@@ -56,6 +57,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -100,8 +102,14 @@ public class CommerceDiscountV2Test {
 		_accountEntry = CommerceAccountTestUtil.getPersonAccountEntry(
 			_user.getUserId());
 
-		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
-			_group.getCompanyId());
+		_commerceCurrency =
+			CommerceCurrencyLocalServiceUtil.fetchPrimaryCommerceCurrency(
+				_group.getCompanyId());
+
+		if (_commerceCurrency == null) {
+			_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
+				_group.getCompanyId());
+		}
 	}
 
 	@After
@@ -530,7 +538,8 @@ public class CommerceDiscountV2Test {
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), "NOME"
 				).build(),
-				0, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
+				0, BigDecimal.ZERO, true, 0.0, BigDecimal.ONE,
+				cpInstance.getSku());
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
@@ -950,8 +959,7 @@ public class CommerceDiscountV2Test {
 		CommerceOrder commerceOrder = CommerceTestUtil.addB2CCommerceOrder(
 			_user.getUserId(), commerceChannel.getGroupId(), _commerceCurrency);
 
-		commerceOrder.setCommerceCurrencyId(
-			_commerceCurrency.getCommerceCurrencyId());
+		commerceOrder.setCommerceCurrencyCode(_commerceCurrency.getCode());
 
 		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
 			commerceOrder);
@@ -1462,7 +1470,12 @@ public class CommerceDiscountV2Test {
 		CommerceMoney finalPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
 
-		Assert.assertEquals(price, finalPriceCommerceMoney.getPrice());
+		BigDecimal finalPriceCommerceMoneyPrice =
+			finalPriceCommerceMoney.getPrice();
+
+		Assert.assertEquals(
+			price,
+			BigDecimalUtil.stripTrailingZeros(finalPriceCommerceMoneyPrice));
 	}
 
 	@Test

@@ -4,12 +4,15 @@ definition {
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property test.run.environment = "EE";
 	property testray.main.component.name = "Product Info Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(minium = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		CommerceEntry.addAccountEntryUser(
 			accountName = "Commerce Account",
@@ -723,7 +726,7 @@ definition {
 
 	@description = "Verify users can search a diagram product's product details page by SKU, name, and description"
 	@priority = 5
-	test UseMappedProductSearchbar {
+	test UseMappedProductSearchBar {
 		property portal.acceptance = "true";
 
 		task ("Given the ABS Sensor product's Short Description is 'This is a Short Description' and the Full Description is 'This is a Full Description'") {

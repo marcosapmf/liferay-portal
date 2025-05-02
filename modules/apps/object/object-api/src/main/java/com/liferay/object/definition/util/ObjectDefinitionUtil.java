@@ -40,19 +40,6 @@ public class ObjectDefinitionUtil {
 		return _allowedModifiableSystemObjectDefinitionNames.containsKey(name);
 	}
 
-	public static boolean
-		isAllowedUnmodifiableSystemObjectDefinitionExternalReferenceCode(
-			String externalReferenceCode, String name) {
-
-		if (PortalRunMode.isTestMode()) {
-			return true;
-		}
-
-		return StringUtil.equals(
-			_allowedUnmodifiableSystemObjectDefinitionNames.get(name),
-			externalReferenceCode);
-	}
-
 	public static boolean isInvokerBundleAllowed() {
 		if (PortalInstances.isCurrentCompanyInDeletionProcess() ||
 			PortalRunMode.isTestMode() || StartupHelperUtil.isUpgrading()) {
@@ -88,8 +75,10 @@ public class ObjectDefinitionUtil {
 	private static final String[] _ALLOWED_INVOKER_BUNDLE_SYMBOLIC_NAMES = {
 		"com.liferay.commerce.service", "com.liferay.cookies.impl",
 		"com.liferay.frontend.data.set.admin.web",
+		"com.liferay.frontend.data.set.impl",
 		"com.liferay.headless.builder.impl", "com.liferay.list.type.service",
-		"com.liferay.notification.service", "com.liferay.object.service"
+		"com.liferay.notification.service", "com.liferay.object.service",
+		"com.liferay.site.initializer.cms"
 	};
 
 	private static final Map<String, String>
@@ -106,11 +95,39 @@ public class ObjectDefinitionUtil {
 		).put(
 			"APISort", "/headless-builder/sorts"
 		).put(
+			"BasicDocument", "/cms/basic-documents"
+		).put(
+			"BasicWebContent", "/cms/basic-web-contents"
+		).put(
+			"Blog", "/cms/blogs"
+		).put(
 			"Bookmark", "/bookmarks"
 		).put(
-			"CommerceReturn", "/commerce-returns"
+			"CommerceReturn", "/commerce/returns"
 		).put(
-			"CommerceReturnItem", "/commerce-return-items"
+			"CommerceReturnItem", "/commerce/return-items"
+		).put(
+			"DataSet", "/data-set-admin/data-sets"
+		).put(
+			"DataSetAction", "/data-set-admin/data-sets/actions"
+		).put(
+			"DataSetCardsSection", "/data-set-admin/data-sets/cards-sections"
+		).put(
+			"DataSetClientExtensionFilter",
+			"/data-set-admin/data-sets/client-extension-filters"
+		).put(
+			"DataSetDateFilter", "/data-set-admin/data-sets/date-filters"
+		).put(
+			"DataSetListSection", "/data-set-admin/data-sets/list-sections"
+		).put(
+			"DataSetSelectionFilter",
+			"/data-set-admin/data-sets/selection-filters"
+		).put(
+			"DataSetSort", "/data-set-admin/data-sets/sorts"
+		).put(
+			"DataSetTableSection", "/data-set-admin/data-sets/table-sections"
+		).put(
+			"ExternalVideo", "/cms/external-videos"
 		).put(
 			"FDSAction", "/data-set-manager/actions"
 		).put(
@@ -135,29 +152,13 @@ public class ObjectDefinitionUtil {
 		).put(
 			"FunctionalCookieEntry", "/functional-cookies-entries"
 		).put(
+			"KnowledgeBase", "/cms/knowledge-bases"
+		).put(
 			"NecessaryCookieEntry", "/necessary-cookies-entries"
 		).put(
 			"PerformanceCookieEntry", "/performance-cookies-entries"
 		).put(
 			"PersonalizationCookieEntry", "/personalization-cookies-entries"
-		).build();
-	private static final Map<String, String>
-		_allowedUnmodifiableSystemObjectDefinitionNames = HashMapBuilder.put(
-			"AccountEntry", "L_ACCOUNT"
-		).put(
-			"Address", "L_POSTAL_ADDRESS"
-		).put(
-			"CommerceOrder", "L_COMMERCE_ORDER"
-		).put(
-			"CommerceOrderItem", "L_COMMERCE_ORDER_ITEM"
-		).put(
-			"CommercePricingClass", "L_COMMERCE_PRODUCT_GROUP"
-		).put(
-			"CPDefinition", "L_COMMERCE_PRODUCT_DEFINITION"
-		).put(
-			"Organization", "L_ORGANIZATION"
-		).put(
-			"User", "L_USER"
 		).build();
 
 }

@@ -5,7 +5,7 @@
 				"definition": {
 					"fragmentStyle": {
 						"borderWidth": "0",
-						"minHeight": "94vh"
+						"minHeight": "100vh"
 					},
 					"indexed": true,
 					"layout": {
@@ -213,56 +213,15 @@
 													{
 														"definition": {
 															"fragment": {
-																"key": "site-search",
+																"key": "com.liferay.commerce.currency.web.internal.fragment.renderer.CurrencySelectorFragmentRenderer",
 																"siteKey": "[$GROUP_KEY$]"
 															},
 															"fragmentConfig": {
-																"searchBlueprintId": 0
 															},
 															"fragmentFields": [
-																{
-																	"id": "searchSeeAllResultsButton",
-																	"value": {
-																		"fragmentLink": {
-																			"value": {
-																				"href": {
-																					"value": "/search"
-																				}
-																			}
-																		}
-																	}
-																},
-																{
-																	"id": "suggestionsPopularItem4",
-																	"value": {
-																		"fragmentLink": {
-																		}
-																	}
-																},
-																{
-																	"id": "suggestionsPopularItem3",
-																	"value": {
-																		"fragmentLink": {
-																		}
-																	}
-																},
-																{
-																	"id": "suggestionsPopularItem2",
-																	"value": {
-																		"fragmentLink": {
-																		}
-																	}
-																},
-																{
-																	"id": "suggestionsPopularItem1",
-																	"value": {
-																		"fragmentLink": {
-																		}
-																	}
-																}
 															],
 															"fragmentStyle": {
-																"marginRight": "3"
+																"marginTop": "1"
 															},
 															"indexed": true
 														},
@@ -855,6 +814,10 @@
 	},
 	"settings": {
 		"colorSchemeName": "01",
+		"styleBook": {
+			"key": "Marketplace",
+			"name": "Marketplace"
+		},
 		"themeName": "Classic",
 		"themeSettings": {
 			"lfr-theme:regular:show-footer": "false",

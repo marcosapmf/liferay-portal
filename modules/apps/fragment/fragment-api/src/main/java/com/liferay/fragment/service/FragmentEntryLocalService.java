@@ -86,8 +86,8 @@ public interface FragmentEntryLocalService
 			long fragmentCollectionId, String fragmentEntryKey, String name,
 			String css, String html, String js, boolean cacheable,
 			String configuration, String icon, long previewFileEntryId,
-			boolean readOnly, int type, String typeOptions, int status,
-			ServiceContext serviceContext)
+			boolean marketplace, boolean readOnly, int type, String typeOptions,
+			int status, ServiceContext serviceContext)
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -261,6 +261,10 @@ public interface FragmentEntryLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public FragmentEntry fetchFragmentEntry(
 		long groupId, String fragmentEntryKey);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public FragmentEntry fetchFragmentEntryByExternalReferenceCode(
+		String externalReferenceCode, long groupId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public FragmentEntry fetchFragmentEntryByUuidAndGroupId(

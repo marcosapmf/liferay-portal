@@ -1,0 +1,233 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import ClayButton from '@clayui/button';
+import ClayDropDown, {Align} from '@clayui/drop-down';
+import ClayIcon from '@clayui/icon';
+import {useState} from 'react';
+
+import {RadioCard} from '../../../../../components/RadioCard/RadioCard';
+import {Section} from '../../../../../components/Section/Section';
+import {
+	NewAppTypes,
+	useNewAppContext,
+} from '../../../../../context/NewAppContext';
+import {ProductType} from '../../../../../enums/Product';
+import i18n from '../../../../../i18n';
+import {ProductTypeOptions} from '../../Apps/AppCreationFlow/ProvideAppBuildPage/constants/productTypes';
+import CloudResourceRequirements from '../components/CloudResourceRequirements';
+import {NewAppPackageVersionModal} from '../components/NewAppPackagesModal';
+import NewAppUploadAppPackagesComponent from '../components/NewAppUploadPackage';
+import {BUILD_UPLOAD_OPTIONS} from '../constants';
+
+type ProductTypeOption = {
+	description: string;
+	label: string;
+	value: ProductType;
+};
+
+const BuildContent = () => {
+	const [
+		{
+			build: {appType, liferayPackages},
+			loading,
+		},
+		dispatch,
+	] = useNewAppContext();
+
+	const [visibleSelectVersionModal, setVisibleSelectVersionModal] =
+		useState(false);
+
+	return (
+		<>
+			{appType === ProductType.CLOUD && (
+				<Section
+					className="d-flex justify-content-between mt-4"
+					label={i18n.translate('resource-requirements')}
+				>
+					<CloudResourceRequirements />
+				</Section>
+			)}
+
+			<Section
+				className="d-flex flex-column form-radio-card"
+				label={i18n.translate('app-build')}
+			>
+				{BUILD_UPLOAD_OPTIONS[
+					appType === ProductType.CLOUD
+						? ProductType.CLOUD
+						: ProductType.DXP
+				].map((card, index) => (
+					<RadioCard
+						description={card.description}
+						disabled={card.disabled}
+						icon={card.icon}
+						key={index}
+						onChange={() => {}}
+						selected={'upload' === card.value}
+						title={card.title}
+						tooltip={card.tooltip}
+					/>
+				))}
+			</Section>
+
+			<Section label={i18n.translate('upload-liferay-plugin-packages')}>
+				<small>
+					{i18n.translate(
+						'if-the-app-is-compatible-with-different-updates-of-74-please-upload-multiple-packages-for-each-update-or-update-compatibility-range'
+					)}
+				</small>
+
+				<hr />
+
+				{liferayPackages.map((liferayPackage, index) => (
+					<div
+						className="mt-4 provide-app-build-page-dropzone-container"
+						key={index}
+					>
+						<div className="align-center d-flex font-weight-bold justify-content-between p-3 provide-app-build-page-dropzone-container-header">
+							<span>{liferayPackage.version}</span>
+
+							<ClayButton
+								displayType="unstyled"
+								onClick={() => {
+									const updatedLiferayPackages =
+										liferayPackages.filter(
+											(_, itemIndex) =>
+												itemIndex !== index
+										);
+
+									dispatch({
+										payload: {
+											liferayPackages:
+												updatedLiferayPackages,
+										},
+										type: NewAppTypes.SET_BUILD,
+									});
+								}}
+							>
+								{i18n.translate('remove-a-version')}
+							</ClayButton>
+						</div>
+
+						<NewAppUploadAppPackagesComponent
+							isProcessing={loading}
+							versionName={liferayPackage.version}
+						/>
+					</div>
+				))}
+
+				{!loading && (
+					<ClayButton
+						className="btn-block provide-app-build-page-add-package-button"
+						displayType="secondary"
+						onClick={() => setVisibleSelectVersionModal(true)}
+					>
+						<ClayIcon className="mr-1" symbol="plus" />
+						{i18n.translate('add-packages')}
+					</ClayButton>
+				)}
+
+				{visibleSelectVersionModal && (
+					<NewAppPackageVersionModal
+						currentVersions={[]}
+						handleClose={() => setVisibleSelectVersionModal(false)}
+					/>
+				)}
+			</Section>
+		</>
+	);
+};
+
+const Build = () => {
+	const [active, setActive] = useState(false);
+
+	const [
+		{
+			build: {appType},
+		},
+		dispatch,
+	] = useNewAppContext();
+
+	const getType = (value: ProductType) => {
+		if (!value) {
+			return i18n.translate('choose-an-option');
+		}
+
+		const type = ProductTypeOptions.find(
+			(option: ProductTypeOption) => option.value === value
+		);
+
+		return type ? type.label : 'Unknown';
+	};
+
+	const handleAppTypeChange = (value: ProductType) => {
+		dispatch({
+			payload: {
+				appType: value,
+			},
+			type: NewAppTypes.SET_BUILD,
+		});
+
+		// handleResetAppPackages();
+
+	};
+
+	return (
+		<div className="new-app-form-build">
+			<Section
+				label={i18n.translate('app-type')}
+				required
+				tooltipText={i18n.translate('more-info')}
+			>
+				<div className="provide-app-build-page-cloud-compatible-container">
+					<ClayDropDown
+						active={active}
+						alignmentPosition={Align.BottomLeft}
+						className="app-type-dropdown"
+						onActiveChange={setActive}
+						trigger={
+							<ClayButton
+								className="align-items-center app-type-dropdown d-flex justify-content-between"
+								displayType="secondary"
+								onClick={() => setActive(!active)}
+							>
+								<div className="align-items-center d-flex justify-content-between w-100">
+									<span>{getType(appType)}</span>
+
+									<ClayIcon symbol="caret-bottom" />
+								</div>
+							</ClayButton>
+						}
+					>
+						<ClayDropDown.ItemList className="app-type-list-unstyled">
+							{ProductTypeOptions.map(
+								(option: ProductTypeOption) => (
+									<ClayDropDown.Item
+										key={option.value}
+										onClick={() => {
+											setActive(false);
+
+											handleAppTypeChange(option.value);
+										}}
+									>
+										<span className="d-flex flex-column">
+											<strong>{option.label}</strong>
+											<span>{option.description}</span>
+										</span>
+									</ClayDropDown.Item>
+								)
+							)}
+						</ClayDropDown.ItemList>
+					</ClayDropDown>
+				</div>
+			</Section>
+
+			{appType && <BuildContent />}
+		</div>
+	);
+};
+
+export default Build;

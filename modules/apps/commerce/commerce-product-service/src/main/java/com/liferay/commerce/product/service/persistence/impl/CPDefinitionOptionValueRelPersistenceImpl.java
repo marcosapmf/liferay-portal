@@ -659,7 +659,6 @@ public class CPDefinitionOptionValueRelPersistenceImpl
 		"(cpDefinitionOptionValueRel.uuid IS NULL OR cpDefinitionOptionValueRel.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the cp definition option value rel where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchCPDefinitionOptionValueRelException</code> if it could not be found.
@@ -849,68 +848,14 @@ public class CPDefinitionOptionValueRelPersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					CPDefinitionOptionValueRel.class)) {
+		CPDefinitionOptionValueRel cpDefinitionOptionValueRel = fetchByUUID_G(
+			uuid, groupId);
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUUID_G;
-
-			Object[] finderArgs = new Object[] {uuid, groupId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_CPDEFINITIONOPTIONVALUEREL_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (cpDefinitionOptionValueRel == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -4244,7 +4189,6 @@ public class CPDefinitionOptionValueRelPersistenceImpl
 		"(cpDefinitionOptionValueRel.key IS NULL OR cpDefinitionOptionValueRel.key = '')";
 
 	private FinderPath _finderPathFetchByC_K;
-	private FinderPath _finderPathCountByC_K;
 
 	/**
 	 * Returns the cp definition option value rel where CPDefinitionOptionRelId = &#63; and key = &#63; or throws a <code>NoSuchCPDefinitionOptionValueRelException</code> if it could not be found.
@@ -4439,68 +4383,14 @@ public class CPDefinitionOptionValueRelPersistenceImpl
 	 */
 	@Override
 	public int countByC_K(long CPDefinitionOptionRelId, String key) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					CPDefinitionOptionValueRel.class)) {
+		CPDefinitionOptionValueRel cpDefinitionOptionValueRel = fetchByC_K(
+			CPDefinitionOptionRelId, key);
 
-			key = Objects.toString(key, "");
-
-			FinderPath finderPath = _finderPathCountByC_K;
-
-			Object[] finderArgs = new Object[] {CPDefinitionOptionRelId, key};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_CPDEFINITIONOPTIONVALUEREL_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_K_CPDEFINITIONOPTIONRELID_2);
-
-				boolean bindKey = false;
-
-				if (key.isEmpty()) {
-					sb.append(_FINDER_COLUMN_C_K_KEY_3);
-				}
-				else {
-					bindKey = true;
-
-					sb.append(_FINDER_COLUMN_C_K_KEY_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(CPDefinitionOptionRelId);
-
-					if (bindKey) {
-						queryPos.add(key);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (cpDefinitionOptionValueRel == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_C_K_CPDEFINITIONOPTIONRELID_2 =
@@ -5245,8 +5135,6 @@ public class CPDefinitionOptionValueRelPersistenceImpl
 			};
 
 			finderCache.putResult(
-				_finderPathCountByUUID_G, args, Long.valueOf(1));
-			finderCache.putResult(
 				_finderPathFetchByUUID_G, args,
 				cpDefinitionOptionValueRelModelImpl);
 
@@ -5256,7 +5144,6 @@ public class CPDefinitionOptionValueRelPersistenceImpl
 				cpDefinitionOptionValueRelModelImpl.getKey()
 			};
 
-			finderCache.putResult(_finderPathCountByC_K, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByC_K, args,
 				cpDefinitionOptionValueRelModelImpl);
@@ -5976,6 +5863,7 @@ public class CPDefinitionOptionValueRelPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -5987,21 +5875,22 @@ public class CPDefinitionOptionValueRelPersistenceImpl
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("CPDefinitionOptionRelId");
-		ctStrictColumnNames.add("CPInstanceUuid");
-		ctStrictColumnNames.add("CProductId");
-		ctStrictColumnNames.add("key_");
-		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("preselected");
-		ctStrictColumnNames.add("price");
-		ctStrictColumnNames.add("priority");
-		ctStrictColumnNames.add("quantity");
-		ctStrictColumnNames.add("unitOfMeasureKey");
+		ctMergeColumnNames.add("CPDefinitionOptionRelId");
+		ctMergeColumnNames.add("CPInstanceUuid");
+		ctMergeColumnNames.add("CProductId");
+		ctMergeColumnNames.add("key_");
+		ctMergeColumnNames.add("name");
+		ctMergeColumnNames.add("preselected");
+		ctMergeColumnNames.add("price");
+		ctMergeColumnNames.add("priority");
+		ctMergeColumnNames.add("quantity");
+		ctMergeColumnNames.add("unitOfMeasureKey");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("CPDefinitionOptionValueRelId"));
@@ -6056,11 +5945,6 @@ public class CPDefinitionOptionValueRelPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
-
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
@@ -6178,11 +6062,6 @@ public class CPDefinitionOptionValueRelPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_K",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"CPDefinitionOptionRelId", "key_"}, true);
-
-		_finderPathCountByC_K = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_K",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"CPDefinitionOptionRelId", "key_"}, false);
 
 		_finderPathWithPaginationFindByCDORI_P = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCDORI_P",

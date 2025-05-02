@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {openToast} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
 
 import deleteItemAction from '../actions/deleteItem';
 import {ITEM_ACTIVATION_ORIGINS} from '../config/constants/itemActivationOrigins';
@@ -16,11 +16,10 @@ import {
 	FORM_ERROR_TYPES,
 	getFormErrorDescription,
 } from '../utils/getFormErrorDescription';
+import {getFormParent} from '../utils/getFormParent';
 import getFragmentEntryLinkIdsFromItemId from '../utils/getFragmentEntryLinkIdsFromItemId';
 import getPortletId from '../utils/getPortletId';
-import {hasFormParent} from '../utils/hasFormParent';
 import {isRequiredFormInput} from '../utils/isRequiredFormInput';
-import selectFirstControlsItem from '../utils/selectFirstControlsItem';
 import {clearPageContents} from '../utils/usePageContents';
 import filterSelectedItems from './filterSelectedItems';
 
@@ -76,11 +75,8 @@ export default function deleteItem({itemIds, selectItems = () => {}}) {
 				selectItems(null);
 			}
 			else {
-				selectFirstControlsItem({
-					itemId: nextItemId,
-					layoutData,
+				selectItems([nextItemId], {
 					origin: ITEM_ACTIVATION_ORIGINS.itemActions,
-					selectItems,
 				});
 			}
 
@@ -138,7 +134,7 @@ async function markItemForDeletion({
 
 	// We just need to remove the parents of the selected items
 
-	const selectedItemIds = filterSelectedItems(itemIds, layoutData);
+	const selectedItemIds = filterSelectedItems(itemIds, layoutData.items);
 
 	const portletIds = selectedItemIds.flatMap((itemId) =>
 		findPortletIds(itemId, layoutData, fragmentEntryLinks)
@@ -188,7 +184,7 @@ async function isRequiredFormField(layoutData, itemId, fragmentEntryLinks) {
 	if (
 		!item ||
 		item.type !== LAYOUT_DATA_ITEM_TYPES.fragment ||
-		!hasFormParent(item, layoutData)
+		!getFormParent(item, layoutData)
 	) {
 		return false;
 	}

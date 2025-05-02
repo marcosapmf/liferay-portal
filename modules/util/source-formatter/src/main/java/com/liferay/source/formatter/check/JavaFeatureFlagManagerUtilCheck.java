@@ -74,8 +74,8 @@ public class JavaFeatureFlagManagerUtilCheck extends BaseFileCheck {
 
 				addMessage(
 					fileName,
-					"Use 'FeatureFlagManagerUtil.isEnabled' instead of " +
-						"'PropsUtil.get' for feature flag",
+					"Use \"FeatureFlagManagerUtil.isEnabled\" instead of " +
+						"\"PropsUtil.get\" for feature flag",
 					getLineNumber(content, matcher.start()));
 			}
 		}
@@ -94,7 +94,8 @@ public class JavaFeatureFlagManagerUtilCheck extends BaseFileCheck {
 
 			if (variableTypeName.equals("FeatureFlagManager")) {
 				addMessage(
-					fileName, "Use 'FeatureFlagManagerUtil.isEnabled' instead",
+					fileName,
+					"Use \"FeatureFlagManagerUtil.isEnabled\" instead",
 					getLineNumber(content, matcher.start()));
 			}
 		}

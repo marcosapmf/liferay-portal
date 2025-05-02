@@ -16,7 +16,7 @@ definition {
 
 	@priority = 5
 	test CanAutoUpgradeLargePartitionedDatabase7413 {
-		property custom.properties = "upgrade.report.enabled=true";
+		property custom.properties = "upgrade.report.enabled=true${line.separator}virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
 		property custom.startup.timeout = "540";
 		property data.archive.type = "data-archive-portal-partition-large";
 		property database.auto.upgrade.enabled = "true";
@@ -67,6 +67,7 @@ definition {
 
 	@priority = 5
 	test CanUpgradeLargePartitionedDatabase7413 {
+		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
 		property custom.startup.timeout = "600";
 		property data.archive.type = "data-archive-portal-partition-large";
 		property minimum.slave.ram = "24";
@@ -87,6 +88,7 @@ definition {
 
 	@priority = 5
 	test CanUpgradeLargePartitionedDatabase7413Benchmark {
+		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
 		property data.archive.type = "data-archive-portal-partition-large";
 		property minimum.slave.ram = "24";
 		property portal.release = "false";
@@ -112,9 +114,11 @@ definition {
 
 	@priority = 5
 	test CanUpgradePartitionedDatabase7413U33 {
+		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com,www.baker.com";
 		property data.archive.type = "data-archive-portal-partition";
 		property portal.smoke.upgrades = "true";
 		property portal.version = "7.4.13.u33";
+		property test.assert.warning.exceptions = "false";
 
 		User.loginPG(
 			nodePort = 8080,
@@ -126,11 +130,15 @@ definition {
 		ValidateDatabasePartitioningUpgrade.viewUpgradeDBPartition();
 	}
 
-	@priority = 5
-	test ExtractAndAddDBPartitionCompaniesWithUpgradedDB {
+	@priority = 4
+	test ExtractAndAddDBPartitionWithUpgradedDB {
+		property app.server.bundles.size = "1";
+		property cluster.enabled = "true";
+		property custom.properties = "feature.flag.LPD-11342=true${line.separator}virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com,www.baker.com";
 		property data.archive.type = "data-archive-portal-partition";
 		property portal.version = "7.4.13.u33";
 		property test.assert.warning.exceptions = "false";
+		property web.xml.timeout = "60";
 
 		task ("Validate www.able.com and www.baker.com partitions") {
 			User.loginPG(
@@ -152,13 +160,36 @@ definition {
 
 			DBPartition.extractDBPartition(partitionCompanyId = 44913);
 
-			Portlet.shutdownServer();
+			Clustering.shutdownSpecificServer(nodePort = 8080);
+
+			Clustering.shutdownSpecificServer(nodePort = 9080);
 		}
 
 		task ("Create an empty database") {
 			AntCommands.runCommand("build-test.xml", "rebuild-database -Ddatabase.type=mysql -Dsql.dir=sql/create-bare/ -Dsql.file=create-bare-mysql.sql");
 
-			Portlet.startServer(deleteLiferayHome = "false");
+			Clustering.startSpecificServer(
+				deleteLiferayHome = "false",
+				nodePort = 8080);
+
+			Clustering.startSpecificServer(
+				deleteLiferayHome = "false",
+				nodePort = 9080);
+		}
+
+		task ("Removing the original schemas") {
+			var databaseType = PropsUtil.get("database.type");
+
+			if (${databaseType} == "mysql") {
+				SQL.executeSQLStatement(sqlStatement = "drop schema if exists lpartition_42638;");
+
+				SQL.executeSQLStatement(sqlStatement = "drop schema if exists lpartition_44913;");
+			}
+			else if (${databaseType} == "postgresql") {
+				SQL.executeSQLStatement(sqlStatement = "drop schema if exists lpartition_42638 cascade;");
+
+				SQL.executeSQLStatement(sqlStatement = "drop schema if exists lpartition_44913 cascade;");
+			}
 		}
 
 		task ("Add previously extracted partitions into new database") {

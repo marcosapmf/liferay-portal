@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auto.login.AutoLogin;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -29,12 +30,16 @@ import com.liferay.portal.kernel.test.util.PropsValuesTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.struts.Action;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpSession;
 
@@ -62,10 +67,17 @@ public class SetupAdminAutoLoginTest {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_safeCloseable = PropsValuesTestUtil.swapWithSafeCloseable(
-			"DEFAULT_ADMIN_PASSWORD", "");
+		_safeCloseables.add(
+			PropsValuesTestUtil.swapWithSafeCloseable(
+				"DEFAULT_ADMIN_PASSWORD", ""));
 
 		_company = CompanyTestUtil.addCompany();
+
+		_originalCompanyId = CompanyThreadLocal.getCompanyId();
+
+		_safeCloseables.add(
+			CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+				_company.getCompanyId()));
 
 		try {
 			_emailAdressAdminUser =
@@ -84,7 +96,9 @@ public class SetupAdminAutoLoginTest {
 
 	@AfterClass
 	public static void tearDownClass() {
-		_safeCloseable.close();
+		for (SafeCloseable safeCloseable : _safeCloseables) {
+			safeCloseable.close();
+		}
 	}
 
 	@Test
@@ -137,16 +151,21 @@ public class SetupAdminAutoLoginTest {
 
 		mockHttpServletRequest.addParameter("p_auth", "test");
 
+		mockHttpServletRequest.setAttribute(
+			WebKeys.COMPANY_ID, _company.getCompanyId());
+
 		HttpSession httpSession = mockHttpServletRequest.getSession();
 
 		httpSession.setAttribute(
 			"LIFERAY_SHARED_AUTHENTICATION_TOKEN#CSRF", "test");
 
-		Layout layout = LayoutLocalServiceUtil.getLayout(1);
-
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
 		themeDisplay.setCompany(_company);
+
+		Layout layout = LayoutLocalServiceUtil.getLayout(
+			PortalUtil.getControlPanelPlid(_company.getCompanyId()));
+
 		themeDisplay.setLayout(layout);
 		themeDisplay.setLayoutSet(layout.getLayoutSet());
 
@@ -172,7 +191,9 @@ public class SetupAdminAutoLoginTest {
 
 	private static Company _company;
 	private static String _emailAdressAdminUser;
-	private static SafeCloseable _safeCloseable;
+	private static long _originalCompanyId;
+	private static final List<SafeCloseable> _safeCloseables =
+		new ArrayList<>();
 	private static User _user;
 
 	@Inject(

@@ -5,7 +5,7 @@
 
 package com.liferay.portal.spring.transaction;
 
-import com.liferay.portal.spring.hibernate.LastSessionRecorderHibernateTransactionManager;
+import com.liferay.portal.spring.hibernate.PortalTransactionManager;
 import com.liferay.portal.util.PropsUtil;
 
 import java.util.Enumeration;
@@ -17,7 +17,6 @@ import jodd.bean.BeanUtil;
 
 import org.hibernate.SessionFactory;
 
-import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.transaction.support.AbstractPlatformTransactionManager;
 
 /**
@@ -28,8 +27,8 @@ public class TransactionManagerFactory {
 	public static AbstractPlatformTransactionManager createTransactionManager(
 		DataSource dataSource, SessionFactory sessionFactory) {
 
-		HibernateTransactionManager hibernateTransactionManager =
-			new LastSessionRecorderHibernateTransactionManager();
+		AbstractPlatformTransactionManager abstractPlatformTransactionManager =
+			new PortalTransactionManager(dataSource, sessionFactory);
 
 		Properties properties = PropsUtil.getProperties(
 			"transaction.manager.property.", true);
@@ -42,13 +41,11 @@ public class TransactionManagerFactory {
 
 			String value = properties.getProperty(key);
 
-			BeanUtil.pojo.setProperty(hibernateTransactionManager, key, value);
+			BeanUtil.pojo.setProperty(
+				abstractPlatformTransactionManager, key, value);
 		}
 
-		hibernateTransactionManager.setDataSource(dataSource);
-		hibernateTransactionManager.setSessionFactory(sessionFactory);
-
-		return hibernateTransactionManager;
+		return abstractPlatformTransactionManager;
 	}
 
 }

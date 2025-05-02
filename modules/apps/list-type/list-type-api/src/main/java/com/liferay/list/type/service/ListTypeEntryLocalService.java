@@ -263,6 +263,9 @@ public interface ListTypeEntryLocalService
 		long listTypeDefinitionId, int start, int end,
 		OrderByComparator<ListTypeEntry> orderByComparator);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ListTypeEntry> getListTypeEntries(long[] listTypeDefinitionIds);
+
 	/**
 	 * Returns the number of list type entries.
 	 *
@@ -340,6 +343,9 @@ public interface ListTypeEntryLocalService
 	public ListTypeEntry updateListTypeEntry(
 			String externalReferenceCode, long listTypeEntryId,
 			Map<Locale, String> nameMap)
+		throws PortalException;
+
+	public void updateUserId(long companyId, long oldUserId, long newUserId)
 		throws PortalException;
 
 }

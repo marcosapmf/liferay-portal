@@ -225,16 +225,18 @@ public class FragmentEntryStagedModelDataHandlerTest
 	}
 
 	@Test
-	@TestInfo("LPS-167932")
+	@TestInfo({"LPS-129852", "LPS-167932"})
 	public void testUpdateFragmentEntryWithFragmentEntryLinkAddingDropZone()
 		throws Exception {
 
 		FragmentEntry fragmentEntry = _addFragmentEntry(
 			StringPool.BLANK, stagingGroup, "<div class=\"fragment_1\"></div>");
+
+		Layout draftLayout = _layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				_layout.getPlid());
-		Layout draftLayout = _layout.fetchDraftLayout();
+				draftLayout.getPlid());
 
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(
@@ -400,7 +402,7 @@ public class FragmentEntryStagedModelDataHandlerTest
 			fragmentCollection.getFragmentCollectionId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), html, RandomTestUtil.randomString(),
-			false, configuration, null, 0, false,
+			false, configuration, null, 0, false, false,
 			FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED,
 			ServiceContextTestUtil.getServiceContext(

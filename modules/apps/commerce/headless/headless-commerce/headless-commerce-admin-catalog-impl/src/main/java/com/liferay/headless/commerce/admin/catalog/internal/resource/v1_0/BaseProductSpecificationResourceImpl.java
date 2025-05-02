@@ -12,8 +12,6 @@ import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -34,10 +32,12 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -67,7 +67,8 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BaseProductSpecificationResourceImpl
 	implements EntityModelResource, ProductSpecificationResource,
-			   VulcanBatchEngineTaskItemDelegate<ProductSpecification> {
+			   VulcanBatchEngineTaskItemDelegate<ProductSpecification>,
+			   VulcanCRUDItemDelegate<ProductSpecification> {
 
 	/**
 	 * Invoke this method with the command line:
@@ -151,13 +152,55 @@ public abstract class BaseProductSpecificationResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/productSpecifications/{id}'  -u 'test@liferay.com:test'
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/productSpecifications/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "id"
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "ProductSpecification"
+			)
+		}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path(
+		"/productSpecifications/by-externalReferenceCode/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteProductSpecificationByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/{externalReferenceCode}/product-specifications'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
 			)
 		}
 	)
@@ -169,51 +212,21 @@ public abstract class BaseProductSpecificationResourceImpl
 		}
 	)
 	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/productSpecifications/{id}")
+	@javax.ws.rs.Path(
+		"/products/by-externalReferenceCode/{externalReferenceCode}/product-specifications"
+	)
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public ProductSpecification getProductSpecification(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
-			Long id)
+	public Page<ProductSpecification>
+			getProductByExternalReferenceCodeProductSpecificationsPage(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("externalReferenceCode")
+				String externalReferenceCode,
+				@javax.ws.rs.core.Context Pagination pagination)
 		throws Exception {
 
-		return new ProductSpecification();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/productSpecifications/{id}' -d $'{"id": ___, "key": ___, "label": ___, "optionCategoryId": ___, "priority": ___, "productId": ___, "specificationId": ___, "specificationKey": ___, "specificationPriority": ___, "value": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "id"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "ProductSpecification"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path("/productSpecifications/{id}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public ProductSpecification patchProductSpecification(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
-			Long id,
-			ProductSpecification productSpecification)
-		throws Exception {
-
-		return new ProductSpecification();
+		return Page.of(Collections.emptyList());
 	}
 
 	/**
@@ -261,7 +274,189 @@ public abstract class BaseProductSpecificationResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/{id}/productSpecifications' -d $'{"id": ___, "key": ___, "label": ___, "optionCategoryId": ___, "priority": ___, "productId": ___, "specificationId": ___, "specificationKey": ___, "specificationPriority": ___, "value": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/productSpecifications/{id}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "id"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "ProductSpecification"
+			)
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/productSpecifications/{id}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public ProductSpecification getProductSpecification(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
+			Long id)
+		throws Exception {
+
+		return new ProductSpecification();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/productSpecifications/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "ProductSpecification"
+			)
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/productSpecifications/by-externalReferenceCode/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public ProductSpecification getProductSpecificationByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+
+		return new ProductSpecification();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/productSpecifications/{id}' -d $'{"externalReferenceCode": ___, "id": ___, "key": ___, "label": ___, "optionCategoryExternalReferenceCode": ___, "optionCategoryId": ___, "priority": ___, "productId": ___, "specificationExternalReferenceCode": ___, "specificationId": ___, "specificationKey": ___, "specificationPriority": ___, "value": ___, "visible": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "id"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "ProductSpecification"
+			)
+		}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.PATCH
+	@javax.ws.rs.Path("/productSpecifications/{id}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public ProductSpecification patchProductSpecification(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
+			Long id,
+			ProductSpecification productSpecification)
+		throws Exception {
+
+		return new ProductSpecification();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/productSpecifications/by-externalReferenceCode/{externalReferenceCode}' -d $'{"externalReferenceCode": ___, "id": ___, "key": ___, "label": ___, "optionCategoryExternalReferenceCode": ___, "optionCategoryId": ___, "priority": ___, "productId": ___, "specificationExternalReferenceCode": ___, "specificationId": ___, "specificationKey": ___, "specificationPriority": ___, "value": ___, "visible": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "ProductSpecification"
+			)
+		}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.PATCH
+	@javax.ws.rs.Path(
+		"/productSpecifications/by-externalReferenceCode/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public ProductSpecification
+			patchProductSpecificationByExternalReferenceCode(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("externalReferenceCode")
+				String externalReferenceCode,
+				ProductSpecification productSpecification)
+		throws Exception {
+
+		return new ProductSpecification();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/{externalReferenceCode}/product-specifications' -d $'{"externalReferenceCode": ___, "id": ___, "key": ___, "label": ___, "optionCategoryExternalReferenceCode": ___, "optionCategoryId": ___, "priority": ___, "productId": ___, "specificationExternalReferenceCode": ___, "specificationId": ___, "specificationKey": ___, "specificationPriority": ___, "value": ___, "visible": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "ProductSpecification"
+			)
+		}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path(
+		"/products/by-externalReferenceCode/{externalReferenceCode}/product-specifications"
+	)
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public ProductSpecification
+			postProductByExternalReferenceCodeProductSpecification(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("externalReferenceCode")
+				String externalReferenceCode,
+				ProductSpecification productSpecification)
+		throws Exception {
+
+		return new ProductSpecification();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/{id}/productSpecifications' -d $'{"externalReferenceCode": ___, "id": ___, "key": ___, "label": ___, "optionCategoryExternalReferenceCode": ___, "optionCategoryId": ___, "priority": ___, "productId": ___, "specificationExternalReferenceCode": ___, "specificationId": ___, "specificationKey": ___, "specificationPriority": ___, "value": ___, "visible": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -348,8 +543,47 @@ public abstract class BaseProductSpecificationResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		UnsafeFunction<ProductSpecification, ProductSpecification, Exception>
+			productSpecificationUnsafeFunction = null;
+
+		String createStrategy = (String)parameters.getOrDefault(
+			"createStrategy", "INSERT");
+
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
+			if (parameters.containsKey("externalReferenceCode")) {
+				productSpecificationUnsafeFunction = productSpecification ->
+					postProductByExternalReferenceCodeProductSpecification(
+						(String)parameters.get("externalReferenceCode"),
+						productSpecification);
+			}
+			else {
+				throw new NotSupportedException(
+					"One of the following parameters must be specified: [externalReferenceCode]");
+			}
+		}
+
+		if (productSpecificationUnsafeFunction == null) {
+			throw new NotSupportedException(
+				"Create strategy \"" + createStrategy +
+					"\" is not supported for ProductSpecification");
+		}
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				productSpecifications, productSpecificationUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				productSpecifications,
+				productSpecificationUnsafeFunction::apply);
+		}
+		else {
+			for (ProductSpecification productSpecification :
+					productSpecifications) {
+
+				productSpecificationUnsafeFunction.apply(productSpecification);
+			}
+		}
 	}
 
 	@Override
@@ -358,15 +592,60 @@ public abstract class BaseProductSpecificationResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (ProductSpecification productSpecification :
-				productSpecifications) {
+		UnsafeFunction<ProductSpecification, ProductSpecification, Exception>
+			productSpecificationUnsafeFunction = productSpecification -> {
+				if (productSpecification.getId() != null) {
+					try {
+						deleteProductSpecification(
+							productSpecification.getId());
 
-			deleteProductSpecification(productSpecification.getId());
+						return productSpecification;
+					}
+					catch (Exception exception) {
+						if (productSpecification.getExternalReferenceCode() !=
+								null) {
+
+							deleteProductSpecificationByExternalReferenceCode(
+								productSpecification.
+									getExternalReferenceCode());
+
+							return productSpecification;
+						}
+					}
+				}
+				else if (productSpecification.getExternalReferenceCode() !=
+							null) {
+
+					deleteProductSpecificationByExternalReferenceCode(
+						productSpecification.getExternalReferenceCode());
+
+					return productSpecification;
+				}
+
+				throw new UnsupportedOperationException(
+					"Unable to delete by external reference code or ID");
+			};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				productSpecifications, productSpecificationUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				productSpecifications,
+				productSpecificationUnsafeFunction::apply);
+		}
+		else {
+			for (ProductSpecification productSpecification :
+					productSpecifications) {
+
+				productSpecificationUnsafeFunction.apply(productSpecification);
+			}
 		}
 	}
 
 	public Set<String> getAvailableCreateStrategies() {
-		return SetUtil.fromArray();
+		return SetUtil.fromArray("INSERT");
 	}
 
 	public Set<String> getAvailableUpdateStrategies() {
@@ -398,7 +677,9 @@ public abstract class BaseProductSpecificationResourceImpl
 
 	@Override
 	public Page<ProductSpecification> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -483,6 +764,11 @@ public abstract class BaseProductSpecificationResourceImpl
 		return null;
 	}
 
+	@Override
+	public ProductSpecification getItem(Long id) throws Exception {
+		return getProductSpecification(id);
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
 	}
@@ -525,7 +811,8 @@ public abstract class BaseProductSpecificationResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -535,7 +822,8 @@ public abstract class BaseProductSpecificationResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -570,6 +858,10 @@ public abstract class BaseProductSpecificationResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "headless-commerce-admin-catalog";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -587,7 +879,7 @@ public abstract class BaseProductSpecificationResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -612,7 +904,7 @@ public abstract class BaseProductSpecificationResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -630,13 +922,13 @@ public abstract class BaseProductSpecificationResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -647,7 +939,7 @@ public abstract class BaseProductSpecificationResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -774,7 +1066,8 @@ public abstract class BaseProductSpecificationResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

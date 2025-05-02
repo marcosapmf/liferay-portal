@@ -112,6 +112,7 @@ export type TestrayBuild = {
 	actions: ObjectActionsItems;
 	archived?: boolean;
 	buildToTasks: TestrayTask[];
+	cpuUseTime: string;
 	creator: {
 		name: string;
 	};
@@ -122,7 +123,9 @@ export type TestrayBuild = {
 	dueStatus: PickList;
 	gitHash: string;
 	id: number;
+	importStatus: PickList;
 	name: string;
+	playwrightReports: string;
 	productVersion?: TestrayProductVersion;
 	project?: TestrayProject;
 	promoted: boolean;
@@ -141,6 +144,7 @@ export type TestrayBuild = {
 export type TestrayBuildCustomAPI = {
 	testrayBuildArchived: boolean;
 	testrayBuildId: number;
+	testrayBuildImportStatus: string;
 	testrayBuildName: string;
 	testrayBuildPromoted: boolean;
 	testrayBuildTaskStatus: string;
@@ -151,6 +155,7 @@ export type TestrayStatusMetric = {
 	blocked: number;
 	failed: number;
 	inProgress: number;
+	incomplete: number;
 	passed: number;
 	testfix: number;
 	total: number;
@@ -200,6 +205,7 @@ export type TestrayCaseResult = {
 	dateCreated: string;
 	dateModified: string;
 	dueStatus: PickList;
+	duration: number;
 	error?: string;
 	errors: string;
 	id: number;
@@ -207,6 +213,7 @@ export type TestrayCaseResult = {
 	key: string;
 	mbMessageId: number;
 	mbThreadId: number;
+	priority?: number;
 	r_buildToCaseResult_c_build?: TestrayBuild;
 	r_buildToCaseResult_c_buildId?: number;
 	r_caseToCaseResult_c_case?: TestrayCase;
@@ -331,6 +338,7 @@ export type TestraySubtask = {
 	dateCreated: string;
 	dateModified: string;
 	dueStatus: PickList;
+	error?: string;
 	errors: string;
 	id: number;
 	issues: string;
@@ -477,6 +485,7 @@ export type TestrayRoutine = {
 	name: string;
 	routineToBuilds: TestrayBuild[];
 	routineToProjects?: TestrayProject;
+	testrayBuildCPUUseTime?: string;
 	testrayBuildDueDate: string;
 	testrayRoutineId?: number;
 };

@@ -53,12 +53,7 @@
 	<macrodef name="apply-portal-ext-properties">
 		<sequential>
 			<if>
-				<and>
-					<contains string="${app.server.portal.dir}" substring="liferay-portal.war" />
-					<not>
-						<equals arg1="${app.server.type}" arg2="websphere" />
-					</not>
-				</and>
+				<contains string="${app.server.portal.dir}" substring="liferay-portal.war" />
 				<then>
 					<property name="test.build.liferay.portal.zip.file.name" value="${app.server.portal.dir}" />
 				</then>
@@ -136,15 +131,13 @@ module.framework.properties.osgi.console=11312</echo>
 				<not>
 					<or>
 						<equals arg1="${app.server.type}" arg2="jboss" />
-						<equals arg1="${app.server.type}" arg2="tcserver" />
 						<equals arg1="${app.server.type}" arg2="tomcat" />
 						<equals arg1="${app.server.type}" arg2="weblogic" />
-						<equals arg1="${app.server.type}" arg2="websphere" />
 						<equals arg1="${app.server.type}" arg2="wildfly" />
 					</or>
 				</not>
 				<then>
-					<fail>Please set "app.server.type" to one of the following:${line.separator}, jboss, tcserver, tomcat, weblogic, websphere, or wildfly.</fail>
+					<fail>Please set "app.server.type" to one of the following:${line.separator}, jboss, tomcat, weblogic, or wildfly.</fail>
 				</then>
 			</if>
 
@@ -175,11 +168,10 @@ module.framework.properties.osgi.console=11312</echo>
 						<equals arg1="${database.type}" arg2="oracle" />
 						<equals arg1="${database.type}" arg2="postgresql" />
 						<equals arg1="${database.type}" arg2="sqlserver" />
-						<equals arg1="${database.type}" arg2="sybase" />
 					</or>
 				</not>
 				<then>
-					<fail>Please set "database.type" to one of the following:${line.separator}auroramysql, aurorapostgresql, db2, hypersonic, mariadb, mysql, oracle, postgresql, sqlserver, sybase.</fail>
+					<fail>Please set "database.type" to one of the following:${line.separator}auroramysql, aurorapostgresql, db2, hypersonic, mariadb, mysql, oracle, postgresql, sqlserver.</fail>
 				</then>
 			</if>
 		</sequential>
@@ -465,6 +457,8 @@ module.framework.properties.osgi.console=11312</echo>
 
 			<echo file="${script.sh.file}"><![CDATA[@{script}]]></echo>
 
+			<print-file file.name="${script.sh.file}" />
+
 			<execute>
 				<![CDATA[
 					docker exec @{container} mkdir -p /tmp
@@ -539,7 +533,7 @@ module.framework.properties.osgi.console=11312</echo>
 		</sequential>
 	</macrodef>
 
-	<macrodef name="export-database-mysql-compact">
+	<macrodef name="export-database-mysql">
 		<attribute default="mysql" name="database.file.prefix" />
 		<attribute default="lportal" name="database.schema.name" />
 
@@ -569,19 +563,34 @@ module.framework.properties.osgi.console=11312</echo>
 						<![CDATA[
 							#!/bin/bash
 
-							mysqldump \
-								--compact \
-								--no-data \
-								--order-by-primary \
-								--password=${database.mysql.password} \
-								--skip-comments \
-								--skip-extended-insert \
-								--user=${database.mysql.username} \
-								--default-character-set=utf8 \
-								--databases ${database.schema.name} > \
-								${docker.src.file.path}
+							function get_modifiable_system_object_definition_table_names() {
+								mysql --execute="SHOW TABLES" --password=${database.mysql.password} --user=${database.mysql.username} ${database.schema.name} | grep -E '^L_[0-9]+_'
+							}
 
-							sed -i "s/Warning: Using a password on the command line interface can be insecure.//g" ${docker.src.file.path}
+							function main {
+								local ignore_table_argument="";
+
+								while IFS= read -r table; do
+									ignore_table_argument+=" --ignore-table=${database.schema.name}.$table"
+								done < <(get_modifiable_system_object_definition_table_names)
+
+								mysqldump \
+									--compact \
+									--databases ${database.schema.name} \
+									--default-character-set=utf8 \
+									${ignore_table_argument} \
+									--no-data \
+									--order-by-primary \
+									--password=${database.mysql.password} \
+									--skip-comments \
+									--skip-extended-insert \
+									--user=${database.mysql.username} \
+									> ${docker.src.file.path}
+
+								sed -i "s/Warning: Using a password on the command line interface can be insecure.//g" ${docker.src.file.path}
+							}
+
+							main
 						]]>
 					</echo>
 
@@ -655,6 +664,134 @@ module.framework.properties.osgi.console=11312</echo>
 		</sequential>
 	</macrodef>
 
+	<macrodef name="export-database-postgresql">
+		<attribute default="postgresql" name="database.file.prefix" />
+		<attribute default="lportal" name="database.schema.name" />
+
+		<sequential>
+			<if>
+				<not>
+					<available file="${selenium.output.dir.name}" type="dir" />
+				</not>
+				<then>
+					<mkdir dir="${selenium.output.dir.name}" />
+				</then>
+			</if>
+
+			<get-database-property property.name="database.password" />
+			<get-database-property property.name="database.schema" />
+			<get-database-property property.name="database.username" />
+
+			<if>
+				<or>
+					<equals arg1="${env.DOCKER_ENABLED}" arg2="true" />
+					<isset property="database.${database.type}.docker.image" />
+				</or>
+				<then>
+					<local name="export.dmp.file.path" />
+
+					<property location="export_database_postgresql_export.sh" name="export.database.postgresql.file.path" />
+					<property name="docker.src.file.path" value="/tmp/export.sql" />
+					<property name="export.dmp.file.path" value="${selenium.output.dir.name}/@{database.file.prefix}-@{database.schema.name}.sql" />
+
+					<echo file="${export.database.postgresql.file.path}">
+						<![CDATA[
+							#!/bin/bash
+
+							export PGPASSWORD=${database.password}
+
+							pg_dump \
+								--dbname=lportal \
+								--encoding=UTF8 \
+								--exclude-table=^L_[0-9]+_* \
+								--exclude-table=^l_[0-9]+_* \
+								--no-comments \
+								--no-owner \
+								--no-privileges \
+								--no-publications \
+								--no-security-labels \
+								--no-subscriptions \
+								--no-unlogged-table-data \
+								--schema==${database.schema.name} \
+								--schema-only \
+								--username=${database.postgresql.username}
+								> ${docker.src.file.path}
+						]]>
+					</echo>
+
+					<get-database-property property.name="database.host" />
+
+					<execute>
+						<![CDATA[
+							docker cp ${export.database.postgresql.file.path} ${database.host}:/tmp/export_database_postgresql_export.sh
+
+							docker exec ${database.host} /bin/bash /tmp/export_database_postgresql_export.sh
+						]]>
+					</execute>
+
+					<execute>
+						<![CDATA[
+							docker cp ${database.host}:${docker.src.file.path} ${export.dmp.file.path}
+						]]>
+					</execute>
+				</then>
+				<else>
+					<exec executable="pg_dump" output="${selenium.output.dir.name}/@{database.file.prefix}-@{database.schema.name}.sql">
+						<arg value="--dbname=lportal" />
+						<arg value="--encoding=UTF8" />
+						<arg value="--exclude-table=^L_[0-9]+_*" />
+						<arg value="--exclude-table=^l_[0-9]+_*" />
+						<arg value="--no-comments" />
+						<arg value="--no-owner" />
+						<arg value="--no-privileges" />
+						<arg value="--no-publications" />
+						<arg value="--no-security-labels" />
+						<arg value="--no-subscriptions" />
+						<arg value="--no-unlogged-table-data" />
+						<arg value="--password=${database.password}" />
+						<arg value="--schema=${database.schema.name}" />
+						<arg value="--schema-only" />
+						<arg value="--username=${database.postgresql.username}" />
+					</exec>
+				</else>
+			</if>
+
+			<echo file="export_database_postgresql_sort_sql.sh">
+				<![CDATA[
+					#!/bin/bash
+
+					gawk '/CREATE/ {f=1; delete a}
+						/^);/ {f=0; n=asort(a); print a[length(a)]; for (i=1;i<n;i++) print a[i]}
+						!f
+						f{a[$0]=$0}' ${1} |
+					sed '/^--/d' |
+					sed 's=/[^/]*$==;s/\,$//' |
+					sed 's/_x_.*//' |
+					sed 's/\/\*.*\*//' |
+					sed '/SELECT /d' |
+					sed '/SET /d' |
+					sed '/lpartition_/d' |
+					sed '/^$/d' |
+					sed 's/^[[:space:]]*//'
+				]]>
+			</echo>
+
+			<execute>
+				export_database_postgresql_sort_sql.sh ${selenium.output.dir.name}/@{database.file.prefix}-@{database.schema.name}.sql > ${selenium.output.dir.name}/@{database.file.prefix}-@{database.schema.name}-sorted.sql
+			</execute>
+
+			<delete file="${selenium.output.dir.name}/@{database.file.prefix}-@{database.schema.name}.sql" />
+			<delete file="export_database_postgresql_sort_sql.sh" />
+
+			<move
+				file="${selenium.output.dir.name}/@{database.file.prefix}-@{database.schema.name}-sorted.sql"
+				tofile="${selenium.output.dir.name}/@{database.file.prefix}-@{database.schema.name}.sql"
+			/>
+
+			<delete failonerror="false" file="${project.dir}/export_database_postgresql_export.sh" />
+		</sequential>
+	</macrodef>
+
 	<macrodef name="generate-gulp-user-config-json">
 		<attribute name="portlet.name" />
 
@@ -693,7 +830,9 @@ jdbc.default.url=${database.url}
 jdbc.default.username=${database.username}
 jdbc.default.password=${database.password}
 
-// HikariCP
+#
+# HikariCP
+#
 
 jdbc.default.connectionTimeout=600000
 jdbc.default.maximumPoolSize=30
@@ -1056,7 +1195,7 @@ jdbc.default.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 			<propertyregex
 				input="${test.batch.name}"
 				property="java.jdk.bundle.type"
-				regexp="-jdk[0-9]+_(\w+)"
+				regexp="-jdk[0-9]+_([^_]+)_?"
 				select="\1"
 			/>
 
@@ -1064,7 +1203,7 @@ jdbc.default.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 				<matches pattern="-jdk[0-9]+$" string="${test.batch.name}" />
 			</condition>
 
-			<property name="java.jdk.bundle.type" value="oracle" />
+			<property name="java.jdk.bundle.type" value="none" />
 		</sequential>
 	</macrodef>
 
@@ -1087,16 +1226,45 @@ jdbc.default.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 				select="\1"
 			/>
 
-			<property name="java.jdk.bundle.version" value="${ant.java.version}" />
+			<property name="java.jdk.bundle.version" value="none" />
 		</sequential>
 	</macrodef>
 
 	<macrodef name="get-java-jdk-home">
 		<attribute default="${java.jdk.architecture}" name="architecture" />
-		<attribute default="oracle" name="type" />
-		<attribute default="${ant.java.version}" name="version" />
+		<attribute default="none" name="type" />
+		<attribute default="none" name="version" />
 
 		<sequential>
+			<beanshell>
+				<![CDATA[
+					import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+
+					public String getUpstreamBranchName() {
+						String upstreamBranchName = project.getProperty("env.TEST_PORTAL_BRANCH_NAME");
+
+						if (JenkinsResultsParserUtil.isNullOrEmpty(upstreamBranchName)) {
+							upstreamBranchName = project.getProperty("liferay.portal.branch");
+						}
+
+						if (JenkinsResultsParserUtil.isNullOrEmpty(upstreamBranchName)) {
+							upstreamBranchName = project.getProperty("git.working.branch.name");
+						}
+
+						return upstreamBranchName.replace("-private", "");
+					}
+
+					StringBuilder sb = new StringBuilder();
+
+					sb.append("java.jdk.default.runtime");
+					sb.append("[");
+					sb.append(getUpstreamBranchName());
+					sb.append("]");
+
+					project.setProperty("portal.upstream.branch.default.runtime.jdk", sb.toString());
+				]]>
+			</beanshell>
+
 			<var name="java.jdk.home" unset="true" />
 
 			<if>
@@ -1105,9 +1273,53 @@ jdbc.default.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 					<property name="java.jdk.home" value="${local.java.jdk.home}" />
 				</then>
 				<else>
-					<propertycopy from="java.jdk.home[@{version}][@{architecture}][@{type}]" property="java.jdk.home" silent="true" />
+					<if>
+						<and>
+							<equals arg1="@{type}" arg2="none" />
+							<equals arg1="@{version}" arg2="none" />
+						</and>
+						<then>
+							<propertycopy from="java.jdk.default.runtime" property="java.jdk.home" silent="true" />
+						</then>
+						<elseif>
+							<or>
+								<equals arg1="@{type}" arg2="none" />
+								<equals arg1="@{type}" arg2="stable" />
+							</or>
+							<then>
+								<propertycopy from="java.jdk[@{version}]" property="java.jdk.home.property.name" silent="true" />
 
-					<property name="java.jdk.home" value="${java.home}" />
+								<propertycopy from="${java.jdk.home.property.name}" property="java.jdk.home" silent="true" />
+							</then>
+						</elseif>
+						<elseif>
+							<equals arg1="@{version}" arg2="none" />
+							<then>
+								<propertycopy from="portal.upstream.branch.default.runtime.jdk" property="java.jdk.home" silent="true" />
+
+								<if>
+									<not>
+										<isset property="java.jdk.home" />
+									</not>
+									<then>
+										<propertycopy from="java.jdk.default.runtime" property="java.jdk.home" silent="true" />
+									</then>
+								</if>
+							</then>
+						</elseif>
+						<else>
+							<propertycopy from="java.jdk.home[@{version}][@{architecture}][@{type}]" property="java.jdk.home" silent="true" />
+						</else>
+					</if>
+
+					<if>
+						<not>
+							<isset property="java.jdk.home" />
+						</not>
+						<then>
+							<property name="java.jdk.home" value="${env.JAVA_HOME}" />
+						</then>
+					</if>
 
 					<if>
 						<not>
@@ -1135,19 +1347,41 @@ jdbc.default.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 			<var name="java.jdk.opts" unset="true" />
 
 			<propertycopy from="java.jdk.opts[@{version}][@{architecture}][@{type}]" property="java.jdk.opts" silent="true" />
-
-			<property name="java.jdk.opts" value="${java.home}" />
-
 			<if>
-				<not>
-					<available file="${java.jdk.opts}" />
-				</not>
+				<and>
+					<not>
+						<isset property="java.jdk.opts" />
+					</not>
+					<isset property="java.jdk.opts.default.runtime" />
+				</and>
 				<then>
-					<var name="java.jdk.opts" unset="true" />
-
-					<property name="java.jdk.opts" value="${java.home}" />
+					<property name="java.jdk.opts" value="${java.jdk.opts.default.runtime}" />
 				</then>
+				<elseif>
+					<and>
+						<not>
+							<isset property="java.jdk.opts" />
+						</not>
+						<isset property="env.JAVA_OPTS" />
+					</and>
+					<then>
+						<property name="java.jdk.opts" value="${env.JAVA_OPTS}" />
+					</then>
+				</elseif>
+				<elseif>
+					<and>
+						<not>
+							<isset property="java.jdk.opts" />
+						</not>
+						<isset property="env.ANT_OPTS" />
+					</and>
+					<then>
+						<property name="java.jdk.opts" value="${env.ANT_OPTS}" />
+					</then>
+				</elseif>
 			</if>
+
+			<var name="java.jdk.opts" value="${java.jdk.opts} -XX:+IgnoreUnrecognizedVMOptions" />
 		</sequential>
 	</macrodef>
 
@@ -1369,17 +1603,27 @@ jdbc.default.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 							srcFile="${tstamp.value}-dir/fixpack_documentation.json"
 						/>
 
-						<script language="javascript">
-							var json = project.getProperty("json.content");
+						<beanshell>
+							<![CDATA[
+								import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 
-							var fixpackDocumentation = JSON.parse(json);
+								import java.io.File;
 
-							var patchRequirements = fixpackDocumentation["patch"]["requirements"];
+								import org.json.JSONObject;
 
-							if (patchRequirements != null) {
-								project.setProperty("patch.requirements", patchRequirements);
-							}
-						</script>
+								JSONObject fixPackDocumentationJSONObject = new JSONObject(project.getProperty("json.content"));
+
+								JSONObject patchJSONObject = fixPackDocumentationJSONObject.getJSONObject("patch");
+
+								if (patchJSONObject != null) {
+									String patchRequirements = patchJSONObject.getString("requirements");
+
+									if (!JenkinsResultsParserUtil.isNullOrEmpty(patchRequirements)) {
+										project.setProperty("patch.requirements", patchRequirements);
+									}
+								}
+							]]>
+						</beanshell>
 
 						<antelope:stringutil property="patch.requirements" string="${patch.requirements}">
 							<antelope:replace regex="!" replacement="" />
@@ -1398,25 +1642,33 @@ jdbc.default.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 							srcFile="${tstamp.value}-dir/hotfix.json"
 						/>
 
-						<script language="javascript">
-							var json = project.getProperty("json.content");
+						<beanshell>
+							<![CDATA[
+								import java.io.File;
 
-							var hotfix = JSON.parse(json);
+								import org.json.JSONObject;
 
-							var patchingToolVersion = hotfix["requirement"]["patching-tool-version"];
+								JSONObject hotfixJSONObject = new JSONObject(project.getProperty("json.content"));
 
-							if (patchingToolVersion != null) {
-								project.setProperty("patching.tool.version", patchingToolVersion);
-							}
+								JSONObject requirementJSONObject = hotfixJSONObject.getJSONObject("requirement");
 
-							var patchProductVersion = hotfix["requirement"]["product-version"];
+								if (requirementJSONObject != null){
+									String patchingToolVersion = requirementJSONObject.getString("patching-tool-version");
 
-							if (patchProductVersion != null) {
-								project.setProperty("patch.product.version", patchProductVersion);
-							}
+									if (!JenkinsResultsParserUtil.isNullOrEmpty(patchingToolVersion)) {
+										project.setProperty("patching.tool.version", patchingToolVersion);
+									}
 
-							project.setProperty("patch.requirements", "");
-						</script>
+									String patchProductVersion = requirementJSONObject.getString("product-version");
+
+									if (!JenkinsResultsParserUtil.isNullOrEmpty(patchProductVersion)) {
+										project.setProperty("patch.product.version", patchProductVersion);
+									}
+								}
+
+								project.setProperty("patch.requirements", "");
+							]]>
+						</beanshell>
 					</then>
 				</elseif>
 			</if>
@@ -2172,7 +2424,7 @@ war.path=${app.server.portal.dir}/</echo>
 				<then>
 					<local name="poshi.java.jdk.opts" />
 
-					<get-java-jdk-home version="8" />
+					<get-java-jdk-home version="17" />
 
 					<get-poshi-java-jdk-opts />
 
@@ -2217,6 +2469,7 @@ war.path=${app.server.portal.dir}/</echo>
 						<delete dir="${test.app.server.parent.dir}" />
 
 						<copy
+							preservelastmodified="true"
 							todir="${test.app.server.parent.dir}"
 						>
 							<fileset
@@ -2630,6 +2883,7 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 														maxIdle="20"
 														maxWait="1000"
 														name="jdbc/LiferayPool"
+														transactionIsolation="TRANSACTION_READ_COMMITTED"
 														type="javax.sql.DataSource"
 													/>
 											]]>
@@ -2639,7 +2893,10 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 					</if>
 				</then>
 				<elseif>
-					<equals arg1="${app.server.type}" arg2="wildfly" />
+					<or>
+						<equals arg1="${app.server.type}" arg2="jboss" />
+						<equals arg1="${app.server.type}" arg2="wildfly" />
+					</or>
 					<then>
 						<propertycopy from="jdbc.${database.type}.driver" name="jdbc.driver" />
 
@@ -2668,6 +2925,9 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 								/>
 							</not>
 							<then>
+								<var name="security.line" unless:blank="${database.password}" value="&lt;security user-name=&quot;${database.username}&quot; password=&quot;${database.password}&quot; /&gt;" />
+								<var if:blank="${database.password}" name="security.line" value="&lt;security user-name=&quot;${database.username}&quot; /&gt;" />
+
 								<replace
 									file="${app.server.dir}/standalone/configuration/standalone.xml"
 								>
@@ -2678,10 +2938,8 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 														<datasource jndi-name="java:/jdbc/LiferayPool" pool-name="LiferayPool" enabled="true" jta="true" use-java-context="true" use-ccm="true">
 															<connection-url>${database.url}</connection-url>
 															<driver>${database.type}</driver>
-															<security>
-																<user-name>${database.username}</user-name>
-																<password>${database.password}</password>
-															</security>
+															${security.line}
+															<transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
 														</datasource>
 												]]>
 									</replacevalue>
@@ -2732,6 +2990,10 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 										<driver-name>${database.driver}</driver-name>
 										<properties>
 											<property>
+												<name>desiredtxisolevel</name>
+												<value>TRANSACTION_READ_COMMITTED</value>
+											</property>
+											<property>
 												<name>user</name>
 												<value>${database.username}</value>
 											</property>
@@ -2769,39 +3031,6 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 						</replace>
 					</then>
 				</elseif>
-				<elseif>
-					<and>
-						<equals arg1="${app.server.type}" arg2="websphere" />
-						<equals arg1="${database.type}" arg2="mysql" />
-					</and>
-					<then>
-						<copy
-							file="${test.app.server.lib.portal.dir}/${jdbc.mysql.driver}"
-							tofile="${app.server.lib.global.dir}/${jdbc.mysql.driver}"
-						/>
-
-						<replace
-							file="${app.server.websphere.instance.dir}/config/cells/liferay-cell/resources.xml"
-						>
-							<replacetoken><![CDATA[</xmi:XMI>]]></replacetoken>
-							<replacevalue expandproperties="true">
-								<![CDATA[
-									<resources.jdbc:JDBCProvider xmi:id="Liferay_JDBCProvider" name="Liferay JDBC Provider" providerType="User-defined JDBC Provider" isolatedClassLoader="false" implementationClassName="com.mysql.cj.jdbc.MysqlConnectionPoolDataSource" xa="false">
-										<factories xmi:type="resources.jdbc:DataSource" xmi:id="Liferay_DataSource" name="Liferay DataSource" jndiName="jdbc/LiferayPool" providerType="User-defined JDBC Provider" authMechanismPreference="BASIC_PASSWORD" authDataAlias="" manageCachedHandles="false" logMissingTransactionContext="true" diagnoseConnectionUsage="false" relationalResourceAdapter="builtin_rra" statementCacheSize="10" datasourceHelperClassname="com.ibm.websphere.rsadapter.GenericDataStoreHelper">
-											<propertySet xmi:id="J2EEResourcePropertySet_1">
-												<resourceProperties xmi:id="J2EEResourceProperty_1" name="user" type="java.lang.String" value="${database.username}" required="false" />
-												<resourceProperties xmi:id="J2EEResourceProperty_2" name="password" type="java.lang.String" value="${database.password}" required="false" />
-												<resourceProperties xmi:id="J2EEResourceProperty_3" name="url" type="java.lang.String" value="jdbc:mysql://${database.host}/${database.schema}?useUnicode=true&amp;characterEncoding=UTF-8&amp;useFastDateParsing=false&amp;serverTimezone=GMT&amp;dontTrackOpenResources=true&amp;holdResultsOpenOverStatementClose=true" required="false" />
-											</propertySet>
-											<connectionPool xmi:id="ConnectionPool_1" connectionTimeout="1800" maxConnections="100" minConnections="5" reapTime="180" unusedTimeout="1800" agedTimeout="180" purgePolicy="EntirePool" />
-										</factories>
-									</resources.jdbc:JDBCProvider>
-								</xmi:XMI>
-								]]>
-							</replacevalue>
-						</replace>
-					</then>
-				</elseif>
 				<else>
 					<fail message="Tests utilizing JNDI are not available." />
 				</else>
@@ -2822,16 +3051,6 @@ global.lib.dir=modules/com/liferay/portal/main
 portal.dir=standalone/deployments/ROOT.war
 server.detector.server.id=jboss</echo>
 				</then>
-				<elseif>
-					<equals arg1="${app.server.type}" arg2="tcserver" />
-					<then>
-						<echo file="${liferay.home}/tools/portal-tools-db-upgrade-client/app-server.properties">dir=${app.server.dir}
-extra.lib.dirs=runtimes/tomcat-9.0.10.A.RELEASE/lib
-global.lib.dir=instances/liferay/lib
-portal.dir=instances/liferay/webapps/ROOT
-server.detector.server.id=tomcat</echo>
-					</then>
-				</elseif>
 				<elseif>
 					<equals arg1="${app.server.type}" arg2="tomcat" />
 					<then>
@@ -2865,16 +3084,6 @@ server.detector.server.id=weblogic</echo>
 					</then>
 				</elseif>
 				<elseif>
-					<equals arg1="${app.server.type}" arg2="websphere" />
-					<then>
-						<echo file="${liferay.home}/tools/portal-tools-db-upgrade-client/app-server.properties">dir=${app.server.dir}
-extra.lib.dirs=javaext
-global.lib.dir=lib
-portal.dir=profiles/liferay/installedApps/liferay-cell/liferay-portal.ear/liferay-portal.war
-server.detector.server.id=websphere</echo>
-					</then>
-				</elseif>
-				<elseif>
 					<equals arg1="${app.server.type}" arg2="wildfly" />
 					<then>
 						<echo file="${liferay.home}/tools/portal-tools-db-upgrade-client/app-server.properties">dir=${app.server.dir}
@@ -2897,7 +3106,7 @@ server.detector.server.id=wildfly</echo>
 					<equals arg1="${database.type}" arg2="mysql" />
 				</or>
 				<then>
-					<property name="database.url.upgrade" value="${database.url}&amp;rewriteBatchedStatements=true" />
+					<property name="database.url.upgrade" value="${database.url}" />
 				</then>
 				<elseif>
 					<equals arg1="${database.type}" arg2="postgresql" />
@@ -2959,6 +3168,11 @@ include-and-override=portal-liferay-online.properties</echo>
 						file="portal-impl/src/portal-ext.properties"
 						token="${database.mysql.driver}"
 						value="${database.mariadb.driver}"
+					/>
+					<replace
+						file="portal-impl/src/portal-ext.properties"
+						token="jdbc:mysql:"
+						value="jdbc:mariadb:"
 					/>
 				</then>
 			</if>
@@ -3279,17 +3493,147 @@ tell application "Safari" to quit
 			<get-testcase-property property.name="analytics.cloud.enabled" />
 
 			<if>
-				<isset property="test.analytics.cloud.url" />
+				<isset property="env.OSB_ASAH_API_TOKEN" />
 				<then>
 					<echo append="true" file="${test.ext.properties.file}">
-						analytics.cloud.url=${test.analytics.cloud.url}
+						analytics.cloud.asah.api.token=${env.OSB_ASAH_API_TOKEN}
 					</echo>
 				</then>
+				<elseif>
+					<isset property="analytics.cloud.asah.api.token" />
+					<then>
+						<echo append="true" file="${test.ext.properties.file}">
+							analytics.cloud.asah.api.token=${analytics.cloud.asah.api.token}
+						</echo>
+					</then>
+				</elseif>
+			</if>
+
+			<if>
+				<isset property="env.OSB_ASAH_BACKEND_URL" />
+				<then>
+					<echo append="true" file="${test.ext.properties.file}">
+						analytics.cloud.asah.backend.url=${env.OSB_ASAH_BACKEND_URL}
+					</echo>
+				</then>
+				<elseif>
+					<isset property="analytics.cloud.asah.backend.url" />
+					<then>
+						<echo append="true" file="${test.ext.properties.file}">
+							analytics.cloud.asah.backend.url=${analytics.cloud.asah.backend.url}
+						</echo>
+					</then>
+				</elseif>
+			</if>
+
+			<if>
+				<isset property="env.OSB_ASAH_BATCH_CURATOR_URL" />
+				<then>
+					<echo append="true" file="${test.ext.properties.file}">
+						analytics.cloud.asah.curator.batch.url=${env.OSB_ASAH_BATCH_CURATOR_URL}
+					</echo>
+				</then>
+				<elseif>
+					<isset property="analytics.cloud.asah.curator.batch.url" />
+					<then>
+						<echo append="true" file="${test.ext.properties.file}">
+							analytics.cloud.asah.curator.batch.url=${analytics.cloud.asah.curator.batch.url}
+						</echo>
+					</then>
+				</elseif>
+			</if>
+
+			<if>
+				<isset property="env.OSB_ASAH_PROJECT_ID" />
+				<then>
+					<echo append="true" file="${test.ext.properties.file}">
+						analytics.cloud.asah.project.id=${env.OSB_ASAH_PROJECT_ID}
+					</echo>
+				</then>
+				<elseif>
+					<isset property="analytics.cloud.asah.project.id" />
+					<then>
+						<echo append="true" file="${test.ext.properties.file}">
+							analytics.cloud.asah.project.id=${analytics.cloud.asah.project.id}
+						</echo>
+					</then>
+				</elseif>
+			</if>
+
+			<if>
+				<isset property="env.OSB_FARO_PASSWORD" />
+				<then>
+					<echo append="true" file="${test.ext.properties.file}">
+						analytics.cloud.faro.password=${env.OSB_FARO_PASSWORD}
+					</echo>
+				</then>
+				<elseif>
+					<isset property="analytics.cloud.faro.password" />
+					<then>
+						<echo append="true" file="${test.ext.properties.file}">
+							analytics.cloud.faro.password=${analytics.cloud.faro.password}
+						</echo>
+					</then>
+				</elseif>
+			</if>
+
+			<if>
+				<isset property="env.OSB_FARO_URL" />
+				<then>
+					<echo append="true" file="${test.ext.properties.file}">
+						analytics.cloud.faro.frontend.url=${env.OSB_FARO_URL}
+						analytics.cloud.url=${env.OSB_FARO_URL}
+					</echo>
+				</then>
+				<elseif>
+					<isset property="test.analytics.cloud.url" />
+					<then>
+						<echo append="true" file="${test.ext.properties.file}">
+							analytics.cloud.faro.frontend.url=${test.analytics.cloud.url}
+							analytics.cloud.url=${test.analytics.cloud.url}
+						</echo>
+					</then>
+				</elseif>
 				<elseif>
 					<equals arg1="${analytics.cloud.enabled}" arg2="true" />
 					<then>
 						<echo append="true" file="${test.ext.properties.file}">
+							analytics.cloud.faro.frontend.url=${analytics.cloud.faro.frontend.url}
 							analytics.cloud.url=${analytics.cloud.faro.frontend.url}
+						</echo>
+					</then>
+				</elseif>
+			</if>
+
+			<if>
+				<isset property="env.OSB_FARO_USER_LOGIN" />
+				<then>
+					<echo append="true" file="${test.ext.properties.file}">
+						analytics.cloud.faro.user.login=${env.OSB_FARO_USER_LOGIN}
+					</echo>
+				</then>
+				<elseif>
+					<isset property="analytics.cloud.faro.user.login" />
+					<then>
+						<echo append="true" file="${test.ext.properties.file}">
+							analytics.cloud.faro.user.login=${analytics.cloud.faro.user.login}
+						</echo>
+					</then>
+				</elseif>
+			</if>
+
+			<if>
+				<isset property="env.OSB_FARO_WORKSPACE_NAME" />
+				<then>
+					<echo append="true" file="${test.ext.properties.file}">
+						analytics.cloud.faro.workspace.name=${env.OSB_FARO_WORKSPACE_NAME}
+					</echo>
+				</then>
+				<elseif>
+					<isset property="analytics.cloud.faro.workspace.name" />
+					<then>
+						<echo append="true" file="${test.ext.properties.file}">
+							analytics.cloud.faro.workspace.name=${analytics.cloud.faro.workspace.name}
 						</echo>
 					</then>
 				</elseif>
@@ -3313,11 +3657,8 @@ tell application "Safari" to quit
 			</if>
 
 			<echo append="true" file="${test.ext.properties.file}">
-				analytics.cloud.asah.backend.url=${analytics.cloud.asah.backend.url}
-				analytics.cloud.asah.curator.batch.url=${analytics.cloud.asah.curator.batch.url}
 				analytics.cloud.asah.curator.stream.url=${analytics.cloud.asah.curator.stream.url}
 				analytics.cloud.asah.publisher.url=${analytics.cloud.asah.publisher.url}
-				analytics.cloud.faro.frontend.url=${analytics.cloud.faro.frontend.url}
 			</echo>
 		</sequential>
 	</macrodef>
@@ -4772,15 +5113,6 @@ tell application "Safari" to quit
 				</then>
 			</if>
 
-			<get-testcase-property property.name="release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS" />
-
-			<if>
-				<equals arg1="${release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS}" arg2="true" />
-				<then>
-					<echo file="${liferay.home}/osgi/configs/com.liferay.release.feature.flag.web.internal.configuration.ReleaseFeatureFlagConfiguration.config">disabledReleaseFeatureFlags=["DISABLE_PRIVATE_LAYOUTS"]</echo>
-				</then>
-			</if>
-
 			<get-testcase-property property.name="test.assert.javascript.errors" />
 
 			<if>
@@ -4905,51 +5237,6 @@ tell application "Safari" to quit
 
 					<delete file="${weblogic.fix.sh}" />
 				</then>
-				<elseif>
-					<equals arg1="${app.server.type}" arg2="websphere" />
-					<then>
-						<replace
-							dir="${app.server.websphere.dir}"
-							includes="**/*.js,**/*.metadata,**/*.properties,**/*.props,**/*.sh,**/*.txt,**/*.xml"
-						>
-							<replacefilter
-								token="/opt/dev/projects/github/liferay-portal/bundles"
-								value="${app.server.parent.dir}"
-							/>
-						</replace>
-
-						<replace
-							dir="${app.server.websphere.dir}"
-							includes="**/*.sh"
-						>
-							<replacefilter
-								token="#!/bin/sh"
-								value="#!/bin/bash"
-							/>
-						</replace>
-
-						<chmod
-							perm="a+x"
-						>
-							<fileset
-								dir="${app.server.websphere.bin.dir}"
-							>
-								<include name="**/*.sh" />
-							</fileset>
-						</chmod>
-
-						<chmod
-							perm="a+x"
-						>
-							<fileset
-								dir="${app.server.websphere.dir}"
-							>
-								<include name="bin/**/*.sh" />
-								<include name="java*/**/bin/*" />
-							</fileset>
-						</chmod>
-					</then>
-				</elseif>
 			</if>
 		</sequential>
 	</macrodef>
@@ -4994,26 +5281,6 @@ tell application "Safari" to quit
 						<ant antfile="build-dist.xml" inheritAll="false" target="build-dist-jboss">
 							<property name="app.server.jboss.version" value="6.1.0" />
 						</ant>
-					</then>
-				</elseif>
-			</if>
-
-			<if>
-				<and>
-					<equals arg1="${test.build.bundle.tcserver}" arg2="true" />
-					<matches pattern="https?://" string="${test.build.portal.war.url}" />
-				</and>
-				<then>
-					<antcall inheritAll="false" target="prepare-test-bundle">
-						<param name="app.server.lib.global.dir" value="${app.server.tcserver.lib.global.dir}" />
-						<param name="app.server.portal.dir" value="${app.server.tcserver.portal.dir}" />
-						<param name="app.server.type" value="tcserver" />
-					</antcall>
-				</then>
-				<elseif>
-					<equals arg1="${test.build.bundle.tcserver}" arg2="true" />
-					<then>
-						<ant antfile="build-dist.xml" inheritAll="false" target="build-dist-tcserver" />
 					</then>
 				</elseif>
 			</if>
@@ -5251,6 +5518,11 @@ include-and-override=portal-liferay-online.properties</echo>
 								file="${liferay.home}/tools/portal-tools-db-upgrade-client/portal-upgrade-database.properties"
 								token="${database.mysql.driver}"
 								value="${database.mariadb.driver}"
+							/>
+							<replace
+								file="${liferay.home}/tools/portal-tools-db-upgrade-client/portal-upgrade-database.properties"
+								token="jdbc:mysql:"
+								value="jdbc:mariadb:"
 							/>
 						</then>
 					</if>
@@ -5766,23 +6038,13 @@ ${custom.upgrade.properties}</echo>
 								<elseif>
 									<equals arg1="${database.type}" arg2="sqlserver" />
 									<then>
+										<get-database-property property.name="database.executable" />
+
 										<echo file="${create.sh.file.path}">
 											<![CDATA[
 												#!/bin/bash
 
-												/opt/mssql-tools/bin/sqlcmd -P ${database.password} -U ${database.username} -i /tmp/create.sql
-											]]>
-										</echo>
-									</then>
-								</elseif>
-								<elseif>
-									<equals arg1="${database.type}" arg2="sybase" />
-									<then>
-										<echo file="${create.sh.file.path}">
-											<![CDATA[
-												#!/bin/bash
-
-												isql -i /tmp/create.sql -P ${database.password} -S ${database.schema} -U ${database.username}
+												${database.executable} -P ${database.password} -U ${database.username} -i /tmp/create.sql
 											]]>
 										</echo>
 									</then>
@@ -5958,27 +6220,6 @@ ${custom.upgrade.properties}</echo>
 										</exec>
 									</then>
 								</elseif>
-								<elseif>
-									<equals arg1="${database.type}" arg2="sybase" />
-									<then>
-										<get-database-property property.name="database.password" />
-										<get-database-property property.name="database.schema" />
-										<get-database-property property.name="database.username" />
-
-										<retry retrycount="3" retrydelay="60000">
-											<exec executable="${sybase.executable}" failonerror="true">
-												<arg value="-i" />
-												<arg value="create.sql" />
-												<arg value="-P" />
-												<arg value="${database.password}" />
-												<arg value="-S" />
-												<arg value="${database.schema}" />
-												<arg value="-U" />
-												<arg value="${database.username}" />
-											</exec>
-										</retry>
-									</then>
-								</elseif>
 							</if>
 						</else>
 					</if>
@@ -6025,7 +6266,7 @@ ${custom.upgrade.properties}</echo>
 		<sequential>
 			<local name="test.batch.name" />
 
-			<condition else="@{test.type}-test-csv-report-jdk8" property="test.batch.name" value="${test.batch.name}">
+			<condition else="@{test.type}-test-csv-report" property="test.batch.name" value="${test.batch.name}">
 				<isset property="test.batch.name" />
 			</condition>
 
@@ -6367,21 +6608,6 @@ ${custom.upgrade.properties}</echo>
 			</if>
 
 			<if>
-				<equals arg1="@{app.server.type}" arg2="tcserver" />
-				<then>
-					<var name="app.server.dir" value="${app.server.parent.dir}/tc-server-@{app.server.version}" />
-					<var name="app.server.zip.name" value="apache-tomcat-@{app.server.version}.zip" />
-
-					<var name="app.server.bin.dir" value="${app.server.dir}/instances/liferay/bin" />
-					<var name="app.server.classes.portal.dir" value="${app.server.dir}/webapps/ROOT/WEB-INF/classes" />
-					<var name="app.server.lib.global.dir" value="${app.server.dir}/lib" />
-					<var name="app.server.lib.portal.dir" value="${app.server.dir}/webapps/ROOT/WEB-INF/lib/" />
-					<var name="app.server.shielded-container-lib.portal.dir" value="${app.server.dir}/webapps/ROOT/WEB-INF/shielded-container-lib/" />
-					<var name="app.server.zip.url" value="http://archive.apache.org/dist/tomcat/tomcat-9/v@{app.server.version}/bin/${app.server.zip.name}" />
-				</then>
-			</if>
-
-			<if>
 				<equals arg1="@{app.server.type}" arg2="tomcat" />
 				<then>
 					<var name="app.server.dir" value="${app.server.parent.dir}/tomcat-@{app.server.version}" />
@@ -6419,21 +6645,6 @@ ${custom.upgrade.properties}</echo>
 					<var name="app.server.shielded-container-lib.portal.dir" value="${app.server.dir}/domains/liferay/autodeploy/ROOT/WEB-INF/shielded-container-lib/" />
 
 					<var name="app.server.zip.url" value="${app.server.weblogic.zip.url}" />
-				</then>
-			</if>
-
-			<if>
-				<equals arg1="@{app.server.type}" arg2="websphere" />
-				<then>
-					<var name="app.server.dir" value="${app.server.parent.dir}/websphere-@{app.server.version}" />
-					<var name="app.server.zip.name" value="websphere-@{app.server.version}.zip" />
-
-					<var name="app.server.bin.dir" value="${app.server.dir}/bin" />
-					<var name="app.server.classes.portal.dir" value="${app.server.dir}/standalone/deployments/ROOT.war/WEB-INF/classes/" />
-					<var name="app.server.instance.dir" value="${app.server.dir}/profiles/liferay" />
-					<var name="app.server.lib.global.dir" value="${app.server.dir}/modules/com/liferay/portal/main" />
-					<var name="app.server.lib.portal.dir" value="${app.server.dir}/standalone/deployments/ROOT.war/WEB-INF/lib/" />
-					<var name="app.server.shielded-container-lib.portal.dir" value="${app.server.dir}/standalone/deployments/ROOT.war/WEB-INF/shielded-container-lib/" />
 				</then>
 			</if>
 
@@ -6476,7 +6687,6 @@ ${custom.upgrade.properties}</echo>
 				<or>
 					<equals arg1="@{app.server.type}" arg2="jboss" />
 					<equals arg1="@{app.server.type}" arg2="weblogic" />
-					<equals arg1="@{app.server.type}" arg2="websphere" />
 					<equals arg1="@{app.server.type}" arg2="wildfly" />
 				</or>
 				<then>
@@ -6486,20 +6696,10 @@ ${custom.upgrade.properties}</echo>
 				</then>
 			</if>
 
-			<if>
-				<equals arg1="@{app.server.type}" arg2="websphere" />
-				<then>
-					<echo append="true" file="${app.server.properties.file}">
-						app.server.@{app.server.type}.custom.zip.name=${app.server.zip.name}
-					</echo>
-				</then>
-				<else>
-					<echo append="true" file="${app.server.properties.file}">
-						app.server.@{app.server.type}.zip.name=${app.server.zip.name}
-						app.server.@{app.server.type}.zip.url=${app.server.zip.url}
-					</echo>
-				</else>
-			</if>
+			<echo append="true" file="${app.server.properties.file}">
+				app.server.@{app.server.type}.zip.name=${app.server.zip.name}
+				app.server.@{app.server.type}.zip.url=${app.server.zip.url}
+			</echo>
 
 			<beanshell>
 				<![CDATA[
@@ -6537,79 +6737,6 @@ persisted.scheduler.org.quartz.threadPool.threadCount=1]]></echo>
 			<echo file="portal-impl/test/system-ext.properties">## Autogenerated
 
 log.sanitizer.enabled=false</echo>
-		</sequential>
-	</macrodef>
-
-	<macrodef name="set-sybase-charset-utf8">
-		<sequential>
-			<get-database-property property.name="database.password" />
-			<get-database-property property.name="database.schema" />
-			<get-database-property property.name="database.username" />
-
-			<echo>${env.SYBASE}/${env.SYBASE_ASE}/bin/charset -P${database.password} -S${database.schema} -U${database.username} binary.srt utf8</echo>
-
-			<exec executable="${env.SYBASE}/${env.SYBASE_ASE}/bin/charset" timeout="60000">
-				<arg value="-P${database.password}" />
-				<arg value="-S${database.schema}" />
-				<arg value="-U${database.username}" />
-				<arg value="binary.srt" />
-				<arg value="utf8" />
-			</exec>
-
-			<echo file="set-charset.sql">sp_configure 'default sortorder id', 50, 'utf8'
-go
-commit
-go</echo>
-
-			<print-file file.name="set-charset.sql" />
-
-			<exec executable="${sybase.executable}">
-				<arg value="-P${database.password}" />
-				<arg value="-S${database.schema}" />
-				<arg value="-U${database.username}" />
-				<arg line="-i set-charset.sql" />
-			</exec>
-
-			<delete file="set-charset.sql" />
-			<echo>service sybase restart</echo>
-
-			<exec executable="service">
-				<arg value="sybase" />
-				<arg value="restart" />
-			</exec>
-
-			<echo>Sleep for 30 seconds.</echo>
-
-			<sleep seconds="30" />
-
-			<echo>service sybase restart</echo>
-
-			<exec executable="service">
-				<arg value="sybase" />
-				<arg value="restart" />
-			</exec>
-
-			<echo>Sleep for 30 seconds.</echo>
-
-			<sleep seconds="30" />
-
-			<waitfor maxwait="60" maxwaitunit="second">
-				<socket port="5000" server="localhost" />
-			</waitfor>
-
-			<echo file="get-charset.sql">sp_helpsort
-go</echo>
-
-			<print-file file.name="get-charset.sql" />
-
-			<exec executable="${sybase.executable}">
-				<arg value="-P${database.password}" />
-				<arg value="-S${database.schema}" />
-				<arg value="-U${database.username}" />
-				<arg line="-i get-charset.sql" />
-			</exec>
-
-			<delete file="get-charset.sql" />
 		</sequential>
 	</macrodef>
 
@@ -6966,7 +7093,7 @@ go</echo>
 					</then>
 				</elseif>
 				<else>
-					<var name="app.server.tomcat.version" value="9.0.90" />
+					<var name="app.server.tomcat.version" value="9.0.104" />
 				</else>
 			</if>
 
@@ -7038,8 +7165,6 @@ go</echo>
 
 	<macrodef name="set-up-search-engine">
 		<sequential>
-			<propertycopy from="search.engine[${env.CI_TEST_SUITE}]" name="suite.search.engine" silent="true" />
-
 			<if>
 				<not>
 					<isset property="app.server.name" />
@@ -7052,32 +7177,64 @@ go</echo>
 			<get-testcase-property property.name="remote.elasticsearch.enabled" />
 			<get-testcase-property property.name="solr.enabled" />
 
-			<propertycopy from="search.engine[${env.CI_TEST_SUITE}]" name="suite.search.engine" silent="true" />
+			<condition else="${env.TEST_BATCH_NAME}" property="test.batch.name" value="${test.batch.name}">
+				<isset property="test.batch.name" />
+			</condition>
 
 			<if>
 				<or>
-					<equals arg1="${solr.enabled}" arg2="true" />
-					<equals arg1="${suite.search.engine}" arg2="solr" />
+					<contains string="${test.batch.name}" substring="opensearch2" />
+					<contains string="${test.batch.name}" substring="remote-elasticsearch" />
+					<contains string="${test.batch.name}" substring="solr" />
 				</or>
 				<then>
-					<ant antfile="build-test-solr.xml" target="start-solr" />
+					<if>
+						<equals arg1="${test.batch.name}" arg2="solr" />
+						<then>
+							<ant antfile="build-test-solr.xml" target="start-solr" />
+						</then>
+						<elseif>
+							<contains string="${test.batch.name}" substring="opensearch2" />
+							<then>
+								<ant antfile="build-test-opensearch2.xml" target="start-opensearch" />
+							</then>
+						</elseif>
+						<elseif>
+							<contains string="${test.batch.name}" substring="remote-elasticsearch" />
+							<then>
+								<ant antfile="build-test-elasticsearch7.xml" target="start-elasticsearch" />
+							</then>
+						</elseif>
+					</if>
 				</then>
-				<elseif>
-					<contains string="${suite.search.engine}" substring="opensearch2" />
-					<then>
-						<ant antfile="build-test-opensearch2.xml" target="start-opensearch" />
-					</then>
-				</elseif>
-				<elseif>
-					<or>
-						<contains string="${suite.search.engine}" substring="remote-elasticsearch" />
-						<equals arg1="${app.server.type}" arg2="websphere" />
-						<istrue value="${remote.elasticsearch.enabled}" />
-					</or>
-					<then>
-						<ant antfile="build-test-elasticsearch7.xml" target="start-elasticsearch" />
-					</then>
-				</elseif>
+				<else>
+					<propertycopy from="search.engine[${env.CI_TEST_SUITE}]" name="suite.search.engine" silent="true" />
+
+					<if>
+						<or>
+							<equals arg1="${solr.enabled}" arg2="true" />
+							<equals arg1="${suite.search.engine}" arg2="solr" />
+						</or>
+						<then>
+							<ant antfile="build-test-solr.xml" target="start-solr" />
+						</then>
+						<elseif>
+							<contains string="${suite.search.engine}" substring="opensearch2" />
+							<then>
+								<ant antfile="build-test-opensearch2.xml" target="start-opensearch" />
+							</then>
+						</elseif>
+						<elseif>
+							<or>
+								<contains string="${suite.search.engine}" substring="remote-elasticsearch" />
+								<istrue value="${remote.elasticsearch.enabled}" />
+							</or>
+							<then>
+								<ant antfile="build-test-elasticsearch7.xml" target="start-elasticsearch" />
+							</then>
+						</elseif>
+					</if>
+				</else>
 			</if>
 
 			<get-testcase-property property.name="delete.sidecar.bundle" />
@@ -7094,6 +7251,11 @@ go</echo>
 	<macrodef name="setup-testable-jboss">
 		<sequential>
 			<setup-testable-jboss-jsp-configuration />
+
+			<ant antfile="build-dist.xml" target="set-up-jakarta-ee-transformer-agent">
+				<property name="app.server.type" value="jboss" />
+				<property name="app.server.version" value="${app.server.jboss.version}" />
+			</ant>
 		</sequential>
 	</macrodef>
 
@@ -7125,6 +7287,11 @@ go</echo>
 			<setup-testable-tomcat-osgi-modules />
 
 			<setup-testable-tomcat-setenv />
+
+			<ant antfile="build-dist.xml" target="set-up-jakarta-ee-transformer-agent">
+				<property name="app.server.type" value="tomcat" />
+				<property name="app.server.version" value="${app.server.tomcat.version}" />
+			</ant>
 		</sequential>
 	</macrodef>
 
@@ -7424,11 +7591,11 @@ org.apache.catalina.startup.ClassLoaderFactory.level=INFO]]>
 						/>
 					</delete>
 
+					<get-java-jdk-bundle-type test.batch.name="${test.batch.name}" />
 					<get-java-jdk-bundle-version test.batch.name="${test.batch.name}" />
 
-					<get-java-jdk-bundle-type test.batch.name="${test.batch.name}" />
-
 					<get-java-jdk-home type="${java.jdk.bundle.type}" version="${java.jdk.bundle.version}" />
+					<get-java-jdk-opts type="${java.jdk.bundle.type}" version="${java.jdk.bundle.version}" />
 
 					<get-operating-system-property property.name="operating.system.docker.image" />
 
@@ -7580,6 +7747,8 @@ org.apache.catalina.startup.ClassLoaderFactory.level=INFO]]>
 		<text name="run.options" optional="true" />
 
 		<sequential>
+			<lstopwatch action="start" name="start.docker.container.@{name}" />
+
 			<local name="docker.network.run.option" />
 			<local name="docker.start.script" />
 
@@ -7590,7 +7759,13 @@ org.apache.catalina.startup.ClassLoaderFactory.level=INFO]]>
 			<property name="docker.start.script" value="docker_start.sh" />
 
 			<if>
-				<contains string="@{name}" substring="orcllinux" />
+				<or>
+					<contains string="@{name}" substring="amazonlinux2022" />
+					<contains string="@{name}" substring="debian" />
+					<contains string="@{name}" substring="orcllinux" />
+					<contains string="@{name}" substring="redhat" />
+					<contains string="@{name}" substring="rockylinux" />
+				</or>
 				<then>
 					<echo file="${docker.start.script}">
 						<![CDATA[
@@ -7671,6 +7846,8 @@ ${docker.start.error}</fail>
 			<echo>${docker.start.output}</echo>
 
 			<delete file="${docker.start.script}" />
+
+			<lstopwatch action="total" name="start.docker.container.@{name}" />
 		</sequential>
 	</macrodef>
 
@@ -7790,7 +7967,7 @@ ${docker.start.error}</fail>
 						<equals arg1="${database.type}" arg2="mysql" />
 					</or>
 					<then>
-						<property name="docker.database.wait.condition">mysqladmin ping --host=${database.host} --silent</property>
+						<property name="docker.database.wait.condition">mysqladmin ping > /dev/null 2>&amp;1</property>
 					</then>
 				</elseif>
 				<elseif>
@@ -7808,16 +7985,11 @@ ${docker.start.error}</fail>
 				<elseif>
 					<equals arg1="${database.type}" arg2="sqlserver" />
 					<then>
+						<get-database-property property.name="database.executable" />
 						<get-database-property property.name="database.password" />
 						<get-database-property property.name="database.username" />
 
-						<property name="docker.database.wait.condition">/opt/mssql-tools/bin/sqlcmd -P ${database.password} -U ${database.username} -Q "select name from sys.databases" 2>/dev/null</property>
-					</then>
-				</elseif>
-				<elseif>
-					<equals arg1="${database.type}" arg2="sybase" />
-					<then>
-						<property name="docker.database.wait.condition">nc -z ${database.host} 5000</property>
+						<property name="docker.database.wait.condition">${database.executable} -P ${database.password} -U ${database.username} -Q "select name from sys.databases" 2>/dev/null</property>
 					</then>
 				</elseif>
 			</if>
@@ -7870,9 +8042,83 @@ ${docker.start.error}</fail>
 
 			<get-host-git-dir />
 
+			<get-java-jdk-bundle-type test.batch.name="${test.batch.name}" />
+			<get-java-jdk-bundle-version test.batch.name="${test.batch.name}" />
+
+			<get-java-jdk-home type="${java.jdk.bundle.type}" version="${java.jdk.bundle.version}" />
+
+			<if>
+				<isset property="java.jdk.home" />
+				<then>
+					<exec executable="docker">
+						<arg line="pull ${operating.system.docker.image}" />
+					</exec>
+
+					<exec executable="docker" outputproperty="docker.inspect.output">
+						<arg line="inspect ${operating.system.docker.image}" />
+					</exec>
+
+					<beanshell>
+						<![CDATA[
+							import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+
+							import org.json.JSONArray;
+							import org.json.JSONObject;
+
+							String dockerInspectOutput = project.getProperty("docker.inspect.output");
+
+							JSONArray dockerInspectOutputJSONArray = new JSONArray(dockerInspectOutput);
+
+							JSONObject dockerInspectOutputJSONObject = dockerInspectOutputJSONArray.getJSONObject(0);
+
+							if (dockerInspectOutputJSONObject.has("Config")) {
+								JSONObject configJSONObject = dockerInspectOutputJSONObject.getJSONObject("Config");
+
+								if (configJSONObject.has("Env")) {
+									JSONArray envJSONArray = configJSONObject.getJSONArray("Env");
+
+									String javaHome = null;
+									String path = null;
+
+									for (int i = 0; i < envJSONArray.length(); i++) {
+										String env = envJSONArray.getString(i);
+
+										if (env.contains("JAVA_HOME")) {
+											javaHome = env.replace("JAVA_HOME=", "");
+
+											continue;
+										}
+
+										if (env.contains("PATH")) {
+											path = env.replace("PATH=", "");
+										}
+									}
+
+									String javaJDKHome = project.getProperty("java.jdk.home");
+
+									if (!JenkinsResultsParserUtil.isNullOrEmpty(javaJDKHome) &&
+										!JenkinsResultsParserUtil.isNullOrEmpty(path) &&
+										!javaHome.equals(javaJDKHome)) {
+
+										path = javaJDKHome + "/bin:" + path;
+
+										project.setProperty(
+											"docker.java.run.options",
+											" -e PATH=" + path + " -e JAVA_HOME=" + javaJDKHome);
+									}
+								}
+							}
+						]]>
+					</beanshell>
+				</then>
+			</if>
+
+			<property name="docker.java.run.options" value="" />
+
 			<start-docker-container image="${operating.system.docker.image}" name="${operating.system.host}" options="${operating.system.docker.os.options}">\
 				--mount type=bind,source=${host.git.dir}/${portal.dir.name},target=${portal.dir} \
 				--network-alias=${operating.system.host.alias} \
+				${docker.java.run.options} \
 				${operating.system.docker.run.options} \
 			</start-docker-container>
 		</sequential>
@@ -7957,6 +8203,8 @@ ${docker.start.error}</fail>
 						jar="${test.smtp.server.dir}/MockMock.jar"
 					>
 						<arg line="-p 25000" />
+						<jvmarg value="--add-opens=java.base/java.lang=ALL-UNNAMED" />
+						<jvmarg value="-XX:+IgnoreUnrecognizedVMOptions" />
 					</java>
 				</daemons>
 			</parallel>
@@ -8012,9 +8260,8 @@ ${docker.start.error}</fail>
 				app.server.bundle.index="@{app.server.bundle.index}"
 			/>
 
-			<get-java-jdk-bundle-version test.batch.name="${test.batch.name}" />
-
 			<get-java-jdk-bundle-type test.batch.name="${test.batch.name}" />
+			<get-java-jdk-bundle-version test.batch.name="${test.batch.name}" />
 
 			<get-java-jdk-home type="${java.jdk.bundle.type}" version="${java.jdk.bundle.version}" />
 
@@ -8091,9 +8338,6 @@ ${docker.start.error}</fail>
 					<if>
 						<and>
 							<isset property="app.server.stopping.timeout" />
-							<not>
-								<equals arg1="${app.server.type}" arg2="tcserver" />
-							</not>
 						</and>
 						<then>
 							<antcall target="print-jstack-logs">
@@ -8414,7 +8658,6 @@ ${docker.start.error}</fail>
 				<elseif>
 					<or>
 						<contains string="${suite.search.engine}" substring="remote-elasticsearch" />
-						<equals arg1="${app.server.type}" arg2="websphere" />
 						<istrue value="${remote.elasticsearch.enabled}" />
 					</or>
 					<then>
@@ -8754,7 +8997,7 @@ war.path=${app.server.portal.dir}/</echo>
 		</sequential>
 	</macrodef>
 
-	<macrodef name="validate-mysql-schemas">
+	<macrodef name="validate-schemas">
 		<attribute default="upgraded" name="upgraded.db.schema" />
 		<attribute default="fresh" name="fresh.db.schema" />
 
@@ -8769,7 +9012,37 @@ war.path=${app.server.portal.dir}/</echo>
 			</if>
 
 			<echo file="validate_db_upgrade_schemas.sh">
-diff -B --new-line-format='%L' --old-line-format= --unchanged-line-format= ${selenium.output.dir.name}/upgraded-@{upgraded.db.schema}.sql ${selenium.output.dir.name}/fresh-@{fresh.db.schema}.sql || true
+				<![CDATA[
+					#!/bin/bash
+
+					function main {
+						grep -i "CREATE TABLE" "${selenium.output.dir.name}/fresh-@{fresh.db.schema}.sql" | awk '{print $3}' | tr -d '`' > ${selenium.output.dir.name}/tables-fresh.txt
+
+						local upgraded_sql_file="${selenium.output.dir.name}/upgraded-@{upgraded.db.schema}.sql"
+
+						grep -i "CREATE TABLE" "${upgraded_sql_file}" | awk '{print $3}' | tr -d '`' > ${selenium.output.dir.name}/tables-upgraded.txt
+
+						grep -Fxvf ${selenium.output.dir.name}/tables-fresh.txt ${selenium.output.dir.name}/tables-upgraded.txt > ${selenium.output.dir.name}/tables-to-remove.txt
+
+						#
+						# Remove SQL statements for tables that are only present in the upgraded SQL file
+						#
+
+						while read -r table; do
+							sed -i "/^CREATE TABLE \`$table\`/,/ENDCREATE/d" "${upgraded_sql_file}"
+							sed -i "/^CREATE TABLE public.$table/,/^);/d" "${upgraded_sql_file}"
+							sed -i "/^CREATE INDEX.*$TABLE/d" "${upgraded_sql_file}"
+							sed -i "/^CREATE UNIQUE INDEX.*$TABLE/d" "${upgraded_sql_file}"
+							sed -i "/^ALTER TABLE ONLY public\.$table/,/^);/d" "${upgraded_sql_file}"
+							sed -i "/^CREATE RULE update_$table/,/);$/d" "${upgraded_sql_file}"
+							sed -i "/^CREATE RULE delete_$table/,/);$/d" "${upgraded_sql_file}"
+						done < ${selenium.output.dir.name}/tables-to-remove.txt
+
+						diff -B -W250 -y ${selenium.output.dir.name}/upgraded-@{upgraded.db.schema}.sql ${selenium.output.dir.name}/fresh-@{fresh.db.schema}.sql | expand | grep -C5 -E '^.{123} [|><]( |$)' || true
+					}
+
+					main
+				]]>
 			</echo>
 
 			<chmod
@@ -8779,27 +9052,18 @@ diff -B --new-line-format='%L' --old-line-format= --unchanged-line-format= ${sel
 
 			<exec executable="./validate_db_upgrade_schemas.sh" outputproperty="database.changes.master" />
 
+			<delete failonerror="false" file="${selenium.output.dir.name}/tables-fresh.txt" />
+			<delete failonerror="false" file="${selenium.output.dir.name}/tables-to-remove.txt" />
+			<delete failonerror="false" file="${selenium.output.dir.name}/tables-upgraded.txt" />
+
 			<if>
 				<not>
 					<equals arg1="${database.changes.master}" arg2="" />
 				</not>
 				<then>
 					<echo file="${selenium.output.dir.name}/@{upgraded.db.schema}-@{fresh.db.schema}-validate-db-schemas.txt">
-Upgraded database is missing the following elements from a fresh database: ${line.separator}${database.changes.master}
-
-diff:${line.separator}${selenium.output.dir.name}/upgraded-@{upgraded.db.schema}.sql > ${selenium.output.dir.name}/fresh-@{fresh.db.schema}.sql
+						Fresh and upgraded schemas differ: ${line.separator}${database.changes.master}
 					</echo>
-
-					<echo file="validate_db_upgrade_schemas.sh">
-diff -y -B -W250 ${selenium.output.dir.name}/upgraded-@{upgraded.db.schema}.sql ${selenium.output.dir.name}/fresh-@{fresh.db.schema}.sql | expand | grep -E -C40 '^.{123} [|>]( |$)'
-					</echo>
-
-					<chmod
-						file="validate_db_upgrade_schemas.sh"
-						perm="a+x"
-					/>
-
-					<exec append="true" executable="./validate_db_upgrade_schemas.sh" output="${selenium.output.dir.name}/@{upgraded.db.schema}-@{fresh.db.schema}-validate-db-schemas.txt" />
 				</then>
 				<else>
 					<echo file="${selenium.output.dir.name}/@{upgraded.db.schema}-@{fresh.db.schema}-validate-db-schemas.txt">Database schemas match</echo>
@@ -9211,12 +9475,12 @@ create database lportal${database.index} character set utf8;</echo>
 						</and>
 						<then>
 							<echo file="create.sql">
-drop database lportal;
+drop database if exists lportal;
 create database lportal encoding = 'UNICODE';</echo>
 
 							<echo append="true" file="create.sql">
 
-drop database lportal${databases.size};
+drop database if exists lportal${databases.size};
 create database lportal${databases.size} encoding = 'UNICODE';</echo>
 						</then>
 					</elseif>
@@ -9399,61 +9663,6 @@ go</echo>
 							</if>
 						</then>
 					</elseif>
-					<elseif>
-						<equals arg1="${database.type}" arg2="sybase" />
-						<then>
-							<replace
-								file="create.sql"
-							>
-								<replacefilter>
-									<replacetoken>use master
-exec sp_dboption 'lportal', 'allow nulls by default' , true
-go
-
-exec sp_dboption 'lportal', 'select into/bulkcopy/pllsort' , true
-go
-
-use lportal</replacetoken>
-									<replacevalue><![CDATA[use lportal
-go]]></replacevalue>
-								</replacefilter>
-							</replace>
-
-							<if>
-								<isset property="databases.size" />
-								<then>
-									<echo append="true" file="create.sql">
-
-use master
-go
-
-drop database lportal${databases.size}
-go
-
-create database lportal${databases.size}
-go
-
-alter database lportal${databases.size} on default=1400
-go
-
-alter database lportal${databases.size} with override
-go
-
-exec sp_dboption 'lportal${databases.size}', 'allow nulls by default' , true
-go
-
-exec sp_dboption 'lportal${databases.size}', 'select into/bulkcopy/pllsort' , true
-go
-
-use lportal${databases.size}
-go
-
-checkpoint
-go</echo>
-								</then>
-							</if>
-						</then>
-					</elseif>
 				</if>
 
 				<get-database-property property.name="database.schema" />
@@ -9621,35 +9830,6 @@ go</echo>
 		</if>
 	</target>
 
-	<target name="clean-up-sybase-processes">
-		<if>
-			<os family="unix" />
-			<then>
-				<echo file="clean_up_sybase_processes.sh">
-					<![CDATA[
-						#!/bin/bash
-
-						for i in `ps -o pid,args -e | grep /opt/sybase | grep -v grep | cut -c1-5`
-						do
-							echo "Killing $i"
-
-							kill -9 $i
-						done
-					]]>
-				</echo>
-
-				<chmod
-					file="clean_up_sybase_processes.sh"
-					perm="a+x"
-				/>
-
-				<exec executable="${basedir}/clean_up_sybase_processes.sh" />
-
-				<delete file="clean_up_sybase_processes.sh" />
-			</then>
-		</if>
-	</target>
-
 	<target name="clean-up-web-xml">
 		<copy
 			file="portal-web/docroot/WEB-INF/web.xml"
@@ -9684,29 +9864,11 @@ go</echo>
 	</target>
 
 	<target name="cluster-session-replication">
-		<if>
-			<not>
-				<resourcecontains
-					resource="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/classes/logging.properties"
-					substring="org.apache.catalina.ha.session.handlers"
-				/>
-			</not>
-			<then>
-				<echo append="true" file="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/classes/logging.properties">
-			<![CDATA[
-org.apache.catalina.ha.session.handlers=java.util.logging.ConsoleHandler
-org.apache.catalina.ha.session.level=INFO]]>
-				</echo>
-			</then>
-		</if>
-
 		<replace
-			failOnNoReplacements="true"
-			file="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/web.xml"
+			file="${app.server.tomcat.dir}/conf/context.xml"
 		>
-			<replacetoken><![CDATA[xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">]]></replacetoken>
-			<replacevalue><![CDATA[xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
-	<distributable />]]></replacevalue>
+			<replacetoken><![CDATA[    <Manager pathname="SESSIONS.ser" />]]></replacetoken>
+			<replacevalue><![CDATA[]]></replacevalue>
 		</replace>
 
 		<echo append="true" file="${app.server.tomcat.dir}/conf/logging.properties">
@@ -9751,6 +9913,31 @@ org.apache.catalina.tribes.level = FINE]]>
 			</Sender>
 		</Channel>
 	</Cluster>]]></replacevalue>
+		</replace>
+
+		<if>
+			<not>
+				<resourcecontains
+					resource="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/classes/logging.properties"
+					substring="org.apache.catalina.ha.session.handlers"
+				/>
+			</not>
+			<then>
+				<echo append="true" file="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/classes/logging.properties">
+			<![CDATA[
+org.apache.catalina.ha.session.handlers=java.util.logging.ConsoleHandler
+org.apache.catalina.ha.session.level=INFO]]>
+				</echo>
+			</then>
+		</if>
+
+		<replace
+			failOnNoReplacements="true"
+			file="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/web.xml"
+		>
+			<replacetoken><![CDATA[xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">]]></replacetoken>
+			<replacevalue><![CDATA[xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+	<distributable />]]></replacevalue>
 		</replace>
 	</target>
 
@@ -10002,24 +10189,6 @@ org.apache.catalina.tribes.level = FINE]]>
 					</if>
 				</then>
 			</elseif>
-			<elseif>
-				<and>
-					<equals arg1="${database.type}" arg2="sybase" />
-				</and>
-				<then>
-					<delete failonerror="false" includeemptydirs="true">
-						<fileset
-							dir="${test.app.server.lib.portal.dir}"
-							includes="${jdbc.sybase.driver}"
-						/>
-					</delete>
-
-					<mirrors-get
-						dest="${todir}"
-						src="${test.jdbc.drivers.url}/sybase/${database.version}/${jdbc.sybase.driver}"
-					/>
-				</then>
-			</elseif>
 		</if>
 	</target>
 
@@ -10112,13 +10281,6 @@ org.apache.catalina.tribes.level = FINE]]>
 					</and>
 					<then>
 						<delete dir="${test.app.server.liferay.home}/osgi/state" />
-
-						<if>
-							<equals arg1="${app.server.type}" arg2="websphere" />
-							<then>
-								<delete dir="${test.app.server.liferay.home}/logs" />
-							</then>
-						</if>
 					</then>
 					<else>
 						<if>
@@ -10404,9 +10566,11 @@ org.apache.catalina.tribes.level = FINE]]>
 			</else>
 		</if>
 
-		<execute dir="${module.base.dir}">
-			mvn clean package ${build.profiles}
-		</execute>
+		<exec dir="${module.base.dir}" executable="/bin/bash" failonerror="true" logError="true">
+			<env key="MAVEN_OPTS" value="-XX:+IgnoreUnrecognizedVMOptions --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.desktop/java.awt.font=ALL-UNNAMED" />
+			<arg value="-c" />
+			<arg value="mvn clean package ${build.profiles}" />
+		</exec>
 
 		<copy
 			flatten="true"
@@ -10709,7 +10873,6 @@ org.apache.catalina.tribes.level = FINE]]>
 			</not>
 			<then>
 				<get-testcase-property property.name="osgi.modules.includes" />
-				<get-testcase-property property.name="osgi.modules.includes.jdk11" />
 			</then>
 		</if>
 
@@ -10717,17 +10880,6 @@ org.apache.catalina.tribes.level = FINE]]>
 			<isset property="osgi.modules.includes" />
 			<then>
 				<deploy-osgi-modules osgi.modules="${osgi.modules.includes}" />
-			</then>
-		</if>
-
-		<if>
-			<isset property="osgi.modules.includes.jdk11" />
-			<then>
-				<deploy-osgi-modules
-					java.jdk.type="oracle"
-					java.jdk.version="11"
-					osgi.modules="${osgi.modules.includes.jdk11}"
-				/>
 			</then>
 		</if>
 	</target>
@@ -10789,6 +10941,21 @@ org.apache.catalina.tribes.level = FINE]]>
 				</unzip>
 			</then>
 		</if>
+	</target>
+
+	<target name="enable-glowroot-for-tomcat">
+		<sequential>
+			<if>
+				<equals arg1="${app.server.type}" arg2="tomcat" />
+				<then>
+					<echo append="true" file="${app.server.tomcat.dir}/bin/setenv.sh">
+GLOWROOT_OPTS="-javaagent:${CATALINA_HOME}/../glowroot/glowroot.jar -Dglowroot.enabled=true"
+
+CATALINA_OPTS="${CATALINA_OPTS} ${GLOWROOT_OPTS}"
+					</echo>
+				</then>
+			</if>
+		</sequential>
 	</target>
 
 	<target name="execute-command-from-gogo-shell">
@@ -10916,22 +11083,63 @@ send_user $expect_out(buffer)]]></echo>
 		<get-test-app-server-lib-portal-dir />
 
 		<if>
+			<not>
+				<isset property="custom.database.url" />
+			</not>
+			<then>
+				<get-testcase-property property.name="custom.database.url" />
+			</then>
+		</if>
+
+		<if>
+			<isset property="custom.database.url" />
+			<then>
+				<if>
+					<equals arg1="${database.type}" arg2="mysql" />
+					<then>
+						<sql autocommit="${sql.autocommit}" classpath="${test.app.server.lib.portal.dir}/${jdbc.mysql.driver}" driver="${database.mysql.driver}" onerror="continue" output="${sql.output.file}" password="${database.mysql.password}" print="true" showheaders="false" showtrailers="false" src="${sql.input.file}" url="${custom.database.url}" userid="${database.mysql.username}" />
+					</then>
+				</if>
+
+				<if>
+					<equals arg1="${database.type}" arg2="postgresql" />
+					<then>
+						<sql autocommit="${sql.autocommit}" classpath="${test.app.server.lib.portal.dir}/${jdbc.postgresql.driver}" driver="${database.postgresql.driver}" onerror="continue" output="${sql.output.file}" password="${database.postgresql.password}" print="true" showheaders="false" showtrailers="false" src="${sql.input.file}" url="${custom.database.url}" userid="${database.postgresql.username}" />
+					</then>
+				</if>
+			</then>
+			<else>
+				<if>
+					<equals arg1="${database.type}" arg2="mysql" />
+					<then>
+						<sql autocommit="${sql.autocommit}" classpath="${test.app.server.lib.portal.dir}/${jdbc.mysql.driver}" driver="${database.mysql.driver}" onerror="continue" output="${sql.output.file}" password="${database.mysql.password}" print="true" showheaders="false" showtrailers="false" src="${sql.input.file}" url="${database.mysql.url}" userid="${database.mysql.username}" />
+					</then>
+				</if>
+
+				<if>
+					<equals arg1="${database.type}" arg2="postgresql" />
+					<then>
+						<sql autocommit="${sql.autocommit}" classpath="${test.app.server.lib.portal.dir}/${jdbc.postgresql.driver}" driver="${database.postgresql.driver}" onerror="continue" output="${sql.output.file}" password="${database.postgresql.password}" print="true" showheaders="false" showtrailers="false" src="${sql.input.file}" url="${database.postgresql.url}" userid="${database.postgresql.username}" />
+					</then>
+				</if>
+			</else>
+		</if>
+	</target>
+
+	<target name="export-database-schema">
+		<if>
 			<equals arg1="${database.type}" arg2="mysql" />
 			<then>
-				<sql autocommit="${sql.autocommit}" classpath="${test.app.server.lib.portal.dir}/${jdbc.mysql.driver}" driver="${database.mysql.driver}" onerror="continue" output="${sql.output.file}" password="${database.mysql.password}" print="true" showheaders="false" showtrailers="false" src="${sql.input.file}" url="${database.mysql.url}" userid="${database.mysql.username}" />
+				<export-database-mysql database.file.prefix="${database.file.prefix}" database.schema.name="${database.schema.name}" />
 			</then>
 		</if>
 
 		<if>
 			<equals arg1="${database.type}" arg2="postgresql" />
 			<then>
-				<sql autocommit="${sql.autocommit}" classpath="${test.app.server.lib.portal.dir}/${jdbc.postgresql.driver}" driver="${database.postgresql.driver}" onerror="continue" output="${sql.output.file}" password="${database.postgresql.password}" print="true" showheaders="false" showtrailers="false" src="${sql.input.file}" url="${database.postgresql.url}" userid="${database.postgresql.username}" />
+				<export-database-postgresql database.file.prefix="${database.file.prefix}" database.schema.name="${database.schema.name}" />
 			</then>
 		</if>
-	</target>
-
-	<target name="export-database-schema">
-		<export-database-mysql-compact database.file.prefix="${database.file.prefix}" database.schema.name="${database.schema.name}" />
 	</target>
 
 	<target name="generate-changelog">
@@ -11799,6 +12007,8 @@ ${update.properties}</echo>
 
 		<Logger level="ERROR" name="com.zaxxer.hikari.pool.PoolBase" />
 
+		<Logger level="ERROR" name="org.apache.http.client.protocol.ResponseProcessCookies" />
+
 		${log4j.logggers.root}
 	</Loggers>
 </Configuration>]]></echo>
@@ -11840,7 +12050,7 @@ ${update.properties}</echo>
 		<echo file="${liferay.home}/osgi/log4j/com.liferay.portal.cache.ehcache.impl-log4j-ext.xml"><![CDATA[<?xml version="1.0"?>
 <Configuration strict="true">
 	<Loggers>
-		<Logger level="DEBUG" name="com.liferay.portal.cache.ehcache.internal.event.PortalCacheCacheEventListener.test.cache" />
+		<Logger level="DEBUG" name="com.liferay.portal.cache.ehcache.internal.events.PortalCacheCacheEventListener.test.cache" />
 	</Loggers>
 </Configuration>]]></echo>
 
@@ -11851,25 +12061,6 @@ ${update.properties}</echo>
 	</Loggers>
 </Configuration>]]>
 		</echo>
-
-		<!-- Temporarily increase Tika log level until LPS-193838 -->
-
-		<get-testcase-property property.name="portal.version" />
-
-		<if>
-			<and>
-				<equals arg1="${app.server.type}" arg2="websphere" />
-				<isset property="portal.version" />
-			</and>
-			<then>
-				<echo file="${liferay.home}/osgi/log4j/com.liferay.portal.tika-log4j-ext.xml"><![CDATA[<?xml version="1.0"?>
-<Configuration strict="true">
-	<Loggers>
-		<Logger level="ERROR" name="com.liferay.portal.tika.internal.extract.TextExtractorImpl" />
-	</Loggers>
-</Configuration>]]></echo>
-			</then>
-		</if>
 	</target>
 
 	<target name="prepare-osgi-module-configurations">
@@ -11973,7 +12164,9 @@ jdbc.default.url=${database.url}
 jdbc.default.username=${database.username}
 jdbc.default.password=${database.password}
 
-// HikariCP
+#
+# HikariCP
+#
 
 jdbc.default.connectionTimeout=600000
 jdbc.default.maximumPoolSize=${database.max.pool.size}
@@ -12341,16 +12534,6 @@ hibernate.dialect=com.liferay.portal.dao.orm.hibernate.DB2Dialect
 custom.sql.function.isnull=CAST(? AS VARCHAR(32672)) IS NULL
 custom.sql.function.isnotnull=CAST(? AS VARCHAR(32672)) IS NOT NULL</echo>
 			</then>
-			<elseif>
-				<equals arg1="${database.type}" arg2="sybase" />
-				<then>
-					<echo append="true" file="portal-impl/src/portal-ext.properties">
-
-hibernate.dialect=org.hibernate.dialect.SybaseDialect
-custom.sql.function.isnull=CONVERT(VARCHAR,?) IS NULL
-custom.sql.function.isnotnull=CONVERT(VARCHAR,?) IS NOT NULL</echo>
-				</then>
-			</elseif>
 		</if>
 
 		<if>
@@ -12431,16 +12614,6 @@ javascript.fast.load=false</echo>
 module.framework.properties.blacklist.portal.profile.names=${blacklist.portal.profile.names}</echo>
 
 		<if>
-			<equals arg1="${app.server.type}" arg2="tcserver" />
-			<then>
-				<echo append="true" file="portal-impl/src/portal-ext.properties">
-
-session.cookie.use.full.hostname=true
-				</echo>
-			</then>
-		</if>
-
-		<if>
 			<isset property="set.permission.algorithm.5" />
 			<then>
 				<replace
@@ -12496,27 +12669,14 @@ portal.proxy.path=/${portal.proxy.path}</echo>
 			<equals arg1="${rewrite.batch.statements}" arg2="true" />
 			<then>
 				<if>
-					<or>
-						<equals arg1="${database.type}" arg2="mariadb" />
-						<equals arg1="${database.type}" arg2="mysql" />
-					</or>
+					<equals arg1="${database.type}" arg2="postgresql" />
 					<then>
 						<replace
 							file="portal-impl/src/portal-ext.properties"
 							token="${database.url}"
-							value="${database.url}&amp;rewriteBatchedStatements=true"
+							value="${database.url}?reWriteBatchedInserts=true"
 						/>
 					</then>
-					<elseif>
-						<equals arg1="${database.type}" arg2="postgresql" />
-						<then>
-							<replace
-								file="portal-impl/src/portal-ext.properties"
-								token="${database.url}"
-								value="${database.url}?reWriteBatchedInserts=true"
-							/>
-						</then>
-					</elseif>
 					<elseif>
 						<equals arg1="${database.type}" arg2="sqlserver" />
 						<then>
@@ -12608,26 +12768,9 @@ mail.session.mail.smtp.port=25000</echo>
 			</then>
 		</if>
 
-		<if>
-			<or>
-				<equals arg1="${vm.vmdk.suffix}" arg2="websphere-6.1.0.27" />
-				<equals arg1="${vm.vmdk.suffix}" arg2="websphere-7.0.0.7" />
-				<equals arg1="${vm.vmdk.suffix}" arg2="websphere-8.0.0.0" />
-			</or>
-			<then>
-				<replace
-					file="portal-impl/src/portal-ext.properties"
-					token="liferay.home=${liferay.home}"
-					value="liferay.home=C:/WINDOWS/system32/config/systemprofile/liferay"
-				/>
-
-				<echo append="true" file="portal-impl/src/portal-ext.properties">
-
-auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-deploy</echo>
-			</then>
-		</if>
-
 		<echo append="true" file="portal-impl/src/portal-ext.properties">
+analytics.cloud.domain.allowed=*
+
 captcha.enforce.disabled=true</echo>
 
 		<apply-portal-ext-properties />
@@ -12837,6 +12980,24 @@ captcha.enforce.disabled=true</echo>
 				<echo append="true" file="${project.dir}/portal-test/src/test-portal-impl.properties">
 					object.storage.sugarcrm.username=${object.storage.sugarcrm.username}
 				</echo>
+			</then>
+		</if>
+	</target>
+
+	<target name="prepare-portal-test-portal-impl-properties">
+		<if>
+			<equals arg1="${database.partition.copy}" arg2="true" />
+			<then>
+				<echo append="true" file="${project.dir}/portal-test/src/test-portal-impl.properties">
+					database.partition.copy=true</echo>
+			</then>
+		</if>
+
+		<if>
+			<equals arg1="${database.partition.extract.and.insert}" arg2="true" />
+			<then>
+				<echo append="true" file="${project.dir}/portal-test/src/test-portal-impl.properties">
+					database.partition.extract.and.insert=true</echo>
 			</then>
 		</if>
 	</target>
@@ -14009,6 +14170,14 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 
 				<basename file="${test.build.bundle.zip.url}" property="bundle.file.name" />
 
+				<propertyregex
+					input="${test.build.bundle.zip.url}"
+					override="true"
+					property="test.build.bundle.zip.url"
+					regexp="https:\/\/storage.(cloud\.google\.com|googleapis\.com)/"
+					replace="gs://"
+				/>
+
 				<mirrors-get
 					dest="${java.io.tmpdir}/${bundle.file.name}"
 					src="${test.build.bundle.zip.url}"
@@ -14071,10 +14240,7 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 			</then>
 			<else>
 				<if>
-					<or>
-						<equals arg1="${app.server.type}" arg2="weblogic" />
-						<equals arg1="${app.server.type}" arg2="websphere" />
-					</or>
+					<equals arg1="${app.server.type}" arg2="weblogic" />
 					<then>
 						<prepare-test-app-server-custom />
 					</then>
@@ -14090,6 +14256,14 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 				<if>
 					<matches pattern="(file|https?)://" string="${test.build.portal.war.url}" />
 					<then>
+						<propertyregex
+							input="${test.build.portal.war.url}"
+							override="true"
+							property="test.build.portal.war.url"
+							regexp="https:\/\/storage.(cloud\.google\.com|googleapis\.com)/"
+							replace="gs://"
+						/>
+
 						<mirrors-get
 							dest="liferay-portal.war"
 							src="${test.build.portal.war.url}"
@@ -14097,63 +14271,12 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 					</then>
 				</if>
 
-				<if>
-					<equals arg1="${app.server.type}" arg2="websphere" />
-					<then>
-						<tstamp>
-							<format pattern="yyyyMMddkkmmssSSS" property="tstamp.value" />
-						</tstamp>
-
-						<mkdir dir="${tstamp.value}" />
-
-						<unzip
-							dest="${tstamp.value}"
-							src="liferay-portal.war"
-						/>
-
-						<if>
-							<available file="${tstamp.value}/WEB-INF/ibm-web-ext.xmi" />
-							<then>
-								<replace
-									file="${tstamp.value}/WEB-INF/ibm-web-ext.xmi"
-								>
-									<replacetoken><![CDATA[value="16"]]></replacetoken>
-									<replacevalue><![CDATA[value="18"]]></replacevalue>
-								</replace>
-							</then>
-						</if>
-
-						<zip
-							basedir="${tstamp.value}"
-							destfile="liferay-portal.war"
-						/>
-
-						<delete dir="${tstamp.value}" />
-
-						<copy
-							file="liferay-portal.war"
-							tofile="${app.server.websphere.deploy.dir}/liferay-portal.war"
-						/>
-					</then>
-					<else>
-						<unzip
-							dest="${app.server.portal.dir}"
-							src="liferay-portal.war"
-						/>
-					</else>
-				</if>
+				<unzip
+					dest="${app.server.portal.dir}"
+					src="liferay-portal.war"
+				/>
 
 				<ant antfile="build.xml" inheritAll="false" target="update-app-server-scripts" />
-
-				<if>
-					<equals arg1="${app.server.type}" arg2="websphere" />
-					<then>
-						<copy
-							file="${app.server.portal.dir}/WEB-INF/ibm-web-ext.xml"
-							tofile="${app.server.websphere.instance.dir}/config/cells/liferay-cell/applications/liferay-portal.ear/deployments/liferay-portal/liferay-portal.war/WEB-INF/ibm-web-ext.xml"
-						/>
-					</then>
-				</if>
 
 				<if>
 					<matches pattern="(file|https?)://" string="${test.build.portal.elasticsearch.zip.url}" />
@@ -14195,6 +14318,14 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 				<if>
 					<matches pattern="(file|https?)://" string="${test.build.portal.osgi.zip.url}" />
 					<then>
+						<propertyregex
+							input="${test.build.portal.osgi.zip.url}"
+							override="true"
+							property="test.build.portal.osgi.zip.url"
+							regexp="https:\/\/storage.(cloud\.google\.com|googleapis\.com)/"
+							replace="gs://"
+						/>
+
 						<mirrors-get
 							dest="liferay-portal-osgi.zip"
 							src="${test.build.portal.osgi.zip.url}"
@@ -14218,6 +14349,14 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 				<if>
 					<matches pattern="(file|https?)://" string="${test.build.portal.tools.zip.url}" />
 					<then>
+						<propertyregex
+							input="${test.build.portal.tools.zip.url}"
+							override="true"
+							property="test.build.portal.tools.zip.url"
+							regexp="https:\/\/storage.(cloud\.google\.com|googleapis\.com)/"
+							replace="gs://"
+						/>
+
 						<mirrors-get
 							dest="liferay-portal-tools.zip"
 							src="${test.build.portal.tools.zip.url}"
@@ -14310,6 +14449,8 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 
 		<if>
 			<or>
+				<matches pattern="gs://" string="${test.build.bundle.zip.url}" />
+				<matches pattern="gs://" string="${test.build.portal.osgi.zip.url}" />
 				<matches pattern="https?://" string="${test.build.bundle.zip.url}" />
 				<matches pattern="https?://" string="${test.build.portal.osgi.zip.url}" />
 			</or>
@@ -14317,7 +14458,10 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 				<local name="bundle.zip.url" />
 
 				<if>
-					<matches pattern="https?://" string="${test.build.bundle.zip.url}" />
+					<or>
+						<matches pattern="gs://" string="${test.build.bundle.zip.url}" />
+						<matches pattern="https?://" string="${test.build.bundle.zip.url}" />
+					</or>
 					<then>
 						<property name="bundle.zip.url" value="${test.build.bundle.zip.url}" />
 					</then>
@@ -14353,6 +14497,18 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 							<antelope:stringutil property="bundle.zip.url" string="${bundle.base.url}${bundle.zip.name}">
 								<antelope:replace regex="-slim" replacement="" />
 							</antelope:stringutil>
+						</then>
+					</elseif>
+					<elseif>
+						<matches pattern="gs://" string="${test.build.portal.osgi.zip.url}" />
+						<then>
+							<propertyregex
+								input="${test.build.portal.osgi.zip.url}"
+								override="true"
+								property="bundle.zip.url"
+								regexp="osgi"
+								replace="tomcat"
+							/>
 						</then>
 					</elseif>
 				</if>
@@ -14897,50 +15053,12 @@ cluster.link.bind.addr["cluster-link-udp"]=127.0.0.1</echo>
 								<![CDATA[
 									#!/bin/bash
 
-									/opt/mssql-tools/bin/sqlcmd -P ${database.sqlserver.password} -Q "RESTORE DATABASE ${database.sqlserver.schema} FROM DISK='/tmp/${database.type}.bak'" -S localhost -U ${database.sqlserver.username}
+									${database.sqlserver.executable} -P ${database.sqlserver.password} -Q "RESTORE DATABASE ${database.sqlserver.schema} FROM DISK='/tmp/${database.type}.bak'" -S localhost -U ${database.sqlserver.username}
 								]]>
 							</echo>
 
 							<property name="docker.database.dest.path" value="/tmp/${database.type}.bak" />
 							<property name="import.database.src.path" value="${liferay.home}/${database.type}.bak" />
-						</then>
-					</elseif>
-					<elseif>
-						<equals arg1="${database.type}" arg2="sybase" />
-						<then>
-							<echo file="${import.database.sh.file.path}">
-								<![CDATA[
-									#!/bin/bash
-
-									export SYBASE_ASE=${env.SYBASE_ASE}
-
-									${env.SYBASE}/${env.SYBASE_ASE}/bin/backupserver -Slportal_BS &>/dev/null &
-
-									while ! echo exit | nc ${database.host} 5001; do sleep 60; done
-
-									cat /tmp/import-database.sql
-
-									cat lportal__srv.log
-
-									${sybase.executable} -P ${database.password} -S ${database.schema} -U ${database.username} -i /tmp/import-database.sql --retserverror
-								]]>
-							</echo>
-
-							<property location="import-database.sql" name="import.database.sql.file.path" />
-
-							<echo file="import-database.sql">load database lportal from "/tmp/sybase.dmp"
-go
-online database lportal
-go</echo>
-
-							<execute>
-								<![CDATA[
-									docker cp ${import.database.sql.file.path} ${database.host}:/tmp/import-database.sql
-								]]>
-							</execute>
-
-							<property name="docker.database.dest.path" value="/tmp/${database.type}.dmp" />
-							<property name="import.database.src.path" value="${liferay.home}/${database.type}.dmp" />
 						</then>
 					</elseif>
 				</if>
@@ -15132,65 +15250,6 @@ go</echo>
 								<arg value="--file=${liferay.home}/${database.type}.sql" />
 								<arg value="--username=${database.username}" />
 							</exec>
-						</then>
-					</elseif>
-					<elseif>
-						<equals arg1="${database.type}" arg2="sybase" />
-						<then>
-							<get-database-property property.name="database.host" />
-							<get-database-property property.name="database.schema" />
-							<get-database-property property.name="database.username" />
-							<get-database-property property.name="database.password" />
-
-							<echo file="import-sybase.sql">load database lportal from "${liferay.home}/${database.type}.dmp"
-go
-online database lportal
-go</echo>
-
-							<exec executable="${env.SYBASE}/${env.SYBASE_ASE}/bin/backupserver" spawn="true">
-								<arg value="-Slportal_BS" />
-							</exec>
-
-							<waitfor maxwait="60" maxwaitunit="second">
-								<socket port="5001" server="localhost" />
-							</waitfor>
-
-							<print-file file.name="import-sybase.sql" />
-
-							<print-file file.name="lportal__srv.log" />
-
-							<local name="output.content" />
-
-							<exec executable="${sybase.executable}" logError="true" outputproperty="output.content">
-								<arg value="-i" />
-								<arg value="import-sybase.sql" />
-								<arg value="-P" />
-								<arg value="${database.password}" />
-								<arg value="--retserverror" />
-								<arg value="-S" />
-								<arg value="${database.schema}" />
-								<arg value="-U" />
-								<arg value="${database.username}" />
-							</exec>
-
-							<echo>${output.content}</echo>
-
-							<delete file="import-sybase.sql" />
-							<delete file="lportal__srv.log" />
-
-							<echo file="get-charset.sql">sp_helpsort
-go</echo>
-
-							<print-file file.name="get-charset.sql" />
-
-							<exec executable="${sybase.executable}">
-								<arg value="-P${database.password}" />
-								<arg value="-S${database.schema}" />
-								<arg value="-U${database.username}" />
-								<arg line="-i get-charset.sql" />
-							</exec>
-
-							<delete file="get-charset.sql" />
 						</then>
 					</elseif>
 				</if>
@@ -15579,7 +15638,7 @@ if (ppstate.equals("normal")) {
 	</target>
 
 	<target name="record-test-plugin-names">
-		<condition else="plugins-compile-jdk8" property="test.batch.name" value="${test.batch.name}">
+		<condition else="plugins-compile" property="test.batch.name" value="${test.batch.name}">
 			<isset property="test.batch.name" />
 		</condition>
 
@@ -16435,18 +16494,6 @@ mail.send.blacklist=</echo>
 			</then>
 		</if>
 
-		<get-testcase-property property.name="websphere.ssl.truststore.enabled" />
-
-		<if>
-			<and>
-				<equals arg1="${app.server.type}" arg2="websphere" />
-				<equals arg1="${websphere.ssl.truststore.enabled}" arg2="true" />
-			</and>
-			<then>
-				<antcall target="setup-websphere-ssl-truststore" />
-			</then>
-		</if>
-
 		<get-testcase-property property.name="portal.context" />
 		<propertycopy from="portal.context[${env.CI_TEST_SUITE}]" name="portal.context" silent="true" />
 
@@ -16814,15 +16861,6 @@ CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.managemen
 		<setup-testable-tomcat />
 	</target>
 
-	<target name="setup-websphere-ssl-truststore">
-		<replace
-			file="${app.server.websphere.instance.dir}/config/cells/liferay-cell/nodes/liferay-node/servers/server1/server.xml"
-		>
-			<replacetoken><![CDATA[genericJvmArguments="]]></replacetoken>
-			<replacevalue expandproperties="true"><![CDATA[genericJvmArguments="-Djavax.net.ssl.trustStore=${app.server.websphere.dir}/java/8.0/jre/lib/security/cacerts -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=jks ]]></replacevalue>
-		</replace>
-	</target>
-
 	<target name="start-app-server">
 		<if>
 			<not>
@@ -16857,9 +16895,8 @@ CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.managemen
 	</target>
 
 	<target name="start-app-server-tomcat-simple">
-		<get-java-jdk-bundle-version test.batch.name="${test.batch.name}" />
-
 		<get-java-jdk-bundle-type test.batch.name="${test.batch.name}" />
+		<get-java-jdk-bundle-version test.batch.name="${test.batch.name}" />
 
 		<get-java-jdk-home type="${java.jdk.bundle.type}" version="${java.jdk.bundle.version}" />
 
@@ -16877,6 +16914,8 @@ CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.managemen
 	</target>
 
 	<target name="start-docker-containers">
+		<lstopwatch action="start" name="start.docker.containers" />
+
 		<get-database-property property.name="database.docker.image" />
 
 		<if>
@@ -16909,6 +16948,8 @@ CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.managemen
 				<start-docker-browser />
 			</then>
 		</if>
+
+		<lstopwatch action="total" name="start.docker.containers" />
 	</target>
 
 	<target name="start-docker-database">
@@ -17058,9 +17099,8 @@ CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.managemen
 
 		<prepare-database-upgrade-properties />
 
-		<get-java-jdk-bundle-version test.batch.name="${test.batch.name}" />
-
 		<get-java-jdk-bundle-type test.batch.name="${test.batch.name}" />
+		<get-java-jdk-bundle-version test.batch.name="${test.batch.name}" />
 
 		<get-java-jdk-home type="${java.jdk.bundle.type}" version="${java.jdk.bundle.version}" />
 
@@ -17084,34 +17124,16 @@ CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.managemen
 
 		<trycatch property="upgrade.error">
 			<try>
-				<if>
-					<equals arg1="${app.server.type}" arg2="websphere" />
-					<then>
-						<java
-							dir="${liferay.home}/tools/portal-tools-db-upgrade-client"
-							failonerror="true"
-							fork="true"
-							jar="${liferay.home}/tools/portal-tools-db-upgrade-client/com.liferay.portal.tools.db.upgrade.client.jar"
-							jvm="${java.jdk.home}/bin/java"
-							timeout="${upgrade.client.timeout}"
-						>
-							<env key="JAVA_HOME" value="${java.jdk.home}" />
-							<env key="WAS_HOME" value="${app.server.dir}" />
-						</java>
-					</then>
-					<else>
-						<java
-							dir="${liferay.home}/tools/portal-tools-db-upgrade-client"
-							failonerror="true"
-							fork="true"
-							jar="${liferay.home}/tools/portal-tools-db-upgrade-client/com.liferay.portal.tools.db.upgrade.client.jar"
-							jvm="${java.jdk.home}/bin/java"
-							timeout="${upgrade.client.timeout}"
-						>
-							<env key="JAVA_HOME" value="${java.jdk.home}" />
-						</java>
-					</else>
-				</if>
+				<java
+					dir="${liferay.home}/tools/portal-tools-db-upgrade-client"
+					failonerror="true"
+					fork="true"
+					jar="${liferay.home}/tools/portal-tools-db-upgrade-client/com.liferay.portal.tools.db.upgrade.client.jar"
+					jvm="${java.jdk.home}/bin/java"
+					timeout="${upgrade.client.timeout}"
+				>
+					<env key="JAVA_HOME" value="${java.jdk.home}" />
+				</java>
 			</try>
 			<catch>
 				<antcall target="print-jstack-logs">
@@ -17186,7 +17208,7 @@ CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.managemen
 	</target>
 
 	<target name="validate-db-upgrade-schemas">
-		<validate-mysql-schemas fresh.db.schema="${fresh.db.schema}" upgraded.db.schema="${upgraded.db.schema}" />
+		<validate-schemas fresh.db.schema="${fresh.db.schema}" upgraded.db.schema="${upgraded.db.schema}" />
 	</target>
 
 	<target name="wait-for-license-activation">
@@ -17305,23 +17327,9 @@ CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.managemen
 		</fail>
 
 		<if>
-			<or>
-				<equals arg1="${app.server.type}" arg2="weblogic" />
-				<equals arg1="${app.server.type}" arg2="websphere" />
-			</or>
+			<equals arg1="${app.server.type}" arg2="weblogic" />
 			<then>
-				<if>
-					<equals arg1="${app.server.type}" arg2="weblogic" />
-					<then>
-						<var name="admin.server.path" value="8080/console" />
-					</then>
-					<elseif>
-						<equals arg1="${app.server.type}" arg2="websphere" />
-						<then>
-							<var name="admin.server.path" value="9060" />
-						</then>
-					</elseif>
-				</if>
+				<var name="admin.server.path" value="8080/console" />
 
 				<waitfor checkevery="5" checkeveryunit="second" maxwait="5" maxwaitunit="minute" timeoutproperty="admin.server.shutdown.timeout">
 					<not>

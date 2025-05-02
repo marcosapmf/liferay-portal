@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -50,7 +48,7 @@ public class ShippingMethod implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(ShippingMethod.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getDescription() {
 		if (_descriptionSupplier != null) {
 			description = _descriptionSupplier.get();
@@ -91,7 +89,48 @@ public class ShippingMethod implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _descriptionSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getEngineKey() {
+		if (_engineKeySupplier != null) {
+			engineKey = _engineKeySupplier.get();
+
+			_engineKeySupplier = null;
+		}
+
+		return engineKey;
+	}
+
+	public void setEngineKey(String engineKey) {
+		this.engineKey = engineKey;
+
+		_engineKeySupplier = null;
+	}
+
+	@JsonIgnore
+	public void setEngineKey(
+		UnsafeSupplier<String, Exception> engineKeyUnsafeSupplier) {
+
+		_engineKeySupplier = () -> {
+			try {
+				return engineKeyUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String engineKey;
+
+	@JsonIgnore
+	private Supplier<String> _engineKeySupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -130,7 +169,7 @@ public class ShippingMethod implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -169,7 +208,7 @@ public class ShippingMethod implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public ShippingOption[] getShippingOptions() {
 		if (_shippingOptionsSupplier != null) {
@@ -255,6 +294,22 @@ public class ShippingMethod implements Serializable {
 			sb.append("\"");
 		}
 
+		String engineKey = getEngineKey();
+
+		if (engineKey != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"engineKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(engineKey));
+
+			sb.append("\"");
+		}
+
 		Long id = getId();
 
 		if (id != null) {
@@ -310,8 +365,8 @@ public class ShippingMethod implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.delivery.cart.dto.v1_0.ShippingMethod",
 		name = "x-class-name"
 	)

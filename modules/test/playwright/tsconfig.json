@@ -2,13 +2,17 @@
 	"compilerOptions": {
 		"downlevelIteration": true,
 		"esModuleInterop": true,
+		"moduleResolution": "node",
 		"noEmit": true,
+		"skipLibCheck": true,
+		"target": "es2017",
 		"types": [
 			"node"
 		]
 	},
 	"include": [
 		"../../global.d.ts",
-		"**/*.ts"
+		"**/*.ts",
+		"../../node_modules/@types/jest/index.d.ts"
 	]
 }

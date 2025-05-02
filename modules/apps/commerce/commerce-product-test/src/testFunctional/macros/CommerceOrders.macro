@@ -309,7 +309,7 @@ definition {
 				AssertTextEquals(
 					key_cellName1 = ${sku},
 					key_cellName2 = ${orderId},
-					key_columnNumber = 3,
+					key_columnNumber = 4,
 					locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 					value1 = ${outstandingQuantity});
 
@@ -592,7 +592,7 @@ definition {
 
 		if (isSet(editedRegion)) {
 			Select(
-				locator1 = "Select#REGION",
+				locator1 = "Select#NEW_REGION",
 				value1 = ${editedRegion});
 		}
 
@@ -1007,7 +1007,8 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro getOrderCreationDateFromTable(columnIndex = null, rowIndex = null) {
+	macro getOrderCreationDateFromTable(columnIndex = null, orderId = null, rowIndex = null) {
+		var key_cellContent = ${orderId};
 		var key_columnIndex = ${columnIndex};
 		var key_rowIndex = ${rowIndex};
 		var orderCreationDate = selenium.getText("CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC");

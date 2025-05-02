@@ -5,6 +5,7 @@
 
 import {Field, FieldType} from './utils/dataConverter';
 
+export {EVENT_TYPES} from './core/actions/eventTypes';
 export {FieldFeedback} from './core/components/FieldFeedback';
 export {EVENT_TYPES as FORM_EVENT_TYPES} from './custom/form/eventTypes';
 export {
@@ -49,7 +50,10 @@ export function useForm(): ({
 	type: string;
 }) => void;
 
-export function useFormState<T extends {[key: string]: unknown}>(): T;
+export function useFormState<T extends {[key: string]: unknown}>(): T & {
+	defaultLanguageId: Liferay.Language.Locale;
+	editingLanguageId: Liferay.Language.Locale;
+};
 
 export const FormReport: React.FC<{
 	data?: string;
@@ -60,7 +64,9 @@ export const FormReport: React.FC<{
 	portletNamespace: string;
 }>;
 
-export const FormView: React.FC;
+export const FormView: React.FC<{
+	children?: React.ReactNode;
+}>;
 
 export const PartialResults: React.FC<{
 	dataEngineModule: string;

@@ -1,8 +1,10 @@
-@component-name = "portal-page-management"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
-	property portal.release = "true";
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Asset Publisher Widget";
 
@@ -13,6 +15,14 @@ definition {
 
 		task ("Sign in") {
 			User.firstLoginPG();
+		}
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
+		task ("Enable wiki") {
+			WikiPortlet.enableWiki();
 		}
 
 		task ("Add a site") {
@@ -33,79 +43,11 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-137055. The show only assets configuration should be unavailable to display page template."
-	@priority = 4
-	test CannotViewShowOnlyAssetsConfigurationInDisplayPageTemplate {
-		task ("Add a display page template for Web Content Article and Basic Web Content") {
-			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
-				contentType = "Web Content Article",
-				displayPageTemplateEntryName = "Display Page Name",
-				groupName = "Test Site Name",
-				subType = "Basic Web Content");
-		}
-
-		task ("Add an Asset Publisher widget to display page template") {
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			PageEditor.addWidget(portletName = "Asset Publisher");
-		}
-
-		task ("Cannot view Show only assets with Display Page Name as its display page template. configuration in Asset Publisher") {
-			AssetPublisherPortlet.gotoConfigurationPG();
-
-			Navigator.gotoNavTab(navTab = "Display Settings");
-
-			Panel.expandPanel(panel = "Set and Enable");
-
-			AssertElementNotPresent(
-				checkboxName = "Show only assets with Display Page Name as its display page template.",
-				locator1 = "Checkbox#ANY_CHECKBOX");
-		}
-	}
-
-	@description = "This is a test for LPS-132428. The user could configure Asset Publisher after adding the Kaleo Forms admin portlet to blacklist."
-	@priority = 4
-	test ConfigureAssetPublisherAfterAddingKaleoFormsAdminPortletToBlackList {
-		property test.liferay.virtual.instance = "false";
-		property test.run.environment = "EE";
-		property test.run.type = "single";
-
-		task ("Add the Kaleo Forms admin portlet to blacklist") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "System Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "Module Container",
-				configurationName = "Component Blacklist",
-				configurationScope = "System Scope");
-
-			BundleBlacklist.blacklistModuleAndComponentConfiguration(
-				label = "Blacklist Component Names",
-				symbolicName = "com.liferay.portal.workflow.kaleo.forms.web.internal.portlet.KaleoFormsAdminPortlet");
-		}
-
-		task ("Configure the Asset Publisher") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.configureDisplaySettings(displaySettings = "Print");
-		}
-
-		task ("View no NullPointerException thrown") {
-			AssertConsoleTextNotPresent(value1 = "java.lang.NullPointerException");
-		}
-	}
-
 	@description = "Configure the Asset Publisher as Site Administrator."
 	@priority = 4
 	test ConfigureAssetPublisherAsSiteAdministrater {
 		property asset.publisher.selection.style = "asset-list";
-		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property custom.properties = "feature.flag.LPD-35013=true${line.separator}jsonws.web.service.paths.excludes=";
 
 		var userEmailAddress = StringUtil.randomString(8);
 		var userFirstName = StringUtil.randomString(8);
@@ -203,43 +145,70 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-132428. The default selection style of Asset Publisher is Collection."
-	@priority = 5
-	test DisplayCollectionInAssetPublisher {
-		property asset.publisher.selection.style = "asset-list";
-		property portal.acceptance = "true";
+	@description = "This is a test for LPS-97189. A user can edit displayed content in an Asset Publisher widget through Contents panel."
+	@priority = 4
+	test EditDisplayedWebContentInAssetPublisher {
+		property timeout.explicit.wait = "20";
 
-		task ("Add a dynamic collection for Web Content Article and Basic Web Content") {
-			JSONAssetlist.addDynamicAssetListEntryWithItemType(
+		task ("Add a content page") {
+			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
-				itemSubtype = "Basic Web Content",
-				itemType = "Web Content Article",
-				title = "Dynamic Collection");
+				layoutName = "Test Page Name",
+				type = "content");
 		}
 
-		task ("Add a web content") {
+		task ("Add a web content based on Basic Web Content") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
 				groupName = "Test Site Name",
-				title = "Web Content Title");
+				title = "WC WebContent Title");
 		}
 
-		task ("Select the dynamic collection in Asset Publisher") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
+		task ("Add an Asset Publisher") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
-			AssetPublisherPortlet.gotoSelectCollection();
-
-			AssetPublisherPortlet.selectAssetList(assetListName = "Dynamic Collection");
-
-			IFrame.closeFrame();
+			PageEditor.addWidget(portletName = "Asset Publisher");
 		}
 
-		task ("View the web content shown in Asset Publisher") {
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Web Content Content",
-				assetTitle = "Web Content Title");
+		task ("Select the web content as manual selection in Asset Publisher") {
+			AssetPublisherPortlet.configureManualAssetSelectionPG(
+				assetTitle = "WC WebContent Title",
+				assetType = "Basic Web Content");
+		}
+
+		task ("Edit the displayed web content via Contents panel") {
+			Refresh();
+
+			WebContent.editViaContentPanel(
+				webContentContentEdit = "WC WebContent Content Edit",
+				webContentTitle = "WC WebContent Title",
+				webContentTitleEdit = "WC WebContent Title Edit");
+		}
+
+		task ("View the edited web content shown in Asset Publisher") {
+			AssertTextEquals(
+				key_assetTitle = "WC WebContent Title Edit",
+				locator1 = "AP#ASSET_ABSTRACT_TITLE",
+				value1 = "WC WebContent Title Edit");
+
+			AssertTextEquals.assertPartialText(
+				key_assetTitle = "WC WebContent Title Edit",
+				locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
+				value1 = "WC WebContent Content Edit");
+
+			PageEditor.publish();
+		}
+
+		task ("View the edited web content in view mode") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			WebContent.viewPGViaAP(
+				webContentContent = "WC WebContent Content Edit",
+				webContentTitle = "WC WebContent Title Edit");
 		}
 	}
 
@@ -284,7 +253,7 @@ definition {
 				webContentContent = "WC WebContent Content Edit",
 				webContentTitle = "${title} Edit");
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("View the edited content shown in Asset Publisher") {
@@ -347,6 +316,116 @@ definition {
 		}
 	}
 
+	@description = "The user can update the RSS Feed via Asset Publisher widget when the feed time is set to one on system settings."
+	@priority = 4
+	@uitest
+	test EditRSSFeedViaAssetPublisherWhenSetFeedTimeToOne {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Change the RSS Feed Time on System Settings") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "System Settings");
+
+			SystemSettings.gotoConfiguration(
+				configurationCategory = "RSS",
+				configurationName = "Cache",
+				configurationScope = "System Scope");
+
+			RSSPortlet.updateFeedTime(feedTime = 1);
+		}
+
+		task ("Add a Web Content via Asset Publisher") {
+			Navigator.gotoSitePage(
+				pageName = "Asset Publisher Page",
+				siteName = "Test Site Name");
+
+			WebContent.addPGViaAPWithoutAsserts(
+				webContentContent = "This is the web content test for rss feed",
+				webContentTitle = "Web Content Title");
+		}
+
+		task ("Check Subscribe and enable RSS Subscriptions on Asset Publisher configuration") {
+			AssetPublisherPortlet.viewAssetPG(assetTitle = "Web Content Title");
+
+			AssetPublisherPortlet.configureDisplaySettings(displaySettings = "Subscribe");
+
+			AssetPublisherPortlet.enableRSSSubscription();
+
+			IFrame.closeFrame();
+		}
+
+		task ("Get the RSS Feed url") {
+			var rssFeedURL = selenium.getAttribute("//div[contains(@class,'subscribe-action')]//a[contains(@href,'asset-publisher') and contains(.,'RSS')]@href");
+		}
+
+		task ("Add a widget page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name");
+		}
+
+		task ("Add a RSS Publisher widget to page") {
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				widgetName = "RSS Publisher");
+		}
+
+		task ("Add a RSS Feed based on AP RSS Url") {
+			task ("Add a RSS Publisher to page") {
+				JSONLayout.addWidgetToPublicLayout(
+					groupName = "Test Site Name",
+					layoutName = "Asset Publisher Page",
+					widgetName = "RSS Publisher");
+			}
+
+			Navigator.gotoSitePage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			RSSPortlet.addFeed(
+				feedRowIndexNumber = 0,
+				feedTitle = "Web Asset Publisher",
+				feedURLLink = ${rssFeedURL});
+
+			IFrame.closeFrame();
+		}
+
+		task ("View the Feed Heading and Title on RSS Publisher") {
+			RSSPortlet.viewDisplayFeedTitle(feedTitle = "Web Asset Publisher");
+
+			RSSPortlet.viewUpdateFeedTitle(feedHeading = "Web Content Title");
+		}
+
+		task ("Edit the Web Content via Asset Publisher") {
+			Navigator.gotoSitePage(
+				pageName = "Asset Publisher Page",
+				siteName = "Test Site Name");
+
+			AssetPublisherPortlet.gotoEditAssetPG(assetTitle = "Web Content Title");
+
+			WebContent.addCP(
+				webContentContent = "This is the updated version of web content test for rss feed",
+				webContentTitle = "Web Content Title Updated Feed");
+
+			WebContent.publishExistingWCArticleWithPermissions();
+		}
+
+		task ("View the Updated Feed Heading and Title on RSS Publisher") {
+			AssetPublisherPortlet.viewAssetPG(assetTitle = "Web Content Title Updated Feed");
+
+			RSSPortlet.viewUpdateFeedTitle(
+				feedHeading = "Web Content Title Updated Feed",
+				pageName = "Test Page Name",
+				updateFeed = "true");
+
+			RSSPortlet.viewDisplayFeedTitle(feedTitle = "Web Asset Publisher");
+		}
+	}
+
 	@description = "Filter and order the displayed assets by field."
 	@priority = 5
 	test FilterAndOrderAssetsByField {
@@ -380,13 +459,15 @@ definition {
 		}
 
 		task ("Add the localized contents") {
-			PortletEntry.changeLocale(locale = "de-DE");
+			PortletEntry.changeLocale(
+				locale = "de-DE",
+				translated = "true");
 
 			WebContent.addCP(webContentTitle = "Netz Inhalt1 Titel");
 
 			WebContent.addWithStructureCP(webContentNumeric = 3);
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Add the second web content based on new structure") {
@@ -398,13 +479,15 @@ definition {
 		}
 
 		task ("Add the localized contents") {
-			PortletEntry.changeLocale(locale = "de-DE");
+			PortletEntry.changeLocale(
+				locale = "de-DE",
+				translated = "true");
 
 			WebContent.addCP(webContentTitle = "Netz Inhalt2 Titel");
 
 			WebContent.addWithStructureCP(webContentNumeric = 8);
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Add the third web content based on new structure") {
@@ -416,13 +499,15 @@ definition {
 		}
 
 		task ("Add the localized contents") {
-			PortletEntry.changeLocale(locale = "de-DE");
+			PortletEntry.changeLocale(
+				locale = "de-DE",
+				translated = "true");
 
 			WebContent.addCP(webContentTitle = "Netz Inhalt3 Titel");
 
 			WebContent.addWithStructureCP(webContentNumeric = 5);
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Add the fourth web content based on Basic Web Content") {
@@ -432,7 +517,7 @@ definition {
 				webContentContent = "Web Content4 Content",
 				webContentTitle = "Web Content4 Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Add the second structure with Text field") {
@@ -454,7 +539,7 @@ definition {
 				webContentText = "Web Content5 Text",
 				webContentTitle = "Web Content5 Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("View available filter fields of the first structure") {
@@ -531,245 +616,15 @@ definition {
 				locale = "en-US",
 				textIcon = "english-United States");
 		}
-
-		task ("Change the subtype to Any") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.configureAssetTypePG(
-				assetSubtype = "Any",
-				selectedAsset = "Web Content Article");
-		}
-
-		task ("View the displayed assets") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = 345,
-				assetTitle = "Web Content1 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = 123,
-				assetTitle = "Web Content2 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = 567,
-				assetTitle = "Web Content3 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Web Content4 Content",
-				assetTitle = "Web Content4 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Web Content5 Text",
-				assetTitle = "Web Content5 Title");
-		}
-
-		task ("Move the second structure to Available") {
-			AssetPublisherPortlet.configureAssetTypePG(
-				selectContent = "WC Structure1 Name",
-				selectedAsset = "Web Content Article",
-				selectMoreThanOneSubtype = "true");
-		}
-
-		task ("View the displayed assets") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = 345,
-				assetTitle = "Web Content1 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = 123,
-				assetTitle = "Web Content2 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = 567,
-				assetTitle = "Web Content3 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Web Content4 Content",
-				assetTitle = "Web Content4 Title");
-
-			AssetPublisherPortlet.viewAssetNotPresentPG(
-				assetContent = "Web Content5 Text",
-				assetTitle = "Web Content5 Title");
-		}
-
-		task ("Disable the Searchable of the first structure's fields") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-			NavItem.gotoStructures();
-
-			WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
-
-			for (var fieldFieldLabel : list "Boolean,Multiple Selection,Text,Select from List,Single Selection,Date,Numeric,Rich Text,Image,Text Box,Decimal") {
-				DataEngine.editFieldSearchable(
-					fieldFieldLabel = ${fieldFieldLabel},
-					searchableType = "Disable");
-			}
-
-			WebContentStructures.saveCP();
-		}
-
-		task ("View no available filter fields of the first structure") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.viewFilterAndFieldsPG(
-				assetSubtype = "WC Structure Name",
-				noneIndexable = "true",
-				selectedAsset = "Web Content Article");
-		}
-	}
-
-	@description = "This is a test for LPS-135460. Filter the displayed assets by categories when enable pagination."
-	@priority = 5
-	test FilterAssetsByCategoriesWithPagination {
-		property portal.acceptance = "true";
-
-		task ("Add a vocabulary") {
-			JSONCategory.addVocabulary(
-				groupName = "Test Site Name",
-				title = "Vocabulary Name");
-		}
-
-		task ("Add a category") {
-			var categoryId = JSONCategory.addCategory(
-				groupName = "Test Site Name",
-				title = "Vocabulary1 Category",
-				vocabularyName = "Vocabulary Name");
-		}
-
-		task ("Add 5 web contents with category") {
-			for (var i : list "1,2,3,4,5") {
-				JSONWebcontent.addWebContent(
-					assetCategoryIds = ${categoryId},
-					content = "WC WebContent${i} Content",
-					groupName = "Test Site Name",
-					title = "WC WebContent${i} Title");
-			}
-		}
-
-		task ("Add a Categories Navigation to page") {
-			JSONLayout.addWidgetToPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Asset Publisher Page",
-				widgetName = "Category Filter");
-		}
-
-		task ("Configure the pagination type to Regular") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.configurePaginationPG(
-				paginationNumber = 3,
-				paginationType = "Regular");
-		}
-
-		task ("View the number of displayed assets in Page 1") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.viewPaginatedAssetsPG(
-				nextPageClick = "true",
-				pageMod = "1 - 3 of 5",
-				pageNumber = "1 of 2",
-				paginationNumber = 3,
-				paginationType = "Regular");
-		}
-
-		task ("View the number of displayed assets in Page 2") {
-			AssetPublisherPortlet.viewPaginatedAssetsPG(
-				pageMod = "4 - 5 of 5",
-				pageNumber = "2 of 2",
-				paginationNumber = 3,
-				paginationType = "Regular");
-		}
-
-		task ("Configure the ordering") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.configureAssetDisplayOrderPG(
-				fieldNameOrder = "Modified Date",
-				sortOrder = "Ascending");
-		}
-
-		task ("Filter assets by category") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			Category.viewFilterViaCategoriesNavigationPG(
-				categoryName = "Vocabulary1 Category",
-				vocabularyName = "Vocabulary Name");
-		}
-
-		task ("View displayed assets in Asset Publisher") {
-			for (var n : list "1,2,3") {
-				AssetPublisherPortlet.viewAssetPG(
-					assetContent = "WC WebContent${n} Content",
-					assetTitle = "WC WebContent${n} Title");
-			}
-
-			for (var n : list "4,5") {
-				AssetPublisherPortlet.viewAssetNotPresentPG(
-					assetContent = "WC WebContent${n} Content",
-					assetTitle = "WC WebContent${n} Title");
-			}
-		}
-
-		task ("Remove the filter") {
-			Category.viewRemoveFilterViaAP(
-				categoryName = "Vocabulary1 Category",
-				vocabularyName = "Vocabulary Name");
-		}
-
-		task ("View the number of displayed assets in Page 1") {
-			AssetPublisherPortlet.viewPaginatedAssetsPG(
-				nextPageClick = "true",
-				pageMod = "1 - 3 of 5",
-				pageNumber = "1 of 2",
-				paginationNumber = 3,
-				paginationType = "Regular");
-		}
-
-		task ("View the number of displayed assets in Page 1") {
-			AssetPublisherPortlet.viewPaginatedAssetsPG(
-				pageMod = "4 - 5 of 5",
-				pageNumber = "2 of 2",
-				paginationNumber = 3,
-				paginationType = "Regular");
-		}
-
-		task ("Assert URL contains delta by click next pagination") {
-			AssertLocation.assertPartialLocation(value1 = "_delta");
-		}
-
-		task ("Assert URL contains delta by dropdown pagination") {
-			ClickNoError(
-				key_pageNumber = "2 of 2",
-				locator1 = "Pagination#PARTICULAR_PAGE");
-
-			SelectFrame(value1 = "relative=top");
-
-			AssertLocation.assertPartialLocation(value1 = "_delta");
-		}
 	}
 
 	@description = "This is a test for LPS-159046. The page creator should see the tags on Asset Publisher filter selector under scoped page."
 	@priority = 3
 	test FilterAssetsFromPageScopeByTag {
+		task ("Enable Scope Configuration") {
+			Portlet.enableScopeConfiguration();
+		}
+
 		task ("Given a page creator has an Asset Publisher and Blogs widget with scoped page") {
 			task ("Add a Blogs widget to page") {
 				JSONLayout.addWidgetToPublicLayout(
@@ -964,9 +819,6 @@ definition {
 	@description = "This is a test for LPS-129830. The user could remove multiple manual selection asset entries in Asset Publisher."
 	@priority = 4
 	test RemoveMultipleManualSelectionAssetEntries {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
 		task ("Add three web contents based on Basic Web Content") {
 			for (var n : list "1,2,3") {
 				JSONWebcontent.addWebContent(
@@ -1020,250 +872,6 @@ definition {
 			AssertVisible(
 				key_assetTitle = "Web Content Title 1",
 				locator1 = "AssetLists#ASSET_TITLE_ROW");
-		}
-	}
-
-	@description = "This is a test for LPS-158221. The Asset Publisher widget should not lose the layout article reference after edit associated content page."
-	@priority = 4
-	test RepublishAssociatedContentPage {
-		task ("Given a page creator has a web content with an associated content page") {
-			task ("Add two content pages") {
-				for (var i : list "1,2") {
-					JSONLayout.addPublicLayout(
-						groupName = "Test Site Name",
-						layoutName = "Test Page Name ${i}",
-						type = "content");
-				}
-			}
-
-			task ("Add an Asset Publisher to each page") {
-				for (var i : list "1,2") {
-					ContentPagesNavigator.openEditContentPage(
-						pageName = "Test Page Name ${i}",
-						siteName = "Test Site Name");
-
-					PageEditor.addWidget(portletName = "Asset Publisher");
-
-					PageEditor.publish();
-				}
-			}
-
-			task ("Select Content Editing") {
-				ContentPagesNavigator.openEditContentPage(
-					pageName = "Test Page Name 2",
-					siteName = "Test Site Name");
-
-				Click(locator1 = "PageEditor#EDIT_MODE_SELECTOR");
-
-				MenuItem.click(menuItem = "Content Editing");
-			}
-
-			task ("Set the Asset Publisher as default for second page") {
-				AssetPublisherPortlet.configureDisplaySettings(displaySettings = "Set as the Default Asset Publisher for This Page");
-
-				IFrame.closeFrame();
-
-				PageEditor.publish();
-			}
-
-			task ("Add a web content") {
-				JSONWebcontent.addWebContent(
-					content = "Web Content Content",
-					groupName = "Test Site Name",
-					title = "Web Content Title");
-			}
-
-			task ("Select the second page as display template in the web content") {
-				WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-				WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
-
-				WebContent.editDisplayPage(
-					pageName = "Test Page Name 2",
-					pageType = "Pages",
-					webContentTitle = "Web Content Title");
-
-				PortletEntry.publish();
-			}
-		}
-
-		task ("When the page creator republish the associated content page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name 2",
-				siteName = "Test Site Name");
-
-			PortletEntry.publish();
-		}
-
-		task ("Then page creator should be redirected to the associated content page after clicking the web content title on Asset Publisher") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Test Page Name 1",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.clickAssetTitle(assetTitle = "Web Content Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Web Content Content",
-				assetTitle = "Web Content Title");
-
-			ControlMenu.viewHeaderTitle(headerTitle = "Test Page Name 2");
-		}
-	}
-
-	@description = "The user could set as the Default Asset Publisher for This Page."
-	@priority = 5
-	test SetAsDefaultAssetPublisherForThisPage {
-		property portal.acceptance = "true";
-
-		task ("Set the Asset Publisher as default for this page") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.configureDisplaySettings(displaySettings = "Set as the Default Asset Publisher for This Page");
-		}
-
-		task ("Add a web content") {
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = "Test Site Name",
-				title = "Web Content Title");
-		}
-
-		task ("Select a display page in web content") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
-
-			WebContent.editDisplayPage(
-				pageName = "Asset Publisher Page",
-				pageType = "Pages",
-				webContentTitle = "Web Content Title");
-
-			PortletEntry.publish();
-		}
-
-		task ("View web content is shown in Asset Publisher") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			WebContent.viewPGViaAP(
-				webContentContent = "Web Content Content",
-				webContentTitle = "Web Content Title");
-		}
-	}
-
-	@description = "View assets filter by tag or category in Asset Publisher."
-	@priority = 4
-	test ViewAssetsFilterByTagOrCategoryInAssetPublisher {
-		task ("Add a vocabulary") {
-			JSONCategory.addVocabulary(
-				groupName = "Test Site Name",
-				title = "Vocabulary Name");
-		}
-
-		task ("Add a category") {
-			var categoryId = JSONCategory.addCategory(
-				groupName = "Test Site Name",
-				title = "Category Name",
-				vocabularyName = "Vocabulary Name");
-		}
-
-		task ("Add the first wiki page with category") {
-			JSONWiki.addWikiPage(
-				assetCategoryIds = ${categoryId},
-				groupName = "Test Site Name",
-				wikiNodeName = "Main",
-				wikiPageContent = "Wiki Page Content 1",
-				wikiPageName = "Wiki Page Name 1");
-		}
-
-		task ("Add the second wiki page with tag") {
-			JSONWiki.addWikiPage(
-				groupName = "Test Site Name",
-				tagName = "tagname",
-				wikiNodeName = "Main",
-				wikiPageContent = "Wiki Page Content 2",
-				wikiPageName = "Wiki Page Name 2");
-		}
-
-		task ("Add the first web content with category") {
-			JSONWebcontent.addWebContent(
-				assetCategoryIds = ${categoryId},
-				content = "Web Content Content 1",
-				groupName = "Test Site Name",
-				title = "Web Content Title 1");
-		}
-
-		task ("Add the second web content with tag") {
-			JSONWebcontent.addWebContent(
-				assetTagNames = "tagname",
-				content = "Web Content Content 2",
-				groupName = "Test Site Name",
-				title = "Web Content Title 2");
-		}
-
-		task ("Filter assets by category in Asset Publisher") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.configureCategoriesFilterPG(
-				categoryName = "Category Name",
-				vocabularyName = "Vocabulary Name");
-		}
-
-		task ("View displayed content in Asset Publisher") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.viewAssetNotPresentPG(
-				assetContent = "Wiki Page Content 2",
-				assetTitle = "Wiki Page Name 2");
-
-			AssetPublisherPortlet.viewAssetNotPresentPG(
-				assetContent = "Web Content Content 2",
-				assetTitle = "Web Content Title 2");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Wiki Page Content",
-				assetTitle = "Wiki Page Name 1");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Web Content Content",
-				assetTitle = "Web Content Title 1");
-		}
-
-		task ("Filter assets by tag in Asset Publisher") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.configureTagsFilterPG(tagNameList = "tagname");
-		}
-
-		task ("View displayed content in Asset Publisher") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Wiki Page Content 2",
-				assetTitle = "Wiki Page Name 2");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Web Content Content 2",
-				assetTitle = "Web Content Title 2");
-
-			AssetPublisherPortlet.viewAssetNotPresentPG(
-				assetContent = "Wiki Page Content 1",
-				assetTitle = "Wiki Page Name 1");
-
-			AssetPublisherPortlet.viewAssetNotPresentPG(
-				assetContent = "Web Content Content 1",
-				assetTitle = "Web Content Title 1");
 		}
 	}
 
@@ -1536,7 +1144,7 @@ definition {
 				webContentText = "WC WebContent Text",
 				webContentTitle = ${title});
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Add the Global site to Site Scope") {
@@ -1588,7 +1196,9 @@ definition {
 
 		WebContent.editFriendlyURL(webContentFriendlyURL = "webcontentenglish");
 
-		PortletEntry.changeLocale(locale = "de-DE");
+		PortletEntry.changeLocale(
+			locale = "de-DE",
+			translated = "true");
 
 		WebContent.addCP(
 			webContentContent = "WC WebContent German Content",
@@ -1596,7 +1206,7 @@ definition {
 
 		WebContent.editFriendlyURL(webContentFriendlyURL = "webcontentgerman");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Navigator.gotoSitePage(
 			pageName = "Asset Publisher Page",
@@ -1855,7 +1465,7 @@ definition {
 				key_toggleSwitchLabel = "Searchable",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Assert both web contents are present in AP") {
@@ -1987,81 +1597,6 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-146343. View the pagination with 2 Asset Publisher widgets on a Content Page."
-	@priority = 3
-	test ViewPaginationWithTwoAssetPublisherWidgetsInContentPage {
-		task ("Add 3 web contents") {
-			for (var i : list "1,2,3") {
-				JSONWebcontent.addWebContent(
-					content = "WC WebContent${i} Content",
-					groupName = "Test Site Name",
-					title = "WC WebContent${i} Title");
-			}
-		}
-
-		task ("Add a content page") {
-			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Test Content Page Name",
-				type = "content");
-		}
-
-		task ("Add two Asset Publisher widgets to page and configure the pagination type to Regular") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
-
-			PageEditor.addWidget(portletName = "Asset Publisher");
-
-			AssetPublisherPortlet.configurePaginationPG(
-				paginationNumber = 1,
-				paginationType = "Regular");
-
-			IFrame.closeFrame();
-
-			PageEditor.addWidget(
-				portletName = "Asset Publisher",
-				targetFragmentName = "Asset Publisher");
-
-			AssetPublisherPortlet.configurePaginationPG(
-				paginationNumber = 1,
-				paginationType = "Regular",
-				portletIndex = 2);
-
-			IFrame.closeFrame();
-
-			PageEditor.publish();
-		}
-
-		task ("View the pagination in two Asset Publisher widgets") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
-
-			Click(locator1 = "Pagination#NEXT_LINK");
-
-			AssertTextEquals(
-				locator1 = "Pagination#CURRENT_PAGE_MENU",
-				value1 = "Page 2 of 3");
-
-			AssertTextEquals(
-				key_index = 2,
-				locator1 = "Pagination#CURRENT_PAGE_MENU_INDEX",
-				value1 = "Page 1 of 3");
-
-			Click(locator1 = "Pagination#NEXT_LINK_2");
-
-			AssertTextEquals(
-				locator1 = "Pagination#CURRENT_PAGE_MENU",
-				value1 = "Page 2 of 3");
-
-			AssertTextEquals(
-				key_index = 2,
-				locator1 = "Pagination#CURRENT_PAGE_MENU_INDEX",
-				value1 = "Page 2 of 3");
-		}
-	}
-
 	@description = "View tag of web content in Asset Publisher."
 	@priority = 4
 	@uitest
@@ -2128,7 +1663,7 @@ definition {
 	@priority = 3
 	@uitest
 	test ViewWebContentAuthor {
-		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property custom.properties = "feature.flag.LPD-35013=true${line.separator}jsonws.web.service.paths.excludes=";
 
 		var userScreenName1 = StringUtil.randomString(8);
 		var userScreenName2 = StringUtil.randomString(8);
@@ -2183,7 +1718,7 @@ definition {
 				webContentContent = "WC WebContent Content",
 				webContentTitle = "WC WebContent Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("View the web content author in Asset Publisher") {
@@ -2266,7 +1801,7 @@ definition {
 				pageName = "Content Page Name",
 				pageType = "Pages");
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("View web content in associated public page") {
@@ -2296,51 +1831,11 @@ definition {
 
 			WebContent.addCP(webContentContent = "Webcontent Content Edit");
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("View the friendly URL shown in address") {
 			AssertLocation.assertPartialLocation(value1 = "web/test-site-name/-/webcontent-title");
-		}
-	}
-
-	@description = "View web content in associated public page."
-	@priority = 4
-	test ViewWebContentInAssociatedPublicPage {
-		task ("Set the Asset Publisher as default for page") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.configureDisplaySettings(displaySettings = "Set as the Default Asset Publisher for This Page");
-		}
-
-		task ("Add a web content and associate it to the page") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.addAsset(assetType = "Basic Web Content");
-
-			WebContent.addCP(
-				webContentContent = "WC WebContent Content",
-				webContentTitle = "WC WebContent Title");
-
-			PortletEntry.publish();
-		}
-
-		task ("View web content in associated public page") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-			WebContentNavigator.gotoEntryMenuItem(
-				entry = "WC WebContent Title",
-				menuItem = "View Content");
-
-			ControlMenu.viewHeaderTitle(headerTitle = "Asset Publisher Page");
-
-			WebContent.viewLinkedAssetPGViaAP(
-				webContentContent = "WC WebContent Content",
-				webContentTitle = "WC WebContent Title");
 		}
 	}
 
@@ -2362,11 +1857,10 @@ definition {
 			WebContentNavigator.gotoAddCP();
 
 			WebContent.addCP(
-				viewableBy = "Site Members",
 				webContentContent = "WC WebContent Content",
 				webContentTitle = "WC WebContent Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions(viewableBy = "Site Members");
 		}
 
 		task ("View the web content in Asset Publisher") {

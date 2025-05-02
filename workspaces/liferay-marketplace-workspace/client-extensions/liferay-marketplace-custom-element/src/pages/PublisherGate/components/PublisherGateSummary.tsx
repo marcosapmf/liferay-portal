@@ -6,14 +6,14 @@
 import ClayButton from '@clayui/button';
 
 import {Header} from '../../../components/Header/Header';
-import {getSiteURL} from '../../../components/InviteMemberModal/services';
 import i18n from '../../../i18n';
 import {Liferay} from '../../../liferay/liferay';
-import {StepType} from './PublisherGateSteps';
+import {getSiteURL} from '../../../utils/site';
+import {PublisherGateStep} from './PublisherGateSteps';
 
 type PublisherGateSummaryProps = {
 	children: JSX.Element;
-	setStep: React.Dispatch<React.SetStateAction<StepType>>;
+	setStep: React.Dispatch<React.SetStateAction<PublisherGateStep>>;
 	submit: () => void;
 };
 
@@ -38,18 +38,33 @@ const PublisherGateSummary: React.FC<PublisherGateSummaryProps> = ({
 							{i18n.translate(
 								'by-requesting-a-publisher-account-you-agree-to-the'
 							)}
-							&nbsp;
-							<strong>{i18n.translate('content-policy')}</strong>
-							.&nbsp;{i18n.translate('liferay-s')}&nbsp;
-							<strong>
-								{i18n.translate('terms-of-service')}
-							</strong>
-							{` ${i18n.translate('and')} `}&nbsp;
-							<strong>{i18n.translate('privacy-policy')}</strong>
-							&nbsp;
-							{i18n.translate(
-								'apply-to-your-use-of-this-service-the-name-on-your-liferay-account-will-be-used-in-this-liferay-marketplace-publisher-profile-it-may-appear-where-you-contribute-and-be-changed-at-any-time'
-							)}
+							<span className="mx-2">
+								{i18n.translate('liferay-s')}
+							</span>
+							<a
+								className="d-inline-block"
+								href="https://www.liferay.com/legal/marketplace-terms-of-service"
+								target="_blank"
+							>
+								<strong>
+									{i18n.translate('terms-of-service')}
+								</strong>
+							</a>
+							<span className="mx-2">{`${i18n.translate('and')}`}</span>
+							<a
+								className="d-inline-block"
+								href="https://www.liferay.com/privacy-policy"
+								target="_blank"
+							>
+								<strong>
+									{i18n.translate('privacy-policy')}
+								</strong>
+							</a>
+							<span className="ml-2">
+								{i18n.translate(
+									'apply-to-your-use-of-this-service-the-name-on-your-liferay-account-will-be-used-in-this-liferay-marketplace-publisher-profile-it-may-appear-where-you-contribute-and-be-changed-at-any-time'
+								)}
+							</span>
 							.
 						</p>
 					</span>
@@ -73,7 +88,7 @@ const PublisherGateSummary: React.FC<PublisherGateSummaryProps> = ({
 							<ClayButton
 								className="mr-4"
 								displayType="secondary"
-								onClick={() => setStep(StepType.FORM)}
+								onClick={() => setStep(PublisherGateStep.FORM)}
 							>
 								{i18n.translate('back')}
 							</ClayButton>

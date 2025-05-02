@@ -6,8 +6,6 @@
 package com.liferay.object.admin.rest.resource.v1_0;
 
 import com.liferay.object.admin.rest.dto.v1_0.ObjectValidationRule;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,27 +46,39 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ObjectValidationRuleResource {
 
+	public void deleteObjectValidationRule(Long objectValidationRuleId)
+		throws Exception;
+
+	public Response deleteObjectValidationRuleBatch(
+			String callbackURL, Object object)
+		throws Exception;
+
 	public Page<ObjectValidationRule>
 			getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
 				String externalReferenceCode, String search,
-				Pagination pagination, Sort[] sorts)
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Page<ObjectValidationRule>
+			getObjectDefinitionObjectValidationRulesPage(
+				Long objectDefinitionId, String search, Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public ObjectValidationRule getObjectValidationRule(
+			Long objectValidationRuleId)
+		throws Exception;
+
+	public ObjectValidationRule patchObjectValidationRule(
+			Long objectValidationRuleId,
+			ObjectValidationRule objectValidationRule)
 		throws Exception;
 
 	public ObjectValidationRule
 			postObjectDefinitionByExternalReferenceCodeObjectValidationRule(
 				String externalReferenceCode,
 				ObjectValidationRule objectValidationRule)
-		throws Exception;
-
-	public Page<ObjectValidationRule>
-			getObjectDefinitionObjectValidationRulesPage(
-				Long objectDefinitionId, String search, Pagination pagination,
-				Sort[] sorts)
-		throws Exception;
-
-	public Response postObjectDefinitionObjectValidationRulesPageExportBatch(
-			Long objectDefinitionId, String search, Sort[] sorts,
-			String callbackURL, String contentType, String fieldNames)
 		throws Exception;
 
 	public ObjectValidationRule postObjectDefinitionObjectValidationRule(
@@ -79,20 +89,10 @@ public interface ObjectValidationRuleResource {
 			Long objectDefinitionId, String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteObjectValidationRule(Long objectValidationRuleId)
-		throws Exception;
-
-	public Response deleteObjectValidationRuleBatch(
-			String callbackURL, Object object)
-		throws Exception;
-
-	public ObjectValidationRule getObjectValidationRule(
-			Long objectValidationRuleId)
-		throws Exception;
-
-	public ObjectValidationRule patchObjectValidationRule(
-			Long objectValidationRuleId,
-			ObjectValidationRule objectValidationRule)
+	public Response postObjectDefinitionObjectValidationRulesPageExportBatch(
+			Long objectDefinitionId, String search,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public ObjectValidationRule putObjectValidationRule(
@@ -126,7 +126,8 @@ public interface ObjectValidationRuleResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -151,19 +152,23 @@ public interface ObjectValidationRuleResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

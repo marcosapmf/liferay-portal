@@ -5,6 +5,8 @@
 
 package com.liferay.segments.provider.test;
 
+import com.fasterxml.jackson.databind.util.ISO8601Utils;
+
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
@@ -833,7 +835,7 @@ public class DefaultSegmentsEntryProviderTest {
 	}
 
 	@Test
-	public void testGetSegmentsEntryIdsWithSingleModelCriterionAndFilterSegmenntEntryIds()
+	public void testGetSegmentsEntryIdsWithSingleModelCriterionAndFilterSegmentEntryIds()
 		throws Exception {
 
 		_user1 = UserTestUtil.addUser(_group.getGroupId());
@@ -876,6 +878,34 @@ public class DefaultSegmentsEntryProviderTest {
 	}
 
 	@Test
+	public void testGetSegmentsEntryIdsWithUserDateModifiedCriterion()
+		throws Exception {
+
+		_user1 = UserTestUtil.addUser(_group.getGroupId());
+
+		Criteria criteria = new Criteria();
+
+		_userSegmentsCriteriaContributor.contribute(
+			criteria,
+			String.format(
+				"dateModified eq %s",
+				ISO8601Utils.format(_user1.getModifiedDate())),
+			Criteria.Conjunction.AND);
+
+		SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
+			_group.getGroupId(), CriteriaSerializer.serialize(criteria));
+
+		long[] segmentsEntryIds = _segmentsEntryProvider.getSegmentsEntryIds(
+			_group.getGroupId(), User.class.getName(), _user1.getUserId());
+
+		Assert.assertArrayEquals(
+			new long[] {segmentsEntry.getSegmentsEntryId()}, segmentsEntryIds);
+		Assert.assertEquals(
+			StringUtil.merge(segmentsEntryIds, StringPool.COMMA), 1,
+			segmentsEntryIds.length);
+	}
+
+	@Test
 	public void testGetSegmentsEntryIdsWithUserModelCriterionAndUserCreatedAfterSegmentsEntry()
 		throws Exception {
 
@@ -893,6 +923,36 @@ public class DefaultSegmentsEntryProviderTest {
 		_user1 = UserTestUtil.addUser(
 			RandomTestUtil.randomString(), LocaleUtil.US, firstName,
 			RandomTestUtil.randomString(), new long[0]);
+
+		long[] segmentsEntryIds = _segmentsEntryProvider.getSegmentsEntryIds(
+			_group.getGroupId(), User.class.getName(), _user1.getUserId());
+
+		Assert.assertArrayEquals(
+			new long[] {segmentsEntry.getSegmentsEntryId()}, segmentsEntryIds);
+		Assert.assertEquals(
+			StringUtil.merge(segmentsEntryIds, StringPool.COMMA), 1,
+			segmentsEntryIds.length);
+	}
+
+	@Test
+	public void testGetSegmentsEntryIdsWithUserOrganizationDateModifiedCriterion()
+		throws Exception {
+
+		_user1 = UserTestUtil.addOrganizationUser(
+			OrganizationTestUtil.addOrganization(),
+			RoleConstants.ORGANIZATION_USER);
+
+		Criteria criteria = new Criteria();
+
+		_userOrganizationSegmentsCriteriaContributor.contribute(
+			criteria,
+			String.format(
+				"dateModified eq %s",
+				ISO8601Utils.format(_user1.getModifiedDate())),
+			Criteria.Conjunction.AND);
+
+		SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
+			_group.getGroupId(), CriteriaSerializer.serialize(criteria));
 
 		long[] segmentsEntryIds = _segmentsEntryProvider.getSegmentsEntryIds(
 			_group.getGroupId(), User.class.getName(), _user1.getUserId());

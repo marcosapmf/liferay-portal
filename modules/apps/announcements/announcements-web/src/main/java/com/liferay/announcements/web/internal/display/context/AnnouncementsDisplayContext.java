@@ -11,9 +11,15 @@ import com.liferay.announcements.kernel.model.AnnouncementsFlagConstants;
 import com.liferay.announcements.kernel.service.AnnouncementsEntryLocalServiceUtil;
 import com.liferay.announcements.web.internal.display.context.helper.AnnouncementsRequestHelper;
 import com.liferay.announcements.web.internal.util.AnnouncementsUtil;
+import com.liferay.petra.function.UnsafeBiFunction;
+import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.UnsafeSupplier;
+import com.liferay.petra.function.UnsafeTriFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -23,6 +29,7 @@ import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
@@ -34,6 +41,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsParamUtil;
@@ -51,6 +59,7 @@ import java.text.DateFormat;
 import java.text.Format;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
@@ -100,14 +109,16 @@ public class AnnouncementsDisplayContext {
 		_announcementScopes = new LinkedHashMap<>();
 
 		if (isCustomizeAnnouncementsDisplayed()) {
-			long[] selectedScopeGroupIdsArray = GetterUtil.getLongValues(
-				StringUtil.split(_getSelectedScopeGroupIds()));
-			long[] selectedScopeOrganizationIdsArray = GetterUtil.getLongValues(
-				StringUtil.split(_getSelectedScopeOrganizationIds()));
-			long[] selectedScopeRoleIdsArray = GetterUtil.getLongValues(
-				StringUtil.split(_getSelectedScopeRoleIds()));
-			long[] selectedScopeUserGroupIdsArray = GetterUtil.getLongValues(
-				StringUtil.split(_getSelectedScopeUserGroupIds()));
+			long[] selectedScopeGroupIdsArray = ListUtil.toLongArray(
+				_getSelectedScopeGroups(), Group.GROUP_ID_ACCESSOR);
+			long[] selectedScopeOrganizationIdsArray = ListUtil.toLongArray(
+				_getSelectedScopeOrganizations(),
+				Organization.ORGANIZATION_ID_ACCESSOR);
+			long[] selectedScopeRoleIdsArray = ListUtil.toLongArray(
+				_getSelectedScopeRoles(), Role.ROLE_ID_ACCESSOR);
+			long[] selectedScopeUserGroupIdsArray = ListUtil.toLongArray(
+				_getSelectedScopeUserGroups(),
+				UserGroup.USER_GROUP_ID_ACCESSOR);
 
 			if (selectedScopeGroupIdsArray.length != 0) {
 				_announcementScopes.put(
@@ -188,65 +199,16 @@ public class AnnouncementsDisplayContext {
 	}
 
 	public List<Group> getGroups() throws PortalException {
-		if (!isCustomizeAnnouncementsDisplayed() ||
-			StringUtil.equals(
-				_announcementsRequestHelper.getPortletId(),
-				AnnouncementsPortletKeys.ANNOUNCEMENTS_ADMIN)) {
-
-			return AnnouncementsUtil.getGroups(
-				_announcementsRequestHelper.getThemeDisplay());
-		}
-
-		List<Group> selectedGroups = new ArrayList<>();
-
-		String[] selectedScopeGroupIds = StringUtil.split(
-			_getSelectedScopeGroupIds());
-
-		for (String selectedScopeGroupId : selectedScopeGroupIds) {
-			long groupId = Long.valueOf(selectedScopeGroupId);
-
-			if (GroupPermissionUtil.contains(
-					_announcementsRequestHelper.getPermissionChecker(), groupId,
-					ActionKeys.MANAGE_ANNOUNCEMENTS)) {
-
-				selectedGroups.add(GroupLocalServiceUtil.getGroup(groupId));
-			}
-		}
-
-		return selectedGroups;
+		return _getModels(
+			AnnouncementsUtil::getGroups, this::_getSelectedScopeGroups,
+			GroupPermissionUtil::contains);
 	}
 
 	public List<Organization> getOrganizations() throws PortalException {
-		if (!isCustomizeAnnouncementsDisplayed() ||
-			StringUtil.equals(
-				_announcementsRequestHelper.getPortletId(),
-				AnnouncementsPortletKeys.ANNOUNCEMENTS_ADMIN)) {
-
-			return AnnouncementsUtil.getOrganizations(
-				_announcementsRequestHelper.getThemeDisplay());
-		}
-
-		List<Organization> selectedOrganizations = new ArrayList<>();
-
-		String[] selectedScopeOrganizationIds = StringUtil.split(
-			_getSelectedScopeOrganizationIds());
-
-		for (String selectedScopeOrganizationId :
-				selectedScopeOrganizationIds) {
-
-			long organizationId = Long.valueOf(selectedScopeOrganizationId);
-
-			if (OrganizationPermissionUtil.contains(
-					_announcementsRequestHelper.getPermissionChecker(),
-					organizationId, ActionKeys.MANAGE_ANNOUNCEMENTS)) {
-
-				selectedOrganizations.add(
-					OrganizationLocalServiceUtil.getOrganization(
-						organizationId));
-			}
-		}
-
-		return selectedOrganizations;
+		return _getModels(
+			AnnouncementsUtil::getOrganizations,
+			this::_getSelectedScopeOrganizations,
+			OrganizationPermissionUtil::contains);
 	}
 
 	public int getPageDelta() {
@@ -259,32 +221,11 @@ public class AnnouncementsDisplayContext {
 	}
 
 	public List<Role> getRoles() throws PortalException {
-		if (!isCustomizeAnnouncementsDisplayed() ||
-			StringUtil.equals(
-				_announcementsRequestHelper.getPortletId(),
-				AnnouncementsPortletKeys.ANNOUNCEMENTS_ADMIN)) {
-
-			return AnnouncementsUtil.getRoles(
-				_announcementsRequestHelper.getThemeDisplay());
-		}
-
-		List<Role> selectedRoles = new ArrayList<>();
-
-		String[] selectedScopeRoleIds = StringUtil.split(
-			_getSelectedScopeRoleIds());
-
-		for (String selectedScopeRoleId : selectedScopeRoleIds) {
-			Role role = RoleLocalServiceUtil.getRole(
-				Long.valueOf(selectedScopeRoleId));
-
-			if (AnnouncementsUtil.hasManageAnnouncementsPermission(
-					role, _announcementsRequestHelper.getPermissionChecker())) {
-
-				selectedRoles.add(role);
-			}
-		}
-
-		return selectedRoles;
+		return _getModels(
+			AnnouncementsUtil::getRoles, this::_getSelectedScopeRoles,
+			(permissionChecker, role, actionKey) ->
+				AnnouncementsUtil.hasManageAnnouncementsPermission(
+					role, permissionChecker));
 	}
 
 	public SearchContainer<AnnouncementsEntry> getSearchContainer()
@@ -327,33 +268,11 @@ public class AnnouncementsDisplayContext {
 	}
 
 	public List<UserGroup> getUserGroups() throws PortalException {
-		if (!isCustomizeAnnouncementsDisplayed() ||
-			StringUtil.equals(
-				_announcementsRequestHelper.getPortletId(),
-				AnnouncementsPortletKeys.ANNOUNCEMENTS_ADMIN)) {
-
-			return AnnouncementsUtil.getUserGroups(
-				_announcementsRequestHelper.getThemeDisplay());
-		}
-
-		List<UserGroup> selectedUserGroups = new ArrayList<>();
-
-		String[] selectedScopeUserGroupIds = StringUtil.split(
-			_getSelectedScopeUserGroupIds());
-
-		for (String selectedScopeUserGroupId : selectedScopeUserGroupIds) {
-			long userGroupId = Long.valueOf(selectedScopeUserGroupId);
-
-			if (UserGroupPermissionUtil.contains(
-					_announcementsRequestHelper.getPermissionChecker(),
-					userGroupId, ActionKeys.MANAGE_ANNOUNCEMENTS)) {
-
-				selectedUserGroups.add(
-					UserGroupLocalServiceUtil.getUserGroup(userGroupId));
-			}
-		}
-
-		return selectedUserGroups;
+		return _getModels(
+			AnnouncementsUtil::getUserGroups, this::_getSelectedScopeUserGroups,
+			(permissionChecker, userGroup, actionKey) ->
+				UserGroupPermissionUtil.contains(
+					permissionChecker, userGroup.getUserGroupId(), actionKey));
 	}
 
 	public UUID getUuid() {
@@ -398,32 +317,40 @@ public class AnnouncementsDisplayContext {
 			"customizeAnnouncementsDisplayed", !scopeGroup.isUser());
 	}
 
-	public boolean isScopeGroupSelected(Group scopeGroup) {
-		String selectedScopeGroupIds = _getSelectedScopeGroupIds();
+	public boolean isScopeGroupSelected(Group scopeGroup) throws JSONException {
+		List<String> selectedScopeGroupExternalReferenceCodes =
+			_getSelectedScopeGroupExternalReferenceCodes();
 
-		return selectedScopeGroupIds.contains(
-			String.valueOf(scopeGroup.getGroupId()));
+		return selectedScopeGroupExternalReferenceCodes.contains(
+			scopeGroup.getExternalReferenceCode());
 	}
 
-	public boolean isScopeOrganizationSelected(Organization organization) {
-		String selectedScopeOrganizationIds =
-			_getSelectedScopeOrganizationIds();
+	public boolean isScopeOrganizationSelected(Organization organization)
+		throws JSONException {
 
-		return selectedScopeOrganizationIds.contains(
-			String.valueOf(organization.getOrganizationId()));
+		List<String> selectedScopeOrganizationExternalReferenceCodes =
+			_getSelectedScopeOrganizationExternalReferenceCodes();
+
+		return selectedScopeOrganizationExternalReferenceCodes.contains(
+			organization.getExternalReferenceCode());
 	}
 
-	public boolean isScopeRoleSelected(Role role) {
-		String selectedScopeRoleIds = _getSelectedScopeRoleIds();
+	public boolean isScopeRoleSelected(Role role) throws JSONException {
+		List<String> selectedScopeRoleExternalReferenceCodes =
+			_getSelectedScopeRoleExternalReferenceCodes();
 
-		return selectedScopeRoleIds.contains(String.valueOf(role.getRoleId()));
+		return selectedScopeRoleExternalReferenceCodes.contains(
+			role.getExternalReferenceCode());
 	}
 
-	public boolean isScopeUserGroupSelected(UserGroup userGroup) {
-		String selectedScopeUserGroupIds = _getSelectedScopeUserGroupIds();
+	public boolean isScopeUserGroupSelected(UserGroup userGroup)
+		throws JSONException {
 
-		return selectedScopeUserGroupIds.contains(
-			String.valueOf(userGroup.getUserGroupId()));
+		List<String> selectedScopeUserGroupExternalReferenceCodes =
+			_getSelectedScopeUserGroupExternalReferenceCodes();
+
+		return selectedScopeUserGroupExternalReferenceCodes.contains(
+			userGroup.getExternalReferenceCode());
 	}
 
 	public boolean isShowReadEntries() {
@@ -474,6 +401,38 @@ public class AnnouncementsDisplayContext {
 		return _flag;
 	}
 
+	private <T> List<T> _getModels(
+			UnsafeFunction<ThemeDisplay, List<T>, PortalException>
+				unsafeFunction,
+			UnsafeSupplier<List<T>, PortalException> unsafeSupplier,
+			UnsafeTriFunction
+				<PermissionChecker, T, String, Boolean, PortalException>
+					unsafeTriFunction)
+		throws PortalException {
+
+		if (!isCustomizeAnnouncementsDisplayed() ||
+			StringUtil.equals(
+				_announcementsRequestHelper.getPortletId(),
+				AnnouncementsPortletKeys.ANNOUNCEMENTS_ADMIN)) {
+
+			return unsafeFunction.apply(
+				_announcementsRequestHelper.getThemeDisplay());
+		}
+
+		List<T> selectedEntries = new ArrayList<>();
+
+		for (T entry : unsafeSupplier.get()) {
+			if (unsafeTriFunction.apply(
+					_announcementsRequestHelper.getPermissionChecker(), entry,
+					ActionKeys.MANAGE_ANNOUNCEMENTS)) {
+
+				selectedEntries.add(entry);
+			}
+		}
+
+		return selectedEntries;
+	}
+
 	private PortletURL _getPortletURL() {
 		if (_portletURL != null) {
 			return _portletURL;
@@ -490,34 +449,90 @@ public class AnnouncementsDisplayContext {
 		return _portletURL;
 	}
 
-	private String _getSelectedScopeGroupIds() {
+	private <T, E extends Exception> List<T> _getSelectedScopeEntries(
+			List<String> externalReferenceCodes,
+			UnsafeBiFunction<String, Long, T, E> unsafeBiFunction)
+		throws E {
+
+		return TransformUtil.transform(
+			externalReferenceCodes,
+			externalReferenceCode -> unsafeBiFunction.apply(
+				externalReferenceCode,
+				_announcementsRequestHelper.getCompanyId()));
+	}
+
+	private List<String> _getSelectedScopeExternalReferenceCodes(
+			String param, String defaultValue)
+		throws JSONException {
+
+		return AnnouncementsUtil.toStringList(
+			PrefsParamUtil.getString(
+				_announcementsRequestHelper.getPortletPreferences(),
+				_announcementsRequestHelper.getRequest(), param, defaultValue));
+	}
+
+	private List<String> _getSelectedScopeGroupExternalReferenceCodes()
+		throws JSONException {
+
 		Layout layout = _announcementsRequestHelper.getLayout();
 
-		return PrefsParamUtil.getString(
-			_announcementsRequestHelper.getPortletPreferences(),
-			_announcementsRequestHelper.getRequest(), "selectedScopeGroupIds",
-			String.valueOf(layout.getGroupId()));
+		Group group = layout.getGroup();
+
+		return _getSelectedScopeExternalReferenceCodes(
+			"selectedScopeGroupExternalReferenceCodes",
+			AnnouncementsUtil.toJSON(
+				Collections.singletonList(group.getExternalReferenceCode())));
 	}
 
-	private String _getSelectedScopeOrganizationIds() {
-		return PrefsParamUtil.getString(
-			_announcementsRequestHelper.getPortletPreferences(),
-			_announcementsRequestHelper.getRequest(),
-			"selectedScopeOrganizationIds", StringPool.BLANK);
+	private List<Group> _getSelectedScopeGroups() throws PortalException {
+		return _getSelectedScopeEntries(
+			_getSelectedScopeGroupExternalReferenceCodes(),
+			GroupLocalServiceUtil::getGroupByExternalReferenceCode);
 	}
 
-	private String _getSelectedScopeRoleIds() {
-		return PrefsParamUtil.getString(
-			_announcementsRequestHelper.getPortletPreferences(),
-			_announcementsRequestHelper.getRequest(), "selectedScopeRoleIds",
+	private List<String> _getSelectedScopeOrganizationExternalReferenceCodes()
+		throws JSONException {
+
+		return _getSelectedScopeExternalReferenceCodes(
+			"selectedScopeOrganizationExternalReferenceCodes",
 			StringPool.BLANK);
 	}
 
-	private String _getSelectedScopeUserGroupIds() {
-		return PrefsParamUtil.getString(
-			_announcementsRequestHelper.getPortletPreferences(),
-			_announcementsRequestHelper.getRequest(),
-			"selectedScopeUserGroupIds", StringPool.BLANK);
+	private List<Organization> _getSelectedScopeOrganizations()
+		throws PortalException {
+
+		return _getSelectedScopeEntries(
+			_getSelectedScopeOrganizationExternalReferenceCodes(),
+			OrganizationLocalServiceUtil::
+				getOrganizationByExternalReferenceCode);
+	}
+
+	private List<String> _getSelectedScopeRoleExternalReferenceCodes()
+		throws JSONException {
+
+		return _getSelectedScopeExternalReferenceCodes(
+			"selectedScopeRoleExternalReferenceCodes", StringPool.BLANK);
+	}
+
+	private List<Role> _getSelectedScopeRoles() throws PortalException {
+		return _getSelectedScopeEntries(
+			_getSelectedScopeRoleExternalReferenceCodes(),
+			RoleLocalServiceUtil::getRoleByExternalReferenceCode);
+	}
+
+	private List<String> _getSelectedScopeUserGroupExternalReferenceCodes()
+		throws JSONException {
+
+		return _getSelectedScopeExternalReferenceCodes(
+			"selectedScopeUserGroupExternalReferenceCodes", StringPool.BLANK);
+	}
+
+	private List<UserGroup> _getSelectedScopeUserGroups()
+		throws PortalException {
+
+		return _getSelectedScopeEntries(
+			_getSelectedScopeUserGroupExternalReferenceCodes(),
+			UserGroupLocalServiceUtil::getUserGroupByExternalReferenceCode);
 	}
 
 	private static final UUID _UUID = UUID.fromString(

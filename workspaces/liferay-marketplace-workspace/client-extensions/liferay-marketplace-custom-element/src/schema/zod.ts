@@ -7,7 +7,17 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
 
 import i18n from '../i18n';
+import {Liferay} from '../liferay/liferay';
 import {removeHTMLTags} from '../utils/string';
+
+const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-_]+?\.)+[a-zA-Z]{2,}$/;
+
+const baseAppSchema = {
+	appUsageTermsURL: z.string().url().or(z.literal('')),
+	documentationURL: z.string().url().or(z.literal('')),
+	installationGuideURL: z.string().url().or(z.literal('')),
+	url: z.string().url().or(z.literal('')),
+};
 
 const baseContentSchema = z.object({
 	description: z.string().min(1).refine(removeHTMLTags),
@@ -31,6 +41,32 @@ const contentMediaTypeImage = z.object({
 const contentMediaTypeVideo = z.object({
 	headerVideoDescription: z.string().optional(),
 	headerVideoUrl: z.string().url().min(1),
+});
+
+const freeApp = z.object({
+	...baseAppSchema,
+	email: z.string().email().or(z.literal('')),
+	phone: z.string().min(8).or(z.literal('')),
+	publisherWebsiteURL: z.string().url().or(z.literal('')),
+});
+
+const paidApp = z.object({
+	...baseAppSchema,
+	email: z.string().email(),
+	phone: z.string().min(8),
+	publisherWebsiteURL: z.string().url(),
+});
+
+const resources = z.object({
+	free: z.number(),
+	limit: z.number(),
+	used: z.number(),
+});
+
+const rootProjectPlanUsage = z.object({
+	cpu: resources,
+	instance: resources,
+	memory: resources,
 });
 
 const zodSchema = {
@@ -58,6 +94,55 @@ const zodSchema = {
 			.string()
 			.min(1, {message: 'Please enter a phone number to continue.'}),
 	}),
+	analyticsProvisioning: z.object({
+		_refAllowedEmailDomains: z.array(z.any()),
+		_refIncidentReportContacts: z.array(z.any()),
+		acceptTerms: z.boolean().refine((value) => value, {
+			message: 'You must agree with the terms',
+		}),
+		allowedEmailDomains: z
+			.array(z.string())
+			.optional()
+			.default([])
+			.refine(
+				(values) =>
+					values.length
+						? values.every((value) => domainRegex.test(value))
+						: true,
+				'One of the chosen domains is invalid.'
+			),
+		dataCenterLocation: z.string(),
+		friendlyWorkspaceURL: z.string().optional(),
+		incidentReportContacts: z.array(z.string().email()).min(1),
+		region: z.string(),
+		timezone: z.string(),
+		workspaceName: z.string().min(3),
+		workspaceOwnerEmail: z
+			.string()
+			.default(Liferay.ThemeDisplay.getUserEmailAddress()),
+	}),
+	appPublishing: {
+		build: z.object({
+			appType: z.string(),
+			liferayPackages: z.array(z.any()).min(1),
+		}),
+		profile: z.object({
+			categories: z.array(z.any()).nonempty(),
+			description: z.string().min(3),
+			name: z.string().min(3),
+			tags: z.array(z.any()).nonempty(),
+		}),
+		storefront: z.object({images: z.array(z.any()).min(1).max(10)}),
+		support: {
+			supportForFreeApp: freeApp,
+			supportForPaidApp: paidApp,
+		},
+		termsAndConditions: z.boolean().refine((data) => data === true),
+		version: z.object({
+			notes: z.string(),
+			version: z.string(),
+		}),
+	},
 	becomePublisherForm: z.object({
 		emailAddress: z.string().email('Please fill in valid email'),
 		extension: z.string().optional(),
@@ -111,6 +196,23 @@ const zodSchema = {
 			})
 			.optional(),
 	}),
+	installProductSchema: z.object({
+		environment: z.object({
+			isExtensionEnvironment: z.boolean(),
+			projectId: z.string(),
+		}),
+		project: z.object({
+			availabilityToProduct: z.boolean(),
+			environments: z.array(
+				z.object({
+					isExtensionEnvironment: z.boolean(),
+					projectId: z.string(),
+				})
+			),
+			rootProjectId: z.string(),
+			rootProjectPlanUsage,
+		}),
+	}),
 	invitedNewMember: z.object({
 		emailAddress: z
 			.string()
@@ -119,21 +221,6 @@ const zodSchema = {
 		firstName: z.string().min(3, 'Please enter member name'),
 		lastName: z.string().min(3, 'Last name is required'),
 		roles: z.string().array().min(5, 'Please select at least one role'),
-	}),
-	newCustomer: z.object({
-		accountBriefs: z.any().optional(),
-		alternateName: z.string().optional(),
-		currentPassword: z.string().optional(),
-		emailAddress: z.string().email(),
-		familyName: z.string(),
-		givenName: z.string(),
-		id: z.number().optional(),
-		image: z.string().optional(),
-		imageBlob: z.any().optional(),
-		isCustomerAccount: z.boolean().optional(),
-		isPublisherAccount: z.boolean().optional(),
-		newsSubscription: z.boolean(),
-		password: z.string().optional(),
 	}),
 	solutionPublishing: {
 		company: z
@@ -183,8 +270,16 @@ const zodSchema = {
 		}),
 		termsAndConditions: z.boolean().refine((data) => data === true),
 	},
+	trialForm: z.object({
+		accountId: z.string().optional(),
+		consoleInviteEmailAddresses: z.array(z.string().email()),
+		product: z
+			.any()
+			.refine((value) => !!value, {message: 'Product is required'}),
+		sendNotificationEmail: z.boolean(),
+	}),
 };
 
-export {zodResolver};
+export {z, zodResolver};
 
 export default zodSchema;

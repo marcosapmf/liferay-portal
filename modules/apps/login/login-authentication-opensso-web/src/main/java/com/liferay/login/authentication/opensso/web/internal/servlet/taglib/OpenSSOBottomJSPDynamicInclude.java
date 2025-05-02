@@ -8,6 +8,7 @@ package com.liferay.login.authentication.opensso.web.internal.servlet.taglib;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.ContactNameException;
 import com.liferay.portal.kernel.exception.UserEmailAddressException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -15,9 +16,11 @@ import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.servlet.taglib.BaseJSPDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.sso.opensso.configuration.OpenSSOConfiguration;
 import com.liferay.portal.security.sso.opensso.constants.OpenSSOConstants;
 import com.liferay.portal.security.sso.opensso.constants.OpenSSOWebKeys;
@@ -48,6 +51,16 @@ public class OpenSSOBottomJSPDynamicInclude extends BaseJSPDynamicInclude {
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				themeDisplay.getCompanyId(), "LPD-36719")) {
+
+			return;
+		}
 
 		try {
 			OpenSSOConfiguration openSSOConfiguration =

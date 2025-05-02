@@ -9,12 +9,13 @@ import com.liferay.asset.link.model.adapter.StagedAssetLink;
 import com.liferay.exportimport.configuration.ExportImportServiceConfiguration;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.controller.PortletImportController;
-import com.liferay.exportimport.internal.lar.DeletionSystemEventImporter;
 import com.liferay.exportimport.kernel.controller.ExportImportController;
 import com.liferay.exportimport.kernel.controller.ImportController;
 import com.liferay.exportimport.kernel.exception.LARFileException;
+import com.liferay.exportimport.kernel.exception.LARScopeException;
 import com.liferay.exportimport.kernel.exception.LARTypeException;
 import com.liferay.exportimport.kernel.exception.LayoutImportException;
+import com.liferay.exportimport.kernel.exception.MissingPortletDataHandlerException;
 import com.liferay.exportimport.kernel.exception.MissingReferenceException;
 import com.liferay.exportimport.kernel.lar.ExportImportHelper;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
@@ -32,8 +33,10 @@ import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManager;
 import com.liferay.exportimport.kernel.lifecycle.constants.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.staging.Staging;
+import com.liferay.exportimport.lar.DeletionSystemEventImporter;
 import com.liferay.exportimport.lar.PermissionImporter;
 import com.liferay.exportimport.portlet.data.handler.provider.PortletDataHandlerProvider;
+import com.liferay.layout.admin.kernel.visibility.LayoutVisibilityManager;
 import com.liferay.layout.set.model.adapter.StagedLayoutSet;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
@@ -79,11 +82,11 @@ import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.XPath;
 import com.liferay.portal.kernel.zip.ZipReader;
 import com.liferay.portal.kernel.zip.ZipReaderFactory;
-import com.liferay.release.feature.flag.ReleaseFeatureFlag;
-import com.liferay.release.feature.flag.ReleaseFeatureFlagManagerUtil;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.site.model.adapter.StagedGroup;
 import com.liferay.sites.kernel.util.Sites;
+import com.liferay.staging.StagingGroupHelper;
+import com.liferay.staging.StagingGroupHelperUtil;
 
 import java.io.File;
 import java.io.Serializable;
@@ -591,6 +594,19 @@ public class LayoutImportController implements ImportController {
 			if (group.isCompany() ^ companySourceGroup) {
 				throw new LARTypeException(LARTypeException.TYPE_COMPANY_GROUP);
 			}
+
+			StagingGroupHelper stagingGroupHelper =
+				StagingGroupHelperUtil.getStagingGroupHelper();
+
+			boolean companyGroupFriendlyURL =
+				stagingGroupHelper.isCompanyGroupFriendlyURL(
+					headerElement.attributeValue("group-friendly-url"));
+
+			if (companyGroupFriendlyURL != stagingGroupHelper.isCompanyGroup(
+					group)) {
+
+				throw new LARScopeException();
+			}
 		}
 
 		if (larType.equals("layout-set-prototype") &&
@@ -619,6 +635,15 @@ public class LayoutImportController implements ImportController {
 				_portletDataHandlerProvider.provide(companyId, portletId);
 
 			if (portletDataHandler == null) {
+				if (GetterUtil.getBoolean(
+						portletElement.attributeValue(
+							"validate-existing-data-handler"))) {
+
+					throw new MissingPortletDataHandlerException(
+						GetterUtil.getString(
+							portletElement.attributeValue("display-name")));
+				}
+
 				continue;
 			}
 
@@ -886,8 +911,8 @@ public class LayoutImportController implements ImportController {
 			layoutSetPrototypeUuid = GetterUtil.getString(
 				headerElement.attributeValue("type-uuid"));
 
-			if (ReleaseFeatureFlagManagerUtil.isEnabled(
-					ReleaseFeatureFlag.DISABLE_PRIVATE_LAYOUTS)) {
+			if (!_layoutVisibilityManager.isPrivateLayoutsEnabled(
+					group.getCompanyId())) {
 
 				LayoutSet publicLayoutSet =
 					_layoutSetLocalService.fetchLayoutSet(
@@ -1366,8 +1391,8 @@ public class LayoutImportController implements ImportController {
 	@Reference
 	private ConfigurationProvider _configurationProvider;
 
-	private final DeletionSystemEventImporter _deletionSystemEventImporter =
-		DeletionSystemEventImporter.getInstance();
+	@Reference
+	private DeletionSystemEventImporter _deletionSystemEventImporter;
 
 	@Reference
 	private ExportImportHelper _exportImportHelper;
@@ -1392,6 +1417,9 @@ public class LayoutImportController implements ImportController {
 
 	@Reference
 	private LayoutSetPrototypeLocalService _layoutSetPrototypeLocalService;
+
+	@Reference
+	private LayoutVisibilityManager _layoutVisibilityManager;
 
 	@Reference
 	private PermissionImporter _permissionImporter;

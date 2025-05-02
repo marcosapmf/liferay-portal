@@ -481,11 +481,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>IGNORE_REDIRECT_URLS</td>
-	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-hidden')]]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>IMAGE_CLEAR</td>
 	<td>//label[normalize-space(text())='${key_fieldLabel}']/following-sibling::div//button[contains(@id,'openGraphClearImageButton')] | //div[normalize-space(text())='${key_fieldLabel}']/../following-sibling::div//button[contains(@id,'openGraphClearImageButton')]</td>
 	<td></td>
@@ -532,7 +527,7 @@
 </tr>
 <tr>
 	<td>LOCALIZATION_GENERIC</td>
-	<td>//div[contains(@class,'form-group')]//div[contains(@class,'localized')]//button[contains(@class,'localized')] | //button[contains(@class,'localized')]</td>
+	<td>//div[contains(@class,'form-group')]//div[contains(@class,'localized')]//button[contains(@class,'localized')] | //button[contains(@class,'localized')] | //div[contains(@class,'translation-manager')]/button</td>
 	<td></td>
 </tr>
 <tr>
@@ -553,6 +548,11 @@
 <tr>
 	<td>LOCALIZATION_SUMMARY</td>
 	<td>//button[@id='_com_liferay_journal_web_portlet_JournalPortlet__com_liferay_journal_web_portlet_JournalPortlet_descriptionMapAsXMLMenu']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>LOCALIZATION_TRANSLATED</td>
+	<td>//div[@role='group']//ul[@class='tbar-nav']//button[@role='combobox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -978,11 +978,6 @@
 <tr>
 	<td>UNDO</td>
 	<td>//button[contains(.,'Undo')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>UNIGNORE_REDIRECT_URLS</td>
-	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-view')]]</td>
 	<td></td>
 </tr>
 <tr>

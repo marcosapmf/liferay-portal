@@ -3,10 +3,46 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayIcon from '@clayui/icon';
 import React from 'react';
 
 import OrderableTable from '../../../components/OrderableTable';
+import Toggle from '../../../components/Toggle';
 import {IAction} from '../Actions';
+
+enum EItemImportPolicy {
+	GROUP_PROXY = 'GROUP_PROXY',
+	ITEM_PROXY = 'ITEM_PROXY',
+}
+
+const isVisible = ({item}: {item: any}) => {
+	if (
+		item.target === EItemImportPolicy.ITEM_PROXY ||
+		item.target === EItemImportPolicy.GROUP_PROXY
+	) {
+		return false;
+	}
+
+	return true;
+};
+
+const ActionIconComponent = ({item}: any) => {
+	return <>{item.icon ? <ClayIcon symbol={item.icon} /> : ''}</>;
+};
+
+const ActionTypeComponent = ({item}: any) => {
+	return (
+		<>
+			{item.target === EItemImportPolicy.ITEM_PROXY ? (
+				<span>{Liferay.Language.get('system-action')}</span>
+			) : item.target === EItemImportPolicy.GROUP_PROXY ? (
+				<span>{Liferay.Language.get('group-of-system-actions')}</span>
+			) : (
+				<span>{item.target}</span>
+			)}
+		</>
+	);
+};
 
 const ActionList = ({
 	actions,
@@ -15,7 +51,9 @@ const ActionList = ({
 	deleteAction,
 	editAction,
 	noItemsButtonLabel,
+	toogleActiveDisabled,
 	updateActionsOrder,
+	updateActive,
 }: {
 	actions: Array<IAction>;
 	createAction: () => void;
@@ -23,18 +61,22 @@ const ActionList = ({
 	deleteAction: ({item}: {item: IAction}) => void;
 	editAction: ({item}: {item: IAction}) => void;
 	noItemsButtonLabel: string;
+	toogleActiveDisabled: boolean;
 	updateActionsOrder: ({order}: {order: string}) => void;
+	updateActive: (item: IAction) => Promise<void>;
 }) => {
 	return (
 		<OrderableTable
 			actions={[
 				{
 					icon: 'pencil',
+					isVisible,
 					label: Liferay.Language.get('edit'),
 					onClick: editAction,
 				},
 				{
 					icon: 'trash',
+					isVisible,
 					label: Liferay.Language.get('delete'),
 					onClick: deleteAction,
 				},
@@ -48,6 +90,9 @@ const ActionList = ({
 			]}
 			fields={[
 				{
+					contentRenderer: {
+						component: ActionIconComponent,
+					},
 					label: Liferay.Language.get('icon'),
 					name: 'icon',
 				},
@@ -56,8 +101,23 @@ const ActionList = ({
 					name: 'label',
 				},
 				{
+					contentRenderer: {
+						component: ActionTypeComponent,
+					},
 					label: Liferay.Language.get('type'),
-					name: 'type',
+					name: 'target',
+				},
+				{
+					contentRenderer: {
+						component: ({item}: any) =>
+							Toggle({
+								disabled: toogleActiveDisabled,
+								item,
+								toggleChange: updateActive,
+							}),
+					},
+					label: Liferay.Language.get('status'),
+					name: 'active',
 				},
 			]}
 			items={actions}

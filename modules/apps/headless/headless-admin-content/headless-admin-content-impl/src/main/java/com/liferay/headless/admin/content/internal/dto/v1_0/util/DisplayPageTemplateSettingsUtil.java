@@ -50,7 +50,7 @@ public class DisplayPageTemplateSettingsUtil {
 		InfoItemServiceRegistry infoItemServiceRegistry,
 		LayoutPageTemplateEntry layoutPageTemplateEntry, Portal portal) {
 
-		String className = portal.getClassName(
+		String className = portal.fetchClassName(
 			layoutPageTemplateEntry.getClassNameId());
 
 		return new ContentAssociation() {
@@ -84,12 +84,11 @@ public class DisplayPageTemplateSettingsUtil {
 				layoutPageTemplateEntry.getGroupId(),
 				String.valueOf(layoutPageTemplateEntry.getClassTypeId()));
 
-		if (infoItemFormVariation != null) {
-			return infoItemFormVariation.getLabel(
-				dtoConverterContext.getLocale());
+		if (infoItemFormVariation == null) {
+			return null;
 		}
 
-		return null;
+		return infoItemFormVariation.getLabel(dtoConverterContext.getLocale());
 	}
 
 	private static OpenGraphSettingsMapping _getOpenGraphSettingsMapping(

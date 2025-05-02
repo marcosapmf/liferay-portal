@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.channel.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.channel.dto.v1_0.Channel;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,16 +46,36 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ChannelResource {
 
+	public void deleteChannel(Long channelId) throws Exception;
+
+	public Response deleteChannelBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteChannelByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
 	public Channel getAccountAddressChannelChannel(Long accountAddressChannelId)
 		throws Exception;
 
-	public Page<Channel> getChannelsPage(
-			String search, Filter filter, Pagination pagination, Sort[] sorts)
+	public Channel getChannel(Long channelId) throws Exception;
+
+	public Channel getChannelByExternalReferenceCode(
+			String externalReferenceCode)
 		throws Exception;
 
-	public Response postChannelsPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
-			String contentType, String fieldNames)
+	public Page<Channel> getChannelsPage(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Channel patchChannel(Long channelId, Channel channel)
+		throws Exception;
+
+	public Channel patchChannelByExternalReferenceCode(
+			String externalReferenceCode, Channel channel)
 		throws Exception;
 
 	public Channel postChannel(Channel channel) throws Exception;
@@ -65,35 +83,20 @@ public interface ChannelResource {
 	public Response postChannelBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteChannelByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public Channel getChannelByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public Channel patchChannelByExternalReferenceCode(
-			String externalReferenceCode, Channel channel)
-		throws Exception;
-
-	public Channel putChannelByExternalReferenceCode(
-			String externalReferenceCode, Channel channel)
-		throws Exception;
-
-	public void deleteChannel(Long channelId) throws Exception;
-
-	public Response deleteChannelBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public Channel getChannel(Long channelId) throws Exception;
-
-	public Channel patchChannel(Long channelId, Channel channel)
+	public Response postChannelsPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public Channel putChannel(Long channelId, Channel channel) throws Exception;
 
 	public Response putChannelBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public Channel putChannelByExternalReferenceCode(
+			String externalReferenceCode, Channel channel)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -118,7 +121,8 @@ public interface ChannelResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -143,19 +147,23 @@ public interface ChannelResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

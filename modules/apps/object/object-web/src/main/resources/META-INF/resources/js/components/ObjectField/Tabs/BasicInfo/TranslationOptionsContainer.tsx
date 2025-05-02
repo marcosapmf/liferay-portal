@@ -5,15 +5,20 @@
 
 import ClayAlert from '@clayui/alert';
 import ClayIcon from '@clayui/icon';
-import ClayLink from '@clayui/link';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import {Toggle} from '@liferay/object-js-components-web';
 import classNames from 'classnames';
+import {
+	ILearnResourceContext,
+	LearnMessage,
+	LearnResourcesContext,
+} from 'frontend-js-components-web';
 import React from 'react';
 
 import './TranslationOptionsContainer.scss';
 
 interface TranslationOptionsContainerProps {
+	learnResources: ILearnResourceContext;
 	modelBuilder?: boolean;
 	objectDefinition?: ObjectDefinition;
 	onSubmit?: () => void;
@@ -23,6 +28,7 @@ interface TranslationOptionsContainerProps {
 }
 
 export function TranslationOptionsContainer({
+	learnResources,
 	modelBuilder,
 	objectDefinition,
 	onSubmit,
@@ -33,7 +39,18 @@ export function TranslationOptionsContainer({
 	const translatableField =
 		(values.businessType === 'LongText' ||
 			values.businessType === 'RichText' ||
-			values.businessType === 'Text') &&
+			values.businessType === 'Text' ||
+			(Liferay.FeatureFlags['LPD-32050'] &&
+				(values.businessType === 'Attachment' ||
+					values.businessType === 'Boolean' ||
+					values.businessType === 'Date' ||
+					values.businessType === 'DateTime' ||
+					values.businessType === 'Decimal' ||
+					values.businessType === 'Integer' ||
+					values.businessType === 'LongInteger' ||
+					values.businessType === 'MultiselectPicklist' ||
+					values.businessType === 'Picklist' ||
+					values.businessType === 'PrecisionDecimal'))) &&
 		!values.system;
 
 	return (
@@ -53,10 +70,14 @@ export function TranslationOptionsContainer({
 					{`${Liferay.Language.get(
 						'this-field-type-does-not-support-translations'
 					)} `}
-
-					<ClayLink href="#" target="_blank" weight="semi-bold">
-						{Liferay.Language.get('click-here-for-documentation')}
-					</ClayLink>
+					&nbsp;
+					<LearnResourcesContext.Provider value={learnResources}>
+						<LearnMessage
+							className="alert-link"
+							resource="object-web"
+							resourceKey="localizing-object-definitions-and-entries"
+						/>
+					</LearnResourcesContext.Provider>
 				</ClayAlert>
 			)}
 
@@ -65,7 +86,8 @@ export function TranslationOptionsContainer({
 					disabled={
 						published ||
 						!translatableField ||
-						!objectDefinition?.enableLocalization
+						!objectDefinition?.enableLocalization ||
+						(!Liferay.FeatureFlags['LPD-32050'] && values.required)
 					}
 					label={Liferay.Language.get('enable-entry-translations')}
 					onBlur={(event) => {
@@ -78,7 +100,6 @@ export function TranslationOptionsContainer({
 					onToggle={(localized) =>
 						setValues({
 							localized,
-							required: !localized && values.required,
 						})
 					}
 					toggled={values.localized}

@@ -20,7 +20,7 @@ public class IndexerRequestBuffer {
 
 	public static IndexerRequestBuffer create() {
 		List<IndexerRequestBuffer> indexerRequestBuffers =
-			_indexerRequestBuffersThreadLocal.get();
+			_indexerRequestBuffers.get();
 
 		IndexerRequestBuffer indexerRequestBuffer = new IndexerRequestBuffer();
 
@@ -31,7 +31,7 @@ public class IndexerRequestBuffer {
 
 	public static IndexerRequestBuffer get() {
 		List<IndexerRequestBuffer> indexerRequestBuffers =
-			_indexerRequestBuffersThreadLocal.get();
+			_indexerRequestBuffers.get();
 
 		if (indexerRequestBuffers.isEmpty()) {
 			return null;
@@ -42,7 +42,7 @@ public class IndexerRequestBuffer {
 
 	public static IndexerRequestBuffer remove() {
 		List<IndexerRequestBuffer> indexerRequestBuffers =
-			_indexerRequestBuffersThreadLocal.get();
+			_indexerRequestBuffers.get();
 
 		if (indexerRequestBuffers.isEmpty()) {
 			return null;
@@ -82,9 +82,22 @@ public class IndexerRequestBuffer {
 		return _indexerRequests.size();
 	}
 
+	public IndexerRequestBuffer transferCopy() {
+		IndexerRequestBuffer indexerRequestBuffer = new IndexerRequestBuffer();
+
+		LinkedHashMap<IndexerRequest, IndexerRequest> indexerRequests =
+			indexerRequestBuffer._indexerRequests;
+
+		indexerRequests.putAll(_indexerRequests);
+
+		_indexerRequests.clear();
+
+		return indexerRequestBuffer;
+	}
+
 	private static final ThreadLocal<List<IndexerRequestBuffer>>
-		_indexerRequestBuffersThreadLocal = new CentralizedThreadLocal<>(
-			IndexerRequestBuffer.class + "._indexerRequestBuffersThreadLocal",
+		_indexerRequestBuffers = new CentralizedThreadLocal<>(
+			IndexerRequestBuffer.class + "._indexerRequestBuffers",
 			ArrayList::new);
 
 	private final LinkedHashMap<IndexerRequest, IndexerRequest>

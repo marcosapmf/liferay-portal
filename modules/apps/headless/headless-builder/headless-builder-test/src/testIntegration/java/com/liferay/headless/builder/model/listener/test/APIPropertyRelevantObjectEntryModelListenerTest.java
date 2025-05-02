@@ -88,7 +88,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiApplicationToAPISchemas_c_apiApplicationId",
+				"r_apiApplicationToAPISchemas_l_apiApplicationId",
 				apiApplicationJSONObject.getLong("id")
 			).toString(),
 			"headless-builder/schemas", Http.Method.POST);
@@ -99,7 +99,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject.get("id")
 			).toString(),
 			"headless-builder/properties", Http.Method.POST);
@@ -126,7 +126,8 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			jsonObject.get("title"));
 
 		ObjectDefinition userSystemObjectDefinition =
-			_objectDefinitionLocalService.fetchSystemObjectDefinition("User");
+			_objectDefinitionLocalService.fetchSystemObjectDefinition(
+				TestPropsValues.getCompanyId(), "User");
 
 		ObjectRelationship objectRelationship =
 			ObjectRelationshipTestUtil.addObjectRelationship(
@@ -152,7 +153,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"objectRelationshipNames", objectRelationship.getName()
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject.get("id")
 			).toString(),
 			"headless-builder/properties", Http.Method.POST);
@@ -170,7 +171,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"objectFieldERC", "APPLICATION_STATUS"
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject.get("id")
 			).toString(),
 			"headless-builder/properties", Http.Method.POST);
@@ -188,7 +189,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"objectFieldERC", _objectField1.getExternalReferenceCode()
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject.get("id")
 			).toString(),
 			"headless-builder/properties", Http.Method.POST);
@@ -236,7 +237,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiApplicationToAPISchemas_c_apiApplicationId",
+				"r_apiApplicationToAPISchemas_l_apiApplicationId",
 				apiApplicationJSONObject.getLong("id")
 			).toString(),
 			"headless-builder/schemas", Http.Method.POST);
@@ -273,7 +274,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiApplicationToAPISchemas_c_apiApplicationId",
+				"r_apiApplicationToAPISchemas_l_apiApplicationId",
 				apiApplicationJSONObject.getLong("id")
 			).toString(),
 			"headless-builder/schemas/by-external-reference-code/" +
@@ -330,7 +331,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiApplicationToAPISchemas_c_apiApplicationId",
+				"r_apiApplicationToAPISchemas_l_apiApplicationId",
 				apiApplicationJSONObject.getLong("id")
 			).toString(),
 			"headless-builder/schemas", Http.Method.POST);
@@ -343,7 +344,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"objectFieldERC", _objectField1.getExternalReferenceCode()
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject1.get("id")
 			).toString(),
 			"headless-builder/properties", Http.Method.POST);
@@ -356,10 +357,10 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"objectFieldERC", _objectField1.getExternalReferenceCode()
 			).put(
-				"r_apiPropertyToAPIProperties_c_apiPropertyId",
+				"r_apiPropertyToAPIProperties_l_apiPropertyId",
 				apiPropertyJSONObject1.getLong("id")
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject1.get("id")
 			).toString(),
 			"headless-builder/properties", Http.Method.POST);
@@ -377,7 +378,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"objectFieldERC", "APPLICATION_STATUS"
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject1.get("id")
 			).put(
 				"type", "record"
@@ -398,7 +399,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"objectRelationshipNames", RandomTestUtil.randomString()
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject1.get("id")
 			).put(
 				"type", "record"
@@ -417,10 +418,10 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiPropertyToAPIProperties_c_apiPropertyId",
+				"r_apiPropertyToAPIProperties_l_apiPropertyId",
 				apiPropertyJSONObject1.getLong("id")
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject1.get("id")
 			).put(
 				"type", "record"
@@ -440,7 +441,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiApplicationToAPISchemas_c_apiApplicationId",
+				"r_apiApplicationToAPISchemas_l_apiApplicationId",
 				apiApplicationJSONObject.getLong("id")
 			).toString(),
 			"headless-builder/schemas", Http.Method.POST);
@@ -453,7 +454,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"objectFieldERC", _objectField1.getExternalReferenceCode()
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject2.get("id")
 			).toString(),
 			"headless-builder/properties", Http.Method.POST);
@@ -466,10 +467,10 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"objectFieldERC", _objectField1.getExternalReferenceCode()
 			).put(
-				"r_apiPropertyToAPIProperties_c_apiPropertyId",
+				"r_apiPropertyToAPIProperties_l_apiPropertyId",
 				apiPropertyJSONObject2.getLong("id")
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject1.get("id")
 			).toString(),
 			"headless-builder/properties", Http.Method.POST);
@@ -488,7 +489,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 				).put(
 					"name", RandomTestUtil.randomString()
 				).put(
-					"r_apiSchemaToAPIProperties_c_apiSchemaId",
+					"r_apiSchemaToAPIProperties_l_apiSchemaId",
 					apiSchemaJSONObject1.get("id")
 				).put(
 					"type", "record"
@@ -503,10 +504,10 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"objectFieldERC", _objectField1.getExternalReferenceCode()
 			).put(
-				"r_apiPropertyToAPIProperties_c_apiPropertyId",
+				"r_apiPropertyToAPIProperties_l_apiPropertyId",
 				recordAPIPropertyJSONObject.getLong("id")
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject1.get("id")
 			).toString(),
 			"headless-builder/properties", Http.Method.POST);
@@ -519,10 +520,10 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"objectFieldERC", _objectField2.getExternalReferenceCode()
 			).put(
-				"r_apiPropertyToAPIProperties_c_apiPropertyId",
+				"r_apiPropertyToAPIProperties_l_apiPropertyId",
 				recordAPIPropertyJSONObject.getLong("id")
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject1.get("id")
 			).toString(),
 			"headless-builder/properties", Http.Method.POST);
@@ -539,10 +540,10 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"objectFieldERC", _objectField1.getExternalReferenceCode()
 			).put(
-				"r_apiPropertyToAPIProperties_c_apiPropertyId",
+				"r_apiPropertyToAPIProperties_l_apiPropertyId",
 				apiApplicationJSONObject.getLong("id")
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject1.get("id")
 			).toString(),
 			"headless-builder/properties", Http.Method.POST);
@@ -550,7 +551,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 		Assert.assertEquals("BAD_REQUEST", jsonObject.get("status"));
 		Assert.assertEquals(
 			"The value is invalid for object field " +
-				"\"r_apiPropertyToAPIProperties_c_apiPropertyId\"",
+				"\"r_apiPropertyToAPIProperties_l_apiPropertyId\"",
 			jsonObject.get("title"));
 
 		apiPropertyJSONObject1 = HTTPTestUtil.invokeToJSONObject(
@@ -559,7 +560,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject1.get("id")
 			).put(
 				"type", "record"
@@ -574,10 +575,10 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"objectFieldERC", _objectField1.getExternalReferenceCode()
 			).put(
-				"r_apiPropertyToAPIProperties_c_apiPropertyId",
+				"r_apiPropertyToAPIProperties_l_apiPropertyId",
 				apiPropertyJSONObject1.getLong("id")
 			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				"r_apiSchemaToAPIProperties_l_apiSchemaId",
 				apiSchemaJSONObject1.get("id")
 			).toString(),
 			"headless-builder/properties", Http.Method.POST);
@@ -636,7 +637,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiApplicationToAPISchemas_c_apiApplicationId",
+				"r_apiApplicationToAPISchemas_l_apiApplicationId",
 				apiApplicationJSONObject.getLong("id")
 			).toString(),
 			"headless-builder/schemas", Http.Method.POST);
@@ -661,7 +662,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiApplicationToAPISchemas_c_apiApplicationId",
+				"r_apiApplicationToAPISchemas_l_apiApplicationId",
 				apiApplicationJSONObject.getLong("id")
 			).toString(),
 			"headless-builder/schemas/by-external-reference-code/" +

@@ -5,6 +5,7 @@
 
 package com.liferay.portal.tools.db.partition.migration.validator.util;
 
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.version.Version;
 import com.liferay.portal.tools.db.partition.migration.validator.Company;
@@ -41,49 +42,73 @@ public class DatabaseUtilTest extends BaseTestCase {
 	}
 
 	@Test
+	@TestInfo("LPD-6742")
 	public void testExportLiferayDatabaseWithDefaultCompany() throws Exception {
 		LiferayDatabase liferayDatabase = DatabaseUtil.exportLiferayDatabase(
-			connection);
+			connection, _COMPANY_ID);
 
 		_assert(liferayDatabase, true);
 	}
 
 	@Test
+	@TestInfo("LPD-6742")
 	public void testExportLiferayDatabaseWithMultipleCompanies()
 		throws Exception {
 
-		mockGetCompanyInfos(
-			Arrays.asList(
-				RandomTestUtil.randomLong(), RandomTestUtil.randomLong()));
+		List<Long> companyIds = Arrays.asList(
+			RandomTestUtil.randomLong(), RandomTestUtil.randomLong());
 
-		try {
-			DatabaseUtil.exportLiferayDatabase(connection);
+		mockGetCompanyInfos(companyIds);
 
-			Assert.fail();
-		}
-		catch (Exception exception) {
-			Assert.assertTrue(
-				exception instanceof UnsupportedOperationException);
-			Assert.assertEquals(
-				"Database schema has to have a single company or database " +
-					"partitioning must be enabled",
-				exception.getMessage());
-		}
+		LiferayDatabase liferayDatabase = DatabaseUtil.exportLiferayDatabase(
+			connection, companyIds.get(0));
+
+		Long companyId = companyIds.get(0);
+
+		Assert.assertEquals(
+			companyId.longValue(), liferayDatabase.getExportedCompanyId());
 	}
 
 	@Test
+	@TestInfo("LPD-6742")
 	public void testExportLiferayDatabaseWithNondefaultCompany()
 		throws Exception {
 
 		mockGetTables(false);
 
 		LiferayDatabase liferayDatabase = DatabaseUtil.exportLiferayDatabase(
-			connection);
+			connection, _COMPANY_ID);
 
 		_assert(liferayDatabase, false);
 	}
 
 	@Test
+	@TestInfo("LPD-39640")
+	public void testExportLiferayDatabaseWithNonexistentCompanyId()
+		throws Exception {
+
+		List<Long> companyIds = Arrays.asList(
+			RandomTestUtil.randomLong(), RandomTestUtil.randomLong());
+
+		mockGetCompanyInfos(companyIds);
+
+		long randomCompanyId = RandomTestUtil.randomLong();
+
+		try {
+			DatabaseUtil.exportLiferayDatabase(connection, randomCompanyId);
+
+			Assert.fail();
+		}
+		catch (Exception exception) {
+			Assert.assertTrue(exception instanceof IllegalArgumentException);
+			Assert.assertEquals(
+				"Company " + randomCompanyId + " does not exist",
+				exception.getMessage());
+		}
+	}
+
+	@Test
+	@TestInfo("LPD-16309")
 	public void testReplaceSchemaName() {
 
 		// Default JDBC URL

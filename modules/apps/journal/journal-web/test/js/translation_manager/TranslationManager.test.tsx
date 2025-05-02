@@ -3,14 +3,18 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {fieldToTranslations} from '../../../src/main/resources/META-INF/resources/js/translation_manager/useTranslationProgress';
+import useTranslationProgress, {
+	fieldToTranslations,
+} from '../../../src/main/resources/META-INF/resources/js/translation_manager/useTranslationProgress';
 
 import '@testing-library/jest-dom/extend-expect';
 import {render, screen} from '@testing-library/react';
+import {act, renderHook} from '@testing-library/react-hooks';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import TranslationManager from '../../../src/main/resources/META-INF/resources/js/translation_manager/TranslationManager';
+import {TranslationManagerProps} from '../../../src/main/resources/META-INF/resources/js/translation_manager/Types';
 
 const FIELDS = {
 	description: {
@@ -23,7 +27,7 @@ const FIELDS = {
 	},
 };
 
-const DEFAULT_PROPS = {
+const DEFAULT_PROPS: TranslationManagerProps = {
 	defaultLanguageId: 'en_US',
 	fields: FIELDS,
 	locales: [
@@ -46,7 +50,8 @@ const DEFAULT_PROPS = {
 			symbol: 'ca-es',
 		},
 	],
-	selectedLanguageId: 'ar_SA',
+	namespace: 'test',
+	selectedLanguageId: 'en_US',
 };
 
 const renderComponent = () => render(<TranslationManager {...DEFAULT_PROPS} />);
@@ -76,7 +81,7 @@ describe('TranslationManager', () => {
 	it('attaches inputLocalized:updateTranslationStatus event when the button is clicked', () => {
 		renderComponent();
 
-		userEvent.click(screen.getByRole('button'));
+		userEvent.click(screen.getByRole('combobox'));
 
 		expect(global.Liferay.on).toHaveBeenCalledWith(
 			'inputLocalized:updateTranslationStatus',
@@ -99,7 +104,7 @@ describe('TranslationManager', () => {
 		const renderComponent = () =>
 			render(
 				<>
-					<div data-languageid="ar_SA" data-value="ar_SA" />
+					<div data-languageid="en_US" data-value="en_US" />
 
 					<TranslationManager {...DEFAULT_PROPS} />
 				</>
@@ -108,8 +113,8 @@ describe('TranslationManager', () => {
 		renderComponent();
 
 		const item = document.createElement('div');
-		item.dataset.value = 'ar_SA';
-		item.dataset.languageid = 'ar_SA';
+		item.dataset.value = 'en_US';
+		item.dataset.languageid = 'en_US';
 
 		expect(global.Liferay.fire).toHaveBeenCalledWith(
 			'inputLocalized:localeChanged',
@@ -117,5 +122,49 @@ describe('TranslationManager', () => {
 				item,
 			}
 		);
+	});
+
+	it('ignores hidden inputs with data-translated=false and no value', () => {
+		Object.keys(DEFAULT_PROPS.fields).forEach((fieldName) => {
+			const ddmField = document.createElement('input');
+			ddmField.type = 'text';
+			ddmField.setAttribute('data-ddm-localizable-field-id', '');
+			ddmField.setAttribute('data-field-name', fieldName);
+			document.body.appendChild(ddmField);
+
+			Object.keys(DEFAULT_PROPS.fields[fieldName]).forEach((langId) => {
+				const input = document.createElement('input');
+				input.type = 'hidden';
+				input.setAttribute('data-field-name', fieldName);
+				input.setAttribute('data-languageid', langId);
+				if (fieldName === 'name' && langId === 'en_US') {
+					input.setAttribute('data-translated', 'false');
+					input.value = '';
+				}
+				else if (fieldName === 'description' && langId === 'ca_ES') {
+					input.setAttribute('data-translated', 'false');
+					input.value = '   ';
+				}
+				else {
+					input.setAttribute('data-translated', 'true');
+					input.value = 'test';
+				}
+				document.body.appendChild(input);
+			});
+		});
+
+		const {result} = renderHook(() =>
+			useTranslationProgress(DEFAULT_PROPS)
+		);
+
+		act(() => {
+			result.current.updateTranslations();
+		});
+
+		expect(result.current.translations).toEqual([
+			{fieldName: 'titleMapAsXML', languages: []},
+			{fieldName: 'description', languages: ['ar_SA']},
+			{fieldName: 'name', languages: ['ca_ES']},
+		]);
 	});
 });

@@ -1,0 +1,1716 @@
+{
+	"pageElement": {
+		"pageElements": [
+			{
+				"definition": {
+					"customCSS": ".[$FRAGMENT_CLASS$] {\nborder-bottom: 1px solid var(--gray-300);\nposition: sticky;\n  top: calc(var(--control-menu-container-height, 0px) + 7.75rem);\n  z-index: 899;\n}\n\n.commerce-main header {\ntop: calc(var(--control-menu-container-height) - var(--commerce-header-user-height, 0));\n}\n\n.commerce-header-user {\nposition: sticky;\ntop: calc(-1 * var(--commerce-header-user-height));\n}",
+					"fragmentStyle": {
+						"backgroundColor": "whiteColor",
+						"fontFamily": "fontFamilyBase",
+						"paddingBottom": "2",
+						"paddingTop": "2",
+						"textColor": "whiteColor"
+					},
+					"indexed": true,
+					"layout": {
+					},
+					"name": "Order Heading"
+				},
+				"pageElements": [
+					{
+						"definition": {
+							"fragmentStyle": {
+								"fontFamily": "fontFamilyBase"
+							},
+							"indexed": true,
+							"layout": {
+								"widthType": "Fixed"
+							}
+						},
+						"pageElements": [
+							{
+								"definition": {
+									"fragmentStyle": {
+										"paddingBottom": "1",
+										"paddingTop": "1"
+									},
+									"gutters": false,
+									"indexed": true,
+									"modulesPerRow": 3,
+									"numberOfColumns": 3,
+									"reverseOrder": false,
+									"rowViewports": [
+										{
+											"id": "landscapeMobile",
+											"rowViewportDefinition": {
+											}
+										},
+										{
+											"id": "portraitMobile",
+											"rowViewportDefinition": {
+											}
+										},
+										{
+											"id": "tablet",
+											"rowViewportDefinition": {
+											}
+										}
+									],
+									"verticalAlignment": "middle"
+								},
+								"pageElements": [
+									{
+										"definition": {
+											"columnViewports": [
+												{
+													"columnViewportDefinition": {
+														"size": 12
+													},
+													"id": "landscapeMobile"
+												},
+												{
+													"columnViewportDefinition": {
+													},
+													"id": "portraitMobile"
+												},
+												{
+													"columnViewportDefinition": {
+													},
+													"id": "tablet"
+												}
+											],
+											"size": 2
+										},
+										"pageElements": [
+											{
+												"definition": {
+													"fragmentStyle": {
+														"paddingRight": "3"
+													},
+													"gutters": false,
+													"indexed": true,
+													"modulesPerRow": 2,
+													"numberOfColumns": 2,
+													"reverseOrder": false,
+													"rowViewports": [
+														{
+															"id": "landscapeMobile",
+															"rowViewportDefinition": {
+															}
+														},
+														{
+															"id": "portraitMobile",
+															"rowViewportDefinition": {
+															}
+														},
+														{
+															"id": "tablet",
+															"rowViewportDefinition": {
+															}
+														}
+													],
+													"verticalAlignment": "top"
+												},
+												"pageElements": [
+													{
+														"definition": {
+															"columnViewports": [
+																{
+																	"columnViewportDefinition": {
+																		"size": 12
+																	},
+																	"id": "landscapeMobile"
+																},
+																{
+																	"columnViewportDefinition": {
+																	},
+																	"id": "portraitMobile"
+																},
+																{
+																	"columnViewportDefinition": {
+																	},
+																	"id": "tablet"
+																}
+															],
+															"size": 4
+														},
+														"pageElements": [
+															{
+																"definition": {
+																	"fragmentStyle": {
+																		"paddingLeft": "2",
+																		"paddingRight": "3"
+																	},
+																	"indexed": true,
+																	"layout": {
+																		"paddingRight": 1
+																	}
+																},
+																"pageElements": [
+																	{
+																		"definition": {
+																			"fragment": {
+																				"key": "BASIC_COMPONENT-image"
+																			},
+																			"fragmentConfig": {
+																				"imageSize": "w-100"
+																			},
+																			"fragmentFields": [
+																				{
+																					"id": "image-square",
+																					"value": {
+																						"fragmentImage": {
+																							"description": {
+																								"value_i18n": {
+																									"en_US": ""
+																								}
+																							},
+																							"url": {
+																								"value_i18n": {
+																									"en_US": "[$DOCUMENT_URL:/site-initializer/documents/group/Commerce/Page Icons/orders.png$]"
+																								}
+																							}
+																						},
+																						"fragmentLink": {
+																						}
+																					}
+																				}
+																			],
+																			"fragmentStyle": {
+																				"backgroundColor": "blockquoteSmallColor",
+																				"borderRadius": "borderRadiusLg",
+																				"fontSize": "fontSizeSm"
+																			},
+																			"indexed": true
+																		},
+																		"type": "Fragment"
+																	}
+																],
+																"type": "Section"
+															}
+														],
+														"type": "Column"
+													},
+													{
+														"definition": {
+															"columnViewports": [
+																{
+																	"columnViewportDefinition": {
+																		"size": 12
+																	},
+																	"id": "landscapeMobile"
+																},
+																{
+																	"columnViewportDefinition": {
+																	},
+																	"id": "portraitMobile"
+																},
+																{
+																	"columnViewportDefinition": {
+																	},
+																	"id": "tablet"
+																}
+															],
+															"size": 8
+														},
+														"pageElements": [
+															{
+																"definition": {
+																	"cssClasses": [
+																		"d-flex",
+																		"flex-column",
+																		"justify-content-center"
+																	],
+																	"indexed": true,
+																	"layout": {
+																	}
+																},
+																"pageElements": [
+																	{
+																		"definition": {
+																			"indexed": true,
+																			"layout": {
+																			}
+																		},
+																		"pageElements": [
+																			{
+																				"definition": {
+																					"fragment": {
+																						"key": "BASIC_COMPONENT-heading"
+																					},
+																					"fragmentConfig": {
+																						"headingLevel": "h3"
+																					},
+																					"fragmentFields": [
+																						{
+																							"id": "element-text",
+																							"value": {
+																								"fragmentLink": {
+																								},
+																								"text": {
+																									"mapping": {
+																										"fieldKey": "CommerceOrder_orderId",
+																										"itemReference": {
+																											"contextSource": "DisplayPageItem"
+																										}
+																									}
+																								}
+																							}
+																						}
+																					],
+																					"fragmentStyle": {
+																						"textColor": "blackColor"
+																					},
+																					"indexed": true,
+																					"name": "Order ID"
+																				},
+																				"type": "Fragment"
+																			}
+																		],
+																		"type": "Section"
+																	},
+																	{
+																		"definition": {
+																			"cssClasses": [
+																				"d-flex"
+																			],
+																			"indexed": true,
+																			"layout": {
+																			}
+																		},
+																		"pageElements": [
+																			{
+																				"definition": {
+																					"fragment": {
+																						"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.StatusLabelFragmentRenderer"
+																					},
+																					"fragmentConfig": {
+																						"selectedStatus": "orderStatusInfo"
+																					},
+																					"fragmentFields": [
+																					],
+																					"indexed": true
+																				},
+																				"type": "Fragment"
+																			},
+																			{
+																				"definition": {
+																					"fragment": {
+																						"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.StatusLabelFragmentRenderer"
+																					},
+																					"fragmentConfig": {
+																						"selectedStatus": "workflowStatusInfo"
+																					},
+																					"fragmentFields": [
+																					],
+																					"indexed": true
+																				},
+																				"type": "Fragment"
+																			}
+																		],
+																		"type": "Section"
+																	}
+																],
+																"type": "Section"
+															}
+														],
+														"type": "Column"
+													}
+												],
+												"type": "Row"
+											}
+										],
+										"type": "Column"
+									},
+									{
+										"definition": {
+											"columnViewports": [
+												{
+													"columnViewportDefinition": {
+														"size": 12
+													},
+													"id": "landscapeMobile"
+												},
+												{
+													"columnViewportDefinition": {
+													},
+													"id": "portraitMobile"
+												},
+												{
+													"columnViewportDefinition": {
+													},
+													"id": "tablet"
+												}
+											],
+											"size": 6
+										},
+										"pageElements": [
+											{
+												"definition": {
+													"customCSS": ".[$FRAGMENT_CLASS$] {\nborder-left: 1px solid var(--gray-300);\n}",
+													"fragmentStyle": {
+														"paddingLeft": "3",
+														"paddingRight": "3"
+													},
+													"indexed": true,
+													"layout": {
+														"paddingLeft": 1,
+														"paddingRight": 1
+													}
+												},
+												"pageElements": [
+													{
+														"definition": {
+															"customCSS": ".[$FRAGMENT_CLASS$] {\nmargin: -5px 0;\n}",
+															"fragment": {
+																"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InlineEditableOrderFieldFragmentRenderer"
+															},
+															"fragmentConfig": {
+																"field": "name",
+																"fieldHelpMessage": {
+																	"en_US": "You can define a name for this order."
+																},
+																"label": "Order Name"
+															},
+															"fragmentFields": [
+															],
+															"fragmentStyle": {
+																"textColor": "blackColor"
+															},
+															"indexed": true
+														},
+														"type": "Fragment"
+													},
+													{
+														"definition": {
+															"customCSS": ".[$FRAGMENT_CLASS$] {\nmargin: -5px 0;\n}",
+															"fragment": {
+																"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InlineEditableOrderFieldFragmentRenderer"
+															},
+															"fragmentConfig": {
+																"field": "externalReferenceCode",
+																"fieldHelpMessage": {
+																	"en_US": "This is the external reference code for this order."
+																},
+																"label": "ERC"
+															},
+															"fragmentFields": [
+															],
+															"fragmentStyle": {
+																"textColor": "blackColor"
+															},
+															"indexed": true
+														},
+														"type": "Fragment"
+													}
+												],
+												"type": "Section"
+											}
+										],
+										"type": "Column"
+									},
+									{
+										"definition": {
+											"columnViewports": [
+												{
+													"columnViewportDefinition": {
+														"size": 12
+													},
+													"id": "landscapeMobile"
+												},
+												{
+													"columnViewportDefinition": {
+													},
+													"id": "portraitMobile"
+												},
+												{
+													"columnViewportDefinition": {
+													},
+													"id": "tablet"
+												}
+											],
+											"size": 4
+										},
+										"pageElements": [
+											{
+												"definition": {
+													"cssClasses": [
+														"d-flex",
+														"justify-content-end"
+													],
+													"indexed": true,
+													"layout": {
+													}
+												},
+												"pageElements": [
+													{
+														"definition": {
+															"cssClasses": [
+																"align-items-center",
+																"d-flex"
+															],
+															"fragment": {
+																"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.OrderActionsFragmentRenderer"
+															},
+															"fragmentConfig": {
+																"csv": true,
+																"orders": true,
+																"printOrder": true,
+																"wishlists": true
+															},
+															"fragmentFields": [
+															],
+															"indexed": true
+														},
+														"type": "Fragment"
+													}
+												],
+												"type": "Section"
+											}
+										],
+										"type": "Column"
+									}
+								],
+								"type": "Row"
+							}
+						],
+						"type": "Section"
+					}
+				],
+				"type": "Section"
+			},
+			{
+				"definition": {
+					"indexed": true,
+					"layout": {
+						"widthType": "Fixed"
+					}
+				},
+				"pageElements": [
+					{
+						"definition": {
+							"customCSS": ".[$FRAGMENT_CLASS$] nav.navbar.navbar-collapse-relative.navbar-expand-md.navbar-underline.navigation-bar.navigation-bar-light::before {\n    background-color: var(--white);\n    content: '';\n    height: -webkit-fill-available;\n    left: 50%;\n    margin-left: -50vw;\n    position: absolute;\n    width: 100vw;\n}",
+							"fragment": {
+								"key": "BASIC_COMPONENT-tabs"
+							},
+							"fragmentConfig": {
+								"numberOfTabs": 3,
+								"persistSelectedTab": true
+							},
+							"fragmentFields": [
+								{
+									"id": "title1",
+									"value": {
+										"fragmentLink": {
+										},
+										"text": {
+											"value_i18n": {
+												"en_US": "Details"
+											}
+										}
+									}
+								},
+								{
+									"id": "title2",
+									"value": {
+										"fragmentLink": {
+										},
+										"text": {
+											"value_i18n": {
+												"en_US": "Returns"
+											}
+										}
+									}
+								},
+								{
+									"id": "title3",
+									"value": {
+										"fragmentLink": {
+										},
+										"text": {
+											"value_i18n": {
+												"en_US": "Shipments"
+											}
+										}
+									}
+								}
+							],
+							"indexed": true
+						},
+						"pageElements": [
+							{
+								"definition": {
+									"fragmentDropZoneId": "1"
+								},
+								"pageElements": [
+									{
+										"definition": {
+											"fragmentStyle": {
+												"fontFamily": "fontFamilyBase",
+												"paddingTop": "4"
+											},
+											"indexed": true,
+											"layout": {
+												"paddingTop": 2,
+												"widthType": "Fixed"
+											}
+										},
+										"pageElements": [
+											{
+												"definition": {
+													"fragmentStyle": {
+														"backgroundColor": "whiteColor",
+														"marginBottom": "4"
+													},
+													"indexed": true,
+													"layout": {
+														"borderColor": "gray300Color",
+														"marginBottom": 2
+													},
+													"name": "Panel"
+												},
+												"pageElements": [
+													{
+														"definition": {
+															"fragmentStyle": {
+																"backgroundColor": ""
+															},
+															"indexed": true,
+															"layout": {
+															},
+															"name": "Panel Body"
+														},
+														"pageElements": [
+															{
+																"definition": {
+																	"customCSS": ".[$FRAGMENT_CLASS$]:has(> div:empty), .[$FRAGMENT_CLASS$]:has(> div > div:empty) {display: none!important;}",
+																	"fragmentStyle": {
+																		"borderColor": "gray300Color",
+																		"borderRadius": "0.25px",
+																		"borderWidth": "1px",
+																		"paddingBottom": "2",
+																		"paddingLeft": "5",
+																		"paddingRight": "5",
+																		"paddingTop": "4"
+																	},
+																	"indexed": true,
+																	"layout": {
+																		"paddingLeft": 4,
+																		"paddingRight": 4,
+																		"paddingTop": 2
+																	}
+																},
+																"pageElements": [
+																	{
+																		"definition": {
+																			"fragment": {
+																				"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.StepTrackerFragmentRenderer"
+																			},
+																			"fragmentConfig": {
+																			},
+																			"fragmentFields": [
+																			],
+																			"indexed": true
+																		},
+																		"type": "Fragment"
+																	}
+																],
+																"type": "Section"
+															}
+														],
+														"type": "Section"
+													}
+												],
+												"type": "Section"
+											},
+											{
+												"definition": {
+													"fragmentStyle": {
+														"backgroundColor": "whiteColor",
+														"borderColor": "gray300Color",
+														"borderRadius": "0.25rem",
+														"borderWidth": "1px",
+														"marginBottom": "4"
+													},
+													"indexed": true,
+													"layout": {
+														"borderColor": "gray300Color",
+														"marginBottom": 2
+													},
+													"name": "Panel"
+												},
+												"pageElements": [
+													{
+														"definition": {
+															"customCSS": ".[$FRAGMENT_CLASS$] {\nborder-bottom: 1px solid var(--gray-300);\n}",
+															"fragment": {
+																"key": "BASIC_COMPONENT-heading"
+															},
+															"fragmentConfig": {
+																"headingLevel": "h3"
+															},
+															"fragmentFields": [
+																{
+																	"id": "element-text",
+																	"value": {
+																		"fragmentLink": {
+																		},
+																		"text": {
+																			"value_i18n": {
+																				"en_US": "Details"
+																			}
+																		}
+																	}
+																}
+															],
+															"fragmentStyle": {
+																"backgroundColor": "",
+																"paddingBottom": "3",
+																"paddingLeft": "4",
+																"paddingRight": "4",
+																"paddingTop": "3"
+															},
+															"indexed": true,
+															"name": "Panel Heading"
+														},
+														"type": "Fragment"
+													},
+													{
+														"definition": {
+															"fragmentStyle": {
+																"backgroundColor": ""
+															},
+															"indexed": true,
+															"layout": {
+															},
+															"name": "Panel Body"
+														},
+														"pageElements": [
+															{
+																"definition": {
+																	"fragmentStyle": {
+																		"paddingBottom": "4",
+																		"paddingLeft": "2",
+																		"paddingRight": "2",
+																		"paddingTop": "4"
+																	},
+																	"indexed": true,
+																	"layout": {
+																		"paddingBottom": 2,
+																		"paddingTop": 2
+																	}
+																},
+																"pageElements": [
+																	{
+																		"definition": {
+																			"gutters": false,
+																			"indexed": true,
+																			"modulesPerRow": 3,
+																			"numberOfColumns": 3,
+																			"reverseOrder": false,
+																			"rowViewports": [
+																				{
+																					"id": "landscapeMobile",
+																					"rowViewportDefinition": {
+																					}
+																				},
+																				{
+																					"id": "portraitMobile",
+																					"rowViewportDefinition": {
+																					}
+																				},
+																				{
+																					"id": "tablet",
+																					"rowViewportDefinition": {
+																					}
+																				}
+																			],
+																			"verticalAlignment": "top"
+																		},
+																		"pageElements": [
+																			{
+																				"definition": {
+																					"columnViewports": [
+																						{
+																							"columnViewportDefinition": {
+																								"size": 12
+																							},
+																							"id": "landscapeMobile"
+																						},
+																						{
+																							"columnViewportDefinition": {
+																							},
+																							"id": "portraitMobile"
+																						},
+																						{
+																							"columnViewportDefinition": {
+																							},
+																							"id": "tablet"
+																						}
+																					],
+																					"size": 4
+																				},
+																				"pageElements": [
+																					{
+																						"definition": {
+																							"fragmentStyle": {
+																								"paddingBottom": "2",
+																								"paddingLeft": "3",
+																								"paddingRight": "3",
+																								"paddingTop": "2"
+																							},
+																							"indexed": true,
+																							"layout": {
+																								"paddingLeft": 1,
+																								"paddingRight": 1
+																							}
+																						},
+																						"pageElements": [
+																							{
+																								"definition": {
+																									"fragment": {
+																										"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InfoBoxFragmentRenderer"
+																									},
+																									"fragmentConfig": {
+																										"buttonStyle": "secondary",
+																										"field": "accountInfo",
+																										"label": "Account Info",
+																										"readOnly": true
+																									},
+																									"fragmentFields": [
+																									],
+																									"indexed": true,
+																									"name": "Account Info"
+																								},
+																								"type": "Fragment"
+																							},
+																							{
+																								"definition": {
+																									"fragment": {
+																										"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InfoBoxFragmentRenderer"
+																									},
+																									"fragmentConfig": {
+																										"buttonStyle": "secondary",
+																										"field": "orderDate",
+																										"label": "Order Date",
+																										"readOnly": true
+																									},
+																									"fragmentFields": [
+																									],
+																									"indexed": true,
+																									"name": "Order Date"
+																								},
+																								"type": "Fragment"
+																							},
+																							{
+																								"definition": {
+																									"fragment": {
+																										"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InfoBoxFragmentRenderer"
+																									},
+																									"fragmentConfig": {
+																										"buttonStyle": "secondary",
+																										"field": "orderType",
+																										"label": {
+																											"en_US": "Order Type"
+																										},
+																										"readOnly": true
+																									},
+																									"fragmentFields": [
+																									],
+																									"indexed": true,
+																									"name": "Order Date"
+																								},
+																								"type": "Fragment"
+																							},
+																							{
+																								"definition": {
+																									"fragment": {
+																										"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InfoBoxFragmentRenderer"
+																									},
+																									"fragmentConfig": {
+																										"buttonStyle": "secondary",
+																										"field": "purchaseOrderNumber",
+																										"label": "Purchase Order Number",
+																										"readOnly": false
+																									},
+																									"fragmentFields": [
+																									],
+																									"indexed": true,
+																									"name": "Purchase Order Number"
+																								},
+																								"type": "Fragment"
+																							},
+																							{
+																								"definition": {
+																									"fragment": {
+																										"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InfoBoxFragmentRenderer"
+																									},
+																									"fragmentConfig": {
+																										"buttonStyle": "secondary",
+																										"field": "purchaseOrderDocument",
+																										"label": {
+																											"en_US": "Purchase Order Document"
+																										},
+																										"readOnly": false
+																									},
+																									"fragmentFields": [
+																									],
+																									"indexed": true,
+																									"name": "Payment Terms"
+																								},
+																								"type": "Fragment"
+																							}
+																						],
+																						"type": "Section"
+																					}
+																				],
+																				"type": "Column"
+																			},
+																			{
+																				"definition": {
+																					"columnViewports": [
+																						{
+																							"columnViewportDefinition": {
+																								"size": 12
+																							},
+																							"id": "landscapeMobile"
+																						},
+																						{
+																							"columnViewportDefinition": {
+																							},
+																							"id": "portraitMobile"
+																						},
+																						{
+																							"columnViewportDefinition": {
+																							},
+																							"id": "tablet"
+																						}
+																					],
+																					"size": 4
+																				},
+																				"pageElements": [
+																					{
+																						"definition": {
+																							"customCSS": ".[$FRAGMENT_CLASS$] {\nborder-left: 1px solid var(--gray-300);\nborder-right: 1px solid var(--gray-300)\n}",
+																							"fragmentStyle": {
+																								"paddingBottom": "2",
+																								"paddingLeft": "3",
+																								"paddingRight": "3",
+																								"paddingTop": "2"
+																							},
+																							"indexed": true,
+																							"layout": {
+																								"paddingLeft": 1,
+																								"paddingRight": 1
+																							}
+																						},
+																						"pageElements": [
+																							{
+																								"definition": {
+																									"fragment": {
+																										"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InfoBoxFragmentRenderer"
+																									},
+																									"fragmentConfig": {
+																										"buttonStyle": "secondary",
+																										"field": "shippingAddress",
+																										"label": "Shipping Address",
+																										"readOnly": false
+																									},
+																									"fragmentFields": [
+																									],
+																									"indexed": true,
+																									"name": "Shipping Address"
+																								},
+																								"type": "Fragment"
+																							},
+																							{
+																								"definition": {
+																									"fragment": {
+																										"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InfoBoxFragmentRenderer"
+																									},
+																									"fragmentConfig": {
+																										"buttonStyle": "secondary",
+																										"field": "shippingMethod",
+																										"label": "Shipping Method",
+																										"readOnly": false
+																									},
+																									"fragmentFields": [
+																									],
+																									"indexed": true,
+																									"name": "Shipping Method"
+																								},
+																								"type": "Fragment"
+																							},
+																							{
+																								"definition": {
+																									"fragment": {
+																										"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InfoBoxFragmentRenderer"
+																									},
+																									"fragmentConfig": {
+																										"buttonStyle": "secondary",
+																										"field": "deliveryTermId",
+																										"label": "Delivery Terms",
+																										"readOnly": false
+																									},
+																									"fragmentFields": [
+																									],
+																									"indexed": true,
+																									"name": "Delivery Terms"
+																								},
+																								"type": "Fragment"
+																							},
+																							{
+																								"definition": {
+																									"fragment": {
+																										"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InfoBoxFragmentRenderer"
+																									},
+																									"fragmentConfig": {
+																										"buttonStyle": "secondary",
+																										"field": "requestedDeliveryDate",
+																										"label": "Requested Delivery Date",
+																										"readOnly": false
+																									},
+																									"fragmentFields": [
+																									],
+																									"indexed": true,
+																									"name": "Requested Delivery Date"
+																								},
+																								"type": "Fragment"
+																							}
+																						],
+																						"type": "Section"
+																					}
+																				],
+																				"type": "Column"
+																			},
+																			{
+																				"definition": {
+																					"columnViewports": [
+																						{
+																							"columnViewportDefinition": {
+																								"size": 12
+																							},
+																							"id": "landscapeMobile"
+																						},
+																						{
+																							"columnViewportDefinition": {
+																							},
+																							"id": "portraitMobile"
+																						},
+																						{
+																							"columnViewportDefinition": {
+																							},
+																							"id": "tablet"
+																						}
+																					],
+																					"size": 4
+																				},
+																				"pageElements": [
+																					{
+																						"definition": {
+																							"fragmentStyle": {
+																								"paddingBottom": "2",
+																								"paddingLeft": "3",
+																								"paddingRight": "3",
+																								"paddingTop": "2"
+																							},
+																							"indexed": true,
+																							"layout": {
+																								"paddingLeft": 1,
+																								"paddingRight": 1
+																							}
+																						},
+																						"pageElements": [
+																							{
+																								"definition": {
+																									"fragment": {
+																										"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InfoBoxFragmentRenderer"
+																									},
+																									"fragmentConfig": {
+																										"buttonStyle": "secondary",
+																										"field": "billingAddress",
+																										"label": "Billing Address",
+																										"readOnly": false
+																									},
+																									"fragmentFields": [
+																									],
+																									"indexed": true,
+																									"name": "Billing Address"
+																								},
+																								"type": "Fragment"
+																							},
+																							{
+																								"definition": {
+																									"fragment": {
+																										"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InfoBoxFragmentRenderer"
+																									},
+																									"fragmentConfig": {
+																										"buttonStyle": "secondary",
+																										"field": "paymentMethod",
+																										"label": "Payment Method",
+																										"readOnly": false
+																									},
+																									"fragmentFields": [
+																									],
+																									"indexed": true,
+																									"name": "Payment Method"
+																								},
+																								"type": "Fragment"
+																							},
+																							{
+																								"definition": {
+																									"fragment": {
+																										"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InfoBoxFragmentRenderer"
+																									},
+																									"fragmentConfig": {
+																										"buttonStyle": "secondary",
+																										"field": "paymentTermId",
+																										"label": "Payment Terms",
+																										"readOnly": false
+																									},
+																									"fragmentFields": [
+																									],
+																									"indexed": true,
+																									"name": "Payment Terms"
+																								},
+																								"type": "Fragment"
+																							},
+																							{
+																								"definition": {
+																									"fragment": {
+																										"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.InfoBoxFragmentRenderer"
+																									},
+																									"fragmentConfig": {
+																										"buttonStyle": "secondary",
+																										"field": "notes",
+																										"label": {
+																											"en_US": "Questions and Answers"
+																										},
+																										"readOnly": false
+																									},
+																									"fragmentFields": [
+																									],
+																									"indexed": true,
+																									"name": "Questions and Answers"
+																								},
+																								"type": "Fragment"
+																							}
+																						],
+																						"type": "Section"
+																					}
+																				],
+																				"type": "Column"
+																			}
+																		],
+																		"type": "Row"
+																	}
+																],
+																"type": "Section"
+															}
+														],
+														"type": "Section"
+													}
+												],
+												"type": "Section"
+											},
+											{
+												"definition": {
+													"fragmentStyle": {
+														"backgroundColor": "whiteColor",
+														"borderColor": "gray300Color",
+														"borderRadius": "0.25rem",
+														"borderWidth": "1px",
+														"marginBottom": "4"
+													},
+													"indexed": true,
+													"layout": {
+														"borderColor": "gray300Color",
+														"marginBottom": 2
+													},
+													"name": "Panel"
+												},
+												"pageElements": [
+													{
+														"definition": {
+															"customCSS": ".[$FRAGMENT_CLASS$] {\nborder-bottom: 1px solid var(--gray-300);\n}",
+															"fragment": {
+																"key": "BASIC_COMPONENT-heading"
+															},
+															"fragmentConfig": {
+																"headingLevel": "h3"
+															},
+															"fragmentFields": [
+																{
+																	"id": "element-text",
+																	"value": {
+																		"fragmentLink": {
+																		},
+																		"text": {
+																			"value_i18n": {
+																				"en_US": "Items"
+																			}
+																		}
+																	}
+																}
+															],
+															"fragmentStyle": {
+																"backgroundColor": "",
+																"paddingBottom": "3",
+																"paddingLeft": "4",
+																"paddingRight": "4",
+																"paddingTop": "3"
+															},
+															"indexed": true,
+															"name": "Panel Heading"
+														},
+														"type": "Fragment"
+													},
+													{
+														"definition": {
+															"fragmentStyle": {
+																"backgroundColor": ""
+															},
+															"indexed": true,
+															"layout": {
+															},
+															"name": "Panel Body"
+														},
+														"pageElements": [
+															{
+																"definition": {
+																	"indexed": true,
+																	"layout": {
+																	}
+																},
+																"pageElements": [
+																	{
+																		"definition": {
+																			"fragment": {
+																				"key": "order-items-tab",
+																				"siteKey": "[$GROUP_KEY$]"
+																			},
+																			"fragmentConfig": {
+																			},
+																			"fragmentFields": [
+																			],
+																			"indexed": true
+																		},
+																		"pageElements": [
+																			{
+																				"pageElements": [
+																					{
+																						"definition": {
+																							"fragment": {
+																								"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.OrderItemsDataSetFragmentRenderer"
+																							},
+																							"fragmentConfig": {
+																								"displayStyle": "fluid"
+																							},
+																							"fragmentFields": [
+																							],
+																							"indexed": true
+																						},
+																						"type": "Fragment"
+																					}
+																				],
+																				"type": "FragmentDropZone"
+																			},
+																			{
+																				"pageElements": [
+																					{
+																						"definition": {
+																							"fragment": {
+																								"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.MultishippingFragmentRenderer"
+																							},
+																							"fragmentConfig": {
+																								"displayStyle": "fluid"
+																							},
+																							"fragmentFields": [
+																							],
+																							"indexed": true
+																						},
+																						"type": "Fragment"
+																					}
+																				],
+																				"type": "FragmentDropZone"
+																			}
+																		],
+																		"type": "Fragment"
+																	}
+																],
+																"type": "Section"
+															}
+														],
+														"type": "Section"
+													}
+												],
+												"type": "Section"
+											},
+											{
+												"definition": {
+													"fragmentStyle": {
+														"backgroundColor": "whiteColor",
+														"borderColor": "gray300Color",
+														"borderRadius": "0.25rem",
+														"borderWidth": "1px",
+														"marginBottom": "4"
+													},
+													"indexed": true,
+													"layout": {
+														"borderColor": "gray300Color",
+														"marginBottom": 2
+													},
+													"name": "Panel"
+												},
+												"pageElements": [
+													{
+														"definition": {
+															"customCSS": ".[$FRAGMENT_CLASS$] {\nborder-bottom: 1px solid var(--gray-300);\n}",
+															"fragment": {
+																"key": "BASIC_COMPONENT-heading"
+															},
+															"fragmentConfig": {
+																"headingLevel": "h3"
+															},
+															"fragmentFields": [
+																{
+																	"id": "element-text",
+																	"value": {
+																		"fragmentLink": {
+																		},
+																		"text": {
+																			"value_i18n": {
+																				"en_US": "Order Summary"
+																			}
+																		}
+																	}
+																}
+															],
+															"fragmentStyle": {
+																"backgroundColor": "",
+																"paddingBottom": "3",
+																"paddingLeft": "4",
+																"paddingRight": "4",
+																"paddingTop": "3"
+															},
+															"indexed": true,
+															"name": "Panel Heading"
+														},
+														"type": "Fragment"
+													},
+													{
+														"definition": {
+															"fragmentStyle": {
+																"backgroundColor": ""
+															},
+															"indexed": true,
+															"layout": {
+															},
+															"name": "Panel Body"
+														},
+														"pageElements": [
+															{
+																"definition": {
+																	"customCSS": ".[$FRAGMENT_CLASS$] .order-summary-label {\ndisplay: inline-block;\ntext-align: right;\nmin-width: 40%;\n}\n.[$FRAGMENT_CLASS$] .order-summary-value {\ndisplay: block;\nfloat: right;\n}",
+																	"fragmentStyle": {
+																		"paddingBottom": "3",
+																		"paddingRight": "3",
+																		"paddingTop": "3"
+																	},
+																	"gutters": true,
+																	"indexed": true,
+																	"modulesPerRow": 2,
+																	"numberOfColumns": 2,
+																	"reverseOrder": false,
+																	"rowViewports": [
+																		{
+																			"id": "landscapeMobile",
+																			"rowViewportDefinition": {
+																				"modulesPerRow": 1
+																			}
+																		},
+																		{
+																			"id": "portraitMobile",
+																			"rowViewportDefinition": {
+																			}
+																		},
+																		{
+																			"id": "tablet",
+																			"rowViewportDefinition": {
+																			}
+																		}
+																	],
+																	"verticalAlignment": "top"
+																},
+																"pageElements": [
+																	{
+																		"definition": {
+																			"columnViewports": [
+																				{
+																					"columnViewportDefinition": {
+																						"size": 12
+																					},
+																					"id": "landscapeMobile"
+																				},
+																				{
+																					"columnViewportDefinition": {
+																					},
+																					"id": "portraitMobile"
+																				},
+																				{
+																					"columnViewportDefinition": {
+																					},
+																					"id": "tablet"
+																				}
+																			],
+																			"size": 8
+																		},
+																		"type": "Column"
+																	},
+																	{
+																		"definition": {
+																			"columnViewports": [
+																				{
+																					"columnViewportDefinition": {
+																						"size": 12
+																					},
+																					"id": "landscapeMobile"
+																				},
+																				{
+																					"columnViewportDefinition": {
+																					},
+																					"id": "portraitMobile"
+																				},
+																				{
+																					"columnViewportDefinition": {
+																					},
+																					"id": "tablet"
+																				}
+																			],
+																			"size": 4
+																		},
+																		"pageElements": [
+																			{
+																				"definition": {
+																					"customCSS": ".[$FRAGMENT_CLASS$] {\n}",
+																					"fragment": {
+																						"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.OrderSummaryFragmentRenderer"
+																					},
+																					"fragmentConfig": {
+																						"field": "subtotalFormatted",
+																						"label": "Subtotal"
+																					},
+																					"fragmentFields": [
+																					],
+																					"indexed": true
+																				},
+																				"type": "Fragment"
+																			},
+																			{
+																				"definition": {
+																					"cssClasses": [
+																						"justify-content-end"
+																					],
+																					"customCSS": ".[$FRAGMENT_CLASS$] {\n.order-summary-label {}\n}",
+																					"fragment": {
+																						"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.OrderSummaryFragmentRenderer"
+																					},
+																					"fragmentConfig": {
+																						"field": "subtotalDiscountValueFormatted",
+																						"label": "Subtotal Discount"
+																					},
+																					"fragmentFields": [
+																					],
+																					"indexed": true
+																				},
+																				"type": "Fragment"
+																			},
+																			{
+																				"definition": {
+																					"fragment": {
+																						"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.OrderSummaryFragmentRenderer"
+																					},
+																					"fragmentConfig": {
+																						"field": "totalDiscountValueFormatted",
+																						"label": "Total Discount"
+																					},
+																					"fragmentFields": [
+																					],
+																					"indexed": true
+																				},
+																				"type": "Fragment"
+																			},
+																			{
+																				"definition": {
+																					"fragment": {
+																						"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.OrderSummaryFragmentRenderer"
+																					},
+																					"fragmentConfig": {
+																						"field": "couponCode",
+																						"label": "Promotion Code"
+																					},
+																					"fragmentFields": [
+																					],
+																					"indexed": true
+																				},
+																				"type": "Fragment"
+																			},
+																			{
+																				"definition": {
+																					"fragment": {
+																						"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.OrderSummaryFragmentRenderer"
+																					},
+																					"fragmentConfig": {
+																						"field": "taxValueFormatted",
+																						"label": "Tax"
+																					},
+																					"fragmentFields": [
+																					],
+																					"indexed": true
+																				},
+																				"type": "Fragment"
+																			},
+																			{
+																				"definition": {
+																					"fragment": {
+																						"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.OrderSummaryFragmentRenderer"
+																					},
+																					"fragmentConfig": {
+																						"field": "shippingValueFormatted",
+																						"label": "Delivery"
+																					},
+																					"fragmentFields": [
+																					],
+																					"indexed": true
+																				},
+																				"type": "Fragment"
+																			},
+																			{
+																				"definition": {
+																					"fragment": {
+																						"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.OrderSummaryFragmentRenderer"
+																					},
+																					"fragmentConfig": {
+																						"field": "shippingDiscountValueFormatted",
+																						"label": "Delivery Discount"
+																					},
+																					"fragmentFields": [
+																					],
+																					"indexed": true
+																				},
+																				"type": "Fragment"
+																			}
+																		],
+																		"type": "Column"
+																	}
+																],
+																"type": "Row"
+															},
+															{
+																"definition": {
+																	"fragment": {
+																		"key": "BASIC_COMPONENT-separator"
+																	},
+																	"fragmentConfig": {
+																		"bottomSpacing": "3",
+																		"separatorColor": ""
+																	},
+																	"fragmentFields": [
+																	],
+																	"fragmentStyle": {
+																		"paddingLeft": "4",
+																		"paddingRight": "3"
+																	},
+																	"indexed": true
+																},
+																"type": "Fragment"
+															},
+															{
+																"definition": {
+																	"customCSS": ".[$FRAGMENT_CLASS$] {\n.order-summary-label {\ndisplay: inline-block;\ntext-align: right;\nmin-width: 40%;\n}\n.order-summary-value {\ndisplay: block;\nfloat: right;\n}\n}",
+																	"fragmentStyle": {
+																		"paddingBottom": "3",
+																		"paddingRight": "3"
+																	},
+																	"gutters": true,
+																	"indexed": true,
+																	"modulesPerRow": 2,
+																	"numberOfColumns": 2,
+																	"reverseOrder": false,
+																	"rowViewports": [
+																		{
+																			"id": "landscapeMobile",
+																			"rowViewportDefinition": {
+																				"modulesPerRow": 1
+																			}
+																		},
+																		{
+																			"id": "portraitMobile",
+																			"rowViewportDefinition": {
+																			}
+																		},
+																		{
+																			"id": "tablet",
+																			"rowViewportDefinition": {
+																			}
+																		}
+																	],
+																	"verticalAlignment": "top"
+																},
+																"pageElements": [
+																	{
+																		"definition": {
+																			"columnViewports": [
+																				{
+																					"columnViewportDefinition": {
+																						"size": 12
+																					},
+																					"id": "landscapeMobile"
+																				},
+																				{
+																					"columnViewportDefinition": {
+																					},
+																					"id": "portraitMobile"
+																				},
+																				{
+																					"columnViewportDefinition": {
+																					},
+																					"id": "tablet"
+																				}
+																			],
+																			"size": 8
+																		},
+																		"type": "Column"
+																	},
+																	{
+																		"definition": {
+																			"columnViewports": [
+																				{
+																					"columnViewportDefinition": {
+																						"size": 12
+																					},
+																					"id": "landscapeMobile"
+																				},
+																				{
+																					"columnViewportDefinition": {
+																					},
+																					"id": "portraitMobile"
+																				},
+																				{
+																					"columnViewportDefinition": {
+																					},
+																					"id": "tablet"
+																				}
+																			],
+																			"size": 4
+																		},
+																		"pageElements": [
+																			{
+																				"definition": {
+																					"customCSS": ".[$FRAGMENT_CLASS$] {\nwidth: auto;\nblock-size: auto;\n}",
+																					"fragment": {
+																						"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.OrderSummaryFragmentRenderer"
+																					},
+																					"fragmentConfig": {
+																						"field": "totalFormatted",
+																						"label": "Total"
+																					},
+																					"fragmentFields": [
+																					],
+																					"fragmentStyle": {
+																						"fontWeight": "fontWeightBold"
+																					},
+																					"indexed": true
+																				},
+																				"type": "Fragment"
+																			}
+																		],
+																		"type": "Column"
+																	}
+																],
+																"type": "Row"
+															}
+														],
+														"type": "Section"
+													}
+												],
+												"type": "Section"
+											}
+										],
+										"type": "Section"
+									}
+								],
+								"type": "FragmentDropZone"
+							},
+							{
+								"definition": {
+									"fragmentDropZoneId": "2"
+								},
+								"pageElements": [
+									{
+										"definition": {
+											"fragment": {
+												"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.OrderReturnsDataSetFragmentRenderer"
+											},
+											"fragmentConfig": {
+												"displayStyle": "fluid"
+											},
+											"fragmentFields": [
+											],
+											"indexed": true
+										},
+										"type": "Fragment"
+									}
+								],
+								"type": "FragmentDropZone"
+							},
+							{
+								"definition": {
+									"fragmentDropZoneId": "3"
+								},
+								"pageElements": [
+									{
+										"definition": {
+											"fragment": {
+												"key": "com.liferay.commerce.order.content.web.internal.fragment.renderer.PlacedOrderShipmentsDataSetFragmentRenderer"
+											},
+											"fragmentConfig": {
+												"displayStyle": "fluid"
+											},
+											"fragmentFields": [
+											],
+											"indexed": true
+										},
+										"type": "Fragment"
+									}
+								],
+								"type": "FragmentDropZone"
+							}
+						],
+						"type": "Fragment"
+					}
+				],
+				"type": "Section"
+			}
+		],
+		"type": "Root"
+	},
+	"settings": {
+		"colorSchemeName": "01",
+		"masterPage": {
+			"key": "commerce-classic-master"
+		},
+		"styleBook": {
+			"key": "commerce-classic",
+			"name": "Commerce Classic"
+		},
+		"themeName": "Classic",
+		"themeSettings": {
+			"lfr-theme:regular:show-footer": "false",
+			"lfr-theme:regular:show-header": "false",
+			"lfr-theme:regular:show-header-search": "false",
+			"lfr-theme:regular:wrap-widget-page-content": "false"
+		}
+	},
+	"version": 1.1
+}

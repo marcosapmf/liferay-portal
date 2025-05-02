@@ -134,6 +134,7 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 		super.testPatchSku();
 
 		_testPatchSkuExternalReferenceCode();
+		_testPatchSkuWithReplacementSku();
 		_testPatchSkuWithPricing();
 		_testPatchSkuWithShipping();
 		_testPatchSkuWithUnitOfMeasure();
@@ -148,6 +149,12 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 		_testPostProductIdSkuWithOptionIdKey();
 		_testPostProductIdSkuWithOptionKey();
 		_testPostProductIdSkuWithSkuVirtualSettings();
+	}
+
+	@Override
+	@Test
+	public void testPutSkuByExternalReferenceCode() throws Exception {
+		_testPatchSkuExternalReferenceCode();
 	}
 
 	@Override
@@ -283,6 +290,14 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 		return skuResource.postProductIdSku(_cProduct.getCProductId(), sku);
 	}
 
+	@Override
+	protected Sku testPutSkuByExternalReferenceCode_createSku()
+		throws Exception {
+
+		return skuResource.postProductByExternalReferenceCodeSku(
+			_cProduct.getExternalReferenceCode(), randomSku());
+	}
+
 	private Sku _randomSkuWithSkuOptions(
 			String optionKey, Long optionKeyId, Long optionValueKeyId,
 			String optionValue)
@@ -341,6 +356,45 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 			patchSku.getPromoPrice(), randomSku.getPromoPrice());
 
 		assertValid(patchSku);
+	}
+
+	private void _testPatchSkuWithReplacementSku() throws Exception {
+		Sku sku1 = testPatchSku_addSku();
+		Sku sku2 = testPatchSku_addSku();
+
+		Sku patchSku1 = skuResource.patchSku(
+			sku1.getId(),
+			new Sku() {
+				{
+					discontinued = true;
+					discontinuedDate = RandomTestUtil.nextDate();
+					replacementSkuExternalReferenceCode =
+						sku2.getExternalReferenceCode();
+					replacementSkuId = sku2.getId();
+				}
+			});
+
+		Assert.assertTrue(patchSku1.getDiscontinued());
+		Assert.assertEquals(
+			sku2.getExternalReferenceCode(),
+			patchSku1.getReplacementSkuExternalReferenceCode());
+		Assert.assertEquals(sku2.getId(), patchSku1.getReplacementSkuId());
+
+		assertValid(patchSku1);
+
+		Sku patchSku2 = skuResource.patchSku(
+			patchSku1.getId(),
+			new Sku() {
+				{
+					discontinued = false;
+				}
+			});
+
+		Assert.assertFalse(patchSku2.getDiscontinued());
+		Assert.assertNull(patchSku2.getReplacementSkuExternalReferenceCode());
+		Assert.assertNull(patchSku2.getReplacementSkuId());
+
+		assertValid(patchSku2);
 	}
 
 	private void _testPatchSkuWithShipping() throws Exception {
@@ -506,16 +560,16 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 	private void _testPostProductIdSkuWithSkuVirtualSettings()
 		throws Exception {
 
-		User omniAdminUser = UserTestUtil.addOmniadminUser();
+		User omniadminUser = UserTestUtil.addOmniadminUser();
 
 		String password = RandomTestUtil.randomString();
 
 		_userLocalService.updatePassword(
-			omniAdminUser.getUserId(), password, password, false, true);
+			omniadminUser.getUserId(), password, password, false, true);
 
 		SkuResource skuResource = SkuResource.builder(
 		).authentication(
-			omniAdminUser.getEmailAddress(), password
+			omniadminUser.getEmailAddress(), password
 		).locale(
 			LocaleUtil.getDefault()
 		).parameters(

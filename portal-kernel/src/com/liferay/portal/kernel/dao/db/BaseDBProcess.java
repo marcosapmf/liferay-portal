@@ -9,7 +9,6 @@ import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.UnsafeSupplier;
-import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -18,10 +17,13 @@ import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.ThrowableCollector;
+import com.liferay.portal.kernel.security.auth.CompanyInheritableThreadLocalCallable;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.upgrade.recorder.UpgradeSQLRecorder;
+import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.NotificationThreadLocal;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -284,6 +286,13 @@ public abstract class BaseDBProcess implements DBProcess {
 				newTableName));
 	}
 
+	protected void closeConnections() {
+		Map<Thread, Connection> connectionsMap = _connectionsMaps.get(
+			CompanyThreadLocal.getCompanyId());
+
+		_closeConnections(connectionsMap);
+	}
+
 	/**
 	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #hasTable(String)}
 	 */
@@ -292,6 +301,14 @@ public abstract class BaseDBProcess implements DBProcess {
 		DBInspector dbInspector = new DBInspector(connection);
 
 		return dbInspector.hasTable(tableName);
+	}
+
+	protected void dropIndexes(List<String> indexNames, String tableName)
+		throws Exception {
+
+		DB db = DBManagerUtil.getDB();
+
+		db.dropIndexes(connection, indexNames, tableName);
 	}
 
 	protected List<IndexMetadata> dropIndexes(
@@ -312,7 +329,8 @@ public abstract class BaseDBProcess implements DBProcess {
 			(Connection)ProxyUtil.newProxyInstance(
 				ClassLoader.getSystemClassLoader(),
 				new Class<?>[] {Connection.class},
-				new ConnectionThreadProxyInvocationHandler()));
+				new ConnectionThreadProxyInvocationHandler()),
+			ClassUtil.getClassName(this));
 	}
 
 	protected String[] getPrimaryKeyColumnNames(
@@ -486,6 +504,29 @@ public abstract class BaseDBProcess implements DBProcess {
 
 	protected Connection connection;
 
+	private void _closeConnections(Map<Thread, Connection> connectionsMap) {
+		if (MapUtil.isEmpty(connectionsMap)) {
+			return;
+		}
+
+		Collection<Connection> connections = connectionsMap.values();
+
+		try {
+			Iterator<Connection> iterator = connections.iterator();
+
+			while (iterator.hasNext()) {
+				Connection connection = iterator.next();
+
+				iterator.remove();
+
+				connection.close();
+			}
+		}
+		catch (SQLException sqlException) {
+			_log.error(sqlException);
+		}
+	}
+
 	private PreparedStatement _getConcurrentPreparedStatement(
 		String updateSQL,
 		Map<Thread, PreparedStatement> preparedStatementHashMap) {
@@ -545,6 +586,18 @@ public abstract class BaseDBProcess implements DBProcess {
 		}
 	}
 
+	private int _getConnectionsCount() {
+		int connectionsCount = 0;
+
+		for (Map<Thread, Connection> connectionsMap :
+				_connectionsMaps.values()) {
+
+			connectionsCount += connectionsMap.size();
+		}
+
+		return connectionsCount;
+	}
+
 	private InputStream _getInputStream(String path) {
 		ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
 
@@ -582,7 +635,10 @@ public abstract class BaseDBProcess implements DBProcess {
 			Objects.requireNonNull(unsafeBiConsumer);
 		}
 
-		ExecutorService executorService = Executors.newWorkStealingPool();
+		Runtime runtime = Runtime.getRuntime();
+
+		ExecutorService executorService = Executors.newFixedThreadPool(
+			runtime.availableProcessors());
 
 		ThrowableCollector throwableCollector = new ThrowableCollector();
 
@@ -595,37 +651,36 @@ public abstract class BaseDBProcess implements DBProcess {
 			boolean notificationEnabled = NotificationThreadLocal.isEnabled();
 			boolean workflowEnabled = WorkflowThreadLocal.isEnabled();
 
-			long companyId = CompanyThreadLocal.getCompanyId();
-
 			T next = null;
 
 			while ((next = unsafeSupplier.get()) != null) {
 				T current = next;
 
 				Future<Void> future = executorService.submit(
-					() -> {
-						NotificationThreadLocal.setEnabled(notificationEnabled);
-						WorkflowThreadLocal.setEnabled(workflowEnabled);
+					new CompanyInheritableThreadLocalCallable<>(
+						() -> {
+							NotificationThreadLocal.setEnabled(
+								notificationEnabled);
+							WorkflowThreadLocal.setEnabled(workflowEnabled);
 
-						try (SafeCloseable safeCloseable =
-								CompanyThreadLocal.lock(companyId)) {
-
-							if (Validator.isNull(updateSQL)) {
-								unsafeConsumer.accept(current);
+							try {
+								if (Validator.isNull(updateSQL)) {
+									unsafeConsumer.accept(current);
+								}
+								else {
+									unsafeBiConsumer.accept(
+										current,
+										_getConcurrentPreparedStatement(
+											updateSQL,
+											preparedStatementHashMap));
+								}
 							}
-							else {
-								unsafeBiConsumer.accept(
-									current,
-									_getConcurrentPreparedStatement(
-										updateSQL, preparedStatementHashMap));
+							catch (Exception exception) {
+								throwableCollector.collect(exception);
 							}
-						}
-						catch (Exception exception) {
-							throwableCollector.collect(exception);
-						}
 
-						return null;
-					});
+							return null;
+						}));
 
 				int futuresMaxSize = GetterUtil.getInteger(
 					PropsUtil.get(
@@ -679,6 +734,9 @@ public abstract class BaseDBProcess implements DBProcess {
 
 	private static final Log _log = LogFactoryUtil.getLog(BaseDBProcess.class);
 
+	private final Map<Long, Map<Thread, Connection>> _connectionsMaps =
+		new ConcurrentHashMap<>();
+
 	private class ConnectionThreadProxyInvocationHandler
 		implements InvocationHandler {
 
@@ -689,29 +747,27 @@ public abstract class BaseDBProcess implements DBProcess {
 			String methodName = method.getName();
 
 			if (methodName.equals("close")) {
-				Collection<Connection> connections = _connectionMap.values();
+				if (_getConnectionsCount() > 0) {
+					for (Map<Thread, Connection> connectionsMap :
+							_connectionsMaps.values()) {
 
-				Iterator<Connection> iterator = connections.iterator();
-
-				while (iterator.hasNext()) {
-					Connection connection = iterator.next();
-
-					iterator.remove();
-
-					method.invoke(connection, args);
+						_closeConnections(connectionsMap);
+					}
 				}
 
 				return null;
 			}
 
+			Map<Thread, Connection> connectionsMap =
+				_connectionsMaps.computeIfAbsent(
+					CompanyThreadLocal.getCompanyId(),
+					key -> new ConcurrentHashMap<>());
+
 			return method.invoke(
-				_connectionMap.computeIfAbsent(
+				connectionsMap.computeIfAbsent(
 					Thread.currentThread(), thread -> _getConnection()),
 				args);
 		}
-
-		private final Map<Thread, Connection> _connectionMap =
-			new ConcurrentHashMap<>();
 
 	}
 

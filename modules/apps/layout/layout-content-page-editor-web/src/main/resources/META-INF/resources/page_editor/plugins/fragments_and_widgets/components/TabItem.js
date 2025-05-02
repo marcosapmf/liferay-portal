@@ -7,6 +7,7 @@ import {ClayButtonWithIcon} from '@clayui/button';
 import ClayCard from '@clayui/card';
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
+import {FeatureIndicator} from 'frontend-js-components-web';
 import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useState} from 'react';
@@ -14,17 +15,15 @@ import React, {useCallback, useState} from 'react';
 import {FRAGMENTS_DISPLAY_STYLES} from '../../../app/config/constants/fragmentsDisplayStyles';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../app/config/constants/layoutDataItemTypes';
 import {LIST_ITEM_TYPES} from '../../../app/config/constants/listItemTypes';
-import {
-	useSelectItem,
-	useSelectMultipleItems,
-} from '../../../app/contexts/ControlsContext';
+import {useSelectMultipleItems} from '../../../app/contexts/ControlsContext';
 import {
 	useDisableKeyboardMovement,
-	useSetMovementSource,
+	useSetMovementSources,
 } from '../../../app/contexts/KeyboardMovementContext';
 import {useDispatch} from '../../../app/contexts/StoreContext';
 import addFragment from '../../../app/thunks/addFragment';
 import addItem from '../../../app/thunks/addItem';
+import addStepper from '../../../app/thunks/addStepper';
 import addWidget from '../../../app/thunks/addWidget';
 import toggleFragmentHighlighted from '../../../app/thunks/toggleFragmentHighlighted';
 import toggleWidgetHighlighted from '../../../app/thunks/toggleWidgetHighlighted';
@@ -43,22 +42,24 @@ const ITEM_PROPTYPES_SHAPE = PropTypes.shape({
 export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 	const dispatch = useDispatch();
 	const [disabled, setDisabled] = useState(item.disabled);
-	const setMovementSource = useSetMovementSource();
-	const selectItem = useSelectItem();
+	const setMovementSources = useSetMovementSources();
 	const selectMultipleItems = useSelectMultipleItems();
 
 	const onMovementSource = (event) => {
 		if (event.key === 'Enter' || event.key === ' ') {
 			event.preventDefault();
 
-			setMovementSource({
-				...item.data,
-				fragmentEntryType: item.data.type,
-				icon: item.icon,
-				isWidget: Boolean(item.data.portletId),
-				name: item.label,
-				type: item.type,
-			});
+			setMovementSources([
+				{
+					...item.data,
+					fragmentEntryType: item.data.type,
+					icon: item.icon,
+					isWidget: Boolean(item.data.portletId),
+					name: item.label,
+					portletId: item.data.portletId,
+					type: item.type,
+				},
+			]);
 		}
 	};
 
@@ -89,10 +90,12 @@ export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 
 	const {isDraggingSource, sourceRef} = useDragSymbol(
 		{
+			fieldTypes: item.data.fieldTypes,
 			fragmentEntryType: item.data.type,
 			icon: item.icon,
-			isWidget: item.data.portletId,
+			isWidget: Boolean(item.data.portletId),
 			label: item.label,
+			portletId: item.data.portletId,
 			type: item.type,
 		},
 		(parentId, position) => {
@@ -101,6 +104,9 @@ export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 			if (item.type === LAYOUT_DATA_ITEM_TYPES.fragment) {
 				if (item.data.portletId) {
 					thunk = addWidget;
+				}
+				else if (item.data.fieldTypes?.includes('stepper')) {
+					thunk = addStepper;
 				}
 				else {
 					thunk = addFragment;
@@ -118,9 +124,7 @@ export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 					itemType: item.type,
 					parentItemId: parentId,
 					position,
-					selectItems: Liferay.FeatureFlags['LPD-18221']
-						? selectMultipleItems
-						: selectItem,
+					selectItems: selectMultipleItems,
 				})
 			)
 				.then(() => {
@@ -190,10 +194,23 @@ const ListItem = ({
 				className="align-items-center d-flex h-100 justify-content-between w-100"
 				ref={handlerRef}
 			>
-				<div className="align-items-center d-flex page-editor__fragments-widgets__tab-list-item-body">
-					<ClayIcon className="mr-3" symbol={item.icon} />
+				<ClayIcon
+					className="flex-shrink-0 mr-3 mt-0"
+					symbol={item.icon}
+				/>
 
-					<div className="title">{item.label}</div>
+				<div className="align-items-center d-flex flex-wrap page-editor__fragments-widgets__tab-list-item-body">
+					<div
+						className={classNames('title', {
+							'mr-2': item.deprecated,
+						})}
+					>
+						{item.label}
+					</div>
+
+					{item.deprecated ? (
+						<FeatureIndicator type="deprecated" />
+					) : null}
 				</div>
 
 				{!disabled && (
@@ -374,7 +391,7 @@ HighlightButton.propTypes = {
 };
 
 const AddButton = ({isNavigationTarget, item, setItemActive}) => {
-	const setMovementSource = useSetMovementSource();
+	const setMovementSources = useSetMovementSources();
 	const disableMovement = useDisableKeyboardMovement();
 
 	return (
@@ -388,14 +405,16 @@ const AddButton = ({isNavigationTarget, item, setItemActive}) => {
 				disableMovement();
 			}}
 			onClick={() =>
-				setMovementSource({
-					...item.data,
-					fragmentEntryType: item.data.type,
-					icon: item.icon,
-					isWidget: Boolean(item.data.portletId),
-					name: item.label,
-					type: item.type,
-				})
+				setMovementSources([
+					{
+						...item.data,
+						fragmentEntryType: item.data.type,
+						icon: item.icon,
+						isWidget: Boolean(item.data.portletId),
+						name: item.label,
+						type: item.type,
+					},
+				])
 			}
 			onFocus={() => setItemActive(true)}
 			onKeyDown={(event) => event.stopPropagation()}

@@ -6,8 +6,8 @@
 package com.liferay.dynamic.data.mapping.item.selector.web.internal;
 
 import com.liferay.depot.util.SiteConnectedGroupGroupProviderUtil;
+import com.liferay.dynamic.data.mapping.item.selector.DDMTemplateItemSelectorCriterion;
 import com.liferay.dynamic.data.mapping.item.selector.DDMTemplateItemSelectorReturnType;
-import com.liferay.dynamic.data.mapping.item.selector.criterion.DDMTemplateItemSelectorCriterion;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateServiceUtil;
@@ -113,7 +113,7 @@ public class DDMTemplateItemSelectorViewDescriptor
 		long[] groupIds =
 			SiteConnectedGroupGroupProviderUtil.
 				getCurrentAndAncestorSiteAndDepotGroupIds(
-					_themeDisplay.getScopeGroupId(), true);
+					_themeDisplay.getScopeGroupId(), false, true);
 
 		ddmTemplateSearchContainer.setResultsAndTotal(
 			() -> DDMTemplateServiceUtil.search(
@@ -139,11 +139,6 @@ public class DDMTemplateItemSelectorViewDescriptor
 				WorkflowConstants.STATUS_ANY));
 
 		return ddmTemplateSearchContainer;
-	}
-
-	@Override
-	public boolean isShowBreadcrumb() {
-		return false;
 	}
 
 	@Override

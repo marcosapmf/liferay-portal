@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductConfiguration;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -16,6 +14,10 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,8 +46,45 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ProductConfigurationResource {
 
+	public void deleteProductConfiguration(Long id) throws Exception;
+
+	public Response deleteProductConfigurationBatch(
+			String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteProductConfigurationByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
 	public ProductConfiguration getProductByExternalReferenceCodeConfiguration(
 			String externalReferenceCode)
+		throws Exception;
+
+	public ProductConfiguration getProductConfiguration(Long id)
+		throws Exception;
+
+	public ProductConfiguration getProductConfigurationByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Page<ProductConfiguration>
+			getProductConfigurationListByExternalReferenceCodeProductConfigurationsPage(
+				String externalReferenceCode, String search,
+				Boolean showDifferences,
+				com.liferay.portal.kernel.search.filter.Filter filter,
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Page<ProductConfiguration>
+			getProductConfigurationListIdProductConfigurationsPage(
+				Long id, String search, Boolean showDifferences,
+				com.liferay.portal.kernel.search.filter.Filter filter,
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public ProductConfiguration getProductIdConfiguration(Long id)
 		throws Exception;
 
 	public Response patchProductByExternalReferenceCodeConfiguration(
@@ -53,11 +92,33 @@ public interface ProductConfigurationResource {
 			ProductConfiguration productConfiguration)
 		throws Exception;
 
-	public ProductConfiguration getProductIdConfiguration(Long id)
+	public ProductConfiguration patchProductConfiguration(
+			Long id, ProductConfiguration productConfiguration)
+		throws Exception;
+
+	public ProductConfiguration
+			patchProductConfigurationByExternalReferenceCode(
+				String externalReferenceCode,
+				ProductConfiguration productConfiguration)
 		throws Exception;
 
 	public Response patchProductIdConfiguration(
 			Long id, ProductConfiguration productConfiguration)
+		throws Exception;
+
+	public ProductConfiguration
+			postProductConfigurationListByExternalReferenceCodeProductConfiguration(
+				String externalReferenceCode,
+				ProductConfiguration productConfiguration)
+		throws Exception;
+
+	public ProductConfiguration
+			postProductConfigurationListIdProductConfiguration(
+				Long id, ProductConfiguration productConfiguration)
+		throws Exception;
+
+	public Response postProductConfigurationListIdProductConfigurationBatch(
+			String callbackURL, Object object)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -82,7 +143,8 @@ public interface ProductConfigurationResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -99,19 +161,31 @@ public interface ProductConfigurationResource {
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
 
-	public default Filter toFilter(String filterString) {
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
+
+	public void setVulcanBatchEngineImportTaskResource(
+		VulcanBatchEngineImportTaskResource
+			vulcanBatchEngineImportTaskResource);
+
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

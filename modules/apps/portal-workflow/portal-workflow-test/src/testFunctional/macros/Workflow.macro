@@ -42,7 +42,7 @@ definition {
 			Button.clickSave();
 		}
 
-		for (var workflowResourceValue : list "Blogs Entry,Calendar Event,Comment,Content Page,Knowledge Base Article,Message Boards Message,Page Revision,Web Content Article,Wiki Page") {
+		for (var workflowResourceValue : list "Blogs Entry,Calendar Event,Comment,Content Page,Knowledge Base Article,Message Boards Message,Page Revision,Web Content Article") {
 			if (IsElementNotPresent(assetType = ${workflowResourceValue}, locator1 = "WorkflowConfiguration#ASSET_TYPE_WORKFLOW_ASSIGNED", workflowAssigned = "No Workflow")) {
 				AssertClick.pauseAssertTextClickAt(
 					key_rowEntry = ${workflowResourceValue},
@@ -162,7 +162,7 @@ definition {
 			workflowAssignedTo = ${workflowAssignedTo},
 			workflowTask = ${workflowTask});
 
-		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Approve");
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Approve");
 
 		Workflow.confirmWorkflowAction();
 
@@ -250,7 +250,7 @@ definition {
 
 	@summary = "Default summary"
 	macro assignByDetails(comment = null, user = null) {
-		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to...");
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Assign to...");
 
 		AssertTextEquals(
 			locator1 = "WCPreview#PREVIEW_TITLE",
@@ -343,7 +343,7 @@ definition {
 			workflowAssetTitle = ${workflowAssetTitle},
 			workflowTask = ${workflowTask});
 
-		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to Me");
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Assign to Me");
 
 		Workflow.confirmWorkflowAction();
 
@@ -828,7 +828,7 @@ definition {
 			workflowAssignedTo = ${workflowAssignedTo},
 			workflowTask = ${workflowTask});
 
-		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Reject");
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Reject");
 
 		Workflow.confirmWorkflowAction();
 
@@ -880,7 +880,7 @@ definition {
 			workflowAssignedTo = ${workflowAssignedTo},
 			workflowTask = ${workflowTask});
 
-		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Resubmit");
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Resubmit");
 
 		Button.clickDone();
 
@@ -959,7 +959,7 @@ definition {
 			panel = "Site Administration",
 			portlet = "Web Content");
 
-		Workflow.configureWCWorkflowViaFolderInfo(workflowDefinition = "No Workflow");
+		DMDocument.expandInfo();
 	}
 
 	@summary = "Default summary"
@@ -1473,11 +1473,18 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro viewPendingTasks(workflowAssetType = null, workflowTask = null, workflowAssetTitle = null) {
+	macro viewPendingTasks(workflowAssetType = null, workflowTask = null, workflowAssetTitle = null, workflowNavTab = null) {
 		Workflow._gotoPendingFilter();
 
 		var key_workflowAssetTitle = ${workflowAssetTitle};
 		var key_workflowTask = ${workflowTask};
+
+		if (isSet(workflowNavTab)) {
+			Navigator.gotoNavTab(navTab = ${workflowNavTab});
+		}
+		else {
+			Navigator.gotoNavTab(navTab = "Assigned to My Roles");
+		}
 
 		AssertTextEquals(
 			locator1 = "MyWorkflowTasks#ASSIGNED_TO_MY_ROLES_TABLE_TASK",

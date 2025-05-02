@@ -10,7 +10,7 @@ import com.liferay.content.dashboard.info.item.ClassNameClassPKInfoItemIdentifie
 import com.liferay.content.dashboard.item.ContentDashboardItem;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtypeFactoryRegistry;
-import com.liferay.content.dashboard.web.internal.item.selector.criteria.content.dashboard.type.criterion.ContentDashboardItemSubtypeItemSelectorCriterion;
+import com.liferay.content.dashboard.web.internal.item.selector.ContentDashboardItemSubtypeItemSelectorCriterion;
 import com.liferay.content.dashboard.web.internal.item.type.ContentDashboardItemSubtypeUtil;
 import com.liferay.content.dashboard.web.internal.model.AssetVocabularyMetric;
 import com.liferay.content.dashboard.web.internal.servlet.taglib.util.ContentDashboardDropdownItemsProvider;
@@ -275,8 +275,8 @@ public class ContentDashboardAdminDisplayContext {
 	public List<? extends ContentDashboardItemSubtype>
 		getContentDashboardItemSubtypes() {
 
-		if (_contentDashboardItemSubtypePayloads != null) {
-			return _contentDashboardItemSubtypePayloads;
+		if (_contentDashboardItemSubtypes != null) {
+			return _contentDashboardItemSubtypes;
 		}
 
 		String[] contentDashboardItemSubtypePayloads =
@@ -285,20 +285,45 @@ public class ContentDashboardAdminDisplayContext {
 				new String[0], false);
 
 		if (ArrayUtil.isEmpty(contentDashboardItemSubtypePayloads)) {
-			_contentDashboardItemSubtypePayloads = Collections.emptyList();
+			_contentDashboardItemSubtypes = Collections.emptyList();
 		}
 		else {
-			_contentDashboardItemSubtypePayloads =
-				TransformUtil.transformToList(
-					contentDashboardItemSubtypePayloads,
-					contentDashboardItemSubtypePayload ->
-						ContentDashboardItemSubtypeUtil.
-							toContentDashboardItemSubtype(
-								_contentDashboardItemSubtypeFactoryRegistry,
-								contentDashboardItemSubtypePayload));
+			_contentDashboardItemSubtypes = TransformUtil.transformToList(
+				contentDashboardItemSubtypePayloads,
+				contentDashboardItemSubtypePayload ->
+					ContentDashboardItemSubtypeUtil.
+						toContentDashboardItemSubtype(
+							_contentDashboardItemSubtypeFactoryRegistry,
+							contentDashboardItemSubtypePayload));
 		}
 
-		return _contentDashboardItemSubtypePayloads;
+		return _contentDashboardItemSubtypes;
+	}
+
+	public String getContentPerformanceDataFetchURL(
+		InfoItemReference infoItemReference) {
+
+		InfoItemIdentifier infoItemIdentifier =
+			infoItemReference.getInfoItemIdentifier();
+
+		if (!(infoItemIdentifier instanceof ClassPKInfoItemIdentifier)) {
+			return null;
+		}
+
+		ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+			(ClassPKInfoItemIdentifier)infoItemIdentifier;
+
+		return ResourceURLBuilder.createResourceURL(
+			_liferayPortletResponse
+		).setBackURL(
+			_portal.getCurrentURL(_liferayPortletRequest)
+		).setParameter(
+			"className", infoItemReference.getClassName()
+		).setParameter(
+			"classPK", String.valueOf(classPKInfoItemIdentifier.getClassPK())
+		).setResourceID(
+			"/content_dashboard/get_content_performance_info"
+		).buildString();
 	}
 
 	public Map<String, Object> getData() {
@@ -578,8 +603,7 @@ public class ContentDashboardAdminDisplayContext {
 		_contentDashboardDropdownItemsProvider;
 	private final ContentDashboardItemSubtypeFactoryRegistry
 		_contentDashboardItemSubtypeFactoryRegistry;
-	private List<ContentDashboardItemSubtype>
-		_contentDashboardItemSubtypePayloads;
+	private List<ContentDashboardItemSubtype> _contentDashboardItemSubtypes;
 	private Map<String, Object> _data;
 	private String _dateType;
 	private String _endDateString;

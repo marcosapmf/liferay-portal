@@ -13,8 +13,6 @@ import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -35,10 +33,12 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -68,7 +68,175 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BaseShipmentResourceImpl
 	implements EntityModelResource, ShipmentResource,
-			   VulcanBatchEngineTaskItemDelegate<Shipment> {
+			   VulcanBatchEngineTaskItemDelegate<Shipment>,
+			   VulcanCRUDItemDelegate<Shipment> {
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/{shipmentId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "shipmentId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/shipments/{shipmentId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteShipment(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("shipmentId")
+			Long shipmentId)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
+	)
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/shipments/batch")
+	@javax.ws.rs.Produces("application/json")
+	@Override
+	public Response deleteShipmentBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			Object object)
+		throws Exception {
+
+		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineImportTaskResource.deleteImportTask(
+				Shipment.class.getName(), callbackURL, object)
+		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path(
+		"/shipments/by-externalReferenceCode/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteShipmentByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/{shipmentId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "shipmentId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/shipments/{shipmentId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Shipment getShipment(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("shipmentId")
+			Long shipmentId)
+		throws Exception {
+
+		return new Shipment();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrive information of the given Shipment."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/shipments/by-externalReferenceCode/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Shipment getShipmentByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+
+		return new Shipment();
+	}
 
 	/**
 	 * Invoke this method with the command line:
@@ -110,9 +278,11 @@ public abstract class BaseShipmentResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
 			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -121,84 +291,127 @@ public abstract class BaseShipmentResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/export-batch'  -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/{shipmentId}' -d $'{"carrier": ___, "customFields": ___, "expectedDate": ___, "externalReferenceCode": ___, "orderExternalReferenceCode": ___, "orderId": ___, "shipmentItems": ___, "shippingAddress": ___, "shippingAddressId": ___, "shippingDate": ___, "shippingMethodId": ___, "trackingNumber": ___, "trackingURL": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "filter"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "search"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "sort"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "contentType"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fieldNames"
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "shipmentId"
 			)
 		}
 	)
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
 	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/shipments/export-batch")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/json")
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.PATCH
+	@javax.ws.rs.Path("/shipments/{shipmentId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Response postShipmentsPageExportBatch(
+	public Shipment patchShipment(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("search")
-			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.DefaultValue("JSON")
-			@javax.ws.rs.QueryParam("contentType")
-			String contentType,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("fieldNames")
-			String fieldNames)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("shipmentId")
+			Long shipmentId,
+			Shipment shipment)
 		throws Exception {
 
-		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
-		vulcanBatchEngineExportTaskResource.setGroupLocalService(
-			groupLocalService);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineExportTaskResource.postExportTask(
-				Shipment.class.getName(), callbackURL, contentType, fieldNames)
-		).build();
+		return new Shipment();
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments' -d $'{"carrier": ___, "customFields": ___, "expectedDate": ___, "externalReferenceCode": ___, "orderId": ___, "shipmentItems": ___, "shippingAddress": ___, "shippingAddressId": ___, "shippingDate": ___, "shippingMethodId": ___, "trackingNumber": ___, "trackingURL": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/by-externalReferenceCode/{externalReferenceCode}' -d $'{"carrier": ___, "customFields": ___, "expectedDate": ___, "externalReferenceCode": ___, "orderExternalReferenceCode": ___, "orderId": ___, "shipmentItems": ___, "shippingAddress": ___, "shippingAddressId": ___, "shippingDate": ___, "shippingMethodId": ___, "trackingNumber": ___, "trackingURL": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.PATCH
+	@javax.ws.rs.Path(
+		"/shipments/by-externalReferenceCode/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Shipment patchShipmentByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			Shipment shipment)
+		throws Exception {
+
+		Shipment existingShipment = getShipmentByExternalReferenceCode(
+			externalReferenceCode);
+
+		if (shipment.getCarrier() != null) {
+			existingShipment.setCarrier(shipment.getCarrier());
+		}
+
+		if (shipment.getCustomFields() != null) {
+			existingShipment.setCustomFields(shipment.getCustomFields());
+		}
+
+		if (shipment.getExpectedDate() != null) {
+			existingShipment.setExpectedDate(shipment.getExpectedDate());
+		}
+
+		if (shipment.getExternalReferenceCode() != null) {
+			existingShipment.setExternalReferenceCode(
+				shipment.getExternalReferenceCode());
+		}
+
+		if (shipment.getOrderExternalReferenceCode() != null) {
+			existingShipment.setOrderExternalReferenceCode(
+				shipment.getOrderExternalReferenceCode());
+		}
+
+		if (shipment.getOrderId() != null) {
+			existingShipment.setOrderId(shipment.getOrderId());
+		}
+
+		if (shipment.getShippingAddressId() != null) {
+			existingShipment.setShippingAddressId(
+				shipment.getShippingAddressId());
+		}
+
+		if (shipment.getShippingDate() != null) {
+			existingShipment.setShippingDate(shipment.getShippingDate());
+		}
+
+		if (shipment.getShippingMethodId() != null) {
+			existingShipment.setShippingMethodId(
+				shipment.getShippingMethodId());
+		}
+
+		if (shipment.getTrackingNumber() != null) {
+			existingShipment.setTrackingNumber(shipment.getTrackingNumber());
+		}
+
+		if (shipment.getTrackingURL() != null) {
+			existingShipment.setTrackingURL(shipment.getTrackingURL());
+		}
+
+		preparePatch(shipment, existingShipment);
+
+		return putShipmentByExternalReferenceCode(
+			externalReferenceCode, existingShipment);
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments' -d $'{"carrier": ___, "customFields": ___, "expectedDate": ___, "externalReferenceCode": ___, "orderExternalReferenceCode": ___, "orderId": ___, "shipmentItems": ___, "shippingAddress": ___, "shippingAddressId": ___, "shippingDate": ___, "shippingMethodId": ___, "trackingNumber": ___, "trackingURL": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
@@ -254,186 +467,6 @@ public abstract class BaseShipmentResourceImpl
 			vulcanBatchEngineImportTaskResource.postImportTask(
 				Shipment.class.getName(), callbackURL, null, object)
 		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path(
-		"/shipments/by-externalReferenceCode/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteShipmentByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrive information of the given Shipment."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/shipments/by-externalReferenceCode/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Shipment getShipmentByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-
-		return new Shipment();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/by-externalReferenceCode/{externalReferenceCode}' -d $'{"carrier": ___, "customFields": ___, "expectedDate": ___, "externalReferenceCode": ___, "orderId": ___, "shipmentItems": ___, "shippingAddress": ___, "shippingAddressId": ___, "shippingDate": ___, "shippingMethodId": ___, "trackingNumber": ___, "trackingURL": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path(
-		"/shipments/by-externalReferenceCode/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Shipment patchShipmentByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode,
-			Shipment shipment)
-		throws Exception {
-
-		Shipment existingShipment = getShipmentByExternalReferenceCode(
-			externalReferenceCode);
-
-		if (shipment.getCarrier() != null) {
-			existingShipment.setCarrier(shipment.getCarrier());
-		}
-
-		existingShipment.setCustomFields(shipment.getCustomFields());
-
-		if (shipment.getExpectedDate() != null) {
-			existingShipment.setExpectedDate(shipment.getExpectedDate());
-		}
-
-		if (shipment.getExternalReferenceCode() != null) {
-			existingShipment.setExternalReferenceCode(
-				shipment.getExternalReferenceCode());
-		}
-
-		if (shipment.getOrderId() != null) {
-			existingShipment.setOrderId(shipment.getOrderId());
-		}
-
-		if (shipment.getShippingAddressId() != null) {
-			existingShipment.setShippingAddressId(
-				shipment.getShippingAddressId());
-		}
-
-		if (shipment.getShippingDate() != null) {
-			existingShipment.setShippingDate(shipment.getShippingDate());
-		}
-
-		if (shipment.getShippingMethodId() != null) {
-			existingShipment.setShippingMethodId(
-				shipment.getShippingMethodId());
-		}
-
-		if (shipment.getTrackingNumber() != null) {
-			existingShipment.setTrackingNumber(shipment.getTrackingNumber());
-		}
-
-		if (shipment.getTrackingURL() != null) {
-			existingShipment.setTrackingURL(shipment.getTrackingURL());
-		}
-
-		preparePatch(shipment, existingShipment);
-
-		return putShipmentByExternalReferenceCode(
-			externalReferenceCode, existingShipment);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/by-externalReferenceCode/{externalReferenceCode}' -d $'{"carrier": ___, "customFields": ___, "expectedDate": ___, "externalReferenceCode": ___, "orderId": ___, "shipmentItems": ___, "shippingAddress": ___, "shippingAddressId": ___, "shippingDate": ___, "shippingMethodId": ___, "trackingNumber": ___, "trackingURL": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/shipments/by-externalReferenceCode/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
-	@Override
-	public Shipment putShipmentByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode,
-			Shipment shipment)
-		throws Exception {
-
-		return new Shipment();
 	}
 
 	/**
@@ -535,140 +568,6 @@ public abstract class BaseShipmentResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/{shipmentId}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "shipmentId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/shipments/{shipmentId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteShipment(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("shipmentId")
-			Long shipmentId)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
-	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/shipments/batch")
-	@javax.ws.rs.Produces("application/json")
-	@Override
-	public Response deleteShipmentBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			Object object)
-		throws Exception {
-
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.deleteImportTask(
-				Shipment.class.getName(), callbackURL, object)
-		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/{shipmentId}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "shipmentId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/shipments/{shipmentId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Shipment getShipment(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("shipmentId")
-			Long shipmentId)
-		throws Exception {
-
-		return new Shipment();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/{shipmentId}' -d $'{"carrier": ___, "customFields": ___, "expectedDate": ___, "externalReferenceCode": ___, "orderId": ___, "shipmentItems": ___, "shippingAddress": ___, "shippingAddressId": ___, "shippingDate": ___, "shippingMethodId": ___, "trackingNumber": ___, "trackingURL": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "shipmentId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path("/shipments/{shipmentId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Shipment patchShipment(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("shipmentId")
-			Long shipmentId,
-			Shipment shipment)
-		throws Exception {
-
-		return new Shipment();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/{shipmentId}/status-delivered'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -756,6 +655,119 @@ public abstract class BaseShipmentResourceImpl
 		return new Shipment();
 	}
 
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/export-batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "filter"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "contentType"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fieldNames"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
+	)
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.Path("/shipments/export-batch")
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces("application/json")
+	@Override
+	public Response postShipmentsPageExportBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("search")
+			String search,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.DefaultValue("JSON")
+			@javax.ws.rs.QueryParam("contentType")
+			String contentType,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("fieldNames")
+			String fieldNames)
+		throws Exception {
+
+		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setGroupLocalService(
+			groupLocalService);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineExportTaskResource.postExportTask(
+				Shipment.class.getName(), callbackURL, contentType, fieldNames)
+		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/by-externalReferenceCode/{externalReferenceCode}' -d $'{"carrier": ___, "customFields": ___, "expectedDate": ___, "externalReferenceCode": ___, "orderExternalReferenceCode": ___, "orderId": ___, "shipmentItems": ___, "shippingAddress": ___, "shippingAddressId": ___, "shippingDate": ___, "shippingMethodId": ___, "trackingNumber": ___, "trackingURL": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Shipment")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path(
+		"/shipments/by-externalReferenceCode/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public Shipment putShipmentByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			Shipment shipment)
+		throws Exception {
+
+		return new Shipment();
+	}
+
 	@Override
 	@SuppressWarnings("PMD.UnusedLocalVariable")
 	public void create(
@@ -776,12 +788,6 @@ public abstract class BaseShipmentResourceImpl
 		if (StringUtil.equalsIgnoreCase(createStrategy, "UPSERT")) {
 			String updateStrategy = (String)parameters.getOrDefault(
 				"updateStrategy", "UPDATE");
-
-			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
-				shipmentUnsafeFunction =
-					shipment -> putShipmentByExternalReferenceCode(
-						shipment.getExternalReferenceCode(), shipment);
-			}
 
 			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
 				shipmentUnsafeFunction = shipment -> {
@@ -804,6 +810,12 @@ public abstract class BaseShipmentResourceImpl
 
 					return persistedShipment;
 				};
+			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				shipmentUnsafeFunction =
+					shipment -> putShipmentByExternalReferenceCode(
+						shipment.getExternalReferenceCode(), shipment);
 			}
 		}
 
@@ -834,8 +846,46 @@ public abstract class BaseShipmentResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (Shipment shipment : shipments) {
-			deleteShipment(shipment.getId());
+		UnsafeFunction<Shipment, Shipment, Exception> shipmentUnsafeFunction =
+			shipment -> {
+				if (shipment.getId() != null) {
+					try {
+						deleteShipment(shipment.getId());
+
+						return shipment;
+					}
+					catch (Exception exception) {
+						if (shipment.getExternalReferenceCode() != null) {
+							deleteShipmentByExternalReferenceCode(
+								shipment.getExternalReferenceCode());
+
+							return shipment;
+						}
+					}
+				}
+				else if (shipment.getExternalReferenceCode() != null) {
+					deleteShipmentByExternalReferenceCode(
+						shipment.getExternalReferenceCode());
+
+					return shipment;
+				}
+
+				throw new UnsupportedOperationException(
+					"Unable to delete by external reference code or ID");
+			};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				shipments, shipmentUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				shipments, shipmentUnsafeFunction::apply);
+		}
+		else {
+			for (Shipment shipment : shipments) {
+				shipmentUnsafeFunction.apply(shipment);
+			}
 		}
 	}
 
@@ -872,7 +922,9 @@ public abstract class BaseShipmentResourceImpl
 
 	@Override
 	public Page<Shipment> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -949,6 +1001,11 @@ public abstract class BaseShipmentResourceImpl
 		return null;
 	}
 
+	@Override
+	public Shipment getItem(Long id) throws Exception {
+		return getShipment(id);
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
 	}
@@ -989,7 +1046,8 @@ public abstract class BaseShipmentResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -999,7 +1057,8 @@ public abstract class BaseShipmentResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -1034,6 +1093,10 @@ public abstract class BaseShipmentResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "headless-commerce-admin-shipment";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -1051,7 +1114,7 @@ public abstract class BaseShipmentResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -1076,7 +1139,7 @@ public abstract class BaseShipmentResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -1094,13 +1157,13 @@ public abstract class BaseShipmentResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -1111,7 +1174,7 @@ public abstract class BaseShipmentResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1239,7 +1302,8 @@ public abstract class BaseShipmentResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

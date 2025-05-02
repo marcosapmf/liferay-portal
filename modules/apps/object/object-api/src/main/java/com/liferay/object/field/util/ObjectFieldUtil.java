@@ -19,10 +19,10 @@ import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.service.ObjectFieldLocalServiceUtil;
-import com.liferay.object.service.ObjectFieldSettingLocalServiceUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -206,7 +206,9 @@ public class ObjectFieldUtil {
 		else if ((value.length() == 27) && (value.charAt(26) == 'M')) {
 			return "dd-MMM-yyyy hh:mm:ss.SSS a";
 		}
-		else if ((value.length() == 28) && (value.charAt(23) == '+')) {
+		else if ((value.length() == 28) &&
+				 ((value.charAt(23) == '+') || (value.charAt(23) == '-'))) {
+
 			return "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 		}
 		else if (value.length() == 28) {
@@ -218,6 +220,41 @@ public class ObjectFieldUtil {
 
 	public static boolean isMetadata(String objectFieldName) {
 		return _metadataObjectFieldNames.contains(objectFieldName);
+	}
+
+	public static boolean isReadOnly(
+		DDMExpressionFactory ddmExpressionFactory, ObjectField objectField,
+		Map<String, Object> values) {
+
+		if (Objects.equals(
+				objectField.getReadOnly(),
+				ObjectFieldConstants.READ_ONLY_CONDITIONAL)) {
+
+			try {
+				DDMExpression<Boolean> ddmExpression =
+					ddmExpressionFactory.createExpression(
+						CreateExpressionRequest.Builder.newBuilder(
+							objectField.getReadOnlyConditionExpression()
+						).withDDMExpressionFieldAccessor(
+							new ObjectEntryDDMExpressionFieldAccessor(values)
+						).build());
+
+				ddmExpression.setVariables(values);
+
+				return ddmExpression.evaluate();
+			}
+			catch (DDMExpressionException ddmExpressionException) {
+				_log.error(ddmExpressionException);
+			}
+		}
+		else if (Objects.equals(
+					objectField.getReadOnly(),
+					ObjectFieldConstants.READ_ONLY_TRUE)) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	public static Map<String, ObjectField> toObjectFieldsMap(
@@ -251,9 +288,8 @@ public class ObjectFieldUtil {
 			if (existingValues.get(objectField.getName()) == null) {
 				existingValues.put(
 					objectField.getName(),
-					ObjectFieldSettingUtil.getDefaultValueAsString(
-						null, objectField.getObjectFieldId(),
-						ObjectFieldSettingLocalServiceUtil.getService(), null));
+					ObjectFieldSettingUtil.getDefaultValue(
+						null, objectField, null));
 			}
 
 			if (objectField.isLocalized()) {
@@ -340,6 +376,20 @@ public class ObjectFieldUtil {
 			Objects.equals(
 				objectField.getDBType(), ObjectFieldConstants.DB_TYPE_LONG)) {
 
+			if (Objects.equals(
+					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT) &&
+				Objects.equals(
+					JSONFactoryUtil.createJSONObject(
+						JSONFactoryUtil.looseSerialize(value)
+					).get(
+						"id"
+					),
+					existingValue.toString())) {
+
+				return;
+			}
+
 			BigDecimal bigDecimal1 = new BigDecimal(existingValue.toString());
 			BigDecimal bigDecimal2 = new BigDecimal(value.toString());
 
@@ -358,8 +408,21 @@ public class ObjectFieldUtil {
 					 ObjectFieldConstants.DB_TYPE_STRING)) {
 
 			if (Objects.equals(
-					GetterUtil.getString(value),
-					GetterUtil.getString(existingValue))) {
+					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_PICKLIST) &&
+				Objects.equals(
+					JSONFactoryUtil.createJSONObject(
+						JSONFactoryUtil.looseSerializeDeep(value)
+					).get(
+						"key"
+					),
+					existingValue)) {
+
+				return;
+			}
+			else if (Objects.equals(
+						GetterUtil.getString(value),
+						GetterUtil.getString(existingValue))) {
 
 				return;
 			}

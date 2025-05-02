@@ -37,8 +37,8 @@ public class ConfigurationDBPartitionUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		if (PortalInstancePool.getDefaultCompanyId() ==
-				CompanyThreadLocal.getCompanyId()) {
+		if (CompanyThreadLocal.getCompanyId() ==
+				PortalInstancePool.getDefaultCompanyId()) {
 
 			try (PreparedStatement preparedStatement =
 					connection.prepareStatement(
@@ -77,12 +77,15 @@ public class ConfigurationDBPartitionUpgradeProcess extends UpgradeProcess {
 
 			long[] companyIds = PortalInstancePool.getCompanyIds();
 
+			for (long companyId : companyIds) {
+				DBPartitionUtil.replaceByTable(
+					connection, companyId, "Configuration_", false);
+			}
+
 			_atomicInteger.set(companyIds.length - 1);
 
 			return;
 		}
-
-		DBPartitionUtil.replaceByTable(connection, false, "Configuration_");
 
 		for (ScopeConfiguration scopeConfiguration : _scopeConfigurations) {
 			if (_isApplicable(
@@ -136,11 +139,7 @@ public class ConfigurationDBPartitionUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected boolean isSkipUpgradeProcess() {
-		if (!DBPartition.isPartitionEnabled()) {
-			return true;
-		}
-
-		return false;
+		return !DBPartition.isPartitionEnabled();
 	}
 
 	private ScopeConfiguration _getScopeConfiguration(

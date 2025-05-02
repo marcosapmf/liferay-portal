@@ -27,6 +27,7 @@ import com.liferay.blogs.settings.BlogsGroupServiceSettings;
 import com.liferay.blogs.social.BlogsActivityKeys;
 import com.liferay.blogs.util.comparator.EntryDisplayDateComparator;
 import com.liferay.blogs.util.comparator.EntryIdComparator;
+import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
@@ -43,7 +44,6 @@ import com.liferay.portal.configuration.module.configuration.ConfigurationProvid
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -158,21 +158,17 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 	@Override
 	public FileEntry addAttachmentFileEntry(
-			BlogsEntry entry, long userId, String fileName, String mimeType,
-			InputStream inputStream)
+			String externalReferenceCode, long userId, long groupId,
+			String fileName, String mimeType, InputStream inputStream)
 		throws PortalException {
 
-		Folder folder = addAttachmentsFolder(userId, entry.getGroupId());
-
-		String uniqueFileName = _uniqueFileNameProvider.provide(
-			fileName,
-			curFileName -> _hasFileEntry(
-				entry.getGroupId(), folder.getFolderId(), curFileName));
+		Folder folder = addAttachmentsFolder(userId, groupId);
 
 		return _portletFileRepository.addPortletFileEntry(
-			null, entry.getGroupId(), userId, null, 0,
+			externalReferenceCode, groupId, userId, null, 0,
 			BlogsConstants.SERVICE_NAME, folder.getFolderId(), inputStream,
-			uniqueFileName, mimeType, true);
+			_getUniqueFileName(groupId, fileName, folder.getFolderId()),
+			mimeType, true);
 	}
 
 	@Override
@@ -569,16 +565,16 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 			return;
 		}
 
-		List<BlogsEntry> entries = blogsEntryPersistence.findByLtD_S(
+		List<BlogsEntry> blogsEntries = blogsEntryPersistence.findByLtD_S(
 			date, WorkflowConstants.STATUS_SCHEDULED);
 
-		for (BlogsEntry entry : entries) {
+		for (BlogsEntry blogsEntry : blogsEntries) {
 			ServiceContext serviceContext = new ServiceContext();
 
 			serviceContext.setAttribute(
 				_INVOKED_BY_CHECK_ENTRIES, Boolean.TRUE);
 
-			String[] trackbacks = StringUtil.split(entry.getTrackbacks());
+			String[] trackbacks = StringUtil.split(blogsEntry.getTrackbacks());
 
 			serviceContext.setAttribute("trackbacks", trackbacks);
 
@@ -589,16 +585,30 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 			if (Validator.isNotNull(portletId)) {
 				serviceContext.setLayoutFullURL(
-					_portal.getLayoutFullURL(entry.getGroupId(), portletId));
+					_portal.getLayoutFullURL(
+						blogsEntry.getGroupId(), portletId));
 			}
 
-			serviceContext.setScopeGroupId(entry.getGroupId());
+			serviceContext.setScopeGroupId(blogsEntry.getGroupId());
 
 			blogsEntryLocalService.updateStatus(
-				entry.getStatusByUserId(), entry.getEntryId(),
+				blogsEntry.getStatusByUserId(), blogsEntry.getEntryId(),
 				WorkflowConstants.STATUS_APPROVED, serviceContext,
 				new HashMap<>());
 		}
+	}
+
+	@Override
+	public void deleteAttachmentFileEntry(long fileEntryId)
+		throws PortalException {
+
+		FileEntry fileEntry = _portletFileRepository.getPortletFileEntry(
+			fileEntryId);
+
+		_validateAttachmentFileEntry(fileEntry);
+
+		_portletFileRepository.deletePortletFileEntry(
+			fileEntry.getFileEntryId());
 	}
 
 	@Override
@@ -748,6 +758,32 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 	}
 
 	@Override
+	public FileEntry getAttachmentFileEntry(long fileEntryId)
+		throws PortalException {
+
+		FileEntry fileEntry = _portletFileRepository.getPortletFileEntry(
+			fileEntryId);
+
+		_validateAttachmentFileEntry(fileEntry);
+
+		return fileEntry;
+	}
+
+	@Override
+	public FileEntry getAttachmentFileEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		FileEntry fileEntry =
+			_portletFileRepository.getPortletFileEntryByExternalReferenceCode(
+				externalReferenceCode, groupId);
+
+		_validateAttachmentFileEntry(fileEntry);
+
+		return fileEntry;
+	}
+
+	@Override
 	public List<BlogsEntry> getCompanyEntries(
 		long companyId, Date displayDate,
 		QueryDefinition<BlogsEntry> queryDefinition) {
@@ -787,20 +823,21 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 		BlogsEntry[] entries = blogsEntryPersistence.findByG_D_S_PrevAndNext(
 			entryId, entry.getGroupId(), entry.getDisplayDate(),
-			WorkflowConstants.STATUS_APPROVED, new EntryIdComparator(true));
+			WorkflowConstants.STATUS_APPROVED,
+			EntryIdComparator.getInstance(true));
 
 		if (entries[0] == null) {
 			entries[0] = blogsEntryPersistence.fetchByG_LtD_S_Last(
 				entry.getGroupId(), entry.getDisplayDate(),
 				WorkflowConstants.STATUS_APPROVED,
-				new EntryDisplayDateComparator(true));
+				EntryDisplayDateComparator.getInstance(true));
 		}
 
 		if (entries[2] == null) {
 			entries[2] = blogsEntryPersistence.fetchByG_GtD_S_First(
 				entry.getGroupId(), entry.getDisplayDate(),
 				WorkflowConstants.STATUS_APPROVED,
-				new EntryDisplayDateComparator(true));
+				EntryDisplayDateComparator.getInstance(true));
 		}
 
 		return entries;
@@ -956,10 +993,11 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 	public void moveEntriesToTrash(long groupId, long userId)
 		throws PortalException {
 
-		List<BlogsEntry> entries = blogsEntryPersistence.findByGroupId(groupId);
+		List<BlogsEntry> blogsEntries = blogsEntryPersistence.findByGroupId(
+			groupId);
 
-		for (BlogsEntry entry : entries) {
-			blogsEntryLocalService.moveEntryToTrash(userId, entry);
+		for (BlogsEntry blogsEntry : blogsEntries) {
+			blogsEntryLocalService.moveEntryToTrash(userId, blogsEntry);
 		}
 	}
 
@@ -1870,10 +1908,7 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 	private boolean _isUpdatedAssetCategories(
 		BlogsEntry entry, ServiceContext serviceContext) {
 
-		if ((serviceContext == null) ||
-			!FeatureFlagManagerUtil.isEnabled(
-				entry.getCompanyId(), "LPD-11147")) {
-
+		if (serviceContext == null) {
 			return false;
 		}
 
@@ -1890,22 +1925,13 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 			serviceContext.getAttribute("friendlyURLAssetCategoryIds"));
 
 		if (assetEntry == null) {
-			if (ArrayUtil.isEmpty(friendlyURLAssetCategoryIds)) {
-				return false;
-			}
-
-			return true;
+			return ArrayUtil.isNotEmpty(friendlyURLAssetCategoryIds);
 		}
 
 		List<AssetCategory> assetCategories = assetEntry.getCategories();
 
-		if (assetCategories.containsAll(
-				ListUtil.toList(friendlyURLAssetCategoryIds))) {
-
-			return false;
-		}
-
-		return true;
+		return !assetCategories.containsAll(
+			ListUtil.toList(friendlyURLAssetCategoryIds));
 	}
 
 	private boolean _isValidImageMimeType(FileEntry fileEntry) {
@@ -2193,10 +2219,10 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 		Source source = new Source(entry.getContent());
 
-		List<StartTag> tags = source.getAllStartTags("a");
+		List<StartTag> startTags = source.getAllStartTags("a");
 
-		for (StartTag tag : tags) {
-			String targetUri = tag.getAttributeValue("href");
+		for (StartTag startTag : startTags) {
+			String targetUri = startTag.getAttributeValue("href");
 
 			if (Validator.isNotNull(targetUri)) {
 				try {
@@ -2253,17 +2279,17 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 				entry.getUrlTitle())
 		).build();
 
-		Set<String> trackbacksSet;
+		Set<String> newTrackbacks;
 
 		if (ArrayUtil.isNotEmpty(trackbacks)) {
-			trackbacksSet = SetUtil.fromArray(trackbacks);
+			newTrackbacks = SetUtil.fromArray(trackbacks);
 		}
 		else {
-			trackbacksSet = new HashSet<>();
+			newTrackbacks = new HashSet<>();
 		}
 
 		if (pingOldTrackbacks) {
-			trackbacksSet.addAll(
+			newTrackbacks.addAll(
 				SetUtil.fromArray(StringUtil.split(entry.getTrackbacks())));
 
 			entry.setTrackbacks(StringPool.BLANK);
@@ -2276,33 +2302,36 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 		Set<String> validTrackbacks = new HashSet<>();
 
-		for (String trackback : trackbacksSet) {
-			if (oldTrackbacks.contains(trackback)) {
+		for (String newTrackback : newTrackbacks) {
+			if (oldTrackbacks.contains(newTrackback)) {
 				continue;
 			}
 
 			try {
-				if (LinkbackProducerUtil.sendTrackback(trackback, parts)) {
-					validTrackbacks.add(trackback);
+				if (LinkbackProducerUtil.sendTrackback(newTrackback, parts)) {
+					validTrackbacks.add(newTrackback);
 				}
 			}
 			catch (Exception exception) {
 				_log.error(
-					"Error while sending trackback at " + trackback, exception);
+					"Error while sending trackback at " + newTrackback,
+					exception);
 			}
 		}
 
-		if (!validTrackbacks.isEmpty()) {
-			String newTrackbacks = StringUtil.merge(validTrackbacks);
-
-			if (Validator.isNotNull(entry.getTrackbacks())) {
-				newTrackbacks += StringPool.COMMA + entry.getTrackbacks();
-			}
-
-			entry.setTrackbacks(newTrackbacks);
-
-			blogsEntryPersistence.update(entry);
+		if (validTrackbacks.isEmpty()) {
+			return;
 		}
+
+		String mergedTrackbacks = StringUtil.merge(validTrackbacks);
+
+		if (Validator.isNotNull(entry.getTrackbacks())) {
+			mergedTrackbacks += StringPool.COMMA + entry.getTrackbacks();
+		}
+
+		entry.setTrackbacks(mergedTrackbacks);
+
+		blogsEntryPersistence.update(entry);
 	}
 
 	private String _sanitizeUrlTitle(String urlTitle) {
@@ -2399,6 +2428,25 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 		if (content.length() > contentMaxLength) {
 			throw new EntryContentException(
 				"Content has more than " + contentMaxLength + " characters");
+		}
+	}
+
+	private void _validateAttachmentFileEntry(FileEntry fileEntry)
+		throws PortalException {
+
+		Repository repository = _portletFileRepository.getPortletRepository(
+			fileEntry.getGroupId(), BlogsConstants.SERVICE_NAME);
+
+		Folder folder = _portletFileRepository.getPortletFolder(
+			repository.getRepositoryId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			BlogsConstants.SERVICE_NAME);
+
+		if (fileEntry.getFolderId() != folder.getFolderId()) {
+			throw new NoSuchFileEntryException(
+				StringBundler.concat(
+					"File entry ", fileEntry.getFileEntryId(),
+					" does not belong to folder ", folder.getFolderId()));
 		}
 	}
 

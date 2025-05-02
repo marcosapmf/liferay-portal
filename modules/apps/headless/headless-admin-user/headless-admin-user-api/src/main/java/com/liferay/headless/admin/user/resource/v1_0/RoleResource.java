@@ -6,8 +6,6 @@
 package com.liferay.headless.admin.user.resource.v1_0;
 
 import com.liferay.headless.admin.user.dto.v1_0.Role;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,43 +46,55 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface RoleResource {
 
-	public Page<Role> getRolesPage(
-			String search, Integer[] types, Pagination pagination)
+	public void
+			deleteOrganizationRoleByExternalReferenceCodeUserAccountAssociation(
+				String externalReferenceCode, Long userAccountId,
+				Long organizationId)
 		throws Exception;
 
-	public Response postRolesPageExportBatch(
-			String search, Integer[] types, String callbackURL,
-			String contentType, String fieldNames)
+	public void deleteOrganizationRoleUserAccountAssociation(
+			Long roleId, Long userAccountId, Long organizationId)
 		throws Exception;
 
-	public Role postRole(Role role) throws Exception;
+	public void deleteRole(Long roleId) throws Exception;
 
-	public Response postRoleBatch(String callbackURL, Object object)
+	public Response deleteRoleBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public Role getRoleByExternalReferenceCode(String externalReferenceCode)
-		throws Exception;
-
-	public Role patchRoleByExternalReferenceCode(
-			String externalReferenceCode, Role role)
-		throws Exception;
-
-	public Role putRoleByExternalReferenceCode(
-			String externalReferenceCode, Role role)
+	public void deleteRoleByExternalReferenceCode(String externalReferenceCode)
 		throws Exception;
 
 	public void deleteRoleByExternalReferenceCodeUserAccountAssociation(
 			String externalReferenceCode, Long userAccountId)
 		throws Exception;
 
-	public void postRoleByExternalReferenceCodeUserAccountAssociation(
-			String externalReferenceCode, Long userAccountId)
+	public void deleteRoleUserAccountAssociation(
+			Long roleId, Long userAccountId)
 		throws Exception;
 
-	public void
-			deleteOrganizationRoleByExternalReferenceCodeUserAccountAssociation(
-				String externalReferenceCode, Long userAccountId,
-				Long organizationId)
+	public void deleteSiteRoleByExternalReferenceCodeUserAccountAssociation(
+			String externalReferenceCode, Long userAccountId, Long siteId)
+		throws Exception;
+
+	public void deleteSiteRoleUserAccountAssociation(
+			Long roleId, Long userAccountId, Long siteId)
+		throws Exception;
+
+	public Role getRole(Long roleId) throws Exception;
+
+	public Role getRoleByExternalReferenceCode(String externalReferenceCode)
+		throws Exception;
+
+	public Page<Role> getRolesPage(
+			String search, Integer[] types,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination)
+		throws Exception;
+
+	public Role patchRole(Long roleId, Role role) throws Exception;
+
+	public Role patchRoleByExternalReferenceCode(
+			String externalReferenceCode, Role role)
 		throws Exception;
 
 	public void
@@ -93,37 +103,43 @@ public interface RoleResource {
 				Long organizationId)
 		throws Exception;
 
-	public void deleteSiteRoleByExternalReferenceCodeUserAccountAssociation(
-			String externalReferenceCode, Long userAccountId, Long siteId)
+	public void postOrganizationRoleUserAccountAssociation(
+			Long roleId, Long userAccountId, Long organizationId)
+		throws Exception;
+
+	public Role postRole(Role role) throws Exception;
+
+	public Response postRoleBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public void postRoleByExternalReferenceCodeUserAccountAssociation(
+			String externalReferenceCode, Long userAccountId)
+		throws Exception;
+
+	public void postRoleUserAccountAssociation(Long roleId, Long userAccountId)
+		throws Exception;
+
+	public Response postRolesPageExportBatch(
+			String search, Integer[] types,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			String callbackURL, String contentType, String fieldNames)
 		throws Exception;
 
 	public void postSiteRoleByExternalReferenceCodeUserAccountAssociation(
 			String externalReferenceCode, Long userAccountId, Long siteId)
 		throws Exception;
 
-	public Role getRole(Long roleId) throws Exception;
-
-	public void deleteRoleUserAccountAssociation(
-			Long roleId, Long userAccountId)
-		throws Exception;
-
-	public void postRoleUserAccountAssociation(Long roleId, Long userAccountId)
-		throws Exception;
-
-	public void deleteOrganizationRoleUserAccountAssociation(
-			Long roleId, Long userAccountId, Long organizationId)
-		throws Exception;
-
-	public void postOrganizationRoleUserAccountAssociation(
-			Long roleId, Long userAccountId, Long organizationId)
-		throws Exception;
-
-	public void deleteSiteRoleUserAccountAssociation(
-			Long roleId, Long userAccountId, Long siteId)
-		throws Exception;
-
 	public void postSiteRoleUserAccountAssociation(
 			Long roleId, Long userAccountId, Long siteId)
+		throws Exception;
+
+	public Role putRole(Long roleId, Role role) throws Exception;
+
+	public Response putRoleBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public Role putRoleByExternalReferenceCode(
+			String externalReferenceCode, Role role)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -148,7 +164,8 @@ public interface RoleResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -173,19 +190,23 @@ public interface RoleResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

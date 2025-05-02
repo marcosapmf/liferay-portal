@@ -395,6 +395,22 @@ public class UserSerDes {
 			sb.append("\"");
 		}
 
+		if (user.getUrn_ietf_params_scim_schemas_extension_liferay_2_0_User() !=
+				null) {
+
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append(
+				"\"urn:ietf:params:scim:schemas:extension:liferay:2.0:User\": ");
+
+			sb.append(
+				String.valueOf(
+					user.
+						getUrn_ietf_params_scim_schemas_extension_liferay_2_0_User()));
+		}
+
 		if (user.getUserName() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -617,6 +633,21 @@ public class UserSerDes {
 			map.put("title", String.valueOf(user.getTitle()));
 		}
 
+		if (user.getUrn_ietf_params_scim_schemas_extension_liferay_2_0_User() ==
+				null) {
+
+			map.put(
+				"urn:ietf:params:scim:schemas:extension:liferay:2.0:User",
+				null);
+		}
+		else {
+			map.put(
+				"urn:ietf:params:scim:schemas:extension:liferay:2.0:User",
+				String.valueOf(
+					user.
+						getUrn_ietf_params_scim_schemas_extension_liferay_2_0_User()));
+		}
+
 		if (user.getUserName() == null) {
 			map.put("userName", null);
 		}
@@ -720,6 +751,12 @@ public class UserSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "title")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"urn:ietf:params:scim:schemas:extension:liferay:2.0:User")) {
+
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "userName")) {
@@ -929,6 +966,17 @@ public class UserSerDes {
 					user.setTitle((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"urn:ietf:params:scim:schemas:extension:liferay:2.0:User")) {
+
+				if (jsonParserFieldValue != null) {
+					user.
+						setUrn_ietf_params_scim_schemas_extension_liferay_2_0_User(
+							UserSchemaExtensionSerDes.toDTO(
+								(String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "userName")) {
 				if (jsonParserFieldValue != null) {
 					user.setUserName((String)jsonParserFieldValue);
@@ -1001,6 +1049,10 @@ public class UserSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

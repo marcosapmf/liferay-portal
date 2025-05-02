@@ -1,16 +1,18 @@
 @component-name = "portal-content-management"
 definition {
 
+	property custom.properties = "feature.flag.LPD-35013=false";
 	property portal.acceptance = "true";
-	property portal.release = "true";
+	property portal.release = "false";
 	property portal.upstream = "true";
-	property testray.component.names = "Roles";
 	property testray.main.component.name = "Wiki";
 
 	setUp {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
 	}
 
 	tearDown {
@@ -33,47 +35,6 @@ definition {
 			Site.tearDownCP();
 
 			PagesAdmin.tearDownCP();
-		}
-	}
-
-	@description = "This is a test for LPS-136986. It checks that page permissions can be configured via More Options."
-	@priority = 3
-	test CanConfigurePermissionsViaMoreOptions {
-		property portal.acceptance = "false";
-
-		WikiNavigator.openToAddPage(
-			groupName = "Guest",
-			siteURLKey = "guest",
-			wikiNodeName = "Main");
-
-		WikiEntry.addPageTitle(wikiPageTitle = "Wiki Page Title");
-
-		WikiEntry.addPageContent(wikiPageContent = "Wiki Page Content");
-
-		Panel.expandPanel(panel = "Permissions");
-
-		PermissionsInline.addOrRemoveEntryPermissionsFromAllRoles(
-			addOrRemoveViewPermission = "Remove",
-			key_roleTitle = "Site Member",
-			permissionDefinitionKeyList = "UPDATE,SUBSCRIBE,ADD_DISCUSSION");
-
-		PortletEntry.publish();
-
-		WikiNavigator.openToWikiNode(
-			groupName = "Guest",
-			siteURLKey = "guest",
-			wikiNodeName = "Main");
-
-		LexiconEntry.gotoEntryMenuItem(
-			menuItem = "Permissions",
-			rowEntry = "Wiki Page Title");
-
-		IFrame.selectPermissionsFrame();
-
-		for (var permissionDefinitionKey : list "INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX,INLINE_PERMISSIONS_SUBSCRIBE_CHECKBOX,INLINE_PERMISSIONS_UPDATE_CHECKBOX") {
-			PermissionsInline.viewPermissionsRemoved(
-				permissionDefinitionKey = ${permissionDefinitionKey},
-				roleTitle = "Site Member");
 		}
 	}
 
@@ -323,7 +284,7 @@ definition {
 	@priority = 3
 	@refactordone
 	test CannotAddWikiAssetsWithRegularRoleWithoutPermissions {
-		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property custom.properties = "feature.flag.LPS-188058=true${line.separator}jsonws.web.service.paths.excludes=";
 
 		Permissions.setUpRegRoleLoginUserCP(
 			roleTitle = "Regrole Name",
@@ -355,7 +316,7 @@ definition {
 	@priority = 4
 	@refactordone
 	test CannotAddWikiAssetsWithSiteRoleWithoutPermissions {
-		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property custom.properties = "feature.flag.LPS-188058=true${line.separator}jsonws.web.service.paths.excludes=";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",

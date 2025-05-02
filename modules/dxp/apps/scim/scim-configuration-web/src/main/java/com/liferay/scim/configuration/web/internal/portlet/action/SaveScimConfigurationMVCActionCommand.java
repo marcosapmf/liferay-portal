@@ -105,7 +105,8 @@ public class SaveScimConfigurationMVCActionCommand
 
 			JSONObject jsonObject = _jsonFactory.createJSONObject(
 				_localOAuthClient.requestTokens(
-					oAuth2Application, oAuth2Application.getUserId()));
+					oAuth2Application,
+					oAuth2Application.getClientCredentialUserId()));
 
 			String accessToken = jsonObject.getString("access_token");
 
@@ -256,6 +257,7 @@ public class SaveScimConfigurationMVCActionCommand
 					"oAuth2ApplicationName",
 					ParamUtil.getString(
 						actionRequest, "oAuth2ApplicationName"));
+				properties.put("userId", themeDisplay.getUserId());
 
 				configuration.update(properties);
 			}
@@ -276,6 +278,8 @@ public class SaveScimConfigurationMVCActionCommand
 						"oAuth2ApplicationName",
 						ParamUtil.getString(
 							actionRequest, "oAuth2ApplicationName")
+					).put(
+						"userId", themeDisplay.getUserId()
 					).build());
 			}
 		}

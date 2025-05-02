@@ -5,7 +5,6 @@
 
 package com.liferay.headless.commerce.admin.pricing.internal.util.v2_0;
 
-import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryService;
 import com.liferay.commerce.price.list.model.CommercePriceList;
@@ -45,15 +44,9 @@ public class PriceListAccountUtil {
 		}
 		else {
 			accountEntry =
-				accountEntryService.fetchAccountEntryByExternalReferenceCode(
-					serviceContext.getCompanyId(),
-					priceListAccount.getAccountExternalReferenceCode());
-
-			if (accountEntry == null) {
-				throw new NoSuchEntryException(
-					"Unable to find account with external reference code " +
-						priceListAccount.getAccountExternalReferenceCode());
-			}
+				accountEntryService.getAccountEntryByExternalReferenceCode(
+					priceListAccount.getAccountExternalReferenceCode(),
+					serviceContext.getCompanyId());
 		}
 
 		return commercePriceListAccountRelService.

@@ -6,15 +6,17 @@
 package com.liferay.blogs.web.internal.display.context;
 
 import com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfiguration;
+import com.liferay.asset.entry.rel.model.AssetEntryAssetCategoryRel;
+import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalServiceUtil;
+import com.liferay.asset.entry.rel.util.comparator.AssetEntryAssetCategoryRelAssetEntryAssetCategoryRelIdComparator;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetEntry;
-import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.blogs.configuration.BlogsFileUploadsConfiguration;
 import com.liferay.blogs.constants.BlogsPortletKeys;
-import com.liferay.blogs.item.selector.criterion.BlogsItemSelectorCriterion;
+import com.liferay.blogs.item.selector.BlogsItemSelectorCriterion;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalServiceUtil;
 import com.liferay.blogs.settings.BlogsGroupServiceSettings;
@@ -27,18 +29,15 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.DownloadFileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
-import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
-import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -101,6 +100,22 @@ public class BlogsEditEntryDisplayContext {
 			WebKeys.THEME_DISPLAY);
 	}
 
+	public JSONArray getAvailableFriendlyURLAssetCategoriesJSONArray()
+		throws PortalException {
+
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+		for (long assetCategoryId :
+				_getAvailableFriendlyURLAssetCategoryIds()) {
+
+			_populateJSONArray(
+				jsonArray,
+				AssetCategoryLocalServiceUtil.getCategory(assetCategoryId));
+		}
+
+		return jsonArray;
+	}
+
 	public BlogsEntry getBlogsEntry() {
 		return _blogsEntry;
 	}
@@ -148,6 +163,20 @@ public class BlogsEditEntryDisplayContext {
 		return _getItemSelectorURL(
 			RequestBackedPortletURLFactoryUtil.create(_httpServletRequest),
 			getCoverImageItemSelectorEventName());
+	}
+
+	public JSONArray getCurrentFriendlyURLAssetCategoriesJSONArray()
+		throws PortalException {
+
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+		for (long assetCategoryId : _getCurrentFriendlyURLAssetCategoryIds()) {
+			_populateJSONArray(
+				jsonArray,
+				AssetCategoryLocalServiceUtil.getCategory(assetCategoryId));
+		}
+
+		return jsonArray;
 	}
 
 	public String getDescription() {
@@ -215,54 +244,6 @@ public class BlogsEditEntryDisplayContext {
 		}
 
 		return StringPool.BLANK;
-	}
-
-	public JSONArray getFriendlyURLAssetCategoriesJSONArray()
-		throws PortalException {
-
-		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
-
-		long[] assetCategoryIds = _getFriendlyURLAssetCategoryIds();
-
-		for (long assetCategoryId : assetCategoryIds) {
-			_populateJSONArray(
-				jsonArray,
-				AssetCategoryLocalServiceUtil.getCategory(assetCategoryId));
-		}
-
-		return jsonArray;
-	}
-
-	public String getFriendlyURLAssetCategorySelectorURL() {
-		RequestBackedPortletURLFactory requestBackedPortletURLFactory =
-			RequestBackedPortletURLFactoryUtil.create(_httpServletRequest);
-
-		InfoItemItemSelectorCriterion itemSelectorCriterion =
-			new InfoItemItemSelectorCriterion();
-
-		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			new InfoItemItemSelectorReturnType());
-		itemSelectorCriterion.setItemType(AssetCategory.class.getName());
-		itemSelectorCriterion.setMultiSelection(true);
-
-		return PortletURLBuilder.create(
-			_itemSelector.getItemSelectorURL(
-				requestBackedPortletURLFactory, _themeDisplay.getScopeGroup(),
-				_themeDisplay.getScopeGroupId(),
-				_liferayPortletResponse.getNamespace() +
-					"selectedAssetCategory",
-				itemSelectorCriterion)
-		).setParameter(
-			"selectedCategoryIds",
-			StringUtil.merge(
-				_getFriendlyURLAssetCategoryIds(), StringPool.COMMA)
-		).setParameter(
-			"vocabularyIds",
-			() -> ListUtil.toString(
-				_assetVocabularyLocalService.getGroupsVocabularies(
-					_getGroupIds()),
-				AssetVocabulary.VOCABULARY_ID_ACCESSOR)
-		).buildString();
 	}
 
 	public String getFriendlyURLSeparatorCompanyConfigurationURL()
@@ -384,29 +365,29 @@ public class BlogsEditEntryDisplayContext {
 			() -> {
 				BlogsEntry blogsEntry = getBlogsEntry();
 
-				if (blogsEntry != null) {
-					return HashMapBuilder.<String, Object>put(
-						"content", UnicodeFormatter.toString(getContent())
-					).put(
-						"customDescription", isCustomAbstract()
-					).put(
-						"description", getDescription()
-					).put(
-						"pending", blogsEntry.isPending()
-					).put(
-						"status", blogsEntry.getStatus()
-					).put(
-						"subtitle",
-						BeanParamUtil.getString(
-							getBlogsEntry(), _httpServletRequest, "subtitle")
-					).put(
-						"title", getTitle()
-					).put(
-						"userId", blogsEntry.getUserId()
-					).build();
+				if (blogsEntry == null) {
+					return null;
 				}
 
-				return null;
+				return HashMapBuilder.<String, Object>put(
+					"content", UnicodeFormatter.toString(getContent())
+				).put(
+					"customDescription", isCustomAbstract()
+				).put(
+					"description", getDescription()
+				).put(
+					"pending", blogsEntry.isPending()
+				).put(
+					"status", blogsEntry.getStatus()
+				).put(
+					"subtitle",
+					BeanParamUtil.getString(
+						getBlogsEntry(), _httpServletRequest, "subtitle")
+				).put(
+					"title", getTitle()
+				).put(
+					"userId", blogsEntry.getUserId()
+				).build();
 			}
 		).build();
 	}
@@ -573,59 +554,84 @@ public class BlogsEditEntryDisplayContext {
 		return _assetAutoTaggerConfiguration.isUpdateAutoTags();
 	}
 
-	private long[] _getFriendlyURLAssetCategoryIds() {
+	private long[] _getAvailableFriendlyURLAssetCategoryIds() {
 		if (_assetCategoryIds == null) {
 			_assetCategoryIds = ParamUtil.getLongValues(
+				_httpServletRequest, "assetCategoryIds");
+		}
+
+		if (ArrayUtil.isNotEmpty(_assetCategoryIds)) {
+			return _assetCategoryIds;
+		}
+
+		AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
+			PortalUtil.getClassNameId(BlogsEntry.class), getEntryId());
+
+		if (assetEntry == null) {
+			_assetCategoryIds = new long[0];
+		}
+		else {
+			List<Long> assetCategoryIds = ListUtil.fromArray(
+				assetEntry.getCategoryIds());
+
+			assetCategoryIds.removeAll(
+				ListUtil.fromArray(_getCurrentFriendlyURLAssetCategoryIds()));
+
+			_assetCategoryIds = ArrayUtil.toLongArray(assetCategoryIds);
+		}
+
+		return _assetCategoryIds;
+	}
+
+	private long[] _getCurrentFriendlyURLAssetCategoryIds() {
+		if (_friendlyURLAssetCategoryIds == null) {
+			_friendlyURLAssetCategoryIds = ParamUtil.getLongValues(
 				_httpServletRequest, "friendlyURLAssetCategoryIds");
 		}
 
-		if (!ArrayUtil.isEmpty(_assetCategoryIds)) {
-			return _assetCategoryIds;
+		if (ArrayUtil.isNotEmpty(_friendlyURLAssetCategoryIds)) {
+			return _friendlyURLAssetCategoryIds;
 		}
 
 		FriendlyURLEntry friendlyURLEntry = _getFriendlyURLEntry();
 
 		if (friendlyURLEntry == null) {
-			return new long[0];
+			_friendlyURLAssetCategoryIds = new long[0];
+		}
+		else {
+			AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
+				PortalUtil.getClassNameId(FriendlyURLEntry.class),
+				friendlyURLEntry.getFriendlyURLEntryId());
+
+			if (assetEntry == null) {
+				_friendlyURLAssetCategoryIds = new long[0];
+			}
+			else {
+				List<AssetEntryAssetCategoryRel> assetEntryAssetCategoryRels =
+					AssetEntryAssetCategoryRelLocalServiceUtil.
+						getAssetEntryAssetCategoryRelsByAssetEntryId(
+							assetEntry.getEntryId(), QueryUtil.ALL_POS,
+							QueryUtil.ALL_POS,
+							AssetEntryAssetCategoryRelAssetEntryAssetCategoryRelIdComparator.
+								getInstance(true));
+
+				for (AssetEntryAssetCategoryRel assetEntryAssetCategoryRel :
+						assetEntryAssetCategoryRels) {
+
+					_friendlyURLAssetCategoryIds = ArrayUtil.append(
+						_friendlyURLAssetCategoryIds,
+						assetEntryAssetCategoryRel.getAssetCategoryId());
+				}
+			}
 		}
 
-		AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
-			PortalUtil.getClassNameId(FriendlyURLEntry.class),
-			friendlyURLEntry.getFriendlyURLEntryId());
-
-		if (assetEntry == null) {
-			return new long[0];
-		}
-
-		_assetCategoryIds = assetEntry.getCategoryIds();
-
-		return _assetCategoryIds;
+		return _friendlyURLAssetCategoryIds;
 	}
 
 	private FriendlyURLEntry _getFriendlyURLEntry() {
 		return FriendlyURLEntryLocalServiceUtil.fetchMainFriendlyURLEntry(
 			PortalUtil.getClassNameId(BlogsEntry.class.getName()),
 			getEntryId());
-	}
-
-	private long[] _getGroupIds() {
-		if (_groupIds != null) {
-			return _groupIds;
-		}
-
-		try {
-			_groupIds =
-				_siteConnectedGroupGroupProvider.
-					getCurrentAndAncestorSiteAndDepotGroupIds(
-						_themeDisplay.getScopeGroupId());
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(portalException);
-			}
-		}
-
-		return _groupIds;
 	}
 
 	private String _getItemSelectorURL(
@@ -667,9 +673,6 @@ public class BlogsEditEntryDisplayContext {
 			));
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BlogsEditEntryDisplayContext.class);
-
 	private static final Snapshot<ItemSelector> _itemSelectorSnapshot =
 		new Snapshot<>(
 			BlogsEditEntryDisplayContext.class, ItemSelector.class, null, true);
@@ -689,7 +692,7 @@ public class BlogsEditEntryDisplayContext {
 	private String _description;
 	private Boolean _emailEntryUpdatedEnabled;
 	private Long _entryId;
-	private long[] _groupIds;
+	private long[] _friendlyURLAssetCategoryIds;
 	private final HttpServletRequest _httpServletRequest;
 	private final ItemSelector _itemSelector;
 	private final LiferayPortletResponse _liferayPortletResponse;

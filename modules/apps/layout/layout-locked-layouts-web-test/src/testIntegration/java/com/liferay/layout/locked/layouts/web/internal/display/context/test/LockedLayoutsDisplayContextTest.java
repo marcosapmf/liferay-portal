@@ -6,10 +6,13 @@
 package com.liferay.layout.locked.layouts.web.internal.display.context.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.layout.manager.LayoutLockManager;
 import com.liferay.layout.model.LockedLayout;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.test.util.LayoutPageTemplateTestUtil;
 import com.liferay.layout.utility.page.kernel.constants.LayoutUtilityPageEntryConstants;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
 import com.liferay.petra.function.UnsafeConsumer;
@@ -24,6 +27,7 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.portlet.MockActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -44,7 +48,6 @@ import com.liferay.portal.lock.service.LockLocalService;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portlet.test.MockLiferayPortletContext;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockActionRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -84,30 +87,12 @@ public class LockedLayoutsDisplayContextTest {
 	}
 
 	@Test
-	public void testGetSearchContainerLockedLayoutsFilterByCollectionPage()
-		throws Exception {
-
-		Layout draftLayout = _getDraftLayout(LayoutConstants.TYPE_COLLECTION);
-
-		_lockLayout(draftLayout, _user);
-
-		_lockLayout(_getDraftLayout(), _user);
-
-		_assertSearchContainerLayoutPlids(
-			1, new long[] {draftLayout.getPlid()},
-			_getSearchContainer(
-				_getMockLiferayPortletRenderRequest("collection-page")));
-	}
-
-	@Test
 	public void testGetSearchContainerLockedLayoutsFilterByContentPage()
 		throws Exception {
 
 		Layout draftLayout = _getDraftLayout();
 
 		_lockLayout(draftLayout, _user);
-
-		_lockLayout(_getDraftLayout(LayoutConstants.TYPE_COLLECTION), _user);
 
 		_assertSearchContainerLayoutPlids(
 			1, new long[] {draftLayout.getPlid()},
@@ -120,8 +105,7 @@ public class LockedLayoutsDisplayContextTest {
 		throws Exception {
 
 		Layout draftLayout = _getDraftLayoutPageTemplateEntry(
-			LayoutPageTemplateEntryTypeConstants.BASIC,
-			LayoutConstants.TYPE_CONTENT);
+			LayoutPageTemplateEntryTypeConstants.BASIC);
 
 		_lockLayout(draftLayout, _user);
 
@@ -138,8 +122,7 @@ public class LockedLayoutsDisplayContextTest {
 		throws Exception {
 
 		Layout draftLayout = _getDraftLayoutPageTemplateEntry(
-			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
-			LayoutConstants.TYPE_ASSET_DISPLAY);
+			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
 
 		_lockLayout(draftLayout, _user);
 
@@ -156,8 +139,7 @@ public class LockedLayoutsDisplayContextTest {
 		throws Exception {
 
 		Layout draftLayout = _getDraftLayoutPageTemplateEntry(
-			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
-			LayoutConstants.TYPE_CONTENT);
+			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT);
 
 		_lockLayout(draftLayout, _user);
 
@@ -251,15 +233,6 @@ public class LockedLayoutsDisplayContextTest {
 				_getMockLiferayPortletRenderRequest("user", "desc")));
 	}
 
-	private void _addLayoutPageTemplateEntry(long plid, int type)
-		throws Exception {
-
-		_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-			null, TestPropsValues.getUserId(), _group.getGroupId(), 0, 0, 0,
-			RandomTestUtil.randomString(), type, 0, true, 0, plid, 0,
-			WorkflowConstants.STATUS_APPROVED, _serviceContext);
-	}
-
 	private void _assertSearchContainerLayoutPlids(
 		int expectedSize, long[] expectedLayoutPlids,
 		SearchContainer<LockedLayout> searchContainer) {
@@ -348,7 +321,7 @@ public class LockedLayoutsDisplayContextTest {
 			RandomTestUtil.randomLocaleStringMap(), Collections.emptyMap(),
 			Collections.emptyMap(), Collections.emptyMap(), type,
 			UnicodePropertiesBuilder.put(
-				"published", "true"
+				LayoutTypeSettingsConstants.KEY_PUBLISHED, "true"
 			).buildString(),
 			false, false, Collections.emptyMap(), 0, _serviceContext);
 
@@ -360,15 +333,22 @@ public class LockedLayoutsDisplayContextTest {
 	}
 
 	private Layout _getDraftLayoutPageTemplateEntry(
-			int layoutPageTemplateEntry, String layoutType)
+			int layoutPageTemplateEntryType)
 		throws Exception {
 
-		Layout draftLayout = _getDraftLayout(layoutType);
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
+				_group.getGroupId(), layoutPageTemplateEntryType,
+				WorkflowConstants.STATUS_APPROVED);
 
-		_addLayoutPageTemplateEntry(
-			draftLayout.getClassPK(), layoutPageTemplateEntry);
+		Layout layout = _layoutLocalService.getLayout(
+			layoutPageTemplateEntry.getPlid());
 
-		return draftLayout;
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		draftLayout.setStatus(WorkflowConstants.STATUS_DRAFT);
+
+		return _layoutLocalService.updateLayout(draftLayout);
 	}
 
 	private Layout _getDraftLayoutUtilityPageEntry() throws Exception {

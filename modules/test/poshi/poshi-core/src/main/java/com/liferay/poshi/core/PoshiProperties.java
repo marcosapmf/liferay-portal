@@ -65,9 +65,6 @@ public class PoshiProperties extends Properties {
 	public static final String IGNORE_ERRORS_FILE_NAME =
 		"ignore.errors.file.name";
 
-	public static final String LIFERAY_DATA_GUARD_ENABLED =
-		"liferay.data.guard.enabled";
-
 	public static final String LIFERAY_PORTAL_BRANCH = "liferay.portal.branch";
 
 	public static final String LIFERAY_PORTAL_BUNDLE = "liferay.portal.bundle";
@@ -357,8 +354,6 @@ public class PoshiProperties extends Properties {
 	public String ignoreErrors = getProperty(IGNORE_ERRORS);
 	public String ignoreErrorsDelimiter = getProperty(IGNORE_ERRORS_DELIMITER);
 	public String ignoreErrorsFileName = getProperty(IGNORE_ERRORS_FILE_NAME);
-	public Boolean liferayDataGuardEnabled = GetterUtil.get(
-		getProperty(LIFERAY_DATA_GUARD_ENABLED), false);
 	public String liferayPortalBranch = getProperty(LIFERAY_PORTAL_BRANCH);
 	public String liferayPortalBundle = getProperty(LIFERAY_PORTAL_BUNDLE);
 	public String loggerResourcesURL = getProperty(LOGGER_RESOURCES_URL);
@@ -401,7 +396,7 @@ public class PoshiProperties extends Properties {
 		getProperty(TCAT_ENABLED));
 	public boolean testAssertConsoleErrors = GetterUtil.getBoolean(
 		getProperty(TEST_ASSERT_CONSOLE_ERRORS));
-	public boolean testAssertJavascriptErrors = GetterUtil.getBoolean(
+	public boolean testAssertJavaScriptErrors = GetterUtil.getBoolean(
 		getProperty(TEST_ASSERT_JAVASCRIPT_ERRORS));
 	public boolean testAssertWarningExceptions = GetterUtil.getBoolean(
 		getProperty(TEST_ASSERT_WARNING_EXCEPTIONS));

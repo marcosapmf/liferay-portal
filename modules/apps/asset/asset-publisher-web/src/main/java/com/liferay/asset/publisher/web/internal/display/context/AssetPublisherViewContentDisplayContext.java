@@ -65,11 +65,7 @@ public class AssetPublisherViewContentDisplayContext {
 	}
 
 	public boolean getPrint() {
-		if (Objects.equals(_getViewMode(), Constants.PRINT)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(_getViewMode(), Constants.PRINT);
 	}
 
 	public String getReturnToFullPageURL() {
@@ -180,6 +176,13 @@ public class AssetPublisherViewContentDisplayContext {
 			else if (Validator.isNotNull(_getURLTitle())) {
 				_assetRenderer = _assetRendererFactory.getAssetRenderer(
 					getGroupId(), _getURLTitle());
+
+				if (_assetRenderer == null) {
+					SessionErrors.add(
+						_renderRequest, NoSuchModelException.class.getName());
+
+					return;
+				}
 
 				_assetEntry = _assetRendererFactory.getAssetEntry(
 					_assetRendererFactory.getClassName(),

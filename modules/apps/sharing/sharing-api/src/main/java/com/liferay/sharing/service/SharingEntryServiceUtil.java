@@ -9,6 +9,8 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.sharing.model.SharingEntry;
 
+import java.util.List;
+
 /**
  * Provides the remote service utility for SharingEntry. This utility wraps
  * <code>com.liferay.sharing.service.impl.SharingEntryServiceImpl</code> and is an
@@ -49,8 +51,8 @@ public class SharingEntryServiceUtil {
 	 the expiration date is a past value
 	 */
 	public static SharingEntry addOrUpdateSharingEntry(
-			long toUserId, long classNameId, long classPK, long groupId,
-			boolean shareable,
+			String externalReferenceCode, long toUserGroupId, long toUserId,
+			long classNameId, long classPK, long groupId, boolean shareable,
 			java.util.Collection
 				<com.liferay.sharing.security.permission.SharingEntryAction>
 					sharingEntryActions,
@@ -59,8 +61,9 @@ public class SharingEntryServiceUtil {
 		throws PortalException {
 
 		return getService().addOrUpdateSharingEntry(
-			toUserId, classNameId, classPK, groupId, shareable,
-			sharingEntryActions, expirationDate, serviceContext);
+			externalReferenceCode, toUserGroupId, toUserId, classNameId,
+			classPK, groupId, shareable, sharingEntryActions, expirationDate,
+			serviceContext);
 	}
 
 	/**
@@ -84,8 +87,8 @@ public class SharingEntryServiceUtil {
 	 expiration date is a past value
 	 */
 	public static SharingEntry addSharingEntry(
-			long toUserId, long classNameId, long classPK, long groupId,
-			boolean shareable,
+			String externalReferenceCode, long toUserGroupId, long toUserId,
+			long classNameId, long classPK, long groupId, boolean shareable,
 			java.util.Collection
 				<com.liferay.sharing.security.permission.SharingEntryAction>
 					sharingEntryActions,
@@ -94,8 +97,9 @@ public class SharingEntryServiceUtil {
 		throws PortalException {
 
 		return getService().addSharingEntry(
-			toUserId, classNameId, classPK, groupId, shareable,
-			sharingEntryActions, expirationDate, serviceContext);
+			externalReferenceCode, toUserGroupId, toUserId, classNameId,
+			classPK, groupId, shareable, sharingEntryActions, expirationDate,
+			serviceContext);
 	}
 
 	public static SharingEntry deleteSharingEntry(
@@ -106,6 +110,28 @@ public class SharingEntryServiceUtil {
 		return getService().deleteSharingEntry(sharingEntryId, serviceContext);
 	}
 
+	public static SharingEntry deleteSharingEntry(SharingEntry sharingEntry)
+		throws PortalException {
+
+		return getService().deleteSharingEntry(sharingEntry);
+	}
+
+	public static SharingEntry deleteSharingEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().deleteSharingEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
+	public static SharingEntry fetchSharingEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().fetchSharingEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -113,6 +139,28 @@ public class SharingEntryServiceUtil {
 	 */
 	public static String getOSGiServiceIdentifier() {
 		return getService().getOSGiServiceIdentifier();
+	}
+
+	public static List<SharingEntry> getSharingEntries(
+			long classNameId, long classPK, long groupId, int start, int end)
+		throws PortalException {
+
+		return getService().getSharingEntries(
+			classNameId, classPK, groupId, start, end);
+	}
+
+	public static SharingEntry getSharingEntry(long sharingEntryId)
+		throws PortalException {
+
+		return getService().getSharingEntry(sharingEntryId);
+	}
+
+	public static SharingEntry getSharingEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getSharingEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**

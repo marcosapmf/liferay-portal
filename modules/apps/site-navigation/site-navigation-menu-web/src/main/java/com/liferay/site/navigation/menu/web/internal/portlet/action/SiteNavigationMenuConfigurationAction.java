@@ -8,17 +8,17 @@ package com.liferay.site.navigation.menu.web.internal.portlet.action;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
-import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.settings.ModifiableSettings;
-import com.liferay.portal.kernel.settings.Settings;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.display.template.PortletDisplayTemplate;
+import com.liferay.portlet.display.template.portlet.action.BaseConfigurationAction;
 import com.liferay.site.navigation.constants.SiteNavigationMenuPortletKeys;
 import com.liferay.site.navigation.menu.web.internal.constants.SiteNavigationMenuWebKeys;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
@@ -33,7 +33,9 @@ import java.util.Objects;
 
 import javax.portlet.PortletConfig;
 import javax.portlet.PortletException;
+import javax.portlet.PortletPreferences;
 import javax.portlet.PortletRequest;
+import javax.portlet.ReadOnlyException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -53,7 +55,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = ConfigurationAction.class
 )
 public class SiteNavigationMenuConfigurationAction
-	extends DefaultConfigurationAction {
+	extends BaseConfigurationAction {
 
 	@Override
 	public String getJspPath(HttpServletRequest httpServletRequest) {
@@ -76,21 +78,6 @@ public class SiteNavigationMenuConfigurationAction
 	}
 
 	@Override
-	public void postProcess(
-			long companyId, PortletRequest portletRequest, Settings settings)
-		throws PortalException {
-
-		ModifiableSettings modifiableSettings =
-			settings.getModifiableSettings();
-
-		modifiableSettings.reset("included-layouts");
-
-		_updateDisplayStyleGroupPreferences(modifiableSettings, portletRequest);
-		_updateRootMenuItemPreferences(modifiableSettings);
-		_updateSiteNavigationMenuPreferences(modifiableSettings);
-	}
-
-	@Override
 	protected void doDispatch(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
@@ -99,6 +86,26 @@ public class SiteNavigationMenuConfigurationAction
 			WebKeys.PORTLET_DISPLAY_TEMPLATE, _portletDisplayTemplate);
 
 		super.doDispatch(renderRequest, renderResponse);
+	}
+
+	@Override
+	protected void postProcess(
+			long companyId, PortletRequest portletRequest,
+			PortletPreferences portletPreferences)
+		throws PortalException {
+
+		super.postProcess(companyId, portletRequest, portletPreferences);
+
+		try {
+			portletPreferences.reset("included-layouts");
+
+			_updateRootMenuItemPreferences(portletPreferences, portletRequest);
+			_updateSiteNavigationMenuPreferences(
+				portletPreferences, portletRequest);
+		}
+		catch (ReadOnlyException readOnlyException) {
+			throw new SystemException(readOnlyException);
+		}
 	}
 
 	@Reference
@@ -111,82 +118,79 @@ public class SiteNavigationMenuConfigurationAction
 	@Reference
 	protected SiteNavigationMenuService siteNavigationMenuService;
 
-	private void _updateDisplayStyleGroupPreferences(
-		ModifiableSettings modifiableSettings, PortletRequest portletRequest) {
+	private void _updateRootMenuItemPreferences(
+			PortletPreferences portletPreferences,
+			PortletRequest portletRequest)
+		throws ReadOnlyException {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-23048")) {
-			return;
-		}
+		long siteNavigationMenuId = GetterUtil.getLong(
+			portletPreferences.getValue("siteNavigationMenuId", null));
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		if (siteNavigationMenuId > 0) {
+			long rootMenuItemId = GetterUtil.getLong(
+				portletPreferences.getValue("rootMenuItemId", null));
+			String rootMenuItemType = portletPreferences.getValue(
+				"rootMenuItemType", StringPool.BLANK);
 
-		String displayStyleGroupKey = modifiableSettings.getValue(
-			"displayStyleGroupKey", null);
+			if ((rootMenuItemId == 0) ||
+				!Objects.equals(rootMenuItemType, "select")) {
 
-		Group group = groupLocalService.fetchGroup(
-			themeDisplay.getCompanyId(), displayStyleGroupKey);
+				portletPreferences.reset("rootMenuItemExternalReferenceCode");
+				portletPreferences.reset("rootMenuItemId");
+			}
 
-		if ((group != null) &&
-			(group.getGroupId() != themeDisplay.getScopeGroupId())) {
+			SiteNavigationMenuItem siteNavigationMenuItem =
+				siteNavigationMenuItemLocalService.fetchSiteNavigationMenuItem(
+					rootMenuItemId);
 
-			modifiableSettings.setValue(
-				"displayStyleGroupExternalReferenceCode",
-				group.getExternalReferenceCode());
+			if (siteNavigationMenuItem != null) {
+				portletPreferences.setValue(
+					"rootMenuItemExternalReferenceCode",
+					siteNavigationMenuItem.getExternalReferenceCode());
+
+				return;
+			}
+
+			portletPreferences.reset("rootMenuItemExternalReferenceCode");
 		}
 		else {
-			modifiableSettings.reset("displayStyleGroupExternalReferenceCode");
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)portletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			String rootMenuItemId = portletPreferences.getValue(
+				"rootMenuItemId", null);
+
+			Layout rootLayout = _layoutLocalService.fetchLayoutByUuidAndGroupId(
+				rootMenuItemId, themeDisplay.getScopeGroupId(), false);
+
+			if (rootLayout == null) {
+				rootLayout = _layoutLocalService.fetchLayoutByUuidAndGroupId(
+					rootMenuItemId, themeDisplay.getScopeGroupId(), true);
+			}
+
+			if (rootLayout != null) {
+				portletPreferences.setValue(
+					"rootMenuItemExternalReferenceCode", rootLayout.getUuid());
+			}
+			else {
+				portletPreferences.reset("rootMenuItemExternalReferenceCode");
+			}
 		}
-	}
-
-	private void _updateRootMenuItemPreferences(
-			ModifiableSettings modifiableSettings)
-		throws PortalException {
-
-		long rootMenuItemId = GetterUtil.getLong(
-			modifiableSettings.getValue("rootMenuItemId", null));
-		String rootMenuItemType = modifiableSettings.getValue(
-			"rootMenuItemType", StringPool.BLANK);
-
-		if ((rootMenuItemId == 0) ||
-			!Objects.equals(rootMenuItemType, "select")) {
-
-			modifiableSettings.reset("rootMenuItemExternalReferenceCode");
-			modifiableSettings.reset("rootMenuItemId");
-		}
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-23048")) {
-			return;
-		}
-
-		SiteNavigationMenuItem siteNavigationMenuItem =
-			siteNavigationMenuItemLocalService.fetchSiteNavigationMenuItem(
-				rootMenuItemId);
-
-		if (siteNavigationMenuItem != null) {
-			modifiableSettings.setValue(
-				"rootMenuItemExternalReferenceCode",
-				siteNavigationMenuItem.getExternalReferenceCode());
-
-			return;
-		}
-
-		modifiableSettings.reset("rootMenuItemExternalReferenceCode");
 	}
 
 	private void _updateSiteNavigationMenuPreferences(
-			ModifiableSettings modifiableSettings)
-		throws PortalException {
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-23048")) {
-			return;
-		}
+			PortletPreferences portletPreferences,
+			PortletRequest portletRequest)
+		throws PortalException, ReadOnlyException {
 
 		long siteNavigationMenuId = GetterUtil.getLong(
-			modifiableSettings.getValue("siteNavigationMenuId", null));
+			portletPreferences.getValue("siteNavigationMenuId", null));
 
 		if (siteNavigationMenuId == 0) {
-			modifiableSettings.reset("siteNavigationMenuExternalReferenceCode");
+			portletPreferences.reset("siteNavigationMenuExternalReferenceCode");
+			portletPreferences.reset(
+				"siteNavigationMenuGroupExternalReferenceCode");
 
 			return;
 		}
@@ -196,18 +200,42 @@ public class SiteNavigationMenuConfigurationAction
 				siteNavigationMenuId);
 
 		if (siteNavigationMenu != null) {
-			modifiableSettings.setValue(
+			portletPreferences.setValue(
 				"siteNavigationMenuExternalReferenceCode",
 				siteNavigationMenu.getExternalReferenceCode());
+
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)portletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			if (siteNavigationMenu.getGroupId() ==
+					themeDisplay.getScopeGroupId()) {
+
+				portletPreferences.reset(
+					"siteNavigationMenuGroupExternalReferenceCode");
+			}
+			else {
+				Group group = groupLocalService.getGroup(
+					siteNavigationMenu.getGroupId());
+
+				portletPreferences.setValue(
+					"siteNavigationMenuGroupExternalReferenceCode",
+					group.getExternalReferenceCode());
+			}
 
 			return;
 		}
 
-		modifiableSettings.reset("siteNavigationMenuExternalReferenceCode");
+		portletPreferences.reset("siteNavigationMenuExternalReferenceCode");
+		portletPreferences.reset(
+			"siteNavigationMenuGroupExternalReferenceCode");
 	}
 
 	@Reference
 	private ItemSelector _itemSelector;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private PortletDisplayTemplate _portletDisplayTemplate;

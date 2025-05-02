@@ -25,7 +25,6 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -54,8 +53,9 @@ public class DiscountRuleResourceImpl extends BaseDiscountRuleResourceImpl {
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -69,12 +69,12 @@ public class DiscountRuleResourceImpl extends BaseDiscountRuleResourceImpl {
 				pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountRuleService.getCommerceDiscountRulesCount(
 				commerceDiscount.getCommerceDiscountId());
 
 		return Page.of(
-			_toDiscountRules(commerceDiscountRules), pagination, totalItems);
+			_toDiscountRules(commerceDiscountRules), pagination, totalCount);
 	}
 
 	@Override
@@ -88,12 +88,12 @@ public class DiscountRuleResourceImpl extends BaseDiscountRuleResourceImpl {
 				id, search, pagination.getStartPosition(),
 				pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountRuleService.getCommerceDiscountRulesCount(
 				id, search);
 
 		return Page.of(
-			_toDiscountRules(commerceDiscountRules), pagination, totalItems);
+			_toDiscountRules(commerceDiscountRules), pagination, totalCount);
 	}
 
 	@Override
@@ -125,8 +125,9 @@ public class DiscountRuleResourceImpl extends BaseDiscountRuleResourceImpl {
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -210,17 +211,10 @@ public class DiscountRuleResourceImpl extends BaseDiscountRuleResourceImpl {
 			List<CommerceDiscountRule> commerceDiscountRules)
 		throws Exception {
 
-		List<DiscountRule> discountRules = new ArrayList<>();
-
-		for (CommerceDiscountRule commerceDiscountRule :
-				commerceDiscountRules) {
-
-			discountRules.add(
-				_toDiscountRule(
-					commerceDiscountRule.getCommerceDiscountRuleId()));
-		}
-
-		return discountRules;
+		return transform(
+			commerceDiscountRules,
+			commerceDiscountRule -> _toDiscountRule(
+				commerceDiscountRule.getCommerceDiscountRuleId()));
 	}
 
 	@Reference(

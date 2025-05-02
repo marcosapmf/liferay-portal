@@ -45,12 +45,12 @@ describe('ItemConfiguration', () => {
 		).toBeInTheDocument();
 	});
 
-	it('closes the configuration sidebar when close button is pressed and make sure that this button has title', () => {
+	it('closes the configuration sidebar when close button is pressed and make sure that this button has title', async () => {
 		renderComponent();
 
 		const closeButton = screen.getByTitle('close');
 
-		userEvent.click(closeButton);
+		await userEvent.click(closeButton);
 
 		expect(switchSidebarPanel).toBeCalledWith({
 			itemConfigurationOpen: false,
@@ -58,14 +58,10 @@ describe('ItemConfiguration', () => {
 	});
 
 	it('renders multiselect state when multiple items are selected', () => {
-		Liferay.FeatureFlags['LPD-18221'] = true;
-
 		renderComponent({activeItemIds: ['item-1', 'item-2']});
 
 		expect(
 			screen.getByText('multiple-page-elements-selected')
 		).toBeInTheDocument();
-
-		Liferay.FeatureFlags['LPD-18221'] = false;
 	});
 });

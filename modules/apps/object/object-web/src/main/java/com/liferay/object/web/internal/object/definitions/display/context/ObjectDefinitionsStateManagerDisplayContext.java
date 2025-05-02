@@ -11,7 +11,7 @@ import com.liferay.list.type.service.ListTypeDefinitionService;
 import com.liferay.object.admin.rest.dto.v1_0.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
-import com.liferay.object.service.ObjectFieldSettingLocalService;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -35,12 +35,13 @@ public class ObjectDefinitionsStateManagerDisplayContext
 		ListTypeDefinitionService listTypeDefinitionService,
 		ModelResourcePermission<ObjectDefinition>
 			objectDefinitionModelResourcePermission,
-		ObjectFieldSettingLocalService objectFieldSettingLocalService) {
+		ObjectFolderLocalService objectFolderLocalService) {
 
-		super(httpServletRequest, objectDefinitionModelResourcePermission);
+		super(
+			httpServletRequest, objectDefinitionModelResourcePermission,
+			objectFolderLocalService);
 
 		_listTypeDefinitionService = listTypeDefinitionService;
-		_objectFieldSettingLocalService = objectFieldSettingLocalService;
 	}
 
 	@Override
@@ -78,8 +79,7 @@ public class ObjectDefinitionsStateManagerDisplayContext
 
 	public JSONObject getObjectFieldJSONObject(ObjectField objectField) {
 		return ObjectFieldUtil.toJSONObject(
-			_listTypeDefinitionService, objectField,
-			_objectFieldSettingLocalService);
+			_listTypeDefinitionService, objectField);
 	}
 
 	@Override
@@ -88,7 +88,5 @@ public class ObjectDefinitionsStateManagerDisplayContext
 	}
 
 	private final ListTypeDefinitionService _listTypeDefinitionService;
-	private final ObjectFieldSettingLocalService
-		_objectFieldSettingLocalService;
 
 }

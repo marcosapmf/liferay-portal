@@ -486,7 +486,7 @@ definition {
 
 		Click(locator1 = "Portlet#SPECIFIC_ELLIPSIS_ICON");
 
-		MenuItem.clickNoError(menuItem = "Remove");
+		MenuItem.clickNoError(menuItem = "Delete");
 
 		AssertConfirm(value1 = "Are you sure you want to remove this component?");
 	}
@@ -511,6 +511,28 @@ definition {
 			key_pageColumnNumber = ${columnNumberTo},
 			locator1 = "Portlet#PORTLET_TITLE_INSIDE_PAGE_COLUMN",
 			value1 = ${portletName});
+	}
+
+	@summary = "Default summary"
+	macro enableScopeConfiguration() {
+		ApplicationsMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "Instance Settings");
+
+		SystemSettings.gotoConfiguration(
+			configurationCategory = "Feature Flags",
+			configurationName = "Deprecation",
+			configurationScope = "Virtual Instance Scope");
+
+		if (IsElementPresent(locator1 = "FeatureFlag#TOGGLE_ROW", title_row = "Widget Setting Scope", toggle_state = "Disabled")) {
+			Check.checkToggleSwitch(
+				locator1 = "FeatureFlag#TOGGLE_ROW",
+				title_row = "Widget Setting Scope",
+				toggle_state = "Disabled");
+		}
+
+		Navigator.openURL();
 	}
 
 	@summary = "Default summary"
@@ -588,7 +610,7 @@ definition {
 
 	@summary = "Default summary"
 	macro selectScope(scope = null) {
-		Navigator.gotoNavTab(navTab = "Scope");
+		Click(locator1 = "Configuration#NAVIGATION_SCOPE");
 
 		Select(
 			locator1 = "Select#SCOPE",
@@ -886,9 +908,9 @@ definition {
 			value1 = "Permissions");
 
 		AssertTextEquals(
-			key_menuItem = "Remove",
+			key_menuItem = "Delete",
 			locator1 = "MenuItem#ANY_MENU_ITEM",
-			value1 = "Remove");
+			value1 = "Delete");
 	}
 
 	@summary = "Default summary"

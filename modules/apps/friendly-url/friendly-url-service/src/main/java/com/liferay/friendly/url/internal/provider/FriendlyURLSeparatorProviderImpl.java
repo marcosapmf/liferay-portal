@@ -7,7 +7,6 @@ package com.liferay.friendly.url.internal.provider;
 
 import com.liferay.friendly.url.configuration.manager.FriendlyURLSeparatorConfigurationManager;
 import com.liferay.friendly.url.provider.FriendlyURLSeparatorProvider;
-import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -26,9 +25,8 @@ public class FriendlyURLSeparatorProviderImpl
 	public String getFriendlyURLSeparator(long companyId, String key) {
 		try {
 			JSONObject friendlyURLSeparatorsJSONObject =
-				_jsonFactory.createJSONObject(
-					_friendlyURLSeparatorConfigurationManager.
-						getFriendlyURLSeparatorsJSON(companyId));
+				_friendlyURLSeparatorConfigurationManager.
+					getFriendlyURLSeparatorsJSONObject(companyId);
 
 			return friendlyURLSeparatorsJSONObject.getString(key);
 		}
@@ -47,8 +45,5 @@ public class FriendlyURLSeparatorProviderImpl
 	@Reference
 	private FriendlyURLSeparatorConfigurationManager
 		_friendlyURLSeparatorConfigurationManager;
-
-	@Reference
-	private JSONFactory _jsonFactory;
 
 }

@@ -15,14 +15,15 @@ import com.liferay.object.action.executor.ObjectActionExecutorRegistry;
 import com.liferay.object.constants.ObjectActionConstants;
 import com.liferay.object.constants.ObjectActionExecutorConstants;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.definition.util.ObjectDefinitionUtil;
 import com.liferay.object.exception.DuplicateObjectActionExternalReferenceCodeException;
 import com.liferay.object.exception.LockedObjectActionException;
+import com.liferay.object.exception.ObjectActionActiveException;
 import com.liferay.object.exception.ObjectActionConditionExpressionException;
 import com.liferay.object.exception.ObjectActionErrorMessageException;
 import com.liferay.object.exception.ObjectActionExecutorKeyException;
-import com.liferay.object.exception.ObjectActionLabelException;
 import com.liferay.object.exception.ObjectActionNameException;
 import com.liferay.object.exception.ObjectActionParametersException;
 import com.liferay.object.exception.ObjectActionSystemException;
@@ -32,14 +33,18 @@ import com.liferay.object.internal.security.permission.resource.util.ObjectDefin
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
+import com.liferay.object.model.ObjectFolder;
 import com.liferay.object.scope.CompanyScoped;
 import com.liferay.object.scope.ObjectDefinitionScoped;
 import com.liferay.object.scripting.exception.ObjectScriptingException;
 import com.liferay.object.scripting.validator.ObjectScriptingValidator;
+import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.object.service.ObjectFolderLocalService;
+import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.base.ObjectActionLocalServiceBaseImpl;
 import com.liferay.object.service.persistence.ObjectDefinitionPersistence;
-import com.liferay.object.tree.TreeFactory;
+import com.liferay.object.tree.ObjectDefinitionTreeFactory;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
@@ -62,6 +67,7 @@ import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -71,6 +77,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.security.script.management.configuration.helper.ScriptManagementConfigurationHelper;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -112,7 +119,6 @@ public class ObjectActionLocalServiceImpl
 			objectDefinitionId);
 
 		_validateErrorMessage(errorMessageMap, objectActionTriggerKey);
-		_validateLabel(labelMap);
 		_validateName(0, objectDefinitionId, name);
 		_validateObjectActionExecutorKey(
 			objectActionExecutorKey, objectDefinition);
@@ -143,7 +149,10 @@ public class ObjectActionLocalServiceImpl
 		objectAction.setDescription(description);
 		objectAction.setErrorMessageMap(
 			errorMessageMap, LocaleUtil.getSiteDefault());
-		objectAction.setLabelMap(labelMap, LocaleUtil.getSiteDefault());
+		objectAction.setLabelMap(
+			_populateLabelMap(
+				labelMap, name, objectDefinition.getDefaultLocale()),
+			objectDefinition.getDefaultLocale());
 		objectAction.setName(name);
 		objectAction.setObjectActionExecutorKey(objectActionExecutorKey);
 		objectAction.setObjectActionTriggerKey(objectActionTriggerKey);
@@ -167,8 +176,11 @@ public class ObjectActionLocalServiceImpl
 
 				ObjectDefinitionResourcePermissionUtil.populateResourceActions(
 					objectActionLocalService, objectDefinition,
-					_objectDefinitionPersistence, _portletLocalService,
-					_resourceActions, _treeFactory);
+					_objectDefinitionPersistence,
+					new ObjectDefinitionTreeFactory(
+						_objectDefinitionPersistence,
+						_objectRelationshipLocalService),
+					_portletLocalService, _resourceActions, null);
 			}
 			catch (Exception exception) {
 				ReflectionUtil.throwException(exception);
@@ -321,6 +333,26 @@ public class ObjectActionLocalServiceImpl
 			objectDefinitionId, true, objectActionTriggerKey);
 	}
 
+	@Override
+	public Map<Long, List<ObjectAction>> getObjectActionsMap(
+		long companyId, boolean active, String objectActionTriggerKey) {
+
+		Map<Long, List<ObjectAction>> objectActionsMap = new HashMap<>();
+
+		for (ObjectAction objectAction :
+				objectActionPersistence.findByC_A_OATK(
+					companyId, active, objectActionTriggerKey)) {
+
+			List<ObjectAction> objectActions = objectActionsMap.computeIfAbsent(
+				objectAction.getObjectDefinitionId(),
+				objectDefinitionId -> new ArrayList<>());
+
+			objectActions.add(objectAction);
+		}
+
+		return objectActionsMap;
+	}
+
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public ObjectAction updateObjectAction(
@@ -335,12 +367,18 @@ public class ObjectActionLocalServiceImpl
 		ObjectAction objectAction = objectActionPersistence.findByPrimaryKey(
 			objectActionId);
 
+		ObjectDefinition objectDefinition =
+			_objectDefinitionPersistence.findByPrimaryKey(
+				objectAction.getObjectDefinitionId());
+
 		if (objectAction.isSystem() &&
 			!ObjectDefinitionUtil.isInvokerBundleAllowed()) {
 
-			_validateLabel(labelMap);
-
-			objectAction.setLabelMap(labelMap, LocaleUtil.getSiteDefault());
+			objectAction.setLabelMap(
+				_populateLabelMap(
+					labelMap, objectAction.getName(),
+					objectDefinition.getDefaultLocale()),
+				objectDefinition.getDefaultLocale());
 
 			return objectActionPersistence.update(objectAction);
 		}
@@ -348,17 +386,10 @@ public class ObjectActionLocalServiceImpl
 		_validateExternalReferenceCode(
 			externalReferenceCode, objectAction.getObjectActionId(),
 			objectAction.getCompanyId(), objectAction.getObjectDefinitionId());
-
+		_validateActive(active, objectAction, objectDefinition);
 		_validateErrorMessage(errorMessageMap, objectActionTriggerKey);
-		_validateLabel(labelMap);
-
-		ObjectDefinition objectDefinition =
-			_objectDefinitionPersistence.findByPrimaryKey(
-				objectAction.getObjectDefinitionId());
-
 		_validateObjectActionExecutorKey(
 			objectActionExecutorKey, objectDefinition);
-
 		_validateParametersUnicodeProperties(
 			objectAction.getCompanyId(), objectAction.getUserId(),
 			conditionExpression, objectActionExecutorKey,
@@ -373,7 +404,15 @@ public class ObjectActionLocalServiceImpl
 		objectAction.setDescription(description);
 		objectAction.setErrorMessageMap(
 			errorMessageMap, LocaleUtil.getSiteDefault());
-		objectAction.setLabelMap(labelMap, LocaleUtil.getSiteDefault());
+
+		if (objectDefinition.isApproved()) {
+			objectAction.setLabelMap(
+				_populateLabelMap(
+					labelMap, objectAction.getName(),
+					objectDefinition.getDefaultLocale()),
+				objectDefinition.getDefaultLocale());
+		}
+
 		objectAction.setObjectActionExecutorKey(objectActionExecutorKey);
 		objectAction.setParameters(parametersUnicodeProperties.toString());
 		objectAction.setStatus(ObjectActionConstants.STATUS_NEVER_RAN);
@@ -387,6 +426,10 @@ public class ObjectActionLocalServiceImpl
 		_validateObjectActionTriggerKey(
 			conditionExpression, objectActionTriggerKey, objectDefinition);
 
+		objectAction.setLabelMap(
+			_populateLabelMap(
+				labelMap, name, objectDefinition.getDefaultLocale()),
+			objectDefinition.getDefaultLocale());
 		objectAction.setName(name);
 		objectAction.setObjectActionTriggerKey(objectActionTriggerKey);
 
@@ -461,6 +504,55 @@ public class ObjectActionLocalServiceImpl
 		return false;
 	}
 
+	private Map<Locale, String> _populateLabelMap(
+		Map<Locale, String> labelMap, String name, Locale locale) {
+
+		if ((labelMap == null) || labelMap.isEmpty()) {
+			return HashMapBuilder.put(
+				locale, name
+			).build();
+		}
+
+		if (Validator.isNotNull(labelMap.get(locale))) {
+			return labelMap;
+		}
+
+		if (labelMap.size() == 1) {
+			for (Map.Entry<Locale, String> entry : labelMap.entrySet()) {
+				labelMap.put(locale, entry.getValue());
+			}
+
+			return labelMap;
+		}
+
+		labelMap.put(locale, name);
+
+		return labelMap;
+	}
+
+	private void _validateActive(
+			boolean active, ObjectAction objectAction,
+			ObjectDefinition objectDefinition)
+		throws PortalException {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-34594") ||
+			objectDefinition.isRootNode()) {
+
+			return;
+		}
+
+		if (active &&
+			StringUtil.equals(
+				objectAction.getObjectActionTriggerKey(),
+				ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE)) {
+
+			throw new ObjectActionActiveException(
+				"Object action trigger is " +
+					ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE +
+						" but object definition is not a root node");
+		}
+	}
+
 	private void _validateErrorMessage(
 			Map<Locale, String> errorMessageMap, String objectActionTriggerKey)
 		throws PortalException {
@@ -505,17 +597,6 @@ public class ObjectActionLocalServiceImpl
 		}
 
 		throw new ObjectActionSystemException(message);
-	}
-
-	private void _validateLabel(Map<Locale, String> labelMap)
-		throws PortalException {
-
-		Locale locale = LocaleUtil.getSiteDefault();
-
-		if ((labelMap == null) || Validator.isNull(labelMap.get(locale))) {
-			throw new ObjectActionLabelException(
-				"Label is null for locale " + locale.getDisplayName());
-		}
 	}
 
 	private void _validateName(
@@ -617,7 +698,8 @@ public class ObjectActionLocalServiceImpl
 			ObjectDefinition objectDefinition)
 		throws PortalException {
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-187142") &&
+		if (FeatureFlagManagerUtil.isEnabled(
+				objectDefinition.getCompanyId(), "LPD-34594") &&
 			StringUtil.equals(
 				objectActionTriggerKey,
 				ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE) &&
@@ -724,40 +806,41 @@ public class ObjectActionLocalServiceImpl
 				objectActionExecutorKey,
 				ObjectActionExecutorConstants.KEY_UPDATE_OBJECT_ENTRY)) {
 
-			long objectDefinitionId = GetterUtil.getLong(
-				parametersUnicodeProperties.get("objectDefinitionId"));
-
-			ObjectDefinition objectDefinition =
-				_objectDefinitionPersistence.fetchByPrimaryKey(
-					objectDefinitionId);
+			ObjectDefinition objectDefinition = null;
 
 			String objectDefinitionExternalReferenceCode = GetterUtil.getString(
 				parametersUnicodeProperties.remove(
 					"objectDefinitionExternalReferenceCode"));
 
 			if (Validator.isNotNull(objectDefinitionExternalReferenceCode)) {
-				ObjectDefinition existingObjectDefinition =
-					_objectDefinitionPersistence.fetchByERC_C(
-						objectDefinitionExternalReferenceCode, companyId);
+				objectDefinition = _objectDefinitionPersistence.fetchByERC_C(
+					objectDefinitionExternalReferenceCode, companyId);
 
-				if (existingObjectDefinition != null) {
-					objectDefinition = existingObjectDefinition;
+				if (objectDefinition == null) {
+					ObjectFolder defaultObjectFolder =
+						_objectFolderLocalService.getOrAddDefaultObjectFolder(
+							companyId);
 
-					parametersUnicodeProperties.put(
-						"objectDefinitionId",
-						String.valueOf(
-							objectDefinition.getObjectDefinitionId()));
+					objectDefinition =
+						ObjectDefinitionLocalServiceUtil.addObjectDefinition(
+							objectDefinitionExternalReferenceCode, userId,
+							defaultObjectFolder.getObjectFolderId(), true,
+							ObjectDefinitionConstants.SCOPE_COMPANY, false);
 				}
+
+				parametersUnicodeProperties.put(
+					"objectDefinitionId",
+					String.valueOf(objectDefinition.getObjectDefinitionId()));
+			}
+			else {
+				objectDefinition =
+					_objectDefinitionPersistence.fetchByPrimaryKey(
+						GetterUtil.getLong(
+							parametersUnicodeProperties.get(
+								"objectDefinitionId")));
 			}
 
-			if ((objectDefinition == null) ||
-				(Objects.equals(
-					objectActionExecutorKey,
-					ObjectActionExecutorConstants.KEY_ADD_OBJECT_ENTRY) &&
-				 (!objectDefinition.isActive() ||
-				  !objectDefinition.isApproved()) &&
-				 !objectDefinition.isModifiableAndSystem())) {
-
+			if (objectDefinition == null) {
 				errorMessageKeys.put("objectDefinitionId", "invalid");
 			}
 			else {
@@ -876,8 +959,11 @@ public class ObjectActionLocalServiceImpl
 			ObjectField objectField = _objectFieldLocalService.fetchObjectField(
 				objectDefinitionId, name);
 
-			if ((objectField == null) ||
-				objectField.compareBusinessType(
+			if (objectField == null) {
+				continue;
+			}
+
+			if (objectField.compareBusinessType(
 					ObjectFieldConstants.BUSINESS_TYPE_AUTO_INCREMENT)) {
 
 				predefinedValuesErrorMessageKeys.put(name, "invalid");
@@ -981,6 +1067,12 @@ public class ObjectActionLocalServiceImpl
 	private ObjectFieldLocalService _objectFieldLocalService;
 
 	@Reference
+	private ObjectFolderLocalService _objectFolderLocalService;
+
+	@Reference
+	private ObjectRelationshipLocalService _objectRelationshipLocalService;
+
+	@Reference
 	private ObjectScriptingValidator _objectScriptingValidator;
 
 	@Reference
@@ -992,9 +1084,6 @@ public class ObjectActionLocalServiceImpl
 	@Reference
 	private ScriptManagementConfigurationHelper
 		_scriptManagementConfigurationHelper;
-
-	@Reference
-	private TreeFactory _treeFactory;
 
 	@Reference
 	private UserLocalService _userLocalService;

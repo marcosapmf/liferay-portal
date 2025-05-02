@@ -21,13 +21,12 @@ dependencies {
 	api group: "com.liferay", name: "org.apache.logging.log4j.core", version: "2.17.1.LIFERAY-PATCHED-1"
 	api group: "commons-io", name: "commons-io", version: "2.15.1"
 	api group: "io.github.firemaples", name: "microsoft-translator-java-api", version: "0.8.3"
-
 	compileOnly group: "com.liferay", name: "com.liferay.petra.lang", version: "1.0.0"
 	compileOnly group: "com.liferay", name: "com.liferay.petra.nio", version: "1.0.0"
 	compileOnly group: "com.liferay", name: "com.liferay.petra.string", version: "1.0.0"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "2.6.0"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
-	compileOnly group: "org.apache.ant", name: "ant", transitive: false, version: "1.10.11"
+	compileOnly group: "org.apache.ant", name: "ant", transitive: false, version: "1.10.14"
 	compileOnly group: "org.apache.maven", name: "maven-plugin-api", transitive: false, version: "3.0.4"
 }
 

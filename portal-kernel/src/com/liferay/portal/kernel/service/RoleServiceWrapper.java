@@ -165,6 +165,15 @@ public class RoleServiceWrapper
 	}
 
 	@Override
+	public Role getRoleByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _roleService.getRoleByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
+	@Override
 	public java.util.List<Role> getRoles(int type, String subtype)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -346,14 +355,15 @@ public class RoleServiceWrapper
 	 */
 	@Override
 	public Role updateRole(
-			long roleId, String name,
+			String externalReferenceCode, long roleId, String name,
 			java.util.Map<java.util.Locale, String> titleMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			String subtype, ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _roleService.updateRole(
-			roleId, name, titleMap, descriptionMap, subtype, serviceContext);
+			externalReferenceCode, roleId, name, titleMap, descriptionMap,
+			subtype, serviceContext);
 	}
 
 	@Override

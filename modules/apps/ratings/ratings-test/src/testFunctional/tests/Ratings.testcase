@@ -1,7 +1,9 @@
 @component-name = "portal-content-management"
 definition {
 
-	property portal.release = "true";
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Ratings";
 
@@ -9,6 +11,8 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
 	}
 
 	tearDown {
@@ -213,9 +217,7 @@ definition {
 			pageName = "Staging Test Page",
 			siteName = "Site Name");
 
-		LAR.exportPortlet(
-			larFileName = "Wiki.portlet.lar",
-			wikiPortlet = "true");
+		LAR.exportPortlet(larFileName = "Wiki.portlet.lar");
 
 		HeadlessSite.addSite(siteName = "Second Site");
 
@@ -231,9 +233,7 @@ definition {
 
 		Navigator.openSiteURL(siteName = "Second Site");
 
-		LAR.importPortlet(
-			larFileName = "Wiki.portlet.lar",
-			wikiPortlet = "true");
+		LAR.importPortlet(larFileName = "Wiki.portlet.lar");
 
 		WikiNavigator.openToWikiPage(
 			layoutURLKey = "wiki-page",
@@ -254,7 +254,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanRateAndEditWikiPageComment {
-		property custom.properties = "default.layout.template.id=1_column";
+		property custom.properties = "default.layout.template.id=1_column${line.separator}feature.flag.LPD-35013=true";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -313,7 +313,7 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanRateBlogsEntry {
-		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property custom.properties = "feature.flag.LPD-35013=true${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		JSONUser.addUser(
@@ -568,7 +568,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanRevokeBlogsStarsRating {
-		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property custom.properties = "feature.flag.LPD-35013=true${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		JSONLayout.addPublicLayout(
@@ -977,7 +977,7 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanViewLikeCountForDocument {
-		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property custom.properties = "feature.flag.LPD-35013=true${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		Ratings.configureRatingType(

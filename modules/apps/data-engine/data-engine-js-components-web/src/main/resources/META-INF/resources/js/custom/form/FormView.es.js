@@ -5,7 +5,8 @@
 
 import '../../../css/main.scss';
 
-import {fetch, openModal} from 'frontend-js-web';
+import {openModal} from 'frontend-js-components-web';
+import {fetch} from 'frontend-js-web';
 import React, {
 	useCallback,
 	useEffect,
@@ -15,6 +16,7 @@ import React, {
 import {DndProvider} from 'react-dnd';
 import {HTML5Backend} from 'react-dnd-html5-backend';
 
+import {EVENT_TYPES} from '../../core/actions/eventTypes.es';
 import Pages from '../../core/components/Pages.es';
 import {INITIAL_CONFIG_STATE} from '../../core/config/initialConfigState.es';
 import {INITIAL_STATE} from '../../core/config/initialState.es';
@@ -80,7 +82,12 @@ const useFormSubmit = ({apiRef, containerRef}) => {
 							}
 
 							if (submittable) {
-								Liferay.Util.submitForm(event.target);
+								if (Liferay.Util.submitForm) {
+									Liferay.Util.submitForm(event.target);
+								}
+								else {
+									event.target.submit();
+								}
 							}
 
 							Liferay.fire('ddmFormValid', {
@@ -254,6 +261,7 @@ const usePublicAPI = ({apiRef, containerRef, unstable_onEventRef}) => {
 			dispatch(
 				formValidate({
 					activePage,
+					containerId,
 					defaultLanguageId,
 					editingLanguageId,
 					formId: containerRef.current
@@ -267,6 +275,7 @@ const usePublicAPI = ({apiRef, containerRef, unstable_onEventRef}) => {
 				})
 			),
 		[
+			containerId,
 			dispatch,
 			activePage,
 			containerRef,
@@ -279,6 +288,20 @@ const usePublicAPI = ({apiRef, containerRef, unstable_onEventRef}) => {
 			viewMode,
 		]
 	);
+
+	/**
+	 * Switches the LocalesDropdown back to the default language id.
+	 * This is necessary within objects entries context since the
+	 * entry is only required in the default locale.
+	 */
+
+	const updateLocalesDropdownToDefaultLanguage = () =>
+		dispatch({
+			payload: {
+				editingLanguageId: defaultLanguageId,
+			},
+			type: EVENT_TYPES.LANGUAGE.LOCALES_DROPDOWN_CHANGE,
+		});
 
 	useEffect(() => {
 		Liferay.component(
@@ -374,6 +397,7 @@ const usePublicAPI = ({apiRef, containerRef, unstable_onEventRef}) => {
 					readOnly,
 				})
 			),
+		updateLocalesDropdownToDefaultLanguage,
 		validate,
 	}));
 };

@@ -5,10 +5,9 @@
 
 package com.liferay.layout.content.page.editor.web.internal.display.context;
 
-import com.liferay.asset.list.service.AssetListEntryLocalService;
 import com.liferay.exportimport.kernel.staging.Staging;
+import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
-import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.search.InfoSearchClassMapperRegistry;
@@ -34,10 +33,10 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -84,10 +83,9 @@ public class ContentPageEditorDisplayContextProvider {
 
 		if (Objects.equals(className, Layout.class.getName())) {
 			return new ContentPageLayoutEditorDisplayContext(
-				_assetListEntryLocalService,
 				_getContentPageEditorSidebarPanels(), _contentManager,
 				_fragmentCollectionManager, _fragmentEntryLinkManager,
-				_fragmentEntryLinkLocalService, _fragmentEntryLocalService,
+				_fragmentEntryLinkLocalService,
 				_frontendTokenDefinitionRegistry, _groupLocalService,
 				httpServletRequest, _infoItemServiceRegistry,
 				_infoSearchClassMapperRegistry, _itemSelector, _jsonFactory,
@@ -97,20 +95,20 @@ public class ContentPageEditorDisplayContextProvider {
 				_layoutPageTemplateStructureLocalService,
 				_layoutPageTemplateStructureRelLocalService, _layoutPermission,
 				_pageEditorConfiguration, _portal, portletRequest,
-				_portletURLFactory, renderResponse,
+				_portletResourcePermission, _portletURLFactory, renderResponse,
 				_segmentsConfigurationProvider,
 				new SegmentsExperienceManager(_segmentsExperienceLocalService),
 				_segmentsExperienceLocalService,
 				_segmentsExperimentRelLocalService, _segmentsEntryService,
 				_staging, _stagingGroupHelper, _styleBookEntryLocalService,
-				_userLocalService, _workflowDefinitionLinkLocalService);
+				_workflowDefinitionLinkLocalService);
 		}
 
 		if (Objects.equals(className, LayoutUtilityPageEntry.class.getName())) {
 			return new ContentPageEditorLayoutUtilityPageEntryDisplayContext(
 				_getContentPageEditorSidebarPanels(), _contentManager,
 				_fragmentCollectionManager, _fragmentEntryLinkManager,
-				_fragmentEntryLinkLocalService, _fragmentEntryLocalService,
+				_fragmentEntryLinkLocalService,
 				_frontendTokenDefinitionRegistry, httpServletRequest,
 				_infoItemServiceRegistry, _infoSearchClassMapperRegistry,
 				_itemSelector, _jsonFactory, _language, _layoutLocalService,
@@ -118,13 +116,13 @@ public class ContentPageEditorDisplayContextProvider {
 				_layoutPageTemplateEntryLocalService,
 				_layoutPageTemplateEntryService, _layoutPermission,
 				_pageEditorConfiguration, _portal, portletRequest,
-				_portletURLFactory, renderResponse,
+				_portletResourcePermission, _portletURLFactory, renderResponse,
 				_segmentsConfigurationProvider,
 				new SegmentsExperienceManager(_segmentsExperienceLocalService),
 				_segmentsExperienceLocalService,
 				_segmentsExperimentRelLocalService, _segmentsEntryService,
 				_staging, _stagingGroupHelper, _styleBookEntryLocalService,
-				_userLocalService, _workflowDefinitionLinkLocalService);
+				_workflowDefinitionLinkLocalService);
 		}
 
 		long classPK = GetterUtil.getLong(
@@ -146,21 +144,19 @@ public class ContentPageEditorDisplayContextProvider {
 		return new ContentPageEditorLayoutPageTemplateDisplayContext(
 			_getContentPageEditorSidebarPanels(), _contentManager,
 			_fragmentCollectionManager, _fragmentEntryLinkManager,
-			_fragmentEntryLinkLocalService, _fragmentEntryLocalService,
-			_frontendTokenDefinitionRegistry, httpServletRequest,
-			_infoItemServiceRegistry, _infoSearchClassMapperRegistry,
-			_itemSelector, _jsonFactory, _language, _layoutLocalService,
-			_layoutLockManager, _layoutSetLocalService,
-			_layoutPageTemplateEntryLocalService,
+			_fragmentEntryLinkLocalService, _frontendTokenDefinitionRegistry,
+			httpServletRequest, _infoItemServiceRegistry,
+			_infoSearchClassMapperRegistry, _itemSelector, _jsonFactory,
+			_language, _layoutLocalService, _layoutLockManager,
+			_layoutSetLocalService, _layoutPageTemplateEntryLocalService,
 			_layoutPageTemplateEntryService, _layoutPermission,
 			_pageEditorConfiguration, pageIsDisplayPage, _portal,
-			portletRequest, _portletURLFactory, renderResponse,
-			_segmentsConfigurationProvider,
+			portletRequest, _portletResourcePermission, _portletURLFactory,
+			renderResponse, _segmentsConfigurationProvider,
 			new SegmentsExperienceManager(_segmentsExperienceLocalService),
 			_segmentsExperienceLocalService, _segmentsExperimentRelLocalService,
 			_segmentsEntryService, _staging, _stagingGroupHelper,
-			_styleBookEntryLocalService, _userLocalService,
-			_workflowDefinitionLinkLocalService);
+			_styleBookEntryLocalService, _workflowDefinitionLinkLocalService);
 	}
 
 	@Activate
@@ -186,9 +182,6 @@ public class ContentPageEditorDisplayContextProvider {
 	}
 
 	@Reference
-	private AssetListEntryLocalService _assetListEntryLocalService;
-
-	@Reference
 	private ContentManager _contentManager;
 
 	@Reference
@@ -199,9 +192,6 @@ public class ContentPageEditorDisplayContextProvider {
 
 	@Reference
 	private FragmentEntryLinkManager _fragmentEntryLinkManager;
-
-	@Reference
-	private FragmentEntryLocalService _fragmentEntryLocalService;
 
 	@Reference
 	private FrontendTokenDefinitionRegistry _frontendTokenDefinitionRegistry;
@@ -256,6 +246,11 @@ public class ContentPageEditorDisplayContextProvider {
 	@Reference
 	private Portal _portal;
 
+	@Reference(
+		target = "(resource.name=" + FragmentConstants.RESOURCE_NAME + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
+
 	@Reference
 	private PortletURLFactory _portletURLFactory;
 
@@ -283,9 +278,6 @@ public class ContentPageEditorDisplayContextProvider {
 
 	@Reference
 	private StyleBookEntryLocalService _styleBookEntryLocalService;
-
-	@Reference
-	private UserLocalService _userLocalService;
 
 	@Reference
 	private WorkflowDefinitionLinkLocalService

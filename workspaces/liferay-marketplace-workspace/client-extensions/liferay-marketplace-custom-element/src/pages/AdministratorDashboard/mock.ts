@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
+
 export const colors = {
 	color1: '#2057e2',
 	color2: '#46e27d',
@@ -25,19 +26,3 @@ export const infoCard = [
 		value: '249.194.46',
 	},
 ];
-
-export const barChart = {
-	colors: {
-		data1: colors.color1,
-		data2: colors.color2,
-		data3: colors.color3,
-		data4: colors.color4,
-	},
-	columns: [
-		['data1', 100, 20, 30],
-		['data2', 20, 70, 100],
-		['data3', 15, 12, 45],
-		['data4', 23, 74, 90],
-	],
-	type: 'bar',
-};

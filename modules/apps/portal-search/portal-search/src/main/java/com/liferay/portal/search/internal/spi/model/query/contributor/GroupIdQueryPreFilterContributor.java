@@ -65,19 +65,18 @@ public class GroupIdQueryPreFilterContributor
 				continue;
 			}
 
-			long parentGroupId = groupId;
+			_addTermsFilters(
+				group, groupId, groupIds, groupIdsTermsFilter, i,
+				scopeGroupIdsTermsFilter, searchContext);
+		}
 
-			if (group.isLayout()) {
-				parentGroupId = group.getParentGroupId();
-			}
+		if ((groupIds.length == 1) && (groupIds[0] > 0) &&
+			groupIdsTermsFilter.isEmpty()) {
 
-			groupIdsTermsFilter.addValue(String.valueOf(parentGroupId));
-
-			groupIds[i] = parentGroupId;
-
-			if (group.isLayout() || searchContext.isScopeStrict()) {
-				scopeGroupIdsTermsFilter.addValue(String.valueOf(groupId));
-			}
+			_addTermsFilters(
+				_getGroup(groupIds[0]), groupIds[0], groupIds,
+				groupIdsTermsFilter, 0, scopeGroupIdsTermsFilter,
+				searchContext);
 		}
 
 		if (!groupIdsTermsFilter.isEmpty()) {
@@ -120,6 +119,26 @@ public class GroupIdQueryPreFilterContributor
 
 		if (ownerUserId > 0) {
 			booleanFilter.addRequiredTerm(Field.USER_ID, ownerUserId);
+		}
+	}
+
+	private void _addTermsFilters(
+		Group group, long groupId, long[] groupIds,
+		TermsFilter groupIdsTermsFilter, int index,
+		TermsFilter scopeGroupIdsTermsFilter, SearchContext searchContext) {
+
+		long parentGroupId = groupId;
+
+		if (group.isLayout()) {
+			parentGroupId = group.getParentGroupId();
+		}
+
+		groupIdsTermsFilter.addValue(String.valueOf(parentGroupId));
+
+		groupIds[index] = parentGroupId;
+
+		if (group.isLayout() || searchContext.isScopeStrict()) {
+			scopeGroupIdsTermsFilter.addValue(String.valueOf(groupId));
 		}
 	}
 

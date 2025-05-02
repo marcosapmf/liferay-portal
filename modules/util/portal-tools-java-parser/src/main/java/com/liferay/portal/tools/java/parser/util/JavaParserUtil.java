@@ -46,15 +46,19 @@ import com.liferay.portal.tools.java.parser.JavaOperator;
 import com.liferay.portal.tools.java.parser.JavaOperatorExpression;
 import com.liferay.portal.tools.java.parser.JavaPackageDefinition;
 import com.liferay.portal.tools.java.parser.JavaParameter;
+import com.liferay.portal.tools.java.parser.JavaRecordComponent;
 import com.liferay.portal.tools.java.parser.JavaReturnStatement;
 import com.liferay.portal.tools.java.parser.JavaSignature;
 import com.liferay.portal.tools.java.parser.JavaSimpleValue;
 import com.liferay.portal.tools.java.parser.JavaStaticInitialization;
 import com.liferay.portal.tools.java.parser.JavaSwitchCaseStatement;
+import com.liferay.portal.tools.java.parser.JavaSwitchExpression;
+import com.liferay.portal.tools.java.parser.JavaSwitchRuleStatement;
 import com.liferay.portal.tools.java.parser.JavaSwitchStatement;
 import com.liferay.portal.tools.java.parser.JavaSynchronizedStatement;
 import com.liferay.portal.tools.java.parser.JavaTerm;
 import com.liferay.portal.tools.java.parser.JavaTernaryOperator;
+import com.liferay.portal.tools.java.parser.JavaTextBlock;
 import com.liferay.portal.tools.java.parser.JavaThrowStatement;
 import com.liferay.portal.tools.java.parser.JavaTryStatement;
 import com.liferay.portal.tools.java.parser.JavaType;
@@ -96,7 +100,8 @@ public class JavaParserUtil {
 		if ((detailAST.getType() == TokenTypes.ANNOTATION_DEF) ||
 			(detailAST.getType() == TokenTypes.CLASS_DEF) ||
 			(detailAST.getType() == TokenTypes.ENUM_DEF) ||
-			(detailAST.getType() == TokenTypes.INTERFACE_DEF)) {
+			(detailAST.getType() == TokenTypes.INTERFACE_DEF) ||
+			(detailAST.getType() == TokenTypes.RECORD_DEF)) {
 
 			javaTerm = _parseJavaClassDefinition(detailAST);
 		}
@@ -106,13 +111,16 @@ public class JavaParserUtil {
 		else if (detailAST.getType() == TokenTypes.ANNOTATION_FIELD_DEF) {
 			javaTerm = _parseJavaAnnotationFieldDefinition(detailAST);
 		}
+		else if (detailAST.getType() == TokenTypes.COMPACT_CTOR_DEF) {
+			javaTerm = _parseJavaConstructorDefinition(detailAST, true);
+		}
 		else if ((detailAST.getType() == TokenTypes.CTOR_CALL) ||
 				 (detailAST.getType() == TokenTypes.SUPER_CTOR_CALL)) {
 
 			javaTerm = _parseJavaConstructorCall(detailAST);
 		}
 		else if (detailAST.getType() == TokenTypes.CTOR_DEF) {
-			javaTerm = _parseJavaConstructorDefinition(detailAST);
+			javaTerm = _parseJavaConstructorDefinition(detailAST, false);
 		}
 		else if (detailAST.getType() == TokenTypes.DO_WHILE) {
 			javaTerm = _parseJavaWhileStatement(detailAST);
@@ -167,7 +175,15 @@ public class JavaParserUtil {
 			javaTerm = _parseJavaSynchronizedStatement(detailAST);
 		}
 		else if (detailAST.getType() == TokenTypes.LITERAL_SWITCH) {
-			javaTerm = _parseJavaSwitchStatement(detailAST);
+			DetailAST switchRuleDetailAST = detailAST.findFirstToken(
+				TokenTypes.SWITCH_RULE);
+
+			if (switchRuleDetailAST != null) {
+				javaTerm = _parseJavaExpression(detailAST);
+			}
+			else {
+				javaTerm = _parseJavaSwitchStatement(detailAST);
+			}
 		}
 		else if (detailAST.getType() == TokenTypes.LITERAL_THROW) {
 			javaTerm = _parseJavaThrowStatement(detailAST);
@@ -189,6 +205,9 @@ public class JavaParserUtil {
 		}
 		else if (detailAST.getType() == TokenTypes.STATIC_INIT) {
 			javaTerm = new JavaStaticInitialization();
+		}
+		else if (detailAST.getType() == TokenTypes.SWITCH_RULE) {
+			javaTerm = _parseJavaSwitchRuleStatement(detailAST);
 		}
 		else if (detailAST.getType() == TokenTypes.VARIABLE_DEF) {
 			javaTerm = _parseJavaVariableDefinition(detailAST);
@@ -413,15 +432,16 @@ public class JavaParserUtil {
 			if (childDetailAST.getType() != TokenTypes.COMMA) {
 				FullIdent fullIdent = FullIdent.createFullIdent(childDetailAST);
 
-				exceptionJavaTypes.add(new JavaType(fullIdent.getText(), 0));
+				exceptionJavaTypes.add(new JavaType(0, fullIdent.getText()));
 			}
 
 			childDetailAST = childDetailAST.getNextSibling();
 		}
 	}
 
-	private static List<JavaType> _parseExtendedOrImplementedClassJavaTypes(
-		DetailAST clauseDetailAST) {
+	private static List<JavaType>
+		_parseExtendedOrImplementedOrPermittedClassJavaTypes(
+			DetailAST clauseDetailAST) {
 
 		List<JavaType> classJavaTypes = new ArrayList<>();
 
@@ -433,7 +453,7 @@ public class JavaParserUtil {
 			}
 
 			if (childDetailAST.getType() == TokenTypes.IDENT) {
-				JavaType javaType = new JavaType(childDetailAST.getText(), 0);
+				JavaType javaType = new JavaType(0, childDetailAST.getText());
 
 				DetailAST nextSiblingDetailAST =
 					childDetailAST.getNextSibling();
@@ -452,7 +472,7 @@ public class JavaParserUtil {
 			else if (childDetailAST.getType() == TokenTypes.DOT) {
 				FullIdent fullIdent = FullIdent.createFullIdent(childDetailAST);
 
-				JavaType javaType = new JavaType(fullIdent.getText(), 0);
+				JavaType javaType = new JavaType(0, fullIdent.getText());
 
 				DetailAST typeArgumentsDetailAST =
 					childDetailAST.findFirstToken(TokenTypes.TYPE_ARGUMENTS);
@@ -476,7 +496,7 @@ public class JavaParserUtil {
 		FullIdent fullIdent = FullIdent.createFullIdent(detailAST);
 
 		JavaType genericBoundJavaType = new JavaType(
-			fullIdent.getText(), arrayDimension);
+			arrayDimension, fullIdent.getText());
 
 		DetailAST typeArgumentsDetailAST = null;
 
@@ -624,7 +644,7 @@ public class JavaParserUtil {
 				_parseJavaAnnotations(
 					annotationFieldDefinitionDetailAST.findFirstToken(
 						TokenTypes.MODIFIERS)),
-				_parseJavaSignature(annotationFieldDefinitionDetailAST));
+				_parseJavaSignature(annotationFieldDefinitionDetailAST, false));
 
 		DetailAST literalDefaultDetailAST =
 			annotationFieldDefinitionDetailAST.findFirstToken(
@@ -800,13 +820,13 @@ public class JavaParserUtil {
 				FullIdent fullIdent = FullIdent.createFullIdent(
 					nextSiblingDetailAST);
 
-				parameterJavaTypes.add(new JavaType(fullIdent.getText(), 0));
+				parameterJavaTypes.add(new JavaType(0, fullIdent.getText()));
 			}
 
 			if (childDetailAST.getType() != TokenTypes.BOR) {
 				FullIdent fullIdent = FullIdent.createFullIdent(childDetailAST);
 
-				parameterJavaTypes.add(new JavaType(fullIdent.getText(), 0));
+				parameterJavaTypes.add(new JavaType(0, fullIdent.getText()));
 
 				break;
 			}
@@ -879,7 +899,7 @@ public class JavaParserUtil {
 			nextSiblingDetailAST = nextSiblingDetailAST.getNextSibling();
 		}
 
-		JavaType classJavaType = new JavaType(_getName(definitionDetailAST), 0);
+		JavaType classJavaType = new JavaType(0, _getName(definitionDetailAST));
 
 		DetailAST typeParametersDetailAST = definitionDetailAST.findFirstToken(
 			TokenTypes.TYPE_PARAMETERS);
@@ -891,15 +911,15 @@ public class JavaParserUtil {
 		}
 
 		JavaClassDefinition javaClassDefinition = new JavaClassDefinition(
-			type, _parseJavaAnnotations(modifiersDetailAST),
-			_parseModifiers(modifiersDetailAST), classJavaType);
+			classJavaType, _parseJavaAnnotations(modifiersDetailAST),
+			_parseModifiers(modifiersDetailAST), type);
 
 		DetailAST extendsClauseDetailAST = definitionDetailAST.findFirstToken(
 			TokenTypes.EXTENDS_CLAUSE);
 
 		if (extendsClauseDetailAST != null) {
 			List<JavaType> extendedClassJavaTypes =
-				_parseExtendedOrImplementedClassJavaTypes(
+				_parseExtendedOrImplementedOrPermittedClassJavaTypes(
 					extendsClauseDetailAST);
 
 			if ((extendedClassJavaTypes.size() > 1) &&
@@ -918,7 +938,7 @@ public class JavaParserUtil {
 
 		if (implementsClauseDetailAST != null) {
 			List<JavaType> implementedClassJavaTypes =
-				_parseExtendedOrImplementedClassJavaTypes(
+				_parseExtendedOrImplementedOrPermittedClassJavaTypes(
 					implementsClauseDetailAST);
 
 			if ((implementedClassJavaTypes.size() > 1) &&
@@ -930,6 +950,33 @@ public class JavaParserUtil {
 
 			javaClassDefinition.setImplementedClassJavaTypes(
 				implementedClassJavaTypes);
+		}
+
+		DetailAST permitsClauseDetailAST = definitionDetailAST.findFirstToken(
+			TokenTypes.PERMITS_CLAUSE);
+
+		if (permitsClauseDetailAST != null) {
+			List<JavaType> permittedClassJavaTypes =
+				_parseExtendedOrImplementedOrPermittedClassJavaTypes(
+					permitsClauseDetailAST);
+
+			if ((permittedClassJavaTypes.size() > 1) &&
+				((definitionDetailAST.getParent() == null) ||
+				 !AnnotationUtil.containsAnnotation(definitionDetailAST))) {
+
+				Collections.sort(permittedClassJavaTypes);
+			}
+
+			javaClassDefinition.setPermittedClassJavaTypes(
+				permittedClassJavaTypes);
+		}
+
+		DetailAST recordComponentsDetailAST =
+			definitionDetailAST.findFirstToken(TokenTypes.RECORD_COMPONENTS);
+
+		if (recordComponentsDetailAST != null) {
+			javaClassDefinition.setJavaRecordComponent(
+				_parseRecordComponents(definitionDetailAST));
 		}
 
 		return javaClassDefinition;
@@ -951,13 +998,15 @@ public class JavaParserUtil {
 	}
 
 	private static JavaConstructorDefinition _parseJavaConstructorDefinition(
-		DetailAST constructorDefinitionDetailAST) {
+		DetailAST constructorDefinitionDetailAST,
+		boolean compactRecordConstructor) {
 
 		return new JavaConstructorDefinition(
 			_parseJavaAnnotations(
 				constructorDefinitionDetailAST.findFirstToken(
 					TokenTypes.MODIFIERS)),
-			_parseJavaSignature(constructorDefinitionDetailAST));
+			_parseJavaSignature(
+				constructorDefinitionDetailAST, compactRecordConstructor));
 	}
 
 	private static JavaContinueStatement _parseJavaContinueStatement(
@@ -1151,6 +1200,14 @@ public class JavaParserUtil {
 				}
 			}
 		}
+		else if (detailAST.getType() == TokenTypes.LITERAL_SWITCH) {
+			DetailAST switchRuleDetailAST = detailAST.findFirstToken(
+				TokenTypes.SWITCH_RULE);
+
+			if (switchRuleDetailAST != null) {
+				javaExpression = _parseJavaSwitchExpression(detailAST);
+			}
+		}
 		else if (detailAST.getType() == TokenTypes.METHOD_CALL) {
 			return _parseJavaMethodCall(detailAST);
 		}
@@ -1159,6 +1216,9 @@ public class JavaParserUtil {
 		}
 		else if (detailAST.getType() == TokenTypes.QUESTION) {
 			javaExpression = _parseJavaTernaryOperator(detailAST);
+		}
+		else if (detailAST.getType() == TokenTypes.TEXT_BLOCK_LITERAL_BEGIN) {
+			javaExpression = _parseJavaTextBlock(detailAST.getFirstChild());
 		}
 		else if (detailAST.getType() == TokenTypes.TYPECAST) {
 			javaExpression = _parseJavaTypeCast(detailAST);
@@ -1274,18 +1334,29 @@ public class JavaParserUtil {
 	private static JavaImport _parseJavaImport(
 		DetailAST importDetailAST, boolean isStatic) {
 
-		return new JavaImport(_getName(importDetailAST), isStatic);
+		return new JavaImport(isStatic, _getName(importDetailAST));
 	}
 
 	private static JavaInstanceofStatement _parseJavaInstanceofStatement(
 		DetailAST literalInstanceofDetailAST) {
 
+		JavaExpression javaExpression = _parseJavaExpression(
+			literalInstanceofDetailAST.getFirstChild());
+
 		DetailAST typeDetailAST = literalInstanceofDetailAST.findFirstToken(
 			TokenTypes.TYPE);
 
+		if (typeDetailAST != null) {
+			return new JavaInstanceofStatement(
+				_parseJavaType(typeDetailAST), null, javaExpression);
+		}
+
 		return new JavaInstanceofStatement(
-			_parseJavaType(typeDetailAST),
-			_parseJavaExpression(literalInstanceofDetailAST.getFirstChild()));
+			null,
+			_parseJavaVariableDefinition(
+				literalInstanceofDetailAST.findFirstToken(
+					TokenTypes.PATTERN_VARIABLE_DEF)),
+			javaExpression);
 	}
 
 	private static JavaLoopStatement _parseJavaLabeledStatement(
@@ -1439,7 +1510,7 @@ public class JavaParserUtil {
 		return new JavaMethodDefinition(
 			_parseJavaAnnotations(
 				methodDefinitionDetailAST.findFirstToken(TokenTypes.MODIFIERS)),
-			_parseJavaSignature(methodDefinitionDetailAST));
+			_parseJavaSignature(methodDefinitionDetailAST, false));
 	}
 
 	private static JavaMethodReference _parseJavaMethodReference(
@@ -1455,11 +1526,11 @@ public class JavaParserUtil {
 		}
 
 		return new JavaMethodReference(
-			lastChildDetailAST.getText(), referenceJavaExpression,
 			_parseGenericJavaTypes(
 				methodReferenceDetailAST.findFirstToken(
 					TokenTypes.TYPE_ARGUMENTS),
-				TokenTypes.TYPE_ARGUMENT));
+				TokenTypes.TYPE_ARGUMENT),
+			lastChildDetailAST.getText(), referenceJavaExpression);
 	}
 
 	private static JavaNewArrayInstantiation _parseJavaNewArrayInstantiation(
@@ -1522,10 +1593,10 @@ public class JavaParserUtil {
 		DetailAST packageDefinitionDetailAST) {
 
 		return new JavaPackageDefinition(
-			_getName(packageDefinitionDetailAST),
 			_parseJavaAnnotations(
 				packageDefinitionDetailAST.findFirstToken(
-					TokenTypes.ANNOTATIONS)));
+					TokenTypes.ANNOTATIONS)),
+			_getName(packageDefinitionDetailAST));
 	}
 
 	private static JavaParameter _parseJavaParameter(
@@ -1547,8 +1618,8 @@ public class JavaParserUtil {
 		}
 
 		return new JavaParameter(
-			_getName(parameterDefinitionDetailAST),
-			_parseModifiers(modifiersDetailAST), javaType);
+			javaType, _parseModifiers(modifiersDetailAST),
+			_getName(parameterDefinitionDetailAST));
 	}
 
 	private static List<JavaParameter> _parseJavaParameters(
@@ -1589,7 +1660,9 @@ public class JavaParserUtil {
 		return javaReturnStatement;
 	}
 
-	private static JavaSignature _parseJavaSignature(DetailAST detailAST) {
+	private static JavaSignature _parseJavaSignature(
+		DetailAST detailAST, boolean compactRecordConstructor) {
+
 		DetailAST identDetailAST = detailAST.findFirstToken(TokenTypes.IDENT);
 		DetailAST modifiersDetailAST = detailAST.findFirstToken(
 			TokenTypes.MODIFIERS);
@@ -1602,14 +1675,14 @@ public class JavaParserUtil {
 		}
 
 		return new JavaSignature(
-			identDetailAST.getText(), _parseModifiers(modifiersDetailAST),
-			_parseJavaType(detailAST.findFirstToken(TokenTypes.TYPE)),
+			compactRecordConstructor, exceptionJavaTypes,
 			_parseGenericJavaTypes(
 				detailAST.findFirstToken(TokenTypes.TYPE_PARAMETERS),
 				TokenTypes.TYPE_PARAMETER),
 			_parseJavaParameters(
 				detailAST.findFirstToken(TokenTypes.PARAMETERS)),
-			exceptionJavaTypes);
+			_parseModifiers(modifiersDetailAST), identDetailAST.getText(),
+			_parseJavaType(detailAST.findFirstToken(TokenTypes.TYPE)));
 	}
 
 	private static JavaSwitchCaseStatement _parseJavaSwitchCaseStatement(
@@ -1635,6 +1708,58 @@ public class JavaParserUtil {
 		}
 
 		return javaSwitchCaseStatement;
+	}
+
+	private static JavaExpression _parseJavaSwitchExpression(
+		DetailAST detailAST) {
+
+		DetailAST lparenDetailAST = detailAST.getFirstChild();
+
+		return new JavaSwitchExpression(
+			_parseJavaExpression(lparenDetailAST.getNextSibling()));
+	}
+
+	private static JavaSwitchRuleStatement _parseJavaSwitchRuleStatement(
+		DetailAST switchRuleDetailAST) {
+
+		JavaSwitchRuleStatement javaSwitchRuleStatement =
+			new JavaSwitchRuleStatement();
+
+		DetailAST firstChildDetailAST = switchRuleDetailAST.getFirstChild();
+
+		if (firstChildDetailAST.getType() == TokenTypes.LITERAL_DEFAULT) {
+			javaSwitchRuleStatement.setDefault(true);
+		}
+		else {
+			List<DetailAST> exprCaseDetailASTList =
+				DetailASTUtil.getAllChildTokens(
+					firstChildDetailAST, false, TokenTypes.EXPR);
+
+			for (DetailAST exprCaseDetailAST : exprCaseDetailASTList) {
+				javaSwitchRuleStatement.addSwitchRuleJavaExpression(
+					_parseJavaExpression(exprCaseDetailAST));
+			}
+		}
+
+		DetailAST lambdaDetailAST = switchRuleDetailAST.findFirstToken(
+			TokenTypes.LAMBDA);
+
+		DetailAST nextSiblingDetailAST = lambdaDetailAST.getNextSibling();
+
+		if (nextSiblingDetailAST.getType() == TokenTypes.SLIST) {
+			return javaSwitchRuleStatement;
+		}
+
+		if (nextSiblingDetailAST.getType() == TokenTypes.EXPR) {
+			javaSwitchRuleStatement.setLambdaActionJavaExpression(
+				_parseJavaExpression(nextSiblingDetailAST));
+		}
+		else {
+			javaSwitchRuleStatement.setLambdaActionJavaTerm(
+				parseJavaTerm(nextSiblingDetailAST));
+		}
+
+		return javaSwitchRuleStatement;
 	}
 
 	private static JavaSwitchStatement _parseJavaSwitchStatement(
@@ -1689,8 +1814,14 @@ public class JavaParserUtil {
 		}
 
 		return new JavaTernaryOperator(
-			conditionJavaExpression, trueValueJavaExpression,
-			falseValueJavaExpression);
+			conditionJavaExpression, falseValueJavaExpression,
+			trueValueJavaExpression);
+	}
+
+	private static JavaTextBlock _parseJavaTextBlock(
+		DetailAST textBlockContentDetailAST) {
+
+		return new JavaTextBlock(textBlockContentDetailAST.getText());
 	}
 
 	private static JavaThrowStatement _parseJavaThrowStatement(
@@ -1770,7 +1901,7 @@ public class JavaParserUtil {
 		FullIdent typeFullIdent = FullIdent.createFullIdent(childDetailAST);
 
 		JavaType javaType = new JavaType(
-			typeFullIdent.getText(), javaAnnotations, arrayDimension);
+			arrayDimension, javaAnnotations, typeFullIdent.getText());
 
 		DetailAST typeInfoDetailAST = childDetailAST;
 
@@ -1888,7 +2019,9 @@ public class JavaParserUtil {
 				return modifiers;
 			}
 
-			if (childDetailAST.getType() != TokenTypes.ANNOTATION) {
+			if ((childDetailAST.getType() != TokenTypes.ANNOTATION) &&
+				(childDetailAST.getType() != TokenTypes.STRICTFP)) {
+
 				modifiers.add(new JavaSimpleValue(childDetailAST.getText()));
 			}
 
@@ -1919,6 +2052,49 @@ public class JavaParserUtil {
 
 			childDetailAST = childDetailAST.getNextSibling();
 		}
+	}
+
+	private static List<JavaRecordComponent> _parseRecordComponents(
+		DetailAST detailAST) {
+
+		List<JavaRecordComponent> javaRecordComponents = new ArrayList<>();
+
+		DetailAST recordComponentsDetailAST = detailAST.findFirstToken(
+			TokenTypes.RECORD_COMPONENTS);
+
+		if (recordComponentsDetailAST == null) {
+			return javaRecordComponents;
+		}
+
+		List<DetailAST> recordComponentDefinitionDetailASTList =
+			DetailASTUtil.getAllChildTokens(
+				recordComponentsDetailAST, false,
+				TokenTypes.RECORD_COMPONENT_DEF);
+
+		for (DetailAST recordComponentDefinitionDetailAST :
+				recordComponentDefinitionDetailASTList) {
+
+			DetailAST typeDetailAST =
+				recordComponentDefinitionDetailAST.findFirstToken(
+					TokenTypes.TYPE);
+
+			JavaType javaType = _parseJavaType(typeDetailAST);
+
+			DetailAST ellipsisDetailAST =
+				recordComponentDefinitionDetailAST.findFirstToken(
+					TokenTypes.ELLIPSIS);
+
+			if (ellipsisDetailAST != null) {
+				javaType.setVarargs(true);
+			}
+
+			JavaRecordComponent javaRecordComponent = new JavaRecordComponent(
+				javaType, _getName(recordComponentDefinitionDetailAST));
+
+			javaRecordComponents.add(javaRecordComponent);
+		}
+
+		return javaRecordComponents;
 	}
 
 	private static final int[] _SIMPLE_TYPES = {

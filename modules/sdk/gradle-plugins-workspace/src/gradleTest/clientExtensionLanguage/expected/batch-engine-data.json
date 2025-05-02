@@ -1,0 +1,23 @@
+{
+	"configuration": {
+		"className": "com.liferay.portal.language.rest.dto.v1_0.Message",
+		"parameters": {
+			"containsHeaders": "true",
+			"importStrategy": "ON_ERROR_CONTINUE",
+			"updateStrategy": "UPDATE"
+		},
+		"taskItemDelegateName": "DEFAULT"
+	},
+	"items": [
+		{
+			"key": "do-you-like-to-eat-bananas",
+			"languageId": "en",
+			"value": "Do you like to eat bananas?"
+		},
+		{
+			"key": "do-you-like-to-eat-bananas",
+			"languageId": "es_AR",
+			"value": "¿Te gusta comer plátanos?"
+		}
+	]
+}

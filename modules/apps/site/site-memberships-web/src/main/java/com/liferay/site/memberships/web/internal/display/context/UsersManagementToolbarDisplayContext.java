@@ -38,7 +38,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.membershippolicy.SiteMembershipPolicyUtil;
 import com.liferay.site.memberships.web.internal.util.GroupUtil;
-import com.liferay.site.teams.item.selector.criterion.SiteTeamsItemSelectorCriterion;
+import com.liferay.site.teams.item.selector.SiteTeamsItemSelectorCriterion;
 import com.liferay.users.admin.item.selector.UserSiteMembershipItemSelectorCriterion;
 
 import java.util.ArrayList;
@@ -177,6 +177,12 @@ public class UsersManagementToolbarDisplayContext
 				ActionKeys.ASSIGN_USER_ROLES)) {
 
 			availableActions.add("selectRole");
+
+			Role role = _usersDisplayContext.getRole();
+
+			if (role != null) {
+				availableActions.add("removeUserRole");
+			}
 		}
 
 		return StringUtil.merge(availableActions, StringPool.COMMA);
@@ -271,11 +277,6 @@ public class UsersManagementToolbarDisplayContext
 	}
 
 	@Override
-	public String getInfoPanelId() {
-		return "infoPanelId";
-	}
-
-	@Override
 	public String getSearchContainerId() {
 		return "users";
 	}
@@ -298,11 +299,6 @@ public class UsersManagementToolbarDisplayContext
 		}
 
 		return false;
-	}
-
-	@Override
-	public Boolean isShowInfoButton() {
-		return true;
 	}
 
 	@Override

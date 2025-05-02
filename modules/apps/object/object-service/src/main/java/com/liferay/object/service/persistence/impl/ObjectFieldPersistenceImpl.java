@@ -1203,6 +1203,502 @@ public class ObjectFieldPersistenceImpl
 	private static final String _FINDER_COLUMN_UUID_C_COMPANYID_2 =
 		"objectField.companyId = ?";
 
+	private FinderPath _finderPathWithPaginationFindByCompanyId;
+	private FinderPath _finderPathWithoutPaginationFindByCompanyId;
+	private FinderPath _finderPathCountByCompanyId;
+
+	/**
+	 * Returns all the object fields where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching object fields
+	 */
+	@Override
+	public List<ObjectField> findByCompanyId(long companyId) {
+		return findByCompanyId(
+			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the object fields where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectFieldModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of object fields
+	 * @param end the upper bound of the range of object fields (not inclusive)
+	 * @return the range of matching object fields
+	 */
+	@Override
+	public List<ObjectField> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return findByCompanyId(companyId, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the object fields where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectFieldModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of object fields
+	 * @param end the upper bound of the range of object fields (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching object fields
+	 */
+	@Override
+	public List<ObjectField> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<ObjectField> orderByComparator) {
+
+		return findByCompanyId(companyId, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the object fields where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectFieldModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of object fields
+	 * @param end the upper bound of the range of object fields (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching object fields
+	 */
+	@Override
+	public List<ObjectField> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<ObjectField> orderByComparator,
+		boolean useFinderCache) {
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByCompanyId;
+				finderArgs = new Object[] {companyId};
+			}
+		}
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByCompanyId;
+			finderArgs = new Object[] {
+				companyId, start, end, orderByComparator
+			};
+		}
+
+		List<ObjectField> list = null;
+
+		if (useFinderCache) {
+			list = (List<ObjectField>)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (ObjectField objectField : list) {
+					if (companyId != objectField.getCompanyId()) {
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(3);
+			}
+
+			sb.append(_SQL_SELECT_OBJECTFIELD_WHERE);
+
+			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(ObjectFieldModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(companyId);
+
+				list = (List<ObjectField>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first object field in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object field
+	 * @throws NoSuchObjectFieldException if a matching object field could not be found
+	 */
+	@Override
+	public ObjectField findByCompanyId_First(
+			long companyId, OrderByComparator<ObjectField> orderByComparator)
+		throws NoSuchObjectFieldException {
+
+		ObjectField objectField = fetchByCompanyId_First(
+			companyId, orderByComparator);
+
+		if (objectField != null) {
+			return objectField;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("companyId=");
+		sb.append(companyId);
+
+		sb.append("}");
+
+		throw new NoSuchObjectFieldException(sb.toString());
+	}
+
+	/**
+	 * Returns the first object field in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object field, or <code>null</code> if a matching object field could not be found
+	 */
+	@Override
+	public ObjectField fetchByCompanyId_First(
+		long companyId, OrderByComparator<ObjectField> orderByComparator) {
+
+		List<ObjectField> list = findByCompanyId(
+			companyId, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last object field in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object field
+	 * @throws NoSuchObjectFieldException if a matching object field could not be found
+	 */
+	@Override
+	public ObjectField findByCompanyId_Last(
+			long companyId, OrderByComparator<ObjectField> orderByComparator)
+		throws NoSuchObjectFieldException {
+
+		ObjectField objectField = fetchByCompanyId_Last(
+			companyId, orderByComparator);
+
+		if (objectField != null) {
+			return objectField;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("companyId=");
+		sb.append(companyId);
+
+		sb.append("}");
+
+		throw new NoSuchObjectFieldException(sb.toString());
+	}
+
+	/**
+	 * Returns the last object field in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object field, or <code>null</code> if a matching object field could not be found
+	 */
+	@Override
+	public ObjectField fetchByCompanyId_Last(
+		long companyId, OrderByComparator<ObjectField> orderByComparator) {
+
+		int count = countByCompanyId(companyId);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<ObjectField> list = findByCompanyId(
+			companyId, count - 1, count, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the object fields before and after the current object field in the ordered set where companyId = &#63;.
+	 *
+	 * @param objectFieldId the primary key of the current object field
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next object field
+	 * @throws NoSuchObjectFieldException if a object field with the primary key could not be found
+	 */
+	@Override
+	public ObjectField[] findByCompanyId_PrevAndNext(
+			long objectFieldId, long companyId,
+			OrderByComparator<ObjectField> orderByComparator)
+		throws NoSuchObjectFieldException {
+
+		ObjectField objectField = findByPrimaryKey(objectFieldId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			ObjectField[] array = new ObjectFieldImpl[3];
+
+			array[0] = getByCompanyId_PrevAndNext(
+				session, objectField, companyId, orderByComparator, true);
+
+			array[1] = objectField;
+
+			array[2] = getByCompanyId_PrevAndNext(
+				session, objectField, companyId, orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected ObjectField getByCompanyId_PrevAndNext(
+		Session session, ObjectField objectField, long companyId,
+		OrderByComparator<ObjectField> orderByComparator, boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(3);
+		}
+
+		sb.append(_SQL_SELECT_OBJECTFIELD_WHERE);
+
+		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(ObjectFieldModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(companyId);
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(objectField)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<ObjectField> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the object fields where companyId = &#63; from the database.
+	 *
+	 * @param companyId the company ID
+	 */
+	@Override
+	public void removeByCompanyId(long companyId) {
+		for (ObjectField objectField :
+				findByCompanyId(
+					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
+			remove(objectField);
+		}
+	}
+
+	/**
+	 * Returns the number of object fields where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the number of matching object fields
+	 */
+	@Override
+	public int countByCompanyId(long companyId) {
+		FinderPath finderPath = _finderPathCountByCompanyId;
+
+		Object[] finderArgs = new Object[] {companyId};
+
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(2);
+
+			sb.append(_SQL_COUNT_OBJECTFIELD_WHERE);
+
+			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(companyId);
+
+				count = (Long)query.uniqueResult();
+
+				finderCache.putResult(finderPath, finderArgs, count);
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 =
+		"objectField.companyId = ?";
+
 	private FinderPath _finderPathWithPaginationFindByListTypeDefinitionId;
 	private FinderPath _finderPathWithoutPaginationFindByListTypeDefinitionId;
 	private FinderPath _finderPathCountByListTypeDefinitionId;
@@ -5566,7 +6062,6 @@ public class ObjectFieldPersistenceImpl
 		"objectField.localized = ?";
 
 	private FinderPath _finderPathFetchByODI_N;
-	private FinderPath _finderPathCountByODI_N;
 
 	/**
 	 * Returns the object field where objectDefinitionId = &#63; and name = &#63; or throws a <code>NoSuchObjectFieldException</code> if it could not be found.
@@ -5763,62 +6258,13 @@ public class ObjectFieldPersistenceImpl
 	 */
 	@Override
 	public int countByODI_N(long objectDefinitionId, String name) {
-		name = Objects.toString(name, "");
+		ObjectField objectField = fetchByODI_N(objectDefinitionId, name);
 
-		FinderPath finderPath = _finderPathCountByODI_N;
-
-		Object[] finderArgs = new Object[] {objectDefinitionId, name};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_OBJECTFIELD_WHERE);
-
-			sb.append(_FINDER_COLUMN_ODI_N_OBJECTDEFINITIONID_2);
-
-			boolean bindName = false;
-
-			if (name.isEmpty()) {
-				sb.append(_FINDER_COLUMN_ODI_N_NAME_3);
-			}
-			else {
-				bindName = true;
-
-				sb.append(_FINDER_COLUMN_ODI_N_NAME_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(objectDefinitionId);
-
-				if (bindName) {
-					queryPos.add(name);
-				}
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (objectField == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_ODI_N_OBJECTDEFINITIONID_2 =
@@ -6374,7 +6820,6 @@ public class ObjectFieldPersistenceImpl
 		"objectField.system = ?";
 
 	private FinderPath _finderPathFetchByERC_C_ODI;
-	private FinderPath _finderPathCountByERC_C_ODI;
 
 	/**
 	 * Returns the object field where externalReferenceCode = &#63; and companyId = &#63; and objectDefinitionId = &#63; or throws a <code>NoSuchObjectFieldException</code> if it could not be found.
@@ -6583,68 +7028,14 @@ public class ObjectFieldPersistenceImpl
 	public int countByERC_C_ODI(
 		String externalReferenceCode, long companyId, long objectDefinitionId) {
 
-		externalReferenceCode = Objects.toString(externalReferenceCode, "");
+		ObjectField objectField = fetchByERC_C_ODI(
+			externalReferenceCode, companyId, objectDefinitionId);
 
-		FinderPath finderPath = _finderPathCountByERC_C_ODI;
-
-		Object[] finderArgs = new Object[] {
-			externalReferenceCode, companyId, objectDefinitionId
-		};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_SQL_COUNT_OBJECTFIELD_WHERE);
-
-			boolean bindExternalReferenceCode = false;
-
-			if (externalReferenceCode.isEmpty()) {
-				sb.append(_FINDER_COLUMN_ERC_C_ODI_EXTERNALREFERENCECODE_3);
-			}
-			else {
-				bindExternalReferenceCode = true;
-
-				sb.append(_FINDER_COLUMN_ERC_C_ODI_EXTERNALREFERENCECODE_2);
-			}
-
-			sb.append(_FINDER_COLUMN_ERC_C_ODI_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_ERC_C_ODI_OBJECTDEFINITIONID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindExternalReferenceCode) {
-					queryPos.add(externalReferenceCode);
-				}
-
-				queryPos.add(companyId);
-
-				queryPos.add(objectDefinitionId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (objectField == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String
@@ -7409,7 +7800,6 @@ public class ObjectFieldPersistenceImpl
 			objectFieldModelImpl.getName()
 		};
 
-		finderCache.putResult(_finderPathCountByODI_N, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByODI_N, args, objectFieldModelImpl);
 
@@ -7419,8 +7809,6 @@ public class ObjectFieldPersistenceImpl
 			objectFieldModelImpl.getObjectDefinitionId()
 		};
 
-		finderCache.putResult(
-			_finderPathCountByERC_C_ODI, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByERC_C_ODI, args, objectFieldModelImpl);
 	}
@@ -7967,6 +8355,24 @@ public class ObjectFieldPersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, false);
 
+		_finderPathWithPaginationFindByCompanyId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			},
+			new String[] {"companyId"}, true);
+
+		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			true);
+
+		_finderPathCountByCompanyId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			false);
+
 		_finderPathWithPaginationFindByListTypeDefinitionId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
 			"findByListTypeDefinitionId",
@@ -8123,11 +8529,6 @@ public class ObjectFieldPersistenceImpl
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"objectDefinitionId", "name"}, true);
 
-		_finderPathCountByODI_N = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByODI_N",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"objectDefinitionId", "name"}, false);
-
 		_finderPathWithPaginationFindByODI_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByODI_S",
 			new String[] {
@@ -8157,17 +8558,6 @@ public class ObjectFieldPersistenceImpl
 				"externalReferenceCode", "companyId", "objectDefinitionId"
 			},
 			true);
-
-		_finderPathCountByERC_C_ODI = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_C_ODI",
-			new String[] {
-				String.class.getName(), Long.class.getName(),
-				Long.class.getName()
-			},
-			new String[] {
-				"externalReferenceCode", "companyId", "objectDefinitionId"
-			},
-			false);
 
 		_finderPathWithPaginationFindByODI_DBT_I = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByODI_DBT_I",

@@ -1,16 +1,26 @@
-@component-name = "portal-search-ee"
+@component-name = "portal-search"
 definition {
 
-	property portal.release = "true";
-	property portal.suite.search.engine = "elasticsearch7";
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
+	property portal.suite.search.engine = "elasticsearch7,opensearch2";
 	property portal.upstream = "true";
 	property test.run.environment = "EE";
-	property testray.main.component.name = "Elasticsearch Impl";
+	property testray.main.component.name = "Search Infrastructure > Elasticsearch Connector";
 
 	setUp {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
+		Navigator.openURL();
 	}
 
 	tearDown {
@@ -929,6 +939,10 @@ definition {
 
 	@priority = 4
 	test ViewOnContentPages {
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
 		JSONWebcontent.addWebContent(
 			content = "WC Content",
 			groupName = "Guest",

@@ -5,6 +5,7 @@
 
 package com.liferay.portlet.documentlibrary.service.persistence.impl;
 
+import com.liferay.document.library.kernel.exception.DuplicateDLFileEntryMetadataExternalReferenceCodeException;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryMetadataException;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadataTable;
@@ -23,11 +24,17 @@ import com.liferay.portal.kernel.dao.orm.Query;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.sanitizer.Sanitizer;
+import com.liferay.portal.kernel.sanitizer.SanitizerException;
+import com.liferay.portal.kernel.sanitizer.SanitizerUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelperUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -2273,7 +2280,6 @@ public class DLFileEntryMetadataPersistenceImpl
 		"dlFileEntryMetadata.fileVersionId = ?";
 
 	private FinderPath _finderPathFetchByD_F;
-	private FinderPath _finderPathCountByD_F;
 
 	/**
 	 * Returns the document library file entry metadata where DDMStructureId = &#63; and fileVersionId = &#63; or throws a <code>NoSuchFileEntryMetadataException</code> if it could not be found.
@@ -2453,25 +2459,138 @@ public class DLFileEntryMetadataPersistenceImpl
 	 */
 	@Override
 	public int countByD_F(long DDMStructureId, long fileVersionId) {
+		DLFileEntryMetadata dlFileEntryMetadata = fetchByD_F(
+			DDMStructureId, fileVersionId);
+
+		if (dlFileEntryMetadata == null) {
+			return 0;
+		}
+
+		return 1;
+	}
+
+	private static final String _FINDER_COLUMN_D_F_DDMSTRUCTUREID_2 =
+		"dlFileEntryMetadata.DDMStructureId = ? AND ";
+
+	private static final String _FINDER_COLUMN_D_F_FILEVERSIONID_2 =
+		"dlFileEntryMetadata.fileVersionId = ?";
+
+	private FinderPath _finderPathFetchByERC_C;
+
+	/**
+	 * Returns the document library file entry metadata where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchFileEntryMetadataException</code> if it could not be found.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching document library file entry metadata
+	 * @throws NoSuchFileEntryMetadataException if a matching document library file entry metadata could not be found
+	 */
+	@Override
+	public DLFileEntryMetadata findByERC_C(
+			String externalReferenceCode, long companyId)
+		throws NoSuchFileEntryMetadataException {
+
+		DLFileEntryMetadata dlFileEntryMetadata = fetchByERC_C(
+			externalReferenceCode, companyId);
+
+		if (dlFileEntryMetadata == null) {
+			StringBundler sb = new StringBundler(6);
+
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			sb.append("externalReferenceCode=");
+			sb.append(externalReferenceCode);
+
+			sb.append(", companyId=");
+			sb.append(companyId);
+
+			sb.append("}");
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(sb.toString());
+			}
+
+			throw new NoSuchFileEntryMetadataException(sb.toString());
+		}
+
+		return dlFileEntryMetadata;
+	}
+
+	/**
+	 * Returns the document library file entry metadata where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching document library file entry metadata, or <code>null</code> if a matching document library file entry metadata could not be found
+	 */
+	@Override
+	public DLFileEntryMetadata fetchByERC_C(
+		String externalReferenceCode, long companyId) {
+
+		return fetchByERC_C(externalReferenceCode, companyId, true);
+	}
+
+	/**
+	 * Returns the document library file entry metadata where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching document library file entry metadata, or <code>null</code> if a matching document library file entry metadata could not be found
+	 */
+	@Override
+	public DLFileEntryMetadata fetchByERC_C(
+		String externalReferenceCode, long companyId, boolean useFinderCache) {
+
 		try (SafeCloseable safeCloseable =
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					DLFileEntryMetadata.class)) {
 
-			FinderPath finderPath = _finderPathCountByD_F;
+			externalReferenceCode = Objects.toString(externalReferenceCode, "");
 
-			Object[] finderArgs = new Object[] {DDMStructureId, fileVersionId};
+			Object[] finderArgs = null;
 
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			if (useFinderCache) {
+				finderArgs = new Object[] {externalReferenceCode, companyId};
+			}
 
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
+			Object result = null;
 
-				sb.append(_SQL_COUNT_DLFILEENTRYMETADATA_WHERE);
+			if (useFinderCache) {
+				result = FinderCacheUtil.getResult(
+					_finderPathFetchByERC_C, finderArgs, this);
+			}
 
-				sb.append(_FINDER_COLUMN_D_F_DDMSTRUCTUREID_2);
+			if (result instanceof DLFileEntryMetadata) {
+				DLFileEntryMetadata dlFileEntryMetadata =
+					(DLFileEntryMetadata)result;
 
-				sb.append(_FINDER_COLUMN_D_F_FILEVERSIONID_2);
+				if (!Objects.equals(
+						externalReferenceCode,
+						dlFileEntryMetadata.getExternalReferenceCode()) ||
+					(companyId != dlFileEntryMetadata.getCompanyId())) {
+
+					result = null;
+				}
+			}
+
+			if (result == null) {
+				StringBundler sb = new StringBundler(4);
+
+				sb.append(_SQL_SELECT_DLFILEENTRYMETADATA_WHERE);
+
+				boolean bindExternalReferenceCode = false;
+
+				if (externalReferenceCode.isEmpty()) {
+					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
+				}
+				else {
+					bindExternalReferenceCode = true;
+
+					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
+				}
+
+				sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
 
 				String sql = sb.toString();
 
@@ -2484,13 +2603,27 @@ public class DLFileEntryMetadataPersistenceImpl
 
 					QueryPos queryPos = QueryPos.getInstance(query);
 
-					queryPos.add(DDMStructureId);
+					if (bindExternalReferenceCode) {
+						queryPos.add(externalReferenceCode);
+					}
 
-					queryPos.add(fileVersionId);
+					queryPos.add(companyId);
 
-					count = (Long)query.uniqueResult();
+					List<DLFileEntryMetadata> list = query.list();
 
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+					if (list.isEmpty()) {
+						if (useFinderCache) {
+							FinderCacheUtil.putResult(
+								_finderPathFetchByERC_C, finderArgs, list);
+						}
+					}
+					else {
+						DLFileEntryMetadata dlFileEntryMetadata = list.get(0);
+
+						result = dlFileEntryMetadata;
+
+						cacheResult(dlFileEntryMetadata);
+					}
 				}
 				catch (Exception exception) {
 					throw processException(exception);
@@ -2500,15 +2633,60 @@ public class DLFileEntryMetadataPersistenceImpl
 				}
 			}
 
-			return count.intValue();
+			if (result instanceof List<?>) {
+				return null;
+			}
+			else {
+				return (DLFileEntryMetadata)result;
+			}
 		}
 	}
 
-	private static final String _FINDER_COLUMN_D_F_DDMSTRUCTUREID_2 =
-		"dlFileEntryMetadata.DDMStructureId = ? AND ";
+	/**
+	 * Removes the document library file entry metadata where externalReferenceCode = &#63; and companyId = &#63; from the database.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the document library file entry metadata that was removed
+	 */
+	@Override
+	public DLFileEntryMetadata removeByERC_C(
+			String externalReferenceCode, long companyId)
+		throws NoSuchFileEntryMetadataException {
 
-	private static final String _FINDER_COLUMN_D_F_FILEVERSIONID_2 =
-		"dlFileEntryMetadata.fileVersionId = ?";
+		DLFileEntryMetadata dlFileEntryMetadata = findByERC_C(
+			externalReferenceCode, companyId);
+
+		return remove(dlFileEntryMetadata);
+	}
+
+	/**
+	 * Returns the number of document library file entry metadatas where externalReferenceCode = &#63; and companyId = &#63;.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the number of matching document library file entry metadatas
+	 */
+	@Override
+	public int countByERC_C(String externalReferenceCode, long companyId) {
+		DLFileEntryMetadata dlFileEntryMetadata = fetchByERC_C(
+			externalReferenceCode, companyId);
+
+		if (dlFileEntryMetadata == null) {
+			return 0;
+		}
+
+		return 1;
+	}
+
+	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2 =
+		"dlFileEntryMetadata.externalReferenceCode = ? AND ";
+
+	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3 =
+		"(dlFileEntryMetadata.externalReferenceCode IS NULL OR dlFileEntryMetadata.externalReferenceCode = '') AND ";
+
+	private static final String _FINDER_COLUMN_ERC_C_COMPANYID_2 =
+		"dlFileEntryMetadata.companyId = ?";
 
 	public DLFileEntryMetadataPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
@@ -2545,6 +2723,14 @@ public class DLFileEntryMetadataPersistenceImpl
 				new Object[] {
 					dlFileEntryMetadata.getDDMStructureId(),
 					dlFileEntryMetadata.getFileVersionId()
+				},
+				dlFileEntryMetadata);
+
+			FinderCacheUtil.putResult(
+				_finderPathFetchByERC_C,
+				new Object[] {
+					dlFileEntryMetadata.getExternalReferenceCode(),
+					dlFileEntryMetadata.getCompanyId()
 				},
 				dlFileEntryMetadata);
 		}
@@ -2640,9 +2826,15 @@ public class DLFileEntryMetadataPersistenceImpl
 			};
 
 			FinderCacheUtil.putResult(
-				_finderPathCountByD_F, args, Long.valueOf(1));
-			FinderCacheUtil.putResult(
 				_finderPathFetchByD_F, args, dlFileEntryMetadataModelImpl);
+
+			args = new Object[] {
+				dlFileEntryMetadataModelImpl.getExternalReferenceCode(),
+				dlFileEntryMetadataModelImpl.getCompanyId()
+			};
+
+			FinderCacheUtil.putResult(
+				_finderPathFetchByERC_C, args, dlFileEntryMetadataModelImpl);
 		}
 	}
 
@@ -2789,6 +2981,72 @@ public class DLFileEntryMetadataPersistenceImpl
 			String uuid = PortalUUIDUtil.generate();
 
 			dlFileEntryMetadata.setUuid(uuid);
+		}
+
+		if (Validator.isNull(dlFileEntryMetadata.getExternalReferenceCode())) {
+			dlFileEntryMetadata.setExternalReferenceCode(
+				dlFileEntryMetadata.getUuid());
+		}
+		else {
+			if (!Objects.equals(
+					dlFileEntryMetadataModelImpl.getColumnOriginalValue(
+						"externalReferenceCode"),
+					dlFileEntryMetadata.getExternalReferenceCode())) {
+
+				long userId = GetterUtil.getLong(
+					PrincipalThreadLocal.getName());
+
+				if (userId > 0) {
+					long companyId = dlFileEntryMetadata.getCompanyId();
+
+					long groupId = 0;
+
+					long classPK = 0;
+
+					if (!isNew) {
+						classPK = dlFileEntryMetadata.getPrimaryKey();
+					}
+
+					try {
+						dlFileEntryMetadata.setExternalReferenceCode(
+							SanitizerUtil.sanitize(
+								companyId, groupId, userId,
+								DLFileEntryMetadata.class.getName(), classPK,
+								ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL,
+								dlFileEntryMetadata.getExternalReferenceCode(),
+								null));
+					}
+					catch (SanitizerException sanitizerException) {
+						throw new SystemException(sanitizerException);
+					}
+				}
+			}
+
+			DLFileEntryMetadata ercDLFileEntryMetadata = fetchByERC_C(
+				dlFileEntryMetadata.getExternalReferenceCode(),
+				dlFileEntryMetadata.getCompanyId());
+
+			if (isNew) {
+				if (ercDLFileEntryMetadata != null) {
+					throw new DuplicateDLFileEntryMetadataExternalReferenceCodeException(
+						"Duplicate document library file entry metadata with external reference code " +
+							dlFileEntryMetadata.getExternalReferenceCode() +
+								" and company " +
+									dlFileEntryMetadata.getCompanyId());
+				}
+			}
+			else {
+				if ((ercDLFileEntryMetadata != null) &&
+					(dlFileEntryMetadata.getFileEntryMetadataId() !=
+						ercDLFileEntryMetadata.getFileEntryMetadataId())) {
+
+					throw new DuplicateDLFileEntryMetadataExternalReferenceCodeException(
+						"Duplicate document library file entry metadata with external reference code " +
+							dlFileEntryMetadata.getExternalReferenceCode() +
+								" and company " +
+									dlFileEntryMetadata.getCompanyId());
+				}
+			}
 		}
 
 		Session session = null;
@@ -3313,19 +3571,22 @@ public class DLFileEntryMetadataPersistenceImpl
 
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
 		ctControlColumnNames.add("ctCollectionId");
 		ctStrictColumnNames.add("uuid_");
+		ctStrictColumnNames.add("externalReferenceCode");
 		ctStrictColumnNames.add("companyId");
-		ctStrictColumnNames.add("DDMStorageId");
-		ctStrictColumnNames.add("DDMStructureId");
-		ctStrictColumnNames.add("fileEntryId");
-		ctStrictColumnNames.add("fileVersionId");
+		ctMergeColumnNames.add("DDMStorageId");
+		ctMergeColumnNames.add("DDMStructureId");
+		ctMergeColumnNames.add("fileEntryId");
+		ctMergeColumnNames.add("fileVersionId");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("fileEntryMetadataId"));
@@ -3334,6 +3595,9 @@ public class DLFileEntryMetadataPersistenceImpl
 
 		_uniqueIndexColumnNames.add(
 			new String[] {"DDMStructureId", "fileVersionId"});
+
+		_uniqueIndexColumnNames.add(
+			new String[] {"externalReferenceCode", "companyId"});
 	}
 
 	/**
@@ -3433,10 +3697,10 @@ public class DLFileEntryMetadataPersistenceImpl
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"DDMStructureId", "fileVersionId"}, true);
 
-		_finderPathCountByD_F = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByD_F",
-			new String[] {Long.class.getName(), Long.class.getName()},
-			new String[] {"DDMStructureId", "fileVersionId"}, false);
+		_finderPathFetchByERC_C = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"externalReferenceCode", "companyId"}, true);
 
 		DLFileEntryMetadataUtil.setPersistence(this);
 	}

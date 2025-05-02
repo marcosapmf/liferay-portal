@@ -48,15 +48,16 @@ public class FragmentEntryServiceWrapper
 			long fragmentCollectionId, String fragmentEntryKey, String name,
 			String css, String html, String js, boolean cacheable,
 			String configuration, String icon, long previewFileEntryId,
-			boolean readOnly, int type, String typeOptions, int status,
+			boolean marketplace, boolean readOnly, int type, String typeOptions,
+			int status,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _fragmentEntryService.addFragmentEntry(
 			externalReferenceCode, groupId, fragmentCollectionId,
 			fragmentEntryKey, name, css, html, js, cacheable, configuration,
-			icon, previewFileEntryId, readOnly, type, typeOptions, status,
-			serviceContext);
+			icon, previewFileEntryId, marketplace, readOnly, type, typeOptions,
+			status, serviceContext);
 	}
 
 	@Override

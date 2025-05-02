@@ -22,10 +22,11 @@ import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminP
 import com.liferay.layout.page.template.admin.web.internal.configuration.LayoutPageTemplateAdminWebConfiguration;
 import com.liferay.layout.page.template.admin.web.internal.constants.LayoutPageTemplateAdminWebKeys;
 import com.liferay.layout.page.template.admin.web.internal.security.permission.resource.LayoutPageTemplateEntryPermission;
-import com.liferay.layout.page.template.item.selector.criterion.LayoutPageTemplateCollectionTreeNodeItemSelectorCriterion;
+import com.liferay.layout.page.template.item.selector.LayoutPageTemplateCollectionTreeNodeItemSelectorCriterion;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -134,7 +135,8 @@ public class DisplayPageActionDropdownItemsProvider {
 					).add(
 						() ->
 							_layoutPageTemplateEntry.isApproved() &&
-							(_layoutPageTemplateEntry.getClassNameId() > 0) &&
+							Validator.isNotNull(
+								_layoutPageTemplateEntry.getClassName()) &&
 							hasUpdatePermission,
 						_getMarkAsDefaultDisplayPageActionUnsafeConsumer()
 					).add(
@@ -611,6 +613,18 @@ public class DisplayPageActionDropdownItemsProvider {
 			dropdownItem.putData(
 				"layoutPageTemplateEntryName",
 				_layoutPageTemplateEntry.getName());
+			dropdownItem.putData(
+				"moveSelectedDisplayPageURL",
+				PortletURLBuilder.createActionURL(
+					_renderResponse
+				).setActionName(
+					StringBundler.concat(
+						"/layout_page_template_admin",
+						"/move_layout_page_template_entries",
+						"_and_layout_page_template_collections")
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).buildString());
 			dropdownItem.setIcon("move-folder");
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "move"));
@@ -746,11 +760,7 @@ public class DisplayPageActionDropdownItemsProvider {
 			return false;
 		}
 
-		if (_draftLayout.isDraft()) {
-			return true;
-		}
-
-		return false;
+		return _draftLayout.isDraft();
 	}
 
 	private final boolean _allowedMappedContentType;

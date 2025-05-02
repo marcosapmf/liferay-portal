@@ -6,6 +6,7 @@
 package com.liferay.headless.commerce.admin.shipment.internal.resource.v1_0;
 
 import com.liferay.commerce.constants.CommerceShipmentConstants;
+import com.liferay.commerce.exception.NoSuchOrderException;
 import com.liferay.commerce.exception.NoSuchShipmentException;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseService;
 import com.liferay.commerce.model.CommerceOrder;
@@ -18,7 +19,6 @@ import com.liferay.commerce.service.CommerceShipmentService;
 import com.liferay.headless.commerce.admin.shipment.dto.v1_0.Shipment;
 import com.liferay.headless.commerce.admin.shipment.dto.v1_0.ShipmentItem;
 import com.liferay.headless.commerce.admin.shipment.dto.v1_0.ShippingAddress;
-import com.liferay.headless.commerce.admin.shipment.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.admin.shipment.internal.util.v1_0.ShipmentItemUtil;
 import com.liferay.headless.commerce.admin.shipment.internal.util.v1_0.ShippingAddressUtil;
 import com.liferay.headless.commerce.admin.shipment.resource.v1_0.ShipmentResource;
@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -45,6 +46,7 @@ import java.io.Serializable;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
@@ -175,8 +177,26 @@ public class ShipmentResourceImpl extends BaseShipmentResourceImpl {
 
 	@Override
 	public Shipment postShipment(Shipment shipment) throws Exception {
-		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
-			shipment.getOrderId());
+		CommerceOrder commerceOrder;
+
+		long orderId = GetterUtil.getLong(shipment.getOrderId());
+
+		if (orderId > 0) {
+			commerceOrder = _commerceOrderService.getCommerceOrder(
+				shipment.getOrderId());
+		}
+		else {
+			commerceOrder =
+				_commerceOrderService.fetchCommerceOrderByExternalReferenceCode(
+					shipment.getOrderExternalReferenceCode(),
+					contextCompany.getCompanyId());
+
+			if (commerceOrder == null) {
+				throw new NoSuchOrderException(
+					"Unable to find order with external reference code " +
+						shipment.getOrderExternalReferenceCode());
+			}
+		}
 
 		CommerceShipment commerceShipment =
 			_commerceShipmentService.addCommerceShipment(
@@ -415,9 +435,11 @@ public class ShipmentResourceImpl extends BaseShipmentResourceImpl {
 				shipment.getCustomFields(),
 				contextAcceptLanguage.getPreferredLocale());
 
-		if (expandoBridgeAttributes != null) {
-			serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
+		if (expandoBridgeAttributes == null) {
+			expandoBridgeAttributes = new HashMap<>();
 		}
+
+		serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
 
 		_commerceShipmentService.updateCommerceShipment(
 			commerceShipment.getCommerceShipmentId(),

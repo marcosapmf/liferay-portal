@@ -9,6 +9,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.site.client.dto.v1_0.Site;
 import com.liferay.headless.site.client.problem.Problem;
 import com.liferay.headless.site.client.resource.v1_0.SiteResource;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.LayoutSet;
@@ -98,9 +99,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertEquals(
-				"Unable to get a valid site with ID " + siteId,
-				problem.getTitle());
+			Assert.assertNull(problem.getTitle());
 		}
 	}
 
@@ -123,11 +122,16 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertEquals(
-				"No site exists with external reference code " +
-					externalReferenceCode,
-				problem.getTitle());
+			Assert.assertNull(problem.getTitle());
 		}
+	}
+
+	@Override
+	@Test
+	public void testGetSiteByExternalReferenceCode() throws Exception {
+		super.testGetSiteByExternalReferenceCode();
+
+		_testGetSiteByExternalReferenceCodeWithDollar();
 	}
 
 	@Ignore
@@ -230,6 +234,20 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 			RandomTestUtil.randomString(), randomSite(), getMultipartFiles());
 	}
 
+	private void _testGetSiteByExternalReferenceCodeWithDollar()
+		throws Exception {
+
+		Site postSite = siteResource.putSiteByExternalReferenceCode(
+			RandomTestUtil.randomString() + StringPool.DOLLAR, randomSite(),
+			getMultipartFiles());
+
+		Site getSite = siteResource.getSiteByExternalReferenceCode(
+			postSite.getExternalReferenceCode());
+
+		assertEquals(postSite, getSite);
+		assertValid(getSite);
+	}
+
 	private Site _testPostSite_addSite(Site site) throws Exception {
 		Site postSite = siteResource.postSite(site);
 
@@ -315,9 +333,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertEquals(
-				"No site exists for site key " + randomSite.getParentSiteKey(),
-				problem.getTitle());
+			Assert.assertNull(problem.getTitle());
 		}
 	}
 

@@ -41,15 +41,15 @@ public class OrganizationTestUtil {
 
 		return AddressLocalServiceUtil.addAddress(
 			null, organization.getUserId(), organization.getModelClassName(),
-			organization.getOrganizationId(), null, null,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.nextLong(),
-			RandomTestUtil.randomLong(),
+			organization.getOrganizationId(), RandomTestUtil.nextLong(),
 			_getListTypeId(
 				organization.getCompanyId(),
 				ListTypeConstants.ORGANIZATION_ADDRESS),
-			false, false, null, new ServiceContext());
+			RandomTestUtil.randomLong(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), false, RandomTestUtil.randomString(),
+			false, RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), null, RandomTestUtil.randomString(),
+			null, new ServiceContext());
 	}
 
 	public static Country addCountry(
@@ -81,7 +81,7 @@ public class OrganizationTestUtil {
 		throws Exception {
 
 		return EmailAddressLocalServiceUtil.addEmailAddress(
-			organization.getUserId(), organization.getModelClassName(),
+			null, organization.getUserId(), organization.getModelClassName(),
 			organization.getOrganizationId(), "test@liferay.com",
 			_getListTypeId(
 				organization.getCompanyId(),
@@ -155,7 +155,7 @@ public class OrganizationTestUtil {
 
 	public static Phone addPhone(Organization organization) throws Exception {
 		return PhoneLocalServiceUtil.addPhone(
-			organization.getUserId(), organization.getModelClassName(),
+			null, organization.getUserId(), organization.getModelClassName(),
 			organization.getOrganizationId(), "0000000000", "000",
 			_getListTypeId(
 				organization.getCompanyId(),
@@ -179,7 +179,7 @@ public class OrganizationTestUtil {
 		throws Exception {
 
 		return WebsiteLocalServiceUtil.addWebsite(
-			organization.getUserId(), organization.getModelClassName(),
+			null, organization.getUserId(), organization.getModelClassName(),
 			organization.getOrganizationId(), "http://www.test.com",
 			_getListTypeId(
 				organization.getCompanyId(),

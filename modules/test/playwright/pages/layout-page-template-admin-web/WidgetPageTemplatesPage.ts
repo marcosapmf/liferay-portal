@@ -5,8 +5,9 @@
 
 import {Locator, Page} from '@playwright/test';
 
+import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import {PORTLET_URLS} from '../../utils/portletUrls';
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../utils/waitForAlert';
 
 export class WidgetPageTemplatesPage {
 	readonly page: Page;
@@ -24,66 +25,55 @@ export class WidgetPageTemplatesPage {
 	}
 
 	async addGlobalWidgetPageTemplate(name: string) {
-		await this.newButton.click();
+		await clickAndExpectToBeVisible({
+			target: this.page.getByPlaceholder('Name'),
+			trigger: this.newButton,
+		});
 		await this.page.getByPlaceholder('Name').fill(name);
 		await this.page.getByRole('button', {name: 'Save'}).click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 
 	async deactivateGlobalWidgetPageTemplate(name: string) {
-		await this.clickMoreActions(name);
-
-		await this.page
-			.getByRole('menuitem', {
-				exact: true,
-				name: 'Configure',
-			})
-			.click();
+		await this.clickMoreActions(name, 'Configure');
 
 		await this.page.getByLabel('Active').click();
 
 		await this.page.getByRole('button', {name: 'Save'}).click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 
-	async clickMoreActions(name: string) {
+	async clickMoreActions(name: string, actionName: string) {
 		await this.page
 			.locator('.card-page-item')
 			.filter({hasText: name})
 			.getByLabel('More actions')
 			.click();
+
+		await this.page
+			.getByRole('menuitem', {
+				exact: true,
+				name: actionName,
+			})
+			.click();
 	}
 
 	async delete(name: string) {
-		await this.clickMoreActions(name);
-
-		await this.page
-			.getByRole('menuitem', {
-				exact: true,
-				name: 'Delete',
-			})
-			.click();
+		await this.clickMoreActions(name, 'Delete');
 
 		await this.page.getByRole('button', {name: 'Delete'}).click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 
 	async renameGlobalWidgetPageTemplate(newName: string, oldName: string) {
-		await this.clickMoreActions(oldName);
-
-		await this.page
-			.getByRole('menuitem', {
-				exact: true,
-				name: 'Configure',
-			})
-			.click();
+		await this.clickMoreActions(oldName, 'Configure');
 
 		await this.page.getByPlaceholder('Name').fill(newName);
 		await this.page.getByRole('button', {name: 'Save'}).click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 }

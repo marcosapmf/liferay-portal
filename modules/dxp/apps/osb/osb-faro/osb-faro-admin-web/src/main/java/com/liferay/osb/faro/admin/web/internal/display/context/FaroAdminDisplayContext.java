@@ -10,10 +10,11 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuil
 import com.liferay.osb.faro.admin.web.internal.model.FaroProjectAdminDisplay;
 import com.liferay.osb.faro.model.FaroProject;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.portlet.url.builder.ActionURLBuilder;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
@@ -29,7 +30,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import java.util.Collections;
 import java.util.List;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -60,40 +60,33 @@ public class FaroAdminDisplayContext {
 			return Collections.emptyList();
 		}
 
-		PortletURL portletURL = PortletURLBuilder.create(
-			_renderResponse.createActionURL()
-		).setRedirect(
-			ParamUtil.getString(
-				_httpServletRequest, "redirect", _themeDisplay.getURLCurrent())
-		).buildPortletURL();
-
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {
+				dropdownItem.setDisabled(
+					!faroProjectAdminDisplay.isDataSourceConnected());
 				dropdownItem.setHref(
-					portletURL, ActionRequest.ACTION_NAME,
-					"/faro_admin/deactivate_project", "faroProjectId",
-					faroProjectAdminDisplay.getFaroProjectId());
+					StringBundler.concat(
+						"javascript:Liferay.Util.openConfirmModal({message: '",
+						LanguageUtil.get(
+							_httpServletRequest,
+							"are-you-sure-you-want-to-disconnect-the-data-" +
+								"sources"),
+						"', onConfirm: (isConfirmed) => {if (isConfirmed) {",
+						"submitForm(document.hrefFm, '",
+						HtmlUtil.escapeJS(
+							ActionURLBuilder.createActionURL(
+								_renderResponse
+							).setActionName(
+								"/faro_admin/disconnect_data_sources"
+							).setParameter(
+								"faroProjectId",
+								faroProjectAdminDisplay.getFaroProjectId()
+							).buildString()),
+						"');} else {self.focus();}}});"));
+				dropdownItem.setIcon("logout");
 				dropdownItem.setLabel(
 					LanguageUtil.get(
-						_httpServletRequest, "deactivate-project"));
-			}
-		).add(
-			dropdownItem -> {
-				dropdownItem.setHref(
-					portletURL, ActionRequest.ACTION_NAME,
-					"/faro_admin/refresh_liferay", "faroProjectId",
-					faroProjectAdminDisplay.getFaroProjectId());
-				dropdownItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "refresh-liferay"));
-			}
-		).add(
-			dropdownItem -> {
-				dropdownItem.setHref(
-					portletURL, ActionRequest.ACTION_NAME,
-					"/faro_admin/refresh_project", "groupId",
-					faroProjectAdminDisplay.getGroupId());
-				dropdownItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "refresh-project"));
+						_httpServletRequest, "disconnect-data-sources"));
 			}
 		).build();
 	}
@@ -163,7 +156,7 @@ public class FaroAdminDisplayContext {
 		}
 		else if (_isNavigationUsageLimitApproaching()) {
 			searchContext.setAttribute("maxUsage", 100);
-			searchContext.setAttribute("minUsage", 80);
+			searchContext.setAttribute("minUsage", 70);
 		}
 		else if (_isNavigationUsageLimitExceeded()) {
 			searchContext.setAttribute("maxUsage", Integer.MAX_VALUE);
@@ -187,10 +180,10 @@ public class FaroAdminDisplayContext {
 			orderByCol += "_sortable";
 		}
 
-		boolean reverse = false;
+		boolean reverse = true;
 
 		if (_orderByType.equals("asc")) {
-			reverse = true;
+			reverse = false;
 		}
 
 		searchContext.setSorts(new Sort(orderByCol, reverse));
@@ -254,59 +247,31 @@ public class FaroAdminDisplayContext {
 	}
 
 	private boolean _isBasic() {
-		if (StringUtil.equals(_getNavigation(), "basic")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "basic");
 	}
 
 	private boolean _isBusiness() {
-		if (StringUtil.equals(_getNavigation(), "business")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "business");
 	}
 
 	private boolean _isEnterprise() {
-		if (StringUtil.equals(_getNavigation(), "enterprise")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "enterprise");
 	}
 
 	private boolean _isInactive() {
-		if (StringUtil.equals(_getNavigation(), "inactive")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "inactive");
 	}
 
 	private boolean _isNavigationUsageLimitApproaching() {
-		if (StringUtil.equals(_getNavigation(), "usage-limit-approaching")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "usage-limit-approaching");
 	}
 
 	private boolean _isNavigationUsageLimitExceeded() {
-		if (StringUtil.equals(_getNavigation(), "usage-limit-exceeded")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "usage-limit-exceeded");
 	}
 
 	private boolean _isOffline() {
-		if (StringUtil.equals(_getNavigation(), "offline")) {
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(_getNavigation(), "offline");
 	}
 
 	private final HttpServletRequest _httpServletRequest;

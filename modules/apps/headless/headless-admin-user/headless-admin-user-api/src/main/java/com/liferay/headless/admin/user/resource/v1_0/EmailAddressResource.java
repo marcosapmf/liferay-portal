@@ -6,8 +6,6 @@
 package com.liferay.headless.admin.user.resource.v1_0;
 
 import com.liferay.headless.admin.user.dto.v1_0.EmailAddress;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -47,6 +45,15 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface EmailAddressResource {
 
+	public void deleteEmailAddress(Long emailAddressId) throws Exception;
+
+	public Response deleteEmailAddressBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteEmailAddressByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
 	public Page<EmailAddress>
 			getAccountByExternalReferenceCodeEmailAddressesPage(
 				String externalReferenceCode)
@@ -55,12 +62,11 @@ public interface EmailAddressResource {
 	public Page<EmailAddress> getAccountEmailAddressesPage(Long accountId)
 		throws Exception;
 
-	public Response postAccountEmailAddressesPageExportBatch(
-			Long accountId, String callbackURL, String contentType,
-			String fieldNames)
-		throws Exception;
-
 	public EmailAddress getEmailAddress(Long emailAddressId) throws Exception;
+
+	public EmailAddress getEmailAddressByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
 
 	public Page<EmailAddress>
 			getOrganizationByExternalReferenceCodeEmailAddressesPage(
@@ -71,11 +77,6 @@ public interface EmailAddressResource {
 			String organizationId)
 		throws Exception;
 
-	public Response postOrganizationEmailAddressesPageExportBatch(
-			String organizationId, String callbackURL, String contentType,
-			String fieldNames)
-		throws Exception;
-
 	public Page<EmailAddress>
 			getUserAccountByExternalReferenceCodeEmailAddressesPage(
 				String externalReferenceCode)
@@ -83,6 +84,24 @@ public interface EmailAddressResource {
 
 	public Page<EmailAddress> getUserAccountEmailAddressesPage(
 			Long userAccountId)
+		throws Exception;
+
+	public EmailAddress patchEmailAddress(
+			Long emailAddressId, EmailAddress emailAddress)
+		throws Exception;
+
+	public EmailAddress patchEmailAddressByExternalReferenceCode(
+			String externalReferenceCode, EmailAddress emailAddress)
+		throws Exception;
+
+	public Response postAccountEmailAddressesPageExportBatch(
+			Long accountId, String callbackURL, String contentType,
+			String fieldNames)
+		throws Exception;
+
+	public Response postOrganizationEmailAddressesPageExportBatch(
+			String organizationId, String callbackURL, String contentType,
+			String fieldNames)
 		throws Exception;
 
 	public Response postUserAccountEmailAddressesPageExportBatch(
@@ -112,7 +131,8 @@ public interface EmailAddressResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -137,19 +157,23 @@ public interface EmailAddressResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

@@ -19,11 +19,11 @@ import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Sku;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.SkuOption;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.SkuUnitOfMeasure;
 import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.constants.DTOConverterConstants;
-import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -94,12 +94,11 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 				setPurchasable(cpInstance::isPurchasable);
 				setReplacementSkuExternalReferenceCode(
 					() -> {
-						if (replacementCPInstance != null) {
-							return replacementCPInstance.
-								getExternalReferenceCode();
+						if (replacementCPInstance == null) {
+							return null;
 						}
 
-						return null;
+						return replacementCPInstance.getExternalReferenceCode();
 					});
 				setReplacementSkuId(
 					() -> {
@@ -176,12 +175,12 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 					});
 				setUnitOfMeasureName(
 					() -> {
-						if (cpInstanceUnitOfMeasure != null) {
-							return LanguageUtils.getLanguageIdMap(
-								cpInstanceUnitOfMeasure.getNameMap());
+						if (cpInstanceUnitOfMeasure == null) {
+							return null;
 						}
 
-						return null;
+						return LanguageUtils.getLanguageIdMap(
+							cpInstanceUnitOfMeasure.getNameMap());
 					});
 				setUnitOfMeasureSkuId(
 					() -> {

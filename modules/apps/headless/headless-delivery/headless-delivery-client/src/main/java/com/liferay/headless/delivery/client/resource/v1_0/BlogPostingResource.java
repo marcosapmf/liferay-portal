@@ -52,38 +52,24 @@ public interface BlogPostingResource {
 			String callbackURL, Object object)
 		throws Exception;
 
-	public BlogPosting getBlogPosting(Long blogPostingId) throws Exception;
-
-	public HttpInvoker.HttpResponse getBlogPostingHttpResponse(
-			Long blogPostingId)
-		throws Exception;
-
-	public BlogPosting patchBlogPosting(
-			Long blogPostingId, BlogPosting blogPosting)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse patchBlogPostingHttpResponse(
-			Long blogPostingId, BlogPosting blogPosting)
-		throws Exception;
-
-	public BlogPosting putBlogPosting(
-			Long blogPostingId, BlogPosting blogPosting)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse putBlogPostingHttpResponse(
-			Long blogPostingId, BlogPosting blogPosting)
-		throws Exception;
-
-	public void putBlogPostingBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse putBlogPostingBatchHttpResponse(
-			String callbackURL, Object object)
-		throws Exception;
-
 	public void deleteBlogPostingMyRating(Long blogPostingId) throws Exception;
 
 	public HttpInvoker.HttpResponse deleteBlogPostingMyRatingHttpResponse(
+			Long blogPostingId)
+		throws Exception;
+
+	public void deleteSiteBlogPostingByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			deleteSiteBlogPostingByExternalReferenceCodeHttpResponse(
+				Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public BlogPosting getBlogPosting(Long blogPostingId) throws Exception;
+
+	public HttpInvoker.HttpResponse getBlogPostingHttpResponse(
 			Long blogPostingId)
 		throws Exception;
 
@@ -91,20 +77,6 @@ public interface BlogPostingResource {
 
 	public HttpInvoker.HttpResponse getBlogPostingMyRatingHttpResponse(
 			Long blogPostingId)
-		throws Exception;
-
-	public Rating postBlogPostingMyRating(Long blogPostingId, Rating rating)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse postBlogPostingMyRatingHttpResponse(
-			Long blogPostingId, Rating rating)
-		throws Exception;
-
-	public Rating putBlogPostingMyRating(Long blogPostingId, Rating rating)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse putBlogPostingMyRatingHttpResponse(
-			Long blogPostingId, Rating rating)
 		throws Exception;
 
 	public Page<Permission> getBlogPostingPermissionsPage(
@@ -115,14 +87,6 @@ public interface BlogPostingResource {
 			Long blogPostingId, String roleNames)
 		throws Exception;
 
-	public Page<Permission> putBlogPostingPermissionsPage(
-			Long blogPostingId, Permission[] permissions)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse putBlogPostingPermissionsPageHttpResponse(
-			Long blogPostingId, Permission[] permissions)
-		throws Exception;
-
 	public String getBlogPostingRenderedContentByDisplayPageDisplayPageKey(
 			Long blogPostingId, String displayPageKey)
 		throws Exception;
@@ -130,6 +94,24 @@ public interface BlogPostingResource {
 	public HttpInvoker.HttpResponse
 			getBlogPostingRenderedContentByDisplayPageDisplayPageKeyHttpResponse(
 				Long blogPostingId, String displayPageKey)
+		throws Exception;
+
+	public BlogPosting getSiteBlogPostingByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getSiteBlogPostingByExternalReferenceCodeHttpResponse(
+				Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public Page<Permission> getSiteBlogPostingPermissionsPage(
+			Long siteId, String roleNames)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getSiteBlogPostingPermissionsPageHttpResponse(
+				Long siteId, String roleNames)
 		throws Exception;
 
 	public Page<BlogPosting> getSiteBlogPostingsPage(
@@ -142,16 +124,19 @@ public interface BlogPostingResource {
 			String filterString, Pagination pagination, String sortString)
 		throws Exception;
 
-	public void postSiteBlogPostingsPageExportBatch(
-			Long siteId, String search, String filterString, String sortString,
-			String callbackURL, String contentType, String fieldNames)
+	public BlogPosting patchBlogPosting(
+			Long blogPostingId, BlogPosting blogPosting)
 		throws Exception;
 
-	public HttpInvoker.HttpResponse
-			postSiteBlogPostingsPageExportBatchHttpResponse(
-				Long siteId, String search, String filterString,
-				String sortString, String callbackURL, String contentType,
-				String fieldNames)
+	public HttpInvoker.HttpResponse patchBlogPostingHttpResponse(
+			Long blogPostingId, BlogPosting blogPosting)
+		throws Exception;
+
+	public Rating postBlogPostingMyRating(Long blogPostingId, Rating rating)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse postBlogPostingMyRatingHttpResponse(
+			Long blogPostingId, Rating rating)
 		throws Exception;
 
 	public BlogPosting postSiteBlogPosting(Long siteId, BlogPosting blogPosting)
@@ -169,22 +154,46 @@ public interface BlogPostingResource {
 			Long siteId, String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteSiteBlogPostingByExternalReferenceCode(
-			Long siteId, String externalReferenceCode)
+	public void postSiteBlogPostingsPageExportBatch(
+			Long siteId, String search, String filterString, String sortString,
+			String callbackURL, String contentType, String fieldNames)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
-			deleteSiteBlogPostingByExternalReferenceCodeHttpResponse(
-				Long siteId, String externalReferenceCode)
+			postSiteBlogPostingsPageExportBatchHttpResponse(
+				Long siteId, String search, String filterString,
+				String sortString, String callbackURL, String contentType,
+				String fieldNames)
 		throws Exception;
 
-	public BlogPosting getSiteBlogPostingByExternalReferenceCode(
-			Long siteId, String externalReferenceCode)
+	public BlogPosting putBlogPosting(
+			Long blogPostingId, BlogPosting blogPosting)
 		throws Exception;
 
-	public HttpInvoker.HttpResponse
-			getSiteBlogPostingByExternalReferenceCodeHttpResponse(
-				Long siteId, String externalReferenceCode)
+	public HttpInvoker.HttpResponse putBlogPostingHttpResponse(
+			Long blogPostingId, BlogPosting blogPosting)
+		throws Exception;
+
+	public void putBlogPostingBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse putBlogPostingBatchHttpResponse(
+			String callbackURL, Object object)
+		throws Exception;
+
+	public Rating putBlogPostingMyRating(Long blogPostingId, Rating rating)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse putBlogPostingMyRatingHttpResponse(
+			Long blogPostingId, Rating rating)
+		throws Exception;
+
+	public Page<Permission> putBlogPostingPermissionsPage(
+			Long blogPostingId, Permission[] permissions)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse putBlogPostingPermissionsPageHttpResponse(
+			Long blogPostingId, Permission[] permissions)
 		throws Exception;
 
 	public BlogPosting putSiteBlogPostingByExternalReferenceCode(
@@ -195,15 +204,6 @@ public interface BlogPostingResource {
 			putSiteBlogPostingByExternalReferenceCodeHttpResponse(
 				Long siteId, String externalReferenceCode,
 				BlogPosting blogPosting)
-		throws Exception;
-
-	public Page<Permission> getSiteBlogPostingPermissionsPage(
-			Long siteId, String roleNames)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			getSiteBlogPostingPermissionsPageHttpResponse(
-				Long siteId, String roleNames)
 		throws Exception;
 
 	public Page<Permission> putSiteBlogPostingPermissionsPage(
@@ -325,8 +325,8 @@ public interface BlogPostingResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -430,8 +430,10 @@ public interface BlogPostingResource {
 
 			httpInvoker.path("blogPostingId", blogPostingId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -527,418 +529,10 @@ public interface BlogPostingResource {
 					_builder._port + _builder._contextPath +
 						"/o/headless-delivery/v1.0/blog-postings/batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public BlogPosting getBlogPosting(Long blogPostingId) throws Exception {
-			HttpInvoker.HttpResponse httpResponse = getBlogPostingHttpResponse(
-				blogPostingId);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return BlogPostingSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse getBlogPostingHttpResponse(
-				Long blogPostingId)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}");
-
-			httpInvoker.path("blogPostingId", blogPostingId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public BlogPosting patchBlogPosting(
-				Long blogPostingId, BlogPosting blogPosting)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				patchBlogPostingHttpResponse(blogPostingId, blogPosting);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return BlogPostingSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse patchBlogPostingHttpResponse(
-				Long blogPostingId, BlogPosting blogPosting)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(blogPosting.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PATCH);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}");
-
-			httpInvoker.path("blogPostingId", blogPostingId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public BlogPosting putBlogPosting(
-				Long blogPostingId, BlogPosting blogPosting)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse = putBlogPostingHttpResponse(
-				blogPostingId, blogPosting);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return BlogPostingSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse putBlogPostingHttpResponse(
-				Long blogPostingId, BlogPosting blogPosting)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(blogPosting.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}");
-
-			httpInvoker.path("blogPostingId", blogPostingId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public void putBlogPostingBatch(String callbackURL, Object object)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putBlogPostingBatchHttpResponse(callbackURL, object);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-		}
-
-		public HttpInvoker.HttpResponse putBlogPostingBatchHttpResponse(
-				String callbackURL, Object object)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(object.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			if (callbackURL != null) {
-				httpInvoker.parameter(
-					"callbackURL", String.valueOf(callbackURL));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/blog-postings/batch");
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}
@@ -1040,8 +634,222 @@ public interface BlogPostingResource {
 
 			httpInvoker.path("blogPostingId", blogPostingId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public void deleteSiteBlogPostingByExternalReferenceCode(
+				Long siteId, String externalReferenceCode)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				deleteSiteBlogPostingByExternalReferenceCodeHttpResponse(
+					siteId, externalReferenceCode);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return;
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				deleteSiteBlogPostingByExternalReferenceCodeHttpResponse(
+					Long siteId, String externalReferenceCode)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.DELETE);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/sites/{siteId}/blog-postings/by-external-reference-code/{externalReferenceCode}");
+
+			httpInvoker.path("siteId", siteId);
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public BlogPosting getBlogPosting(Long blogPostingId) throws Exception {
+			HttpInvoker.HttpResponse httpResponse = getBlogPostingHttpResponse(
+				blogPostingId);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return BlogPostingSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse getBlogPostingHttpResponse(
+				Long blogPostingId)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}");
+
+			httpInvoker.path("blogPostingId", blogPostingId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1143,218 +951,10 @@ public interface BlogPostingResource {
 
 			httpInvoker.path("blogPostingId", blogPostingId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Rating postBlogPostingMyRating(Long blogPostingId, Rating rating)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				postBlogPostingMyRatingHttpResponse(blogPostingId, rating);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return RatingSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse postBlogPostingMyRatingHttpResponse(
-				Long blogPostingId, Rating rating)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(rating.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/my-rating");
-
-			httpInvoker.path("blogPostingId", blogPostingId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Rating putBlogPostingMyRating(Long blogPostingId, Rating rating)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putBlogPostingMyRatingHttpResponse(blogPostingId, rating);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return RatingSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse putBlogPostingMyRatingHttpResponse(
-				Long blogPostingId, Rating rating)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(rating.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/my-rating");
-
-			httpInvoker.path("blogPostingId", blogPostingId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}
@@ -1463,122 +1063,10 @@ public interface BlogPostingResource {
 
 			httpInvoker.path("blogPostingId", blogPostingId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Page<Permission> putBlogPostingPermissionsPage(
-				Long blogPostingId, Permission[] permissions)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putBlogPostingPermissionsPageHttpResponse(
-					blogPostingId, permissions);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return Page.of(content, Permission::toDTO);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				putBlogPostingPermissionsPageHttpResponse(
-					Long blogPostingId, Permission[] permissions)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			List<String> values = new ArrayList<>();
-
-			for (Permission permissionValue : permissions) {
-				values.add(String.valueOf(permissionValue));
-			}
-
-			httpInvoker.body(values.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/permissions");
-
-			httpInvoker.path("blogPostingId", blogPostingId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}
@@ -1684,8 +1172,231 @@ public interface BlogPostingResource {
 			httpInvoker.path("blogPostingId", blogPostingId);
 			httpInvoker.path("displayPageKey", displayPageKey);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public BlogPosting getSiteBlogPostingByExternalReferenceCode(
+				Long siteId, String externalReferenceCode)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				getSiteBlogPostingByExternalReferenceCodeHttpResponse(
+					siteId, externalReferenceCode);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return BlogPostingSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				getSiteBlogPostingByExternalReferenceCodeHttpResponse(
+					Long siteId, String externalReferenceCode)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/sites/{siteId}/blog-postings/by-external-reference-code/{externalReferenceCode}");
+
+			httpInvoker.path("siteId", siteId);
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public Page<Permission> getSiteBlogPostingPermissionsPage(
+				Long siteId, String roleNames)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				getSiteBlogPostingPermissionsPageHttpResponse(
+					siteId, roleNames);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return Page.of(content, Permission::toDTO);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				getSiteBlogPostingPermissionsPageHttpResponse(
+					Long siteId, String roleNames)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			if (roleNames != null) {
+				httpInvoker.parameter("roleNames", String.valueOf(roleNames));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/sites/{siteId}/blog-postings/permissions");
+
+			httpInvoker.path("siteId", siteId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1811,8 +1522,436 @@ public interface BlogPostingResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public BlogPosting patchBlogPosting(
+				Long blogPostingId, BlogPosting blogPosting)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				patchBlogPostingHttpResponse(blogPostingId, blogPosting);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return BlogPostingSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse patchBlogPostingHttpResponse(
+				Long blogPostingId, BlogPosting blogPosting)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(blogPosting.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PATCH);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}");
+
+			httpInvoker.path("blogPostingId", blogPostingId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public Rating postBlogPostingMyRating(Long blogPostingId, Rating rating)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postBlogPostingMyRatingHttpResponse(blogPostingId, rating);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return RatingSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse postBlogPostingMyRatingHttpResponse(
+				Long blogPostingId, Rating rating)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(rating.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/my-rating");
+
+			httpInvoker.path("blogPostingId", blogPostingId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public BlogPosting postSiteBlogPosting(
+				Long siteId, BlogPosting blogPosting)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postSiteBlogPostingHttpResponse(siteId, blogPosting);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return BlogPostingSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse postSiteBlogPostingHttpResponse(
+				Long siteId, BlogPosting blogPosting)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(blogPosting.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/sites/{siteId}/blog-postings");
+
+			httpInvoker.path("siteId", siteId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public void postSiteBlogPostingBatch(
+				Long siteId, String callbackURL, Object object)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postSiteBlogPostingBatchHttpResponse(
+					siteId, callbackURL, object);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+		}
+
+		public HttpInvoker.HttpResponse postSiteBlogPostingBatchHttpResponse(
+				Long siteId, String callbackURL, Object object)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(object.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (callbackURL != null) {
+				httpInvoker.parameter(
+					"callbackURL", String.valueOf(callbackURL));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/sites/{siteId}/blog-postings/batch");
+
+			httpInvoker.path("siteId", siteId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1939,18 +2078,20 @@ public interface BlogPostingResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public BlogPosting postSiteBlogPosting(
-				Long siteId, BlogPosting blogPosting)
+		public BlogPosting putBlogPosting(
+				Long blogPostingId, BlogPosting blogPosting)
 			throws Exception {
 
-			HttpInvoker.HttpResponse httpResponse =
-				postSiteBlogPostingHttpResponse(siteId, blogPosting);
+			HttpInvoker.HttpResponse httpResponse = putBlogPostingHttpResponse(
+				blogPostingId, blogPosting);
 
 			String content = httpResponse.getContent();
 
@@ -2011,8 +2152,8 @@ public interface BlogPostingResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse postSiteBlogPostingHttpResponse(
-				Long siteId, BlogPosting blogPosting)
+		public HttpInvoker.HttpResponse putBlogPostingHttpResponse(
+				Long blogPostingId, BlogPosting blogPosting)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -2036,28 +2177,28 @@ public interface BlogPostingResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/blog-postings");
+						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}");
 
-			httpInvoker.path("siteId", siteId);
+			httpInvoker.path("blogPostingId", blogPostingId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void postSiteBlogPostingBatch(
-				Long siteId, String callbackURL, Object object)
+		public void putBlogPostingBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postSiteBlogPostingBatchHttpResponse(
-					siteId, callbackURL, object);
+				putBlogPostingBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -2107,8 +2248,8 @@ public interface BlogPostingResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse postSiteBlogPostingBatchHttpResponse(
-				Long siteId, String callbackURL, Object object)
+		public HttpInvoker.HttpResponse putBlogPostingBatchHttpResponse(
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -2132,7 +2273,7 @@ public interface BlogPostingResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
 
 			if (callbackURL != null) {
 				httpInvoker.parameter(
@@ -2142,23 +2283,21 @@ public interface BlogPostingResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/blog-postings/batch");
+						"/o/headless-delivery/v1.0/blog-postings/batch");
 
-			httpInvoker.path("siteId", siteId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void deleteSiteBlogPostingByExternalReferenceCode(
-				Long siteId, String externalReferenceCode)
+		public Rating putBlogPostingMyRating(Long blogPostingId, Rating rating)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteSiteBlogPostingByExternalReferenceCodeHttpResponse(
-					siteId, externalReferenceCode);
+				putBlogPostingMyRatingHttpResponse(blogPostingId, rating);
 
 			String content = httpResponse.getContent();
 
@@ -2208,7 +2347,7 @@ public interface BlogPostingResource {
 			}
 
 			try {
-				return;
+				return RatingSerDes.toDTO(content);
 			}
 			catch (Exception e) {
 				_logger.log(
@@ -2219,12 +2358,13 @@ public interface BlogPostingResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse
-				deleteSiteBlogPostingByExternalReferenceCodeHttpResponse(
-					Long siteId, String externalReferenceCode)
+		public HttpInvoker.HttpResponse putBlogPostingMyRatingHttpResponse(
+				Long blogPostingId, Rating rating)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(rating.toString(), "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(
@@ -2243,29 +2383,30 @@ public interface BlogPostingResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.DELETE);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/blog-postings/by-external-reference-code/{externalReferenceCode}");
+						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/my-rating");
 
-			httpInvoker.path("siteId", siteId);
-			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+			httpInvoker.path("blogPostingId", blogPostingId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public BlogPosting getSiteBlogPostingByExternalReferenceCode(
-				Long siteId, String externalReferenceCode)
+		public Page<Permission> putBlogPostingPermissionsPage(
+				Long blogPostingId, Permission[] permissions)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				getSiteBlogPostingByExternalReferenceCodeHttpResponse(
-					siteId, externalReferenceCode);
+				putBlogPostingPermissionsPageHttpResponse(
+					blogPostingId, permissions);
 
 			String content = httpResponse.getContent();
 
@@ -2315,7 +2456,7 @@ public interface BlogPostingResource {
 			}
 
 			try {
-				return BlogPostingSerDes.toDTO(content);
+				return Page.of(content, Permission::toDTO);
 			}
 			catch (Exception e) {
 				_logger.log(
@@ -2327,11 +2468,19 @@ public interface BlogPostingResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				getSiteBlogPostingByExternalReferenceCodeHttpResponse(
-					Long siteId, String externalReferenceCode)
+				putBlogPostingPermissionsPageHttpResponse(
+					Long blogPostingId, Permission[] permissions)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			List<String> values = new ArrayList<>();
+
+			for (Permission permissionValue : permissions) {
+				values.add(String.valueOf(permissionValue));
+			}
+
+			httpInvoker.body(values.toString(), "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(
@@ -2350,18 +2499,19 @@ public interface BlogPostingResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/blog-postings/by-external-reference-code/{externalReferenceCode}");
+						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/permissions");
 
-			httpInvoker.path("siteId", siteId);
-			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+			httpInvoker.path("blogPostingId", blogPostingId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -2471,118 +2621,10 @@ public interface BlogPostingResource {
 			httpInvoker.path("siteId", siteId);
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Page<Permission> getSiteBlogPostingPermissionsPage(
-				Long siteId, String roleNames)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				getSiteBlogPostingPermissionsPageHttpResponse(
-					siteId, roleNames);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return Page.of(content, Permission::toDTO);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				getSiteBlogPostingPermissionsPageHttpResponse(
-					Long siteId, String roleNames)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			if (roleNames != null) {
-				httpInvoker.parameter("roleNames", String.valueOf(roleNames));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/blog-postings/permissions");
-
-			httpInvoker.path("siteId", siteId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}
@@ -2695,8 +2737,10 @@ public interface BlogPostingResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -2798,8 +2842,10 @@ public interface BlogPostingResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -2903,8 +2949,10 @@ public interface BlogPostingResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

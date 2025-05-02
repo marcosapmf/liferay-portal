@@ -4,14 +4,17 @@ definition {
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Web Content Administration";
-	property testray.main.component.name = "Web Content Administration";
+	property testray.main.component.name = "Web Content";
 
 	setUp {
 		task ("Set up instance and sign in") {
 			TestCase.setUpPortalInstance();
 
 			User.firstLoginPG();
+		}
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
 		}
 
 		task ("Add a site") {
@@ -94,7 +97,7 @@ definition {
 
 			WebContent.addExpirationDateCP(expirationDate = "01/02/3000");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("View expeiration date is shown") {
@@ -135,7 +138,7 @@ definition {
 		}
 
 		task ("Then the user cannot publish the web content without select an existing small image") {
-			Button.clickPublish();
+			WebContent.publishWithPermissions();
 
 			Alert.viewErrorMessage(errorMessage = "Please select an existing small image.");
 		}
@@ -147,7 +150,7 @@ definition {
 		}
 
 		task ("Then the user could publish the web content") {
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 
 			LexiconEntry.changeDisplayStyle(displayStyle = "cards");
 
@@ -169,7 +172,7 @@ definition {
 				dmFolderName = "Provided by Liferay",
 				imageFileName = "moon.png");
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
 
 			LexiconEntry.changeDisplayStyle(displayStyle = "cards");
 
@@ -313,7 +316,7 @@ definition {
 					categoryNameList = "Category Name",
 					vocabularyName = "Vocabulary Name");
 
-				PortletEntry.publish();
+				WebContent.publishWithPermissions();
 			}
 
 			task ("Assert the web content is added successfully") {
@@ -424,7 +427,7 @@ definition {
 					categoryNameList = "Category Name",
 					vocabularyName = "Vocabulary Name");
 
-				PortletEntry.publish();
+				WebContent.publishWithPermissions();
 			}
 
 			task ("Assert the web content is added successfully") {
@@ -461,7 +464,7 @@ definition {
 		}
 
 		task ("View cannot republish expired web content") {
-			Button.clickPublish();
+			WebContent.publishExistingWCArticleWithPermissions();
 
 			Alert.viewRequestFailedToComplete();
 		}
@@ -591,7 +594,6 @@ definition {
 	@priority = 5
 	test EditWebContent {
 		property portal.acceptance = "true";
-		property testray.component.names = "Web Content Administration,WYSIWYG";
 
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
@@ -660,7 +662,7 @@ definition {
 		}
 
 		task ("Publish Web Content and view the error message") {
-			Button.clickPublish();
+			WebContent.publishExistingWCArticleWithPermissions();
 
 			Alert.viewErrorMessage(errorMessage = "Another user has made changes since you started editing. Publish this version to save it and overwrite the recent changes.");
 		}
@@ -717,7 +719,7 @@ definition {
 
 			WebContent.addFeaturedImageFromComputer(uploadFileName = "Document_1.jpg");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Edit the web content") {
@@ -925,7 +927,7 @@ definition {
 				webContentDateFieldLabel = "Date and Time",
 				webContentTitle = "Web Content Title");
 
-			PageEditor.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("When we have a content page with a date fragment") {
@@ -1010,7 +1012,7 @@ definition {
 				webContentDateFieldLabel = "Date and Time",
 				webContentTitle = "Web Content Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("When we have a display page with a date fragment") {
@@ -1111,7 +1113,6 @@ definition {
 	@priority = 5
 	test MoveWebContentToFolder {
 		property portal.acceptance = "true";
-		property testray.component.names = "Training";
 
 		task ("Add a folder") {
 			JSONWebcontent.addFolder(
@@ -1192,7 +1193,7 @@ definition {
 				webContentTitle = "WC WebContent Title 2",
 				webContentWebContent = "Web Content Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 
 			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
@@ -1345,7 +1346,7 @@ definition {
 				webContentContent = "Web Content Content Edit",
 				webContentTitle = "Web Content Title Edit");
 
-			PortletEntry.submitForWorkflow();
+			WebContent.submitForWorkflow();
 		}
 
 		task ("View the usages of the Web Content article") {
@@ -1383,11 +1384,7 @@ definition {
 				webContentContent = "Web Content Content",
 				webContentTitle = "Web Content Title");
 
-			WebContent.editDisplayDate(
-				displayDate = "01/01/2100",
-				displayTime = "01:01 AM");
-
-			PortletEntry.publish();
+			WebContent.scheduleWCArticleWithPermissions(displayDate = "2100-11-20 01:01");
 		}
 
 		task ("Add a page with a Web Content Display widget and display the Web Content article in the Web Content Display widget") {
@@ -1409,18 +1406,10 @@ definition {
 			IFrame.closeFrame();
 		}
 
-		task ("View the warning message shown in Web Content Display") {
-			Alert.viewWarningSpecific(warningMessage = "Web Content Title is scheduled and will be displayed on 1/1/00 1:01 AM.");
-		}
-
-		task ("Access to web content editor via warning message link") {
+		task ("Assert web content warning message link") {
 			Click(
-				key_warningMessage = "Web Content Title is scheduled and will be displayed on 1/1/00 1:01 AM.",
+				key_warningMessage = "Web Content Title is scheduled and will be displayed on 11/20/00, 1:01 AM.",
 				locator1 = "Message#WARNING_SPECIFIC_LINK");
-
-			WebContent.viewCP(
-				webContentContent = "Web Content Content",
-				webContentTitle = "Web Content Title");
 		}
 
 		task ("View the usages of the Web Content article") {
@@ -1473,7 +1462,7 @@ definition {
 
 			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("View approved status in the web content") {
@@ -1584,7 +1573,7 @@ definition {
 				folderName = "WC Folder Name",
 				searchTerm = "WC Folder Name");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("View the new folder and web content are shown in Asset Publisher") {
@@ -1659,7 +1648,7 @@ definition {
 		task ("Select the new folder") {
 			WebContent.selectFolder(folderName = "WC Folder Name");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("View the new folder and web content are shown in Asset Publisher") {
@@ -1728,7 +1717,7 @@ definition {
 				webContentLinkToPage = "P12",
 				webContentTitle = "Web Content Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("View the P12 shown in Link to Page field") {
@@ -1775,7 +1764,7 @@ definition {
 				pageName = "Test Page Name 2",
 				pageType = "Pages");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Copy the Web Content") {
@@ -1795,7 +1784,7 @@ definition {
 				pageName = "Test Page Name 2",
 				pageType = "Pages");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("View the friendly URL shown in address") {
@@ -1901,37 +1890,9 @@ definition {
 		}
 	}
 
-	@description = "The content cannot be lost after try to publish a web content without title."
-	@priority = 4
-	test ViewContentNotLostWithBlankTitle {
-		task ("View cannot add a web content without title") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-			WebContentNavigator.gotoAddCP();
-
-			WebContent.addNullCP(webContentContent = "Web Content Content");
-		}
-
-		task ("View content is still shown") {
-			WaitForElementPresent(
-				key_fieldLabel = "Content",
-				locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
-
-			SelectFrame.selectFrameNoLoading(
-				key_fieldLabel = "Content",
-				locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
-
-			AssertTextEquals(
-				locator1 = "CKEditor#BODY",
-				value1 = "Web Content Content");
-		}
-	}
-
 	@description = "This is a use case for LPS-138504. Assert display page is still selected after adding a web content without adding required category."
 	@priority = 4
 	test ViewDisplayPageAfterAddingWebContentWithoutAddingRequiredCategory {
-		property testray.component.names = "Asset Publisher";
-
 		task ("Add a widget page and add Asset Publisher in it") {
 			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
@@ -1981,7 +1942,7 @@ definition {
 				pageName = "Test Page Name",
 				pageType = "Pages");
 
-			Button.clickPublish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("View publishing fails and no error in console") {
@@ -2072,8 +2033,6 @@ definition {
 	@priority = 4
 	@uitest
 	test ViewMultipleCategoriesInWebContentEditor {
-		property testray.component.names = "Categories,Web Content Administration";
-
 		task ("Add five categories") {
 			JSONCategory.addVocabulary(
 				groupName = "Test Site Name",
@@ -2155,8 +2114,6 @@ definition {
 	@description = "View available vocabularies within a web content."
 	@priority = 4
 	test ViewMultipleVocabulariesInWebContentEditor {
-		property testray.component.names = "Categories,Web Content Administration";
-
 		task ("Add five vocabularies with one category in each one") {
 			for (var i : list "1,2,3,4,5") {
 				JSONCategory.addVocabulary(
@@ -2292,7 +2249,7 @@ definition {
 				webContentRichTextFieldLabel = "HTML",
 				webContentTitle = "Web Content Title");
 
-			PageEditor.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Then the reserved-article-id should be available on web content") {
@@ -2332,23 +2289,31 @@ definition {
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc");
 
-				PortletEntry.changeLocale(locale = "zh-CN");
+				PortletEntry.changeLocale(
+					locale = "zh-CN",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
 
-				PortletEntry.changeLocale(locale = "ja-JP");
+				PortletEntry.changeLocale(
+					locale = "ja-JP",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
 
-				PortletEntry.changeLocale(locale = "de-DE");
+				PortletEntry.changeLocale(
+					locale = "de-DE",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-de");
 
-				PortletEntry.changeLocale(locale = "es-ES");
+				PortletEntry.changeLocale(
+					locale = "es-ES",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-es");
 
-				PortletEntry.publish();
+				WebContent.publishExistingWCArticleWithPermissions();
 			}
 
 			task ("Add another site") {
@@ -2370,7 +2335,7 @@ definition {
 		}
 
 		task ("When publish the web content with one duplicated friendly URL") {
-			Button.clickPublish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Then there's warning message in pop up") {
@@ -2394,15 +2359,19 @@ definition {
 
 			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
 
-			PortletEntry.changeLocale(locale = "zh-CN");
+			PortletEntry.changeLocale(
+				locale = "zh-CN",
+				translated = "true");
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
 
-			PortletEntry.changeLocale(locale = "ja-JP");
+			PortletEntry.changeLocale(
+				locale = "ja-JP",
+				translated = "true");
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
 
-			Button.clickPublish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Then there's warning message in pop up") {
@@ -2426,11 +2395,13 @@ definition {
 
 			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
 
-			PortletEntry.changeLocale(locale = "de-DE");
+			PortletEntry.changeLocale(
+				locale = "de-DE",
+				translated = "true");
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-de");
 
-			Button.clickPublish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Then there's warning message in pop up") {
@@ -2454,11 +2425,13 @@ definition {
 
 			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
 
-			PortletEntry.changeLocale(locale = "es-ES");
+			PortletEntry.changeLocale(
+				locale = "es-ES",
+				translated = "true");
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-es");
 
-			Button.clickPublish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Then there's warning message in pop up") {
@@ -2494,7 +2467,7 @@ definition {
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc");
 
-				PortletEntry.publish();
+				WebContent.publishExistingWCArticleWithPermissions();
 			}
 
 			task ("Add another site") {
@@ -2513,15 +2486,19 @@ definition {
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc2");
 
-				PortletEntry.changeLocale(locale = "zh-CN");
+				PortletEntry.changeLocale(
+					locale = "zh-CN",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
 
-				PortletEntry.changeLocale(locale = "ja-JP");
+				PortletEntry.changeLocale(
+					locale = "ja-JP",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
 
-				Button.clickPublish();
+				WebContent.publishExistingWCArticleWithPermissions();
 			}
 
 			task ("Add a third site") {
@@ -2540,19 +2517,25 @@ definition {
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc3");
 
-				PortletEntry.changeLocale(locale = "de-DE");
+				PortletEntry.changeLocale(
+					locale = "de-DE",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-de");
 
-				PortletEntry.changeLocale(locale = "fr-FR");
+				PortletEntry.changeLocale(
+					locale = "fr-FR",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-fr");
 
-				PortletEntry.changeLocale(locale = "es-ES");
+				PortletEntry.changeLocale(
+					locale = "es-ES",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-es");
 
-				Button.clickPublish();
+				WebContent.publishExistingWCArticleWithPermissions();
 			}
 
 			task ("Add a forth site") {
@@ -2571,18 +2554,22 @@ definition {
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc");
 
-				PortletEntry.changeLocale(locale = "zh-CN");
+				PortletEntry.changeLocale(
+					locale = "zh-CN",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
 
-				PortletEntry.changeLocale(locale = "de-DE");
+				PortletEntry.changeLocale(
+					locale = "de-DE",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-de");
 			}
 		}
 
 		task ("When publish the web content with three duplicated friendly URLs") {
-			Button.clickPublish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Then there's warning message in pop up") {
@@ -2606,23 +2593,31 @@ definition {
 
 			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
-			PortletEntry.changeLocale(locale = "ja-JP");
+			PortletEntry.changeLocale(
+				locale = "ja-JP",
+				translated = "true");
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
 
-			PortletEntry.changeLocale(locale = "zh-CN");
+			PortletEntry.changeLocale(
+				locale = "zh-CN",
+				translated = "true");
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "");
 
-			PortletEntry.changeLocale(locale = "fr-FR");
+			PortletEntry.changeLocale(
+				locale = "fr-FR",
+				translated = "true");
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-fr");
 
-			PortletEntry.changeLocale(locale = "es-ES");
+			PortletEntry.changeLocale(
+				locale = "es-ES",
+				translated = "true");
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-es");
 
-			Button.clickPublish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Then there's warning message in pop up") {
@@ -2660,15 +2655,19 @@ definition {
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc");
 
-				PortletEntry.changeLocale(locale = "zh-CN");
+				PortletEntry.changeLocale(
+					locale = "zh-CN",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
 
-				PortletEntry.changeLocale(locale = "ja-JP");
+				PortletEntry.changeLocale(
+					locale = "ja-JP",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
 
-				PortletEntry.publish();
+				WebContent.publishExistingWCArticleWithPermissions();
 			}
 
 			task ("Add a web content with 3 friendly URLs in asset library") {
@@ -2682,15 +2681,19 @@ definition {
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc2");
 
-				PortletEntry.changeLocale(locale = "de-DE");
+				PortletEntry.changeLocale(
+					locale = "de-DE",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-de");
 
-				PortletEntry.changeLocale(locale = "es-ES");
+				PortletEntry.changeLocale(
+					locale = "es-ES",
+					translated = "true");
 
 				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-es");
 
-				Button.clickPublish();
+				WebContent.publishWithPermissions();
 			}
 
 			task ("Add a second site and connect it to asset library") {
@@ -2711,7 +2714,7 @@ definition {
 		}
 
 		task ("When publish the web content with one duplicated friendly URL") {
-			Button.clickPublish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Then there's warning message in pop up") {
@@ -2735,15 +2738,19 @@ definition {
 
 			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
 
-			PortletEntry.changeLocale(locale = "zh-CN");
+			PortletEntry.changeLocale(
+				locale = "zh-CN",
+				translated = "true");
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
 
-			PortletEntry.changeLocale(locale = "ja-JP");
+			PortletEntry.changeLocale(
+				locale = "ja-JP",
+				translated = "true");
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
 
-			Button.clickPublish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Then there's warning message in pop up") {
@@ -2773,19 +2780,25 @@ definition {
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc3");
 
-			PortletEntry.changeLocale(locale = "zh-CN");
+			PortletEntry.changeLocale(
+				locale = "zh-CN",
+				translated = "true");
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
 
-			PortletEntry.changeLocale(locale = "ja-JP");
+			PortletEntry.changeLocale(
+				locale = "ja-JP",
+				translated = "true");
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
 
-			PortletEntry.changeLocale(locale = "de-DE");
+			PortletEntry.changeLocale(
+				locale = "de-DE",
+				translated = "true");
 
 			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-de");
 
-			Button.clickPublish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Then there's warning message in pop up") {

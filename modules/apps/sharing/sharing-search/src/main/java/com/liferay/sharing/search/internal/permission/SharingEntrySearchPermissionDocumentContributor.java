@@ -5,7 +5,10 @@
 
 package com.liferay.sharing.search.internal.permission;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.search.spi.model.permission.contributor.SearchPermissionFieldContributor;
 import com.liferay.sharing.model.SharingEntry;
@@ -36,6 +39,13 @@ public class SharingEntrySearchPermissionDocumentContributor
 
 	@Override
 	public void contribute(Document document, String className, long classPK) {
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if ((serviceContext != null) && serviceContext.isStrictAdd()) {
+			return;
+		}
+
 		List<SharingEntry> sharingEntries =
 			_sharingEntryLocalService.getSharingEntries(
 				_portal.getClassNameId(className), classPK);
@@ -44,15 +54,28 @@ public class SharingEntrySearchPermissionDocumentContributor
 			return;
 		}
 
-		long[] userIds = new long[sharingEntries.size()];
+		document.addKeyword(
+			"sharedToUserGroupId",
+			TransformUtil.transformToLongArray(
+				sharingEntries,
+				sharingEntry -> {
+					if (sharingEntry.getToUserGroupId() == 0) {
+						return null;
+					}
 
-		for (int i = 0; i < userIds.length; i++) {
-			SharingEntry sharingEntry = sharingEntries.get(i);
+					return sharingEntry.getToUserGroupId();
+				}));
+		document.addKeyword(
+			"sharedToUserId",
+			TransformUtil.transformToLongArray(
+				sharingEntries,
+				sharingEntry -> {
+					if (sharingEntry.getToUserId() == 0) {
+						return null;
+					}
 
-			userIds[i] = sharingEntry.getToUserId();
-		}
-
-		document.addKeyword("sharedToUserId", userIds);
+					return sharingEntry.getToUserId();
+				}));
 	}
 
 	@Reference

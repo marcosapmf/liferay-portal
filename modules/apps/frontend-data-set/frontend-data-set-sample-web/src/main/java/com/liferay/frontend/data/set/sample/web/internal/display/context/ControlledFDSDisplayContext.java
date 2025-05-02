@@ -7,12 +7,11 @@ package com.liferay.frontend.data.set.sample.web.internal.display.context;
 
 import com.liferay.frontend.data.set.sample.web.internal.constants.FDSSampleFDSNames;
 import com.liferay.frontend.data.set.sample.web.internal.model.UserEntry;
-import com.liferay.frontend.data.set.sample.web.internal.view.util.FDSViewSerializerUtil;
-import com.liferay.frontend.data.set.view.FDSViewSerializer;
+import com.liferay.frontend.data.set.sample.web.internal.serializer.FDSSerializerUtil;
+import com.liferay.frontend.data.set.serializer.FDSSerializer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -37,17 +36,15 @@ public class ControlledFDSDisplayContext {
 				themeDisplay.getCompanyId(), WorkflowConstants.STATUS_APPROVED,
 				0, 20, null),
 			user -> new UserEntry(
-				user.getEmailAddress(), user.getFirstName(), user.getUserId(),
-				user.getLastName()));
+				user.isActive(), user.getEmailAddress(), user.getFirstName(),
+				user.getUserId(), user.getLastName()));
 	}
 
 	public Object getViews() {
-		FDSViewSerializer fdsViewSerializer =
-			FDSViewSerializerUtil.getFDSViewSerializer();
+		FDSSerializer fdsSerializer = FDSSerializerUtil.getFDSSerializer();
 
-		return fdsViewSerializer.serialize(
-			FDSSampleFDSNames.CONTROLLED,
-			PortalUtil.getLocale(_httpServletRequest));
+		return fdsSerializer.serializeViews(
+			FDSSampleFDSNames.CONTROLLED, _httpServletRequest);
 	}
 
 	private final HttpServletRequest _httpServletRequest;

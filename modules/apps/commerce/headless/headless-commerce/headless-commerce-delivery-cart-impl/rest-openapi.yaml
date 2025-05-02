@@ -93,6 +93,8 @@ components:
                     type: string
                 street3:
                     type: string
+                subtype:
+                    type: string
                 type:
                     readOnly: true
                     type: string
@@ -104,10 +106,42 @@ components:
                 zip:
                     type: string
             required:
-                - city
-                - countryISOCode
-                - name
-                - street1
+                -   city
+                -   countryISOCode
+                -   name
+                -   street1
+            type: object
+        Attachment:
+            properties:
+                externalReferenceCode:
+                    example: AB-34098-789-N
+                    readOnly: true
+                    type: string
+                id:
+                    format: int64
+                    readOnly: true
+                    type: integer
+                title:
+                    readOnly: true
+                    type: string
+                type:
+                    format: int32
+                    readOnly: true
+                    type: integer
+                url:
+                    readOnly: true
+                    type: string
+        AttachmentBase64:
+            properties:
+                attachment:
+                    description:
+                        Base64 encoded file
+                    type: string
+                externalReferenceCode:
+                    example: AB-34098-789-N
+                    type: string
+                title:
+                    type: string
             type: object
         Cart:
             properties:
@@ -117,11 +151,18 @@ components:
                 accountId:
                     format: int64
                     type: integer
+                attachments:
+                    items:
+                        $ref: "#/components/schemas/Attachment"
+                    type: array
                 author:
                     readOnly: true
                     type: string
                 billingAddress:
                     $ref: "#/components/schemas/Address"
+                billingAddressExternalReferenceCode:
+                    example: AAB-34098-789-N
+                    type: string
                 billingAddressId:
                     format: int64
                     type: integer
@@ -141,15 +182,32 @@ components:
                     type: string
                 currencyCode:
                     type: string
+                currencyExternalReferenceCode:
+                    example: AAB-34098-789-N
+                    type: string
+                currencyId:
+                    example: 30130
+                    format: int64
+                    minimum: 0
+                    type: integer
                 customFields:
                     additionalProperties: true
                     type: object
+                deliveryTermId:
+                    format: int64
+                    type: integer
+                deliveryTermLabel:
+                    readOnly: true
+                    type: string
                 errorMessages:
                     items:
                         type: string
                     type: array
                 externalReferenceCode:
                     example: AB-34098-789-N
+                    readOnly: true
+                    type: string
+                friendlyURLSeparator:
                     readOnly: true
                     type: string
                 id:
@@ -174,6 +232,9 @@ components:
                 orderStatusInfo:
                     $ref: "#/components/schemas/Status"
                     readOnly: true
+                orderType:
+                    readOnly: true
+                    type: string
                 orderTypeExternalReferenceCode:
                     example: AB-34098-789-N
                     type: string
@@ -188,6 +249,10 @@ components:
                 paymentMethodLabel:
                     readOnly: true
                     type: string
+                paymentMethodType:
+                    format: int32
+                    readOnly: true
+                    type: integer
                 paymentStatus:
                     format: int32
                     readOnly: true
@@ -198,12 +263,25 @@ components:
                 paymentStatusLabel:
                     readOnly: true
                     type: string
+                paymentTermId:
+                    format: int64
+                    type: integer
+                paymentTermLabel:
+                    readOnly: true
+                    type: string
                 printedNote:
                     type: string
                 purchaseOrderNumber:
                     type: string
+                requestedDeliveryDate:
+                    example: 2017-07-21
+                    format: date
+                    type: string
                 shippingAddress:
                     $ref: "#/components/schemas/Address"
+                shippingAddressExternalReferenceCode:
+                    example: AAB-34098-789-N
+                    type: string
                 shippingAddressId:
                     format: int64
                     type: integer
@@ -214,6 +292,10 @@ components:
                 status:
                     readOnly: true
                     type: string
+                steps:
+                    items:
+                        $ref: "#/components/schemas/Step"
+                    type: array
                 summary:
                     $ref: "#/components/schemas/Summary"
                 useAsBilling:
@@ -230,6 +312,13 @@ components:
                 author:
                     readOnly: true
                     type: string
+                authorId:
+                    format: int64
+                    readOnly: true
+                    type: integer
+                authorPortraitURL:
+                    readOnly: true
+                    type: string
                 content:
                     type: string
                 externalReferenceCode:
@@ -240,6 +329,10 @@ components:
                     format: int64
                     readOnly: true
                     type: integer
+                modifiedDate:
+                    format: date
+                    readOnly: true
+                    type: string
                 orderId:
                     format: int64
                     readOnly: true
@@ -259,6 +352,11 @@ components:
                 customFields:
                     additionalProperties: true
                     type: object
+                deliveryGroup:
+                    deprecated: true
+                    type: string
+                deliveryGroupName:
+                    type: string
                 errorMessages:
                     items:
                         type: string
@@ -302,11 +400,25 @@ components:
                     example: "12341234"
                     readOnly: true
                     type: string
+                replacedSkuExternalReferenceCode:
+                    example: AB-34098-789-N
+                    type: string
                 replacedSkuId:
                     format: int64
                     type: integer
+                requestedDeliveryDate:
+                    format: date
+                    type: string
                 settings:
                     $ref: "#/components/schemas/Settings"
+                shippingAddress:
+                    $ref: "#/components/schemas/Address"
+                shippingAddressExternalReferenceCode:
+                    example: AB-34098-789-N
+                    type: string
+                shippingAddressId:
+                    format: int64
+                    type: integer
                 sku:
                     readOnly: true
                     type: string
@@ -322,12 +434,34 @@ components:
                 thumbnail:
                     readOnly: true
                     type: string
+                unitOfMeasure:
+                    readOnly: true
+                    type: string
                 valid:
                     readOnly: true
                     type: boolean
             required:
-                - skuId
+                -   skuId
             type: object
+        CartTransition:
+            properties:
+                cartId:
+                    format: int64
+                    readOnly: true
+                    type: integer
+                comment:
+                    type: string
+                label:
+                    readOnly: true
+                    type: string
+                name:
+                    type: string
+                open:
+                    readOnly: true
+                    type: boolean
+                workflowTaskId:
+                    format: int64
+                    type: integer
         CouponCode:
             properties:
                 code:
@@ -358,10 +492,10 @@ components:
                     readOnly: true
                     type: integer
             required:
-                - errorCode
-                - errorDescription
-                - message
-                - status
+                -   errorCode
+                -   errorDescription
+                -   message
+                -   status
             type: object
         PaymentMethod:
             properties:
@@ -439,6 +573,8 @@ components:
             properties:
                 description:
                     type: string
+                engineKey:
+                    type: string
                 id:
                     format: int64
                     type: integer
@@ -504,6 +640,17 @@ components:
                     example: black
                     type: string
             type: object
+        Step:
+            properties:
+                id:
+                    readOnly: true
+                    type: string
+                label:
+                    readOnly: true
+                    type: string
+                state:
+                    readOnly: true
+                    type: string
         Summary:
             properties:
                 currency:
@@ -565,10 +712,32 @@ components:
                 totalFormatted:
                     type: string
             type: object
+        Term:
+            properties:
+                description:
+                    example: description
+                    readOnly: true
+                    type: string
+                externalReferenceCode:
+                    example: AAB-34098-789-N
+                    type: string
+                id:
+                    example: 30130
+                    format: int64
+                    minimum: 0
+                    type: integer
+                label:
+                    example: label
+                    readOnly: true
+                    type: string
+                name:
+                    example: name
+                    readOnly: true
+                    type: string
 info:
     description:
         "Headless Delivery Commerce Cart API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.delivery.cart.client', and version '4.0.40'."
+        artifact ID 'com.liferay.headless.commerce.delivery.cart.client', and version '4.0.49'."
     license:
         name: Apache 2.0
         url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -582,17 +751,17 @@ paths:
                 Deletes a Cart Comment by external reference code.
             operationId: deleteCartCommentByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          Cart Comment external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            Cart Comment external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 204:
                     content:
@@ -614,17 +783,17 @@ paths:
                 Retrieve information of the given Cart Comment by external reference code.
             operationId: getCartCommentByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          Cart Comment external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            Cart Comment external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 200:
                     content:
@@ -675,17 +844,17 @@ paths:
                 Update the provided Cart Comment by external reference code.
             operationId: patchCartCommentByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          Cart Comment external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            Cart Comment external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -745,17 +914,17 @@ paths:
                 Update the provided Cart Comment by external reference code.
             operationId: putCartCommentByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          Cart Comment external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            Cart Comment external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -814,16 +983,16 @@ paths:
         delete:
             operationId: deleteCartComment
             parameters:
-                - in: path
-                  explode: false
-                  name: cartCommentId
-                  required: true
-                  schema:
-                      description:
-                          Note Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartCommentId
+                    required: true
+                    schema:
+                        description:
+                            Note Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 204:
                     content:
@@ -844,16 +1013,16 @@ paths:
         get:
             operationId: getCartComment
             parameters:
-                - in: path
-                  explode: false
-                  name: cartCommentId
-                  required: true
-                  schema:
-                      description:
-                          Note Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartCommentId
+                    required: true
+                    schema:
+                        description:
+                            Note Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -903,16 +1072,16 @@ paths:
         patch:
             operationId: patchCartComment
             parameters:
-                - in: path
-                  explode: false
-                  name: cartCommentId
-                  required: true
-                  schema:
-                      description:
-                          Note Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartCommentId
+                    required: true
+                    schema:
+                        description:
+                            Note Id
+                        format: int64
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -971,16 +1140,16 @@ paths:
         put:
             operationId: putCartComment
             parameters:
-                - in: path
-                  explode: false
-                  name: cartCommentId
-                  required: true
-                  schema:
-                      description:
-                          Note Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartCommentId
+                    required: true
+                    schema:
+                        description:
+                            Note Id
+                        format: int64
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -1042,17 +1211,17 @@ paths:
                 Deletes a Cart Item by external reference code.
             operationId: deleteCartItemByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          Cart Item external Reference Code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            Cart Item external Reference Code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 204:
                     content:
@@ -1074,17 +1243,17 @@ paths:
                 Retrieve information of the given Cart Item by external reference code.
             operationId: getCartItemByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          Cart Item external Reference Code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            Cart Item external Reference Code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 200:
                     content:
@@ -1130,17 +1299,17 @@ paths:
                 Update the provided Cart Item by external reference code.
             operationId: patchCartItemByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          Cart Item external Reference Code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            Cart Item external Reference Code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -1195,17 +1364,17 @@ paths:
                 Update the provided Cart Item by external reference code.
             operationId: putCartItemByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          Cart Item external Reference Code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            Cart Item external Reference Code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -1261,16 +1430,16 @@ paths:
                 Deletes an Cart Item by ID.
             operationId: deleteCartItem
             parameters:
-                - in: path
-                  explode: false
-                  name: cartItemId
-                  required: true
-                  schema:
-                      description:
-                          Cart Item Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartItemId
+                    required: true
+                    schema:
+                        description:
+                            Cart Item Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 204:
                     content:
@@ -1292,16 +1461,16 @@ paths:
                 Retrieve information of the given Cart
             operationId: getCartItem
             parameters:
-                - in: path
-                  explode: false
-                  name: cartItemId
-                  required: true
-                  schema:
-                      description:
-                          Cart Item Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartItemId
+                    required: true
+                    schema:
+                        description:
+                            Cart Item Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -1347,16 +1516,16 @@ paths:
                 Retrieve information of the given Cart.
             operationId: patchCartItem
             parameters:
-                - in: path
-                  explode: false
-                  name: cartItemId
-                  required: true
-                  schema:
-                      description:
-                          Cart Item Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartItemId
+                    required: true
+                    schema:
+                        description:
+                            Cart Item Id
+                        format: int64
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -1411,16 +1580,16 @@ paths:
                 update the given Cart.
             operationId: putCartItem
             parameters:
-                - in: path
-                  explode: false
-                  name: cartItemId
-                  required: true
-                  schema:
-                      description:
-                          Cart Item Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartItemId
+                    required: true
+                    schema:
+                        description:
+                            Cart Item Id
+                        format: int64
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -1473,15 +1642,15 @@ paths:
     /carts/by-externalReferenceCode/{externalReferenceCode}:
         delete:
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 204:
                     description:
@@ -1502,15 +1671,15 @@ paths:
             description:
                 Retrieve information of the given Cart by external reference code.
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -1553,15 +1722,15 @@ paths:
             tags: ["Cart"]
         patch:
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -1619,15 +1788,15 @@ paths:
             tags: ["Cart"]
         put:
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -1683,20 +1852,211 @@ paths:
                         Unexpected error
             summary: Updates a Cart.
             tags: ["Cart"]
+    /carts/by-externalReferenceCode/{externalReferenceCode}/attachments:
+        get:
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                -   in: query
+                    explode: true
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+                -   in: query
+                    explode: true
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Attachment"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Attachment"
+                                type: array
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            summary: Gets a list of attachments related to a cart.
+            tags: ["Attachment"]
+    /carts/by-externalReferenceCode/{externalReferenceCode}/attachments/by-base64:
+        post:
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/AttachmentBase64"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/AttachmentBase64"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Attachment"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Attachment"
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            summary: Creates an attachment related to a cart.
+            tags: ["Attachment"]
+    /carts/by-externalReferenceCode/{externalReferenceCode}/attachments/by-externalReferenceCode/{attachmentExternalReferenceCode}:
+        delete:
+            parameters:
+                -   in: path
+                    name: attachmentExternalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            summary: Deletes an attachment by external reference code.
+            tags: ["Attachment"]
     /carts/by-externalReferenceCode/{externalReferenceCode}/billing-address:
         get:
             description:
                 Retrieve cart billing address.
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -1740,15 +2100,15 @@ paths:
     /carts/by-externalReferenceCode/{externalReferenceCode}/checkout:
         post:
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -1762,25 +2122,25 @@ paths:
     /carts/by-externalReferenceCode/{externalReferenceCode}/comments:
         get:
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
             responses:
                 200:
                     content:
@@ -1833,15 +2193,15 @@ paths:
             tags: ["CartComment"]
         post:
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -1902,15 +2262,15 @@ paths:
             description:
                 Add a coupon code to a Cart, return the whole Cart updated.
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -1962,36 +2322,101 @@ paths:
                     description:
                         Unexpected error
             tags: ["Cart"]
+    /carts/by-externalReferenceCode/{externalReferenceCode}/delivery-terms:
+        get:
+            description:
+                Retrieve delivery terms available for the Cart.
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Term"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Term"
+                                type: array
+                    description:
+                        Retrieve the available delivery terms for the order
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["Term"]
     /carts/by-externalReferenceCode/{externalReferenceCode}/items:
         get:
             description:
                 Retrieve cart items of a Cart.
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: skuId
-                  required: false
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: skuId
+                    required: false
+                    schema:
+                        format: int64
+                        type: integer
             responses:
                 200:
                     content:
@@ -2042,15 +2467,15 @@ paths:
             description:
                 Add new Item to a Cart, return the whole Cart updated.
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -2107,15 +2532,15 @@ paths:
             description:
                 Retrieve payment methods available for the Cart.
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -2160,23 +2585,83 @@ paths:
                     description:
                         Unexpected error
             tags: ["PaymentMethod"]
+    /carts/by-externalReferenceCode/{externalReferenceCode}/payment-terms:
+        get:
+            description:
+                Retrieve payment terms available for the Cart.
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Term"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Term"
+                                type: array
+                    description:
+                        Retrieve the available payment terms for the order
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["Term"]
     /carts/by-externalReferenceCode/{externalReferenceCode}/payment-url:
         get:
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                - in: query
-                  name: callbackURL
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                -   in: query
+                    name: callbackURL
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -2189,15 +2674,15 @@ paths:
             description:
                 Retrieve cart billing address.
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -2243,15 +2728,15 @@ paths:
             description:
                 Retrieve payment methods available for the Cart.
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -2302,16 +2787,16 @@ paths:
         delete:
             operationId: deleteCart
             parameters:
-                - in: path
-                  explode: false
-                  name: cartId
-                  required: true
-                  schema:
-                      description:
-                          Cart Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 204:
                     description:
@@ -2333,16 +2818,16 @@ paths:
                 Retrieve information of the given Cart.
             operationId: getCart
             parameters:
-                - in: path
-                  explode: false
-                  name: cartId
-                  required: true
-                  schema:
-                      description:
-                          Cart Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -2386,16 +2871,16 @@ paths:
         patch:
             operationId: patchCart
             parameters:
-                - in: path
-                  explode: false
-                  name: cartId
-                  required: true
-                  schema:
-                      description:
-                          Cart Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -2454,16 +2939,16 @@ paths:
         put:
             operationId: putCart
             parameters:
-                - in: path
-                  explode: false
-                  name: cartId
-                  required: true
-                  schema:
-                      description:
-                          Cart Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -2519,22 +3004,217 @@ paths:
                         Unexpected error
             summary: Updates a Cart.
             tags: ["Cart"]
+    /carts/{cartId}/attachments:
+        get:
+            parameters:
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
+                -   in: query
+                    explode: true
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+                -   in: query
+                    explode: true
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Attachment"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Attachment"
+                                type: array
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            summary: Gets a list of attachments related to a cart.
+            tags: ["Attachment"]
+    /carts/{cartId}/attachments/by-base64:
+        post:
+            parameters:
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/AttachmentBase64"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/AttachmentBase64"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Attachment"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Attachment"
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            summary: Creates an attachment related to a cart.
+            tags: ["Attachment"]
+    /carts/{cartId}/attachments/{attachmentId}:
+        delete:
+            parameters:
+                -   in: path
+                    explode: false
+                    name: attachmentId
+                    required: true
+                    schema:
+                        description:
+                            Attachment Id
+                        format: int64
+                        type: integer
+                    style: simple
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
+            responses:
+                200:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            summary: Deletes an attachment by id.
+            tags: ["Attachment"]
     /carts/{cartId}/billing-address:
         get:
             description:
                 Retrieve cart billing address.
             operationId: getCartBillingAddres
             parameters:
-                - in: path
-                  explode: false
-                  name: cartId
-                  required: true
-                  schema:
-                      description:
-                          Cart Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -2575,16 +3255,104 @@ paths:
                     description:
                         Unexpected error
             tags: ["Address"]
+    /carts/{cartId}/cart-transitions:
+        get:
+            description:
+                Retrieve cart transitions of the given Cart.
+            operationId: getCartCartTransitionsPage
+            parameters:
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/CartTransition"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/CartTransition"
+                                type: array
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["CartTransition"]
+        post:
+            operationId: postCartCartTransition
+            parameters:
+                -   in: path
+                    name: cartId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/CartTransition"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/CartTransition"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/CartTransition"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/CartTransition"
+            tags: ["CartTransition"]
     /carts/{cartId}/checkout:
         post:
             operationId: postCartCheckout
             parameters:
-                - in: path
-                  name: cartId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: cartId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             responses:
                 200:
                     content:
@@ -2599,26 +3367,26 @@ paths:
         get:
             operationId: getCartCommentsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: cartId
-                  required: true
-                  schema:
-                      description:
-                          Cart Id
-                      format: int64
-                      type: integer
-                  style: simple
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
             responses:
                 200:
                     content:
@@ -2672,16 +3440,16 @@ paths:
         post:
             operationId: postCartComment
             parameters:
-                - in: path
-                  explode: false
-                  name: cartId
-                  required: true
-                  schema:
-                      description:
-                          Cart Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -2743,16 +3511,16 @@ paths:
                 Add a coupon code to a Cart, return the whole Cart updated.
             operationId: postCartCouponCode
             parameters:
-                - in: path
-                  explode: false
-                  name: cartId
-                  required: true
-                  schema:
-                      description:
-                          Cart Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -2804,38 +3572,105 @@ paths:
                     description:
                         Unexpected error
             tags: ["Cart"]
+    /carts/{cartId}/delivery-terms:
+        get:
+            description:
+                Retrieve delivery terms available for the Cart.
+            operationId: getCartDeliveryTermsPage
+            parameters:
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Term"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Term"
+                                type: array
+                    description:
+                        Retrieve the available delivery terms for the order
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["Term"]
     /carts/{cartId}/items:
         get:
             description:
                 Retrieve cart items of a Cart.
             operationId: getCartItemsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: cartId
-                  required: true
-                  schema:
-                      description:
-                          Cart Id
-                      format: int64
-                      type: integer
-                  style: simple
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: skuId
-                  required: false
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: skuId
+                    required: false
+                    schema:
+                        format: int64
+                        type: integer
             responses:
                 200:
                     content:
@@ -2887,16 +3722,16 @@ paths:
                 Add new Items to a Cart, return the whole Cart updated.
             operationId: postCartItem
             parameters:
-                - in: path
-                  explode: false
-                  name: cartId
-                  required: true
-                  schema:
-                      description:
-                          Cart Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -2954,16 +3789,16 @@ paths:
                 Retrieve payment methods available for the Cart.
             operationId: getCartPaymentMethodsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: cartId
-                  required: true
-                  schema:
-                      description:
-                          Cart Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -3008,21 +3843,83 @@ paths:
                     description:
                         Unexpected error
             tags: ["PaymentMethod"]
+    /carts/{cartId}/payment-terms:
+        get:
+            description:
+                Retrieve payment terms available for the Cart.
+            operationId: getCartPaymentTermsPage
+            parameters:
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Term"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Term"
+                                type: array
+                    description:
+                        Retrieve the available payment terms for the order
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["Term"]
     /carts/{cartId}/payment-url:
         get:
             operationId: getCartPaymentURL
             parameters:
-                - in: path
-                  name: cartId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: callbackURL
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    name: cartId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: callbackURL
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -3036,16 +3933,16 @@ paths:
                 Retrieve cart billing address.
             operationId: getCartShippingAddres
             parameters:
-                - in: path
-                  explode: false
-                  name: cartId
-                  required: true
-                  schema:
-                      description:
-                          Cart Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -3092,16 +3989,16 @@ paths:
                 Retrieve payment methods available for the Cart.
             operationId: getCartShippingMethodsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: cartId
-                  required: true
-                  schema:
-                      description:
-                          Cart Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: cartId
+                    required: true
+                    schema:
+                        description:
+                            Cart Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -3154,39 +4051,49 @@ paths:
                 Retrieves carts for specific account in the given channel.
             operationId: getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodeCartsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: accountExternalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          Account external reference code
-                      type: string
-                  style: simple
-                - in: path
-                  explode: false
-                  name: channelExternalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          Channel external reference code
-                      type: string
-                  style: simple
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    explode: false
+                    name: accountExternalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            Account external reference code
+                        type: string
+                    style: simple
+                -   in: path
+                    explode: false
+                    name: channelExternalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            Channel external reference code
+                        type: string
+                    style: simple
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -3239,15 +4146,15 @@ paths:
                 Creates a Cart.
             operationId: postChannelCartByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          Channel external reference code
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            Channel external reference code
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -3306,43 +4213,53 @@ paths:
         get:
             description:
                 Retrieves carts for specific account in the given channel.
-            operationId: getChannelCartsPage
+            operationId: getChannelAccountCartsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: accountId
-                  required: true
-                  schema:
-                      description:
-                          Account Id
-                      format: int64
-                      type: integer
-                  style: simple
-                - in: path
-                  explode: false
-                  name: channelId
-                  required: true
-                  schema:
-                      description:
-                          Channel Id
-                      format: int64
-                      type: integer
-                  style: simple
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    explode: false
+                    name: accountId
+                    required: true
+                    schema:
+                        description:
+                            Account Id
+                        format: int64
+                        type: integer
+                    style: simple
+                -   in: path
+                    explode: false
+                    name: channelId
+                    required: true
+                    schema:
+                        description:
+                            Channel Id
+                        format: int64
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -3390,19 +4307,105 @@ paths:
                         Unexpected error
             tags: ["Cart"]
     /channels/{channelId}/carts:
+        get:
+            description:
+                Retrieves carts in the given channel.
+            operationId: getChannelCartsPage
+            parameters:
+                -   in: path
+                    explode: false
+                    name: channelId
+                    required: true
+                    schema:
+                        description:
+                            Channel Id
+                        format: int64
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Cart"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Cart"
+                                type: array
+                    description:
+                        Successful operation
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["Cart"]
         post:
             operationId: postChannelCart
             parameters:
-                - in: path
-                  explode: false
-                  name: channelId
-                  required: true
-                  schema:
-                      description:
-                          Channel Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: channelId
+                    required: true
+                    schema:
+                        description:
+                            Channel Id
+                        format: int64
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -3459,4 +4462,4 @@ paths:
             summary: Creates a Cart.
             tags: ["Cart"]
 servers:
-    - url: /
+    -   url: /

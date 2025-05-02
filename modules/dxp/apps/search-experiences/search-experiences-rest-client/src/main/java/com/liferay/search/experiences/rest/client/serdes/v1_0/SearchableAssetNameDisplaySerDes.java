@@ -78,6 +78,16 @@ public class SearchableAssetNameDisplaySerDes {
 			sb.append("\"");
 		}
 
+		if (searchableAssetNameDisplay.getHasSubtype() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"hasSubtype\": ");
+
+			sb.append(searchableAssetNameDisplay.getHasSubtype());
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -118,6 +128,15 @@ public class SearchableAssetNameDisplaySerDes {
 				String.valueOf(searchableAssetNameDisplay.getDisplayName()));
 		}
 
+		if (searchableAssetNameDisplay.getHasSubtype() == null) {
+			map.put("hasSubtype", null);
+		}
+		else {
+			map.put(
+				"hasSubtype",
+				String.valueOf(searchableAssetNameDisplay.getHasSubtype()));
+		}
+
 		return map;
 	}
 
@@ -142,6 +161,9 @@ public class SearchableAssetNameDisplaySerDes {
 			else if (Objects.equals(jsonParserFieldName, "displayName")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "hasSubtype")) {
+				return false;
+			}
 
 			return false;
 		}
@@ -161,6 +183,12 @@ public class SearchableAssetNameDisplaySerDes {
 				if (jsonParserFieldValue != null) {
 					searchableAssetNameDisplay.setDisplayName(
 						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "hasSubtype")) {
+				if (jsonParserFieldValue != null) {
+					searchableAssetNameDisplay.setHasSubtype(
+						(Boolean)jsonParserFieldValue);
 				}
 			}
 		}
@@ -208,6 +236,10 @@ public class SearchableAssetNameDisplaySerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

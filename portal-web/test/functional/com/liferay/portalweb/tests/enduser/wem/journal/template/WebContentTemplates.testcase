@@ -4,7 +4,7 @@ definition {
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Web Content Administration";
+	property testray.main.component.name = "Web Content";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -17,7 +17,6 @@ definition {
 	@priority = 5
 	test AddTemplateWithStructure {
 		property portal.acceptance = "true";
-		property testray.component.names = "Web Content Administration";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 

@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.pricing.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.pricing.dto.v1_0.PriceList;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,13 +46,32 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface PriceListResource {
 
-	public Page<PriceList> getPriceListsPage(
-			Filter filter, Pagination pagination, Sort[] sorts)
+	public Response deletePriceList(Long id) throws Exception;
+
+	public Response deletePriceListBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public Response postPriceListsPageExportBatch(
-			Filter filter, Sort[] sorts, String callbackURL, String contentType,
-			String fieldNames)
+	public Response deletePriceListByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public PriceList getPriceList(Long id) throws Exception;
+
+	public PriceList getPriceListByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Page<PriceList> getPriceListsPage(
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Response patchPriceList(Long id, PriceList priceList)
+		throws Exception;
+
+	public Response patchPriceListByExternalReferenceCode(
+			String externalReferenceCode, PriceList priceList)
 		throws Exception;
 
 	public PriceList postPriceList(PriceList priceList) throws Exception;
@@ -62,26 +79,14 @@ public interface PriceListResource {
 	public Response postPriceListBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public Response deletePriceListByExternalReferenceCode(
-			String externalReferenceCode)
+	public Response postPriceListsPageExportBatch(
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
-	public PriceList getPriceListByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public Response patchPriceListByExternalReferenceCode(
+	public PriceList putPriceListByExternalReferenceCode(
 			String externalReferenceCode, PriceList priceList)
-		throws Exception;
-
-	public Response deletePriceList(Long id) throws Exception;
-
-	public Response deletePriceListBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public PriceList getPriceList(Long id) throws Exception;
-
-	public Response patchPriceList(Long id, PriceList priceList)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -106,7 +111,8 @@ public interface PriceListResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -131,19 +137,23 @@ public interface PriceListResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

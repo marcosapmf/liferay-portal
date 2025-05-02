@@ -19,8 +19,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -59,7 +57,7 @@ public class NavigationMenu implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(NavigationMenu.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Block of actions allowed by the user making the request."
 	)
 	@Valid
@@ -106,7 +104,9 @@ public class NavigationMenu implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
-	@Schema(description = "The navigation menu's creator.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The navigation menu's creator."
+	)
 	@Valid
 	public Creator getCreator() {
 		if (_creatorSupplier != null) {
@@ -148,7 +148,9 @@ public class NavigationMenu implements Serializable {
 	@JsonIgnore
 	private Supplier<Creator> _creatorSupplier;
 
-	@Schema(description = "The navigation menu's creation date.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The navigation menu's creation date."
+	)
 	public Date getDateCreated() {
 		if (_dateCreatedSupplier != null) {
 			dateCreated = _dateCreatedSupplier.get();
@@ -189,7 +191,9 @@ public class NavigationMenu implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateCreatedSupplier;
 
-	@Schema(description = "The last time the navigation menu changed.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The last time the navigation menu changed."
+	)
 	public Date getDateModified() {
 		if (_dateModifiedSupplier != null) {
 			dateModified = _dateModifiedSupplier.get();
@@ -230,7 +234,54 @@ public class NavigationMenu implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateModifiedSupplier;
 
-	@Schema(description = "The navigation menu's ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The navigation menu's external reference code."
+	)
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCodeSupplier != null) {
+			externalReferenceCode = _externalReferenceCodeSupplier.get();
+
+			_externalReferenceCodeSupplier = null;
+		}
+
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+
+		_externalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		_externalReferenceCodeSupplier = () -> {
+			try {
+				return externalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The navigation menu's external reference code."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String externalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _externalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The navigation menu's ID."
+	)
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -269,7 +320,9 @@ public class NavigationMenu implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(description = "The navigation menu's name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The navigation menu's name."
+	)
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -308,7 +361,7 @@ public class NavigationMenu implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The list of navigation menu items this navigation menu has."
 	)
 	@Valid
@@ -357,10 +410,10 @@ public class NavigationMenu implements Serializable {
 	@JsonIgnore
 	private Supplier<NavigationMenuItem[]> _navigationMenuItemsSupplier;
 
-	@JsonGetter("navigationType")
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The navigation menu's type (primary, secondary, social)."
 	)
+	@JsonGetter("navigationType")
 	@Valid
 	public NavigationType getNavigationType() {
 		if (_navigationTypeSupplier != null) {
@@ -416,7 +469,54 @@ public class NavigationMenu implements Serializable {
 	@JsonIgnore
 	private Supplier<NavigationType> _navigationTypeSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public com.liferay.portal.vulcan.permission.Permission[] getPermissions() {
+		if (_permissionsSupplier != null) {
+			permissions = _permissionsSupplier.get();
+
+			_permissionsSupplier = null;
+		}
+
+		return permissions;
+	}
+
+	public void setPermissions(
+		com.liferay.portal.vulcan.permission.Permission[] permissions) {
+
+		this.permissions = permissions;
+
+		_permissionsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPermissions(
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.permission.Permission[], Exception>
+				permissionsUnsafeSupplier) {
+
+		_permissionsSupplier = () -> {
+			try {
+				return permissionsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected com.liferay.portal.vulcan.permission.Permission[] permissions;
+
+	@JsonIgnore
+	private Supplier<com.liferay.portal.vulcan.permission.Permission[]>
+		_permissionsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The ID of the site to which this navigation menu is scoped."
 	)
 	public Long getSiteId() {
@@ -547,6 +647,22 @@ public class NavigationMenu implements Serializable {
 			sb.append("\"");
 		}
 
+		String externalReferenceCode = getExternalReferenceCode();
+
+		if (externalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		Long id = getId();
 
 		if (id != null) {
@@ -613,6 +729,29 @@ public class NavigationMenu implements Serializable {
 			sb.append("\"");
 		}
 
+		com.liferay.portal.vulcan.permission.Permission[] permissions =
+			getPermissions();
+
+		if (permissions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"permissions\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < permissions.length; i++) {
+				sb.append(permissions[i]);
+
+				if ((i + 1) < permissions.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		Long siteId = getSiteId();
 
 		if (siteId != null) {
@@ -630,8 +769,8 @@ public class NavigationMenu implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.NavigationMenu",
 		name = "x-class-name"
 	)

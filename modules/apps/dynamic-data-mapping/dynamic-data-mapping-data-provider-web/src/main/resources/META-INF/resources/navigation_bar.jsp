@@ -8,6 +8,7 @@
 <%@ include file="/init.jsp" %>
 
 <clay:navigation-bar
+	cssClass="container-fluid-max-xxxl"
 	inverted="<%= true %>"
 	navigationItems="<%= ddmDataProviderDisplayContext.getNavigationItems(liferayPortletRequest, liferayPortletResponse) %>"
 />

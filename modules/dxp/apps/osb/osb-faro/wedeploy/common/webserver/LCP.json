@@ -12,10 +12,49 @@
 		},
 		"infra": {
 			"deploy": false
+		},
+		"int": {
+			"loadBalancer": {
+				"cdn": true,
+				"certs": [
+					{
+						"customDomains": [
+							"analytics-internal.liferay.com"
+						]
+					}
+				],
+				"targetPort": 80
+			}
+		},
+		"prd": {
+			"loadBalancer": {
+				"cdn": true,
+				"certs": [
+					{
+						"customDomains": [
+							"analytics.liferay.com"
+						]
+					}
+				],
+				"targetPort": 80
+			}
+		},
+		"stg": {
+			"loadBalancer": {
+				"cdn": true,
+				"certs": [
+					{
+						"customDomains": [
+							"analytics-stg.liferay.com"
+						]
+					}
+				],
+				"targetPort": 80
+			}
 		}
 	},
 	"id": "webserver",
-	"image": "liferaycloud/nginx:1.21.6-5.3.0",
+	"image": "liferaycloud/nginx:1.24.0-6.1.1",
 	"kind": "Deployment",
 	"livenessProbe": {
 		"failureThreshold": 3,
@@ -25,10 +64,6 @@
 		},
 		"initialDelaySeconds": 30,
 		"timeoutSeconds": 60
-	},
-	"loadBalancer": {
-		"cdn": true,
-		"targetPort": 80
 	},
 	"memory": 512,
 	"readinessProbe": {

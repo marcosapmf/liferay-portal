@@ -19,6 +19,9 @@ import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.headless.admin.user.client.pagination.Pagination;
 import com.liferay.headless.admin.user.client.resource.v1_0.UserGroupResource;
 import com.liferay.headless.admin.user.client.serdes.v1_0.UserGroupSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
+import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -29,10 +32,17 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -42,12 +52,18 @@ import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.net.URI;
+
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,13 +72,20 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.servlet.http.HttpServletRequest;
+
 import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -71,6 +94,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Javier Gamarra
@@ -81,12 +107,14 @@ public abstract class BaseUserGroupResourceTestCase {
 
 	@ClassRule
 	@Rule
-	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
-		new LiferayIntegrationTestRule();
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -100,10 +128,25 @@ public abstract class BaseUserGroupResourceTestCase {
 
 		_userGroupResource.setContextCompany(testCompany);
 
-		UserGroupResource.Builder builder = UserGroupResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		userGroupResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		userGroupResource = UserGroupResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -117,7 +160,32 @@ public abstract class BaseUserGroupResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		UserGroup userGroup1 = randomUserGroup();
+
+		String json = objectMapper.writeValueAsString(userGroup1);
+
+		UserGroup userGroup2 = UserGroupSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(userGroup1, userGroup2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		UserGroup userGroup = randomUserGroup();
+
+		String json1 = objectMapper.writeValueAsString(userGroup);
+		String json2 = UserGroupSerDes.toJSON(userGroup);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +200,6 @@ public abstract class BaseUserGroupResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		UserGroup userGroup1 = randomUserGroup();
-
-		String json = objectMapper.writeValueAsString(userGroup1);
-
-		UserGroup userGroup2 = UserGroupSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(userGroup1, userGroup2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		UserGroup userGroup = randomUserGroup();
-
-		String json1 = objectMapper.writeValueAsString(userGroup);
-		String json2 = UserGroupSerDes.toJSON(userGroup);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -190,78 +224,669 @@ public abstract class BaseUserGroupResourceTestCase {
 	}
 
 	@Test
-	public void testGetUserUserGroups() throws Exception {
-		Long userAccountId = testGetUserUserGroups_getUserAccountId();
-		Long irrelevantUserAccountId =
-			testGetUserUserGroups_getIrrelevantUserAccountId();
+	public void testDeleteUserGroup() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserGroup userGroup = testDeleteUserGroup_addUserGroup();
 
-		Page<UserGroup> page = userGroupResource.getUserUserGroups(
-			userAccountId);
+		assertHttpResponseStatusCode(
+			204,
+			userGroupResource.deleteUserGroupHttpResponse(userGroup.getId()));
 
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantUserAccountId != null) {
-			UserGroup irrelevantUserGroup = testGetUserUserGroups_addUserGroup(
-				irrelevantUserAccountId, randomIrrelevantUserGroup());
-
-			page = userGroupResource.getUserUserGroups(irrelevantUserAccountId);
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantUserGroup, (List<UserGroup>)page.getItems());
-			assertValid(
-				page,
-				testGetUserUserGroups_getExpectedActions(
-					irrelevantUserAccountId));
-		}
-
-		UserGroup userGroup1 = testGetUserUserGroups_addUserGroup(
-			userAccountId, randomUserGroup());
-
-		UserGroup userGroup2 = testGetUserUserGroups_addUserGroup(
-			userAccountId, randomUserGroup());
-
-		page = userGroupResource.getUserUserGroups(userAccountId);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(userGroup1, (List<UserGroup>)page.getItems());
-		assertContains(userGroup2, (List<UserGroup>)page.getItems());
-		assertValid(
-			page, testGetUserUserGroups_getExpectedActions(userAccountId));
-
-		userGroupResource.deleteUserGroup(userGroup1.getId());
-
-		userGroupResource.deleteUserGroup(userGroup2.getId());
+		assertHttpResponseStatusCode(
+			404, userGroupResource.getUserGroupHttpResponse(userGroup.getId()));
+		assertHttpResponseStatusCode(
+			404, userGroupResource.getUserGroupHttpResponse(0L));
 	}
 
-	protected Map<String, Map<String, String>>
-			testGetUserUserGroups_getExpectedActions(Long userAccountId)
+	protected UserGroup testDeleteUserGroup_addUserGroup() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteUserGroup() throws Exception {
+
+		// No namespace
+
+		UserGroup userGroup1 = testGraphQLDeleteUserGroup_addUserGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteUserGroup",
+						new HashMap<String, Object>() {
+							{
+								put("userGroupId", userGroup1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteUserGroup"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"userGroup",
+					new HashMap<String, Object>() {
+						{
+							put("userGroupId", userGroup1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		UserGroup userGroup2 = testGraphQLDeleteUserGroup_addUserGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"deleteUserGroup",
+							new HashMap<String, Object>() {
+								{
+									put("userGroupId", userGroup2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+				"Object/deleteUserGroup"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessAdminUser_v1_0",
+					new GraphQLField(
+						"userGroup",
+						new HashMap<String, Object>() {
+							{
+								put("userGroupId", userGroup2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected UserGroup testGraphQLDeleteUserGroup_addUserGroup()
 		throws Exception {
 
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
+		return testGraphQLUserGroup_addUserGroup();
 	}
 
-	protected UserGroup testGetUserUserGroups_addUserGroup(
-			Long userAccountId, UserGroup userGroup)
+	@Test
+	public void testDeleteUserGroupBatch() throws Exception {
+		UserGroup userGroup1 = testDeleteUserGroupBatch_addUserGroup();
+
+		testDeleteUserGroupBatch_deleteUserGroup(
+			"COMPLETED", null, userGroup1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupHttpResponse(userGroup1.getId()));
+
+		UserGroup userGroup2 = testDeleteUserGroupBatch_addUserGroup();
+
+		testDeleteUserGroupBatch_deleteUserGroup(
+			"COMPLETED", userGroup2.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupHttpResponse(userGroup2.getId()));
+
+		userGroup1 = testDeleteUserGroupBatch_addUserGroup();
+		userGroup2 = testDeleteUserGroupBatch_addUserGroup();
+
+		testDeleteUserGroupBatch_deleteUserGroup(
+			"COMPLETED", userGroup2.getExternalReferenceCode(),
+			userGroup1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupHttpResponse(userGroup1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			userGroupResource.getUserGroupHttpResponse(userGroup2.getId()));
+
+		testDeleteUserGroupBatch_deleteUserGroup(
+			"COMPLETED", userGroup2.getExternalReferenceCode(),
+			userGroup1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupHttpResponse(userGroup2.getId()));
+	}
+
+	protected UserGroup testDeleteUserGroupBatch_addUserGroup()
+		throws Exception {
+
+		return testDeleteUserGroup_addUserGroup();
+	}
+
+	protected void testDeleteUserGroupBatch_deleteUserGroup(
+			String expectedExecuteStatus, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			userGroupResource.deleteUserGroupBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(202, httpResponse.getStatusCode());
+
+		waitForFinish(
+			expectedExecuteStatus,
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteUserGroupByExternalReferenceCode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserGroup userGroup =
+			testDeleteUserGroupByExternalReferenceCode_addUserGroup();
+
+		assertHttpResponseStatusCode(
+			204,
+			userGroupResource.
+				deleteUserGroupByExternalReferenceCodeHttpResponse(
+					userGroup.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupByExternalReferenceCodeHttpResponse(
+				userGroup.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.getUserGroupByExternalReferenceCodeHttpResponse(
+				"-"));
+	}
+
+	protected UserGroup
+			testDeleteUserGroupByExternalReferenceCode_addUserGroup()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Long testGetUserUserGroups_getUserAccountId() throws Exception {
+	@Test
+	public void testDeleteUserGroupByExternalReferenceCodeUsers()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserGroup userGroup =
+			testDeleteUserGroupByExternalReferenceCodeUsers_addUserGroup();
+
+		assertHttpResponseStatusCode(
+			204,
+			userGroupResource.
+				deleteUserGroupByExternalReferenceCodeUsersHttpResponse(
+					userGroup.getExternalReferenceCode(), null));
+	}
+
+	protected UserGroup
+			testDeleteUserGroupByExternalReferenceCodeUsers_addUserGroup()
+		throws Exception {
+
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Long testGetUserUserGroups_getIrrelevantUserAccountId()
+	@Test
+	public void testDeleteUserGroupUsers() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserGroup userGroup = testDeleteUserGroupUsers_addUserGroup();
+
+		assertHttpResponseStatusCode(
+			204,
+			userGroupResource.deleteUserGroupUsersHttpResponse(
+				userGroup.getId(), null));
+	}
+
+	protected UserGroup testDeleteUserGroupUsers_addUserGroup()
 		throws Exception {
 
-		return null;
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetUserGroup() throws Exception {
+		UserGroup postUserGroup = testGetUserGroup_addUserGroup();
+
+		UserGroup getUserGroup = userGroupResource.getUserGroup(
+			postUserGroup.getId());
+
+		assertEquals(postUserGroup, getUserGroup);
+		assertValid(getUserGroup);
+	}
+
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		UserGroup postUserGroup = testGetUserGroup_addUserGroup();
+
+		UserGroup getUserGroup = userGroupResource.getUserGroup(
+			postUserGroup.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.headless.admin.user.dto.v1_0.UserGroup"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(postUserGroup.getId());
+
+		assertEquals(getUserGroup, UserGroupSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
+	}
+
+	protected UserGroup testGetUserGroup_addUserGroup() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetUserGroup() throws Exception {
+		UserGroup userGroup = testGraphQLGetUserGroup_addUserGroup();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				userGroup,
+				UserGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"userGroup",
+								new HashMap<String, Object>() {
+									{
+										put("userGroupId", userGroup.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/userGroup"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				userGroup,
+				UserGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"userGroup",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"userGroupId",
+												userGroup.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/userGroup"))));
+	}
+
+	@Test
+	public void testGraphQLGetUserGroupNotFound() throws Exception {
+		Long irrelevantUserGroupId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"userGroup",
+						new HashMap<String, Object>() {
+							{
+								put("userGroupId", irrelevantUserGroupId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"userGroup",
+							new HashMap<String, Object>() {
+								{
+									put("userGroupId", irrelevantUserGroupId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected UserGroup testGraphQLGetUserGroup_addUserGroup()
+		throws Exception {
+
+		return testGraphQLUserGroup_addUserGroup();
+	}
+
+	@Test
+	public void testGetUserGroupByExternalReferenceCode() throws Exception {
+		UserGroup postUserGroup =
+			testGetUserGroupByExternalReferenceCode_addUserGroup();
+
+		UserGroup getUserGroup =
+			userGroupResource.getUserGroupByExternalReferenceCode(
+				postUserGroup.getExternalReferenceCode());
+
+		assertEquals(postUserGroup, getUserGroup);
+		assertValid(getUserGroup);
+	}
+
+	protected UserGroup testGetUserGroupByExternalReferenceCode_addUserGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetUserGroupByExternalReferenceCode()
+		throws Exception {
+
+		UserGroup userGroup =
+			testGraphQLGetUserGroupByExternalReferenceCode_addUserGroup();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				userGroup,
+				UserGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"userGroupByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												userGroup.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/userGroupByExternalReferenceCode"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				userGroup,
+				UserGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"userGroupByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													userGroup.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/userGroupByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetUserGroupByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"userGroupByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"userGroupByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected UserGroup
+			testGraphQLGetUserGroupByExternalReferenceCode_addUserGroup()
+		throws Exception {
+
+		return testGraphQLUserGroup_addUserGroup();
 	}
 
 	@Test
@@ -380,10 +1005,10 @@ public abstract class BaseUserGroupResourceTestCase {
 
 	@Test
 	public void testGetUserGroupsPageWithPagination() throws Exception {
-		Page<UserGroup> userGroupPage = userGroupResource.getUserGroupsPage(
+		Page<UserGroup> userGroupsPage = userGroupResource.getUserGroupsPage(
 			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(userGroupPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(userGroupsPage.getTotalCount());
 
 		UserGroup userGroup1 = testGetUserGroupsPage_addUserGroup(
 			randomUserGroup());
@@ -661,185 +1286,105 @@ public abstract class BaseUserGroupResourceTestCase {
 	}
 
 	@Test
-	public void testPostUserGroup() throws Exception {
-		UserGroup randomUserGroup = randomUserGroup();
+	public void testGetUserUserGroups() throws Exception {
+		Long userAccountId = testGetUserUserGroups_getUserAccountId();
+		Long irrelevantUserAccountId =
+			testGetUserUserGroups_getIrrelevantUserAccountId();
 
-		UserGroup postUserGroup = testPostUserGroup_addUserGroup(
-			randomUserGroup);
+		Page<UserGroup> page = userGroupResource.getUserUserGroups(
+			userAccountId);
 
-		assertEquals(randomUserGroup, postUserGroup);
-		assertValid(postUserGroup);
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantUserAccountId != null) {
+			UserGroup irrelevantUserGroup = testGetUserUserGroups_addUserGroup(
+				irrelevantUserAccountId, randomIrrelevantUserGroup());
+
+			page = userGroupResource.getUserUserGroups(irrelevantUserAccountId);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantUserGroup, (List<UserGroup>)page.getItems());
+			assertValid(
+				page,
+				testGetUserUserGroups_getExpectedActions(
+					irrelevantUserAccountId));
+		}
+
+		UserGroup userGroup1 = testGetUserUserGroups_addUserGroup(
+			userAccountId, randomUserGroup());
+
+		UserGroup userGroup2 = testGetUserUserGroups_addUserGroup(
+			userAccountId, randomUserGroup());
+
+		page = userGroupResource.getUserUserGroups(userAccountId);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(userGroup1, (List<UserGroup>)page.getItems());
+		assertContains(userGroup2, (List<UserGroup>)page.getItems());
+		assertValid(
+			page, testGetUserUserGroups_getExpectedActions(userAccountId));
+
+		userGroupResource.deleteUserGroup(userGroup1.getId());
+
+		userGroupResource.deleteUserGroup(userGroup2.getId());
 	}
 
-	protected UserGroup testPostUserGroup_addUserGroup(UserGroup userGroup)
+	protected Map<String, Map<String, String>>
+			testGetUserUserGroups_getExpectedActions(Long userAccountId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected UserGroup testGetUserUserGroups_addUserGroup(
+			Long userAccountId, UserGroup userGroup)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
+	protected Long testGetUserUserGroups_getUserAccountId() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetUserUserGroups_getIrrelevantUserAccountId()
+		throws Exception {
+
+		return null;
+	}
+
 	@Test
-	public void testDeleteUserGroupByExternalReferenceCode() throws Exception {
+	public void testPatchUserGroup() throws Exception {
+		UserGroup postUserGroup = testPatchUserGroup_addUserGroup();
+
+		UserGroup randomPatchUserGroup = randomPatchUserGroup();
+
 		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup =
-			testDeleteUserGroupByExternalReferenceCode_addUserGroup();
+		UserGroup patchUserGroup = userGroupResource.patchUserGroup(
+			postUserGroup.getId(), randomPatchUserGroup);
 
-		assertHttpResponseStatusCode(
-			204,
-			userGroupResource.
-				deleteUserGroupByExternalReferenceCodeHttpResponse(
-					userGroup.getExternalReferenceCode()));
+		UserGroup expectedPatchUserGroup = postUserGroup.clone();
 
-		assertHttpResponseStatusCode(
-			404,
-			userGroupResource.getUserGroupByExternalReferenceCodeHttpResponse(
-				userGroup.getExternalReferenceCode()));
+		BeanTestUtil.copyProperties(
+			randomPatchUserGroup, expectedPatchUserGroup);
 
-		assertHttpResponseStatusCode(
-			404,
-			userGroupResource.getUserGroupByExternalReferenceCodeHttpResponse(
-				userGroup.getExternalReferenceCode()));
-	}
+		UserGroup getUserGroup = userGroupResource.getUserGroup(
+			patchUserGroup.getId());
 
-	protected UserGroup
-			testDeleteUserGroupByExternalReferenceCode_addUserGroup()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetUserGroupByExternalReferenceCode() throws Exception {
-		UserGroup postUserGroup =
-			testGetUserGroupByExternalReferenceCode_addUserGroup();
-
-		UserGroup getUserGroup =
-			userGroupResource.getUserGroupByExternalReferenceCode(
-				postUserGroup.getExternalReferenceCode());
-
-		assertEquals(postUserGroup, getUserGroup);
+		assertEquals(expectedPatchUserGroup, getUserGroup);
 		assertValid(getUserGroup);
 	}
 
-	protected UserGroup testGetUserGroupByExternalReferenceCode_addUserGroup()
-		throws Exception {
-
+	protected UserGroup testPatchUserGroup_addUserGroup() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetUserGroupByExternalReferenceCode()
-		throws Exception {
-
-		UserGroup userGroup =
-			testGraphQLGetUserGroupByExternalReferenceCode_addUserGroup();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				userGroup,
-				UserGroupSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"userGroupByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												userGroup.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/userGroupByExternalReferenceCode"))));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertTrue(
-			equals(
-				userGroup,
-				UserGroupSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessAdminUser_v1_0",
-								new GraphQLField(
-									"userGroupByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													userGroup.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-						"Object/userGroupByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetUserGroupByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"userGroupByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessAdminUser_v1_0",
-						new GraphQLField(
-							"userGroupByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected UserGroup
-			testGraphQLGetUserGroupByExternalReferenceCode_addUserGroup()
-		throws Exception {
-
-		return testGraphQLUserGroup_addUserGroup();
 	}
 
 	@Test
@@ -870,6 +1415,96 @@ public abstract class BaseUserGroupResourceTestCase {
 	protected UserGroup testPatchUserGroupByExternalReferenceCode_addUserGroup()
 		throws Exception {
 
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostUserGroup() throws Exception {
+		UserGroup randomUserGroup = randomUserGroup();
+
+		UserGroup postUserGroup = testPostUserGroup_addUserGroup(
+			randomUserGroup);
+
+		assertEquals(randomUserGroup, postUserGroup);
+		assertValid(postUserGroup);
+	}
+
+	protected UserGroup testPostUserGroup_addUserGroup(UserGroup userGroup)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostUserGroupByExternalReferenceCodeUsers()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserGroup userGroup =
+			testPostUserGroupByExternalReferenceCodeUsers_addUserGroup();
+
+		assertHttpResponseStatusCode(
+			204,
+			userGroupResource.
+				postUserGroupByExternalReferenceCodeUsersHttpResponse(
+					userGroup.getExternalReferenceCode(), null));
+
+		assertHttpResponseStatusCode(
+			404,
+			userGroupResource.
+				postUserGroupByExternalReferenceCodeUsersHttpResponse(
+					userGroup.getExternalReferenceCode(), null));
+	}
+
+	protected UserGroup
+			testPostUserGroupByExternalReferenceCodeUsers_addUserGroup()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostUserGroupUsers() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		UserGroup userGroup = testPostUserGroupUsers_addUserGroup();
+
+		assertHttpResponseStatusCode(
+			204,
+			userGroupResource.postUserGroupUsersHttpResponse(
+				userGroup.getId(), null));
+
+		assertHttpResponseStatusCode(
+			404, userGroupResource.postUserGroupUsersHttpResponse(0L, null));
+	}
+
+	protected UserGroup testPostUserGroupUsers_addUserGroup() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutUserGroup() throws Exception {
+		UserGroup postUserGroup = testPutUserGroup_addUserGroup();
+
+		UserGroup randomUserGroup = randomUserGroup();
+
+		UserGroup putUserGroup = userGroupResource.putUserGroup(
+			postUserGroup.getId(), randomUserGroup);
+
+		assertEquals(randomUserGroup, putUserGroup);
+		assertValid(putUserGroup);
+
+		UserGroup getUserGroup = userGroupResource.getUserGroup(
+			putUserGroup.getId());
+
+		assertEquals(randomUserGroup, getUserGroup);
+		assertValid(getUserGroup);
+	}
+
+	protected UserGroup testPutUserGroup_addUserGroup() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
@@ -924,299 +1559,6 @@ public abstract class BaseUserGroupResourceTestCase {
 	protected UserGroup testPutUserGroupByExternalReferenceCode_addUserGroup()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteUserGroup() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup = testDeleteUserGroup_addUserGroup();
-
-		assertHttpResponseStatusCode(
-			204,
-			userGroupResource.deleteUserGroupHttpResponse(userGroup.getId()));
-
-		assertHttpResponseStatusCode(
-			404, userGroupResource.getUserGroupHttpResponse(userGroup.getId()));
-
-		assertHttpResponseStatusCode(
-			404, userGroupResource.getUserGroupHttpResponse(0L));
-	}
-
-	protected UserGroup testDeleteUserGroup_addUserGroup() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteUserGroup() throws Exception {
-
-		// No namespace
-
-		UserGroup userGroup1 = testGraphQLDeleteUserGroup_addUserGroup();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteUserGroup",
-						new HashMap<String, Object>() {
-							{
-								put("userGroupId", userGroup1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteUserGroup"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"userGroup",
-					new HashMap<String, Object>() {
-						{
-							put("userGroupId", userGroup1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		UserGroup userGroup2 = testGraphQLDeleteUserGroup_addUserGroup();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessAdminUser_v1_0",
-						new GraphQLField(
-							"deleteUserGroup",
-							new HashMap<String, Object>() {
-								{
-									put("userGroupId", userGroup2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-				"Object/deleteUserGroup"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessAdminUser_v1_0",
-					new GraphQLField(
-						"userGroup",
-						new HashMap<String, Object>() {
-							{
-								put("userGroupId", userGroup2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected UserGroup testGraphQLDeleteUserGroup_addUserGroup()
-		throws Exception {
-
-		return testGraphQLUserGroup_addUserGroup();
-	}
-
-	@Test
-	public void testGetUserGroup() throws Exception {
-		UserGroup postUserGroup = testGetUserGroup_addUserGroup();
-
-		UserGroup getUserGroup = userGroupResource.getUserGroup(
-			postUserGroup.getId());
-
-		assertEquals(postUserGroup, getUserGroup);
-		assertValid(getUserGroup);
-	}
-
-	protected UserGroup testGetUserGroup_addUserGroup() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetUserGroup() throws Exception {
-		UserGroup userGroup = testGraphQLGetUserGroup_addUserGroup();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				userGroup,
-				UserGroupSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"userGroup",
-								new HashMap<String, Object>() {
-									{
-										put("userGroupId", userGroup.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/userGroup"))));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertTrue(
-			equals(
-				userGroup,
-				UserGroupSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessAdminUser_v1_0",
-								new GraphQLField(
-									"userGroup",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"userGroupId",
-												userGroup.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
-						"Object/userGroup"))));
-	}
-
-	@Test
-	public void testGraphQLGetUserGroupNotFound() throws Exception {
-		Long irrelevantUserGroupId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"userGroup",
-						new HashMap<String, Object>() {
-							{
-								put("userGroupId", irrelevantUserGroupId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessAdminUser_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessAdminUser_v1_0",
-						new GraphQLField(
-							"userGroup",
-							new HashMap<String, Object>() {
-								{
-									put("userGroupId", irrelevantUserGroupId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected UserGroup testGraphQLGetUserGroup_addUserGroup()
-		throws Exception {
-
-		return testGraphQLUserGroup_addUserGroup();
-	}
-
-	@Test
-	public void testPatchUserGroup() throws Exception {
-		UserGroup postUserGroup = testPatchUserGroup_addUserGroup();
-
-		UserGroup randomPatchUserGroup = randomPatchUserGroup();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup patchUserGroup = userGroupResource.patchUserGroup(
-			postUserGroup.getId(), randomPatchUserGroup);
-
-		UserGroup expectedPatchUserGroup = postUserGroup.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchUserGroup, expectedPatchUserGroup);
-
-		UserGroup getUserGroup = userGroupResource.getUserGroup(
-			patchUserGroup.getId());
-
-		assertEquals(expectedPatchUserGroup, getUserGroup);
-		assertValid(getUserGroup);
-	}
-
-	protected UserGroup testPatchUserGroup_addUserGroup() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutUserGroup() throws Exception {
-		UserGroup postUserGroup = testPutUserGroup_addUserGroup();
-
-		UserGroup randomUserGroup = randomUserGroup();
-
-		UserGroup putUserGroup = userGroupResource.putUserGroup(
-			postUserGroup.getId(), randomUserGroup);
-
-		assertEquals(randomUserGroup, putUserGroup);
-		assertValid(putUserGroup);
-
-		UserGroup getUserGroup = userGroupResource.getUserGroup(
-			putUserGroup.getId());
-
-		assertEquals(randomUserGroup, getUserGroup);
-		assertValid(getUserGroup);
-	}
-
-	protected UserGroup testPutUserGroup_addUserGroup() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteUserGroupUsers() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup = testDeleteUserGroupUsers_addUserGroup();
-
-		assertHttpResponseStatusCode(
-			204,
-			userGroupResource.deleteUserGroupUsersHttpResponse(
-				userGroup.getId(), null));
-	}
-
-	protected UserGroup testDeleteUserGroupUsers_addUserGroup()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPostUserGroupUsers() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UserGroup userGroup = testPostUserGroupUsers_addUserGroup();
-
-		assertHttpResponseStatusCode(
-			204,
-			userGroupResource.postUserGroupUsersHttpResponse(
-				userGroup.getId(), null));
-
-		assertHttpResponseStatusCode(
-			404, userGroupResource.postUserGroupUsersHttpResponse(0L, null));
-	}
-
-	protected UserGroup testPostUserGroupUsers_addUserGroup() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
@@ -1297,6 +1639,14 @@ public abstract class BaseUserGroupResourceTestCase {
 	protected void assertValid(UserGroup userGroup) throws Exception {
 		boolean valid = true;
 
+		if (userGroup.getDateCreated() == null) {
+			valid = false;
+		}
+
+		if (userGroup.getDateModified() == null) {
+			valid = false;
+		}
+
 		if (userGroup.getId() == null) {
 			valid = false;
 		}
@@ -1306,6 +1656,14 @@ public abstract class BaseUserGroupResourceTestCase {
 
 			if (Objects.equals("actions", additionalAssertFieldName)) {
 				if (userGroup.getActions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("creator", additionalAssertFieldName)) {
+				if (userGroup.getCreator() == null) {
 					valid = false;
 				}
 
@@ -1332,6 +1690,32 @@ public abstract class BaseUserGroupResourceTestCase {
 
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (userGroup.getName() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("permissions", additionalAssertFieldName)) {
+				if (userGroup.getPermissions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("roleBriefs", additionalAssertFieldName)) {
+				if (userGroup.getRoleBriefs() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"userAccountBriefs", additionalAssertFieldName)) {
+
+				if (userGroup.getUserAccountBriefs() == null) {
 					valid = false;
 				}
 
@@ -1473,6 +1857,38 @@ public abstract class BaseUserGroupResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("creator", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						userGroup1.getCreator(), userGroup2.getCreator())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("dateCreated", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						userGroup1.getDateCreated(),
+						userGroup2.getDateCreated())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("dateModified", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						userGroup1.getDateModified(),
+						userGroup2.getDateModified())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("description", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						userGroup1.getDescription(),
@@ -1510,6 +1926,41 @@ public abstract class BaseUserGroupResourceTestCase {
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						userGroup1.getName(), userGroup2.getName())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("permissions", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						userGroup1.getPermissions(),
+						userGroup2.getPermissions())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("roleBriefs", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						userGroup1.getRoleBriefs(),
+						userGroup2.getRoleBriefs())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"userAccountBriefs", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						userGroup1.getUserAccountBriefs(),
+						userGroup2.getUserAccountBriefs())) {
 
 					return false;
 				}
@@ -1638,6 +2089,69 @@ public abstract class BaseUserGroupResourceTestCase {
 		if (entityFieldName.equals("actions")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("creator")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("dateCreated")) {
+			if (operator.equals("between")) {
+				Date date = userGroup.getDateCreated();
+
+				sb = new StringBundler();
+
+				sb.append("(");
+				sb.append(entityFieldName);
+				sb.append(" gt ");
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(" and ");
+				sb.append(entityFieldName);
+				sb.append(" lt ");
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(")");
+			}
+			else {
+				sb.append(entityFieldName);
+
+				sb.append(" ");
+				sb.append(operator);
+				sb.append(" ");
+
+				sb.append(_format.format(userGroup.getDateCreated()));
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("dateModified")) {
+			if (operator.equals("between")) {
+				Date date = userGroup.getDateModified();
+
+				sb = new StringBundler();
+
+				sb.append("(");
+				sb.append(entityFieldName);
+				sb.append(" gt ");
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(" and ");
+				sb.append(entityFieldName);
+				sb.append(" lt ");
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(")");
+			}
+			else {
+				sb.append(entityFieldName);
+
+				sb.append(" ");
+				sb.append(operator);
+				sb.append(" ");
+
+				sb.append(_format.format(userGroup.getDateModified()));
+			}
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("description")) {
@@ -1783,6 +2297,21 @@ public abstract class BaseUserGroupResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("permissions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("roleBriefs")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("userAccountBriefs")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("usersCount")) {
 			sb.append(String.valueOf(userGroup.getUsersCount()));
 
@@ -1834,6 +2363,8 @@ public abstract class BaseUserGroupResourceTestCase {
 	protected UserGroup randomUserGroup() throws Exception {
 		return new UserGroup() {
 			{
+				dateCreated = RandomTestUtil.nextDate();
+				dateModified = RandomTestUtil.nextDate();
 				description = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				externalReferenceCode = StringUtil.toLowerCase(
@@ -1855,7 +2386,30 @@ public abstract class BaseUserGroupResourceTestCase {
 		return randomUserGroup();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected UserGroupResource userGroupResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -1865,12 +2419,12 @@ public abstract class BaseUserGroupResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1879,11 +2433,16 @@ public abstract class BaseUserGroupResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1915,6 +2474,24 @@ public abstract class BaseUserGroupResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1936,16 +2513,6 @@ public abstract class BaseUserGroupResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -2043,10 +2610,34 @@ public abstract class BaseUserGroupResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseUserGroupResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.admin.user.resource.v1_0.UserGroupResource
 		_userGroupResource;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private ScopeChecker _scopeChecker;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	@Inject
+	private VulcanCRUDItemDelegateBuilderRegistry
+		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }

@@ -98,11 +98,7 @@ public abstract class BaseBuild implements Build {
 
 		BaseBuild baseBuild = (BaseBuild)object;
 
-		if (Objects.equals(getBuildURL(), baseBuild.getBuildURL())) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getBuildURL(), baseBuild.getBuildURL());
 	}
 
 	@Override
@@ -301,7 +297,7 @@ public abstract class BaseBuild implements Build {
 			sb.append("C:");
 		}
 
-		sb.append("/tmp/jenkins/");
+		sb.append("/opt/dev/projects/github/.tmp/jenkins/");
 
 		JenkinsMaster jenkinsMaster = getJenkinsMaster();
 
@@ -454,8 +450,8 @@ public abstract class BaseBuild implements Build {
 		}
 
 		if (_jenkinsConsoleTextLoader == null) {
-			_jenkinsConsoleTextLoader = new JenkinsConsoleTextLoader(
-				getBuildURL(), this instanceof TopLevelBuild);
+			_jenkinsConsoleTextLoader = JenkinsConsoleTextLoader.getInstance(
+				getBuildURL());
 		}
 
 		return _jenkinsConsoleTextLoader.getConsoleText();
@@ -561,10 +557,15 @@ public abstract class BaseBuild implements Build {
 
 				String className = clazz.getName();
 
+				StringBuilder sb = new StringBuilder();
+
+				sb.append("Unable to get failure message from " + className);
+				sb.append(className);
+				sb.append("\n");
+				sb.append(getBuildURL());
+
 				NotificationUtil.sendEmail(
-					"Failure message generator exception, class name is: " +
-						className,
-					"Notification Util", "Failure Message Generator",
+					sb.toString(), "jenkins", "Unable to get failure message",
 					"calum.ragan@liferay.com");
 			}
 		}
@@ -1114,19 +1115,28 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public StopWatchRecordsGroup getStopWatchRecordsGroup() {
-		if (!Objects.equals(getStatus(), "completed")) {
-			_stopWatchRecordsGroup = null;
+		if (!(this instanceof TopLevelBuild)) {
+			if (!Objects.equals(getStatus(), "completed")) {
+				_stopWatchRecordsGroup = null;
+
+				return new StopWatchRecordsGroup();
+			}
+
+			if (_stopWatchRecordsGroup != null) {
+				return _stopWatchRecordsGroup;
+			}
+		}
+
+		String consoleText = getConsoleText();
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(consoleText)) {
+			System.out.println(
+				"Console text for " + getBuildName() + " is null or empty");
 
 			return new StopWatchRecordsGroup();
 		}
 
-		if (_stopWatchRecordsGroup != null) {
-			return _stopWatchRecordsGroup;
-		}
-
 		_stopWatchRecordsGroup = new StopWatchRecordsGroup();
-
-		String consoleText = getConsoleText();
 
 		for (String line : consoleText.split("\n")) {
 			Matcher matcher = stopWatchStartTimestampPattern.matcher(line);
@@ -1137,6 +1147,12 @@ public abstract class BaseBuild implements Build {
 				try {
 					timestamp = stopWatchTimestampSimpleDateFormat.parse(
 						matcher.group("timestamp"));
+				}
+				catch (NumberFormatException numberFormatException) {
+					System.out.println(
+						"Unable to parse " + matcher.group("timestamp"));
+
+					continue;
 				}
 				catch (ParseException parseException) {
 					throw new RuntimeException(
@@ -1432,8 +1448,37 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public boolean hasMaximumInvocationCount() {
-		if (_invocations.size() >= _MAXIMUM_INVOCATION_COUNT) {
+		if (_invocations.size() >= _getMaximumInvocationCount()) {
 			return true;
+		}
+
+		Map<ReinvokeRule, Integer> invocationCounts = new HashMap<>();
+
+		for (Invocation invocation : _invocations) {
+			ReinvokeRule reinvokeRule = invocation.getReinvokeRule();
+
+			if (reinvokeRule == null) {
+				continue;
+			}
+
+			Integer invocationCount = invocationCounts.getOrDefault(
+				reinvokeRule, 0);
+
+			invocationCount++;
+
+			invocationCounts.put(reinvokeRule, invocationCount);
+		}
+
+		for (Map.Entry<ReinvokeRule, Integer> entry :
+				invocationCounts.entrySet()) {
+
+			ReinvokeRule reinvokeRule = entry.getKey();
+
+			Integer invocationCount = entry.getValue();
+
+			if (invocationCount > reinvokeRule.getMaximumInvocationCount()) {
+				return true;
+			}
 		}
 
 		return false;
@@ -1466,11 +1511,7 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public boolean isFailing() {
-		if (!Objects.equals(getResult(), "SUCCESS")) {
-			return true;
-		}
-
-		return false;
+		return !Objects.equals(getResult(), "SUCCESS");
 	}
 
 	@Override
@@ -1550,7 +1591,13 @@ public abstract class BaseBuild implements Build {
 	public void reset() {
 		consoleReadCursor = 0;
 		_duration = null;
+
+		if (_jenkinsConsoleTextLoader != null) {
+			_jenkinsConsoleTextLoader.deleteCacheFile();
+		}
+
 		_jenkinsConsoleTextLoader = null;
+
 		_jenkinsMaster = null;
 		_jenkinsSlave = null;
 		_result = null;
@@ -2256,7 +2303,7 @@ public abstract class BaseBuild implements Build {
 			if (status.equals("missing")) {
 				sb.append(" is missing ");
 				sb.append(getJobURL());
-				sb.append(".");
+				sb.append("/.");
 
 				return sb.toString();
 			}
@@ -2264,7 +2311,7 @@ public abstract class BaseBuild implements Build {
 			if (status.equals("queued")) {
 				sb.append(" is queued at ");
 				sb.append(getJobURL());
-				sb.append(".");
+				sb.append("/.");
 
 				return sb.toString();
 			}
@@ -2310,7 +2357,7 @@ public abstract class BaseBuild implements Build {
 
 				sb.append(" invoked at ");
 				sb.append(jobURL);
-				sb.append(".");
+				sb.append("/.");
 
 				return sb.toString();
 			}
@@ -2983,12 +3030,6 @@ public abstract class BaseBuild implements Build {
 
 	protected static final int PIXELS_WIDTH_INDENT = 35;
 
-	protected static final String URL_BASE_FAILURES_JOB_UPSTREAM =
-		"https://test-1-0.liferay.com/userContent/testResults/";
-
-	protected static final String URL_BASE_TEMP_MAP =
-		"http://cloud-10-0-0-31.lax.liferay.com/osb-jenkins-web/map/";
-
 	protected static final Pattern jobNamePattern = Pattern.compile(
 		"(?<baseJob>[^\\(]+)\\((?<branchName>[^\\)]+)\\)");
 	protected static final Pattern stopWatchPattern = Pattern.compile(
@@ -3116,7 +3157,19 @@ public abstract class BaseBuild implements Build {
 	}
 
 	private void _archiveConsoleLog() {
-		_archive(getConsoleText(), true, "consoleText");
+		if (!Objects.equals(getStatus(), "completed") ||
+			JenkinsResultsParserUtil.isNullOrEmpty(getConsoleText())) {
+
+			return;
+		}
+
+		File archiveFile = getArchiveFile("consoleText");
+
+		if (archiveFile.exists()) {
+			return;
+		}
+
+		_jenkinsConsoleTextLoader.moveCacheFileToArchiveFile(archiveFile);
 	}
 
 	private void _archiveMarkerFile() {
@@ -3127,6 +3180,24 @@ public abstract class BaseBuild implements Build {
 
 	private void _archiveTestReportJSON() {
 		_archive(null, false, "testReport/api/json");
+	}
+
+	private int _getMaximumInvocationCount() {
+		try {
+			Properties properties =
+				JenkinsResultsParserUtil.getBuildProperties();
+
+			String propertyName = "build.max.invocation.count";
+
+			if (properties.containsKey(propertyName)) {
+				return Integer.parseInt(properties.getProperty(propertyName));
+			}
+		}
+		catch (IOException ioException) {
+			System.out.println("Unable to load \"build.max.invocation.count\"");
+		}
+
+		return _MAXIMUM_INVOCATION_COUNT;
 	}
 
 	private List<Element> _getStopWatchRecordTableRowElements(
@@ -3295,11 +3366,7 @@ public abstract class BaseBuild implements Build {
 			return false;
 		}
 
-		if (oldValue.equals(newValue)) {
-			return false;
-		}
-
-		return true;
+		return !oldValue.equals(newValue);
 	}
 
 	private void _setBuildURL(String buildURL) {

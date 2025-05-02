@@ -145,7 +145,7 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 								id='<%= liferayPortletResponse.getNamespace() + "customRangeFrom" %>'
 								md="6"
 							>
-								<aui:field-wrapper label="from">
+								<aui:field-wrapper label="from" name="fromInput">
 									<liferay-ui:input-date
 										cssClass="modified-facet-custom-range-input-date-from"
 										dayParam="fromDay"
@@ -165,7 +165,7 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 								id='<%= liferayPortletResponse.getNamespace() + "customRangeTo" %>'
 								md="6"
 							>
-								<aui:field-wrapper label="to">
+								<aui:field-wrapper label="to" name="toInput">
 									<liferay-ui:input-date
 										cssClass="modified-facet-custom-range-input-date-to"
 										dayParam="toDay"
@@ -205,8 +205,8 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 		module="{FacetUtil} from portal-search-web"
 	/>
 
-	<aui:script use="liferay-search-date-facet">
-		new Liferay.Search.DateFacetFilter({
+	<aui:script use="liferay-search-custom-range-facet">
+		new Liferay.Search.CustomRangeFacet({
 			form: A.one('#<portlet:namespace />fm'),
 			fromInputName: '<portlet:namespace />fromInput',
 			namespace: '<portlet:namespace />',

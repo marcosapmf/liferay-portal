@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {API, openToast, stringUtils} from '@liferay/object-js-components-web';
+import {API, stringUtils} from '@liferay/object-js-components-web';
+import {openToast} from 'frontend-js-components-web';
 import {sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 import {useStore} from 'react-flow-renderer';
@@ -14,6 +15,7 @@ import {Scope} from '../../ObjectDetails/EditObjectDetails';
 import {EntryDisplayContainer} from '../../ObjectDetails/EntryDisplayContainer';
 import {ObjectDataContainer} from '../../ObjectDetails/ObjectDataContainer';
 import {ScopeContainer} from '../../ObjectDetails/ScopeContainer';
+import {SeoContainer} from '../../ObjectDetails/SeoContainer';
 import {TranslationsContainer} from '../../ObjectDetails/TranslationsContainer';
 import {useObjectDetailsForm} from '../../ObjectDetails/useObjectDetailsForm';
 import {useObjectFolderContext} from '../ModelBuilderContext/objectFolderContext';
@@ -163,18 +165,19 @@ export function RightSidebarObjectDefinitionDetails({
 			catch (error: unknown) {
 				const {message} = error as Error;
 
-				openToast({message, type: 'danger'});
+				openToast({autoClose: 15000, message, type: 'danger'});
 			}
 		}
 	};
 
 	const objectDefinitionNodeDetailsTitle = sub(
 		Liferay.Language.get('x-details'),
-		stringUtils.getLocalizableLabel(
-			values.defaultLanguageId as Liferay.Language.Locale,
-			values?.label,
-			values?.name
-		)
+		stringUtils.getLocalizableLabel({
+			fallbackLabel: values?.name,
+			fallbackLanguageId:
+				values.defaultLanguageId as Liferay.Language.Locale,
+			labels: values?.label,
+		})
 	);
 
 	return (
@@ -187,7 +190,6 @@ export function RightSidebarObjectDefinitionDetails({
 					<span>{objectDefinitionNodeDetailsTitle}</span>
 				</div>
 			</div>
-
 			<div className="lfr-objects__model-builder-right-sidebar-object-definition-node-content">
 				<ObjectDataContainer
 					dbTableName={
@@ -208,7 +210,6 @@ export function RightSidebarObjectDefinitionDetails({
 					values={values as ObjectDefinition}
 				/>
 			</div>
-
 			<div className="lfr-objects__model-builder-right-sidebar-object-definition-node-content">
 				<EntryDisplayContainer
 					className="lfr-objects__model-builder-right-sidebar-object-definition-entry-display-container"
@@ -243,7 +244,6 @@ export function RightSidebarObjectDefinitionDetails({
 					values={values as ObjectDefinition}
 				/>
 			</div>
-
 			{values?.modifiable && (
 				<div className="lfr-objects__model-builder-right-sidebar-object-definition-node-content">
 					<AccountRestrictionContainer
@@ -263,7 +263,6 @@ export function RightSidebarObjectDefinitionDetails({
 					/>
 				</div>
 			)}
-
 			<div className="lfr-objects__model-builder-right-sidebar-object-definition-node-content">
 				<ConfigurationContainer
 					hasUpdateObjectDefinitionPermission={
@@ -279,7 +278,6 @@ export function RightSidebarObjectDefinitionDetails({
 					values={values as ObjectDefinition}
 				/>
 			</div>
-
 			<div className="lfr-objects__model-builder-right-sidebar-object-definition-node-content">
 				<TranslationsContainer
 					onSubmit={onSubmit}
@@ -287,6 +285,15 @@ export function RightSidebarObjectDefinitionDetails({
 					values={values}
 				/>
 			</div>
+			{Liferay.FeatureFlags['LPD-21926'] && (
+				<div className="lfr-objects__model-builder-right-sidebar-object-definition-node-content">
+					<SeoContainer
+						onSubmit={onSubmit}
+						setValues={setValues}
+						values={values}
+					/>
+				</div>
+			)}
 		</>
 	);
 }

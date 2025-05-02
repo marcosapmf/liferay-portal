@@ -4,7 +4,7 @@
  */
 
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
-import {openModal} from 'frontend-js-web';
+import {openModal} from 'frontend-js-components-web';
 import React, {Dispatch, SetStateAction, useContext, useEffect} from 'react';
 
 import {EditAPIApplicationContext} from '../EditAPIApplicationContext';
@@ -49,7 +49,7 @@ export default function APISchemasTable({
 
 	const schemaAPIURLPath = getFilterRelatedItemURL({
 		apiURLPath: apiURLPaths.schemas,
-		filterQuery: `r_apiApplicationToAPISchemas_c_apiApplicationId eq '${currentAPIApplicationId}'`,
+		filterQuery: `r_apiApplicationToAPISchemas_l_apiApplicationId eq '${currentAPIApplicationId}'`,
 	});
 
 	const deleteAPISchema = (itemData: APISchemaItem, loadData: voidReturn) => {

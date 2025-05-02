@@ -218,11 +218,11 @@ public class DataDefinitionFieldUtil {
 						ddmFormFieldOptions.getOptionLabels(optionValue);
 
 					for (Locale locale : localizedValue.getAvailableLocales()) {
-						List<JSONObject> values = options.computeIfAbsent(
+						List<JSONObject> jsonObjects = options.computeIfAbsent(
 							LanguageUtil.getLanguageId(locale),
 							languageId -> new ArrayList<>());
 
-						values.add(
+						jsonObjects.add(
 							JSONUtil.put(
 								"label", localizedValue.getString(locale)
 							).put(
@@ -308,16 +308,20 @@ public class DataDefinitionFieldUtil {
 			}
 		}
 
-		if (Validator.isNotNull(customProperties.get("ddmStructureId")) &&
-			Validator.isNull(customProperties.get("ddmStructureKey"))) {
+		String ddmStructureId = GetterUtil.getString(
+			customProperties.get("ddmStructureId"));
 
+		if (Validator.isNotNull(ddmStructureId)) {
 			DDMStructure ddmStructure =
 				ddmStructureLocalService.fetchDDMStructure(
-					GetterUtil.getLong(customProperties.get("ddmStructureId")));
+					GetterUtil.getLong(ddmStructureId));
 
 			if (ddmStructure != null) {
 				customProperties.put(
 					"ddmStructureKey", ddmStructure.getStructureKey());
+				customProperties.put(
+					"externalReferenceCode",
+					ddmStructure.getExternalReferenceCode());
 			}
 		}
 

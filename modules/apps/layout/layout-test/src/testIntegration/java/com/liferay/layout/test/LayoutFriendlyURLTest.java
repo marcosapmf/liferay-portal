@@ -6,6 +6,10 @@
 package com.liferay.layout.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.friendly.url.model.FriendlyURLEntry;
+import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.layout.friendly.url.LayoutFriendlyURLEntryHelper;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.LayoutFriendlyURLException;
 import com.liferay.portal.kernel.exception.LayoutFriendlyURLsException;
@@ -15,7 +19,10 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
+import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -32,7 +39,10 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.sites.kernel.util.Sites;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +65,9 @@ public class LayoutFriendlyURLTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -389,6 +401,39 @@ public class LayoutFriendlyURLTest {
 	}
 
 	@Test
+	public void testPropagateLayoutSetPrototype() throws Exception {
+		LayoutSetPrototype layoutSetPrototype =
+			LayoutTestUtil.addLayoutSetPrototype(RandomTestUtil.randomString());
+
+		Group layoutSetPrototypeGroup = layoutSetPrototype.getGroup();
+
+		Layout layoutSetPrototypeLayout = _layoutLocalService.addLayout(
+			null, TestPropsValues.getUserId(),
+			layoutSetPrototypeGroup.getGroupId(), true,
+			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
+			RandomTestUtil.randomString(), null, null,
+			LayoutConstants.TYPE_CONTENT, false, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(
+				layoutSetPrototypeGroup.getGroupId()));
+
+		_sites.updateLayoutSetPrototypesLinks(
+			_group, layoutSetPrototype.getLayoutSetPrototypeId(), 0, true,
+			false);
+
+		_testMergeLayoutSetPrototypeLayouts(
+			_group, _group.getPublicLayoutSet(), layoutSetPrototypeLayout);
+
+		Group curGroup = GroupTestUtil.addGroup();
+
+		_sites.updateLayoutSetPrototypesLinks(
+			curGroup, 0, layoutSetPrototype.getLayoutSetPrototypeId(), false,
+			true);
+
+		_testMergeLayoutSetPrototypeLayouts(
+			curGroup, curGroup.getPrivateLayoutSet(), layoutSetPrototypeLayout);
+	}
+
+	@Test
 	public void testSameFriendlyURLDifferentLocaleDifferentLayout()
 		throws Exception {
 
@@ -570,12 +615,51 @@ public class LayoutFriendlyURLTest {
 			friendlyURLMap, serviceContext);
 	}
 
+	private void _testMergeLayoutSetPrototypeLayouts(
+			Group group, LayoutSet layoutSet, Layout layoutSetPrototypeLayout)
+		throws Exception {
+
+		_sites.mergeLayoutSetPrototypeLayouts(group, layoutSet);
+
+		Layout groupLayout = _layoutLocalService.fetchLayoutByUuidAndGroupId(
+			layoutSetPrototypeLayout.getUuid(), group.getGroupId(),
+			layoutSet.isPrivateLayout());
+
+		List<FriendlyURLEntry> friendlyURLEntries =
+			_friendlyURLEntryLocalService.getFriendlyURLEntries(
+				group.getGroupId(),
+				_layoutFriendlyURLEntryHelper.getClassNameId(
+					layoutSet.isPrivateLayout()),
+				groupLayout.getPlid());
+
+		Assert.assertEquals(
+			friendlyURLEntries.toString(), 1, friendlyURLEntries.size());
+
+		FriendlyURLEntry friendlyURLEntry = friendlyURLEntries.get(0);
+
+		Assert.assertEquals(
+			layoutSetPrototypeLayout.getFriendlyURL(),
+			friendlyURLEntry.getUrlTitle());
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutFriendlyURLTest.class);
+
+	@Inject
+	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
 
 	private Group _group;
 
 	@DeleteAfterTestRun
 	private final List<Group> _groups = new ArrayList<>();
+
+	@Inject
+	private LayoutFriendlyURLEntryHelper _layoutFriendlyURLEntryHelper;
+
+	@Inject
+	private LayoutLocalService _layoutLocalService;
+
+	@Inject
+	private Sites _sites;
 
 }

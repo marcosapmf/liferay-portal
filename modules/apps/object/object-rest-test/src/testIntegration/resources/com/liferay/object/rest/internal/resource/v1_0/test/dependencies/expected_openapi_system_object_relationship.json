@@ -1,0 +1,354 @@
+{
+	"components": {
+		"schemas": {
+			"Object1": {
+				"properties": {
+					"r_relation1ToM_userERC": {
+						"type": "string",
+						"x-parent-map": "properties"
+					},
+					"r_relation1ToM_userId": {
+						"format": "int64",
+						"readOnly": false,
+						"type": "integer",
+						"x-parent-map": "properties"
+					},
+					"relation1ToM": {
+						"description": "Information about the relationship relation1ToM can be embedded with \"nestedFields\".",
+						"type": "object"
+					},
+					"relation1ToMERC": {
+						"readOnly": true,
+						"type": "string",
+						"x-parent-map": "properties"
+					},
+					"relationMTo1": {
+						"description": "Information about the relationship relationMTo1 can be embedded with \"nestedFields\".",
+						"items": {
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"relationMToM": {
+						"description": "Information about the relationship relationMToM can be embedded with \"nestedFields\".",
+						"items": {
+							"type": "object"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object",
+				"xml": {
+					"name": "ObjectEntry"
+				}
+			},
+			"PageObject1": {
+				"properties": {
+					"actions": {
+						"additionalProperties": {
+							"additionalProperties": {
+								"type": "string"
+							},
+							"type": "object"
+						},
+						"type": "object"
+					},
+					"facets": {
+						"items": {
+							"$ref": "#/components/schemas/Facet"
+						},
+						"type": "array"
+					},
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/Object1"
+						},
+						"type": "array"
+					},
+					"lastPage": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"page": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"pageSize": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"totalCount": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"x-schema-name": {
+						"default": "PageObject1",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UserAccount": {
+				"properties": {
+					"r_relationMTo1_c_object1ERC": {
+						"type": "string"
+					},
+					"r_relationMTo1_c_object1Id": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"relation1ToM": {
+						"description": "Information about the object relationship relation1ToM can be embedded with \"nestedFields\".",
+						"items": {
+							"$ref": "#/components/schemas/Object1"
+						},
+						"type": "array"
+					},
+					"relationMTo1": {
+						"$ref": "#/components/schemas/Object1"
+					},
+					"relationMToM": {
+						"description": "Information about the object relationship relationMToM can be embedded with \"nestedFields\".",
+						"items": {
+							"$ref": "#/components/schemas/Object1"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object",
+				"xml": {
+					"name": "UserAccount"
+				}
+			}
+		}
+	},
+	"paths": {
+		"/v1.0/user-accounts/{userAccountId}/relation1ToM": {
+			"get": {
+				"operationId": "getUserAccountRelation1ToMPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "userAccountId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"UserAccount"
+				]
+			}
+		},
+		"/v1.0/user-accounts/{userAccountId}/relation1ToM/{object1Id}": {
+			"delete": {
+				"operationId": "deleteUserAccountRelation1ToM",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "userAccountId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"UserAccount"
+				]
+			},
+			"put": {
+				"operationId": "putUserAccountRelation1ToM",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "userAccountId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"UserAccount"
+				]
+			}
+		},
+		"/v1.0/user-accounts/{userAccountId}/relationMToM": {
+			"get": {
+				"operationId": "getUserAccountRelationMToMPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "userAccountId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"UserAccount"
+				]
+			}
+		},
+		"/v1.0/user-accounts/{userAccountId}/relationMToM/{object1Id}": {
+			"delete": {
+				"operationId": "deleteUserAccountRelationMToM",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "userAccountId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"UserAccount"
+				]
+			},
+			"put": {
+				"operationId": "putUserAccountRelationMToM",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "userAccountId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"UserAccount"
+				]
+			}
+		}
+	}
+}

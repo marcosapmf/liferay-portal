@@ -7,6 +7,12 @@ package com.liferay.change.tracking.internal.search.spi.model.index.contributor;
 
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTEntryLocalService;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.search.batch.BatchIndexingActionable;
 import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
@@ -40,15 +46,34 @@ public class CTEntryModelIndexerWriterContributor
 
 	@Override
 	public BatchIndexingActionable getBatchIndexingActionable() {
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			_ctEntryLocalService.getIndexableActionableDynamicQuery();
+
+		if (!CTCollectionThreadLocal.isProductionMode()) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					StringBundler.concat(
+						"Restricting indexable results of ",
+						CTEntry.class.getName(), " because this can only be ",
+						"performed in production mode"));
+			}
+
+			indexableActionableDynamicQuery.setAddCriteriaMethod(
+				dynamicQuery -> dynamicQuery.add(
+					RestrictionsFactoryUtil.eq("ctCollectionId", -1L)));
+		}
+
 		return _dynamicQueryBatchIndexingActionableFactory.
-			getBatchIndexingActionable(
-				_ctEntryLocalService.getIndexableActionableDynamicQuery());
+			getBatchIndexingActionable(indexableActionableDynamicQuery);
 	}
 
 	@Override
 	public long getCompanyId(CTEntry ctEntry) {
 		return ctEntry.getCompanyId();
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CTEntryModelIndexerWriterContributor.class);
 
 	private final CTEntryLocalService _ctEntryLocalService;
 	private final DynamicQueryBatchIndexingActionableFactory

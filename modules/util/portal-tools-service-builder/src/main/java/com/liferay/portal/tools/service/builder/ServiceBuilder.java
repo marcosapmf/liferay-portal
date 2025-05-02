@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.plugin.Version;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.ClearThreadLocalUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.IntegerWrapper;
@@ -361,13 +360,6 @@ public class ServiceBuilder {
 			}
 
 			ArgumentsUtil.processMainException(arguments, exception);
-		}
-
-		try {
-			ClearThreadLocalUtil.clearThreadLocal();
-		}
-		catch (Throwable throwable) {
-			throwable.printStackTrace();
 		}
 
 		Introspector.flushCaches();
@@ -4965,12 +4957,12 @@ public class ServiceBuilder {
 			return _configuration;
 		}
 
-		_configuration = new Configuration(Configuration.VERSION_2_3_32);
+		_configuration = new Configuration(Configuration.VERSION_2_3_33);
 
 		_configuration.setNumberFormat("computer");
 
 		DefaultObjectWrapperBuilder defaultObjectWrapperBuilder =
-			new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_32);
+			new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_33);
 
 		_configuration.setObjectWrapper(defaultObjectWrapperBuilder.build());
 
@@ -6360,6 +6352,8 @@ public class ServiceBuilder {
 		if (uuid) {
 			Element columnElement = DocumentHelper.createElement("column");
 
+			columnElement.addAttribute(
+				"change-tracking-resolution-type", "STRICT");
 			columnElement.addAttribute("name", "uuid");
 			columnElement.addAttribute("type", "String");
 
@@ -6375,6 +6369,8 @@ public class ServiceBuilder {
 		if (!StringUtil.equals(externalReferenceCode, "none")) {
 			Element columnElement = DocumentHelper.createElement("column");
 
+			columnElement.addAttribute(
+				"change-tracking-resolution-type", "STRICT");
 			columnElement.addAttribute("name", "externalReferenceCode");
 			columnElement.addAttribute("type", "String");
 
@@ -6384,6 +6380,8 @@ public class ServiceBuilder {
 		if (versioned) {
 			Element columnElement = DocumentHelper.createElement("column");
 
+			columnElement.addAttribute(
+				"change-tracking-resolution-type", "STRICT");
 			columnElement.addAttribute("name", "headId");
 			columnElement.addAttribute("type", "long");
 
@@ -6396,6 +6394,8 @@ public class ServiceBuilder {
 		if (localizedEntityElement != null) {
 			Element columnElement = DocumentHelper.createElement("column");
 
+			columnElement.addAttribute(
+				"change-tracking-resolution-type", "STRICT");
 			columnElement.addAttribute("name", "defaultLanguageId");
 			columnElement.addAttribute("type", "String");
 
@@ -6478,10 +6478,21 @@ public class ServiceBuilder {
 			boolean colJsonEnabled = GetterUtil.getBoolean(
 				columnElement.attributeValue("json-enabled"), jsonEnabled);
 
-			String changeTrackingResolutionType = "strict";
+			String changeTrackingResolutionType = "merge";
 
 			if (primary) {
 				changeTrackingResolutionType = "pk";
+			}
+			else if (columnName.equals("classNameId") ||
+					 columnName.equals("classPK") ||
+					 columnName.equals("companyId") ||
+					 columnName.equals("createDate") ||
+					 columnName.equals("creatorUserId") ||
+					 columnName.equals("groupId") ||
+					 columnName.equals("userId") ||
+					 columnName.equals("userName")) {
+
+				changeTrackingResolutionType = "strict";
 			}
 			else if (columnName.equals("modifiedDate") &&
 					 columnType.equals("Date")) {
@@ -6797,6 +6808,18 @@ public class ServiceBuilder {
 			String finderReturn = finderElement.attributeValue("return-type");
 			boolean finderUnique = GetterUtil.getBoolean(
 				finderElement.attributeValue("unique"));
+
+			if (isVersionGTE_7_4_0() &&
+				!Objects.equals(finderReturn, "Collection") && !finderUnique &&
+				ArrayUtil.contains(
+					_FORCE_UNIQUE_FINDER_PACKAGE_PATHS, _packagePath)) {
+
+				throw new IllegalArgumentException(
+					StringBundler.concat(
+						"Finder \"", finderName, "\" defined by entity \"",
+						entityName, "\" must set unique=\"true\" as its ",
+						"return type is the name of the entity"));
+			}
 
 			String finderWhere = finderElement.attributeValue("where");
 
@@ -8120,6 +8143,10 @@ public class ServiceBuilder {
 	}
 
 	private static final int _DEFAULT_COLUMN_MAX_LENGTH = 75;
+
+	private static final String[] _FORCE_UNIQUE_FINDER_PACKAGE_PATHS = {
+		"com.liferay.counter", "com.liferay.portal"
+	};
 
 	private static final String _HIBERNATE_3_HBM_NAMESPACE =
 		"\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\"";

@@ -3,11 +3,14 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Shopping Experience";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(minium = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		JSONAccountEntry.addAccountEntry(
 			accountEntryName = "Commerce Account",
@@ -16,70 +19,6 @@ definition {
 
 	tearDown {
 		CommerceConfiguration.commerceTearDown();
-	}
-
-	@description = "Verify the order time is shown in the order date when the Show Order Creation Time toggle is checked in the Placed Orders widget."
-	@priority = 3
-	test AssertDateAndTimeAreDisplayedAsOrderDate {
-		property portal.acceptance = "false";
-
-		task ("Given the Show Order Creation Time toggle is checked in the Placed Orders widget by default") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/placed-orders");
-
-			Portlet.gotoPortletOptions(
-				portletName = "Placed Orders",
-				portletOption = "Configuration");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
-
-			AssertChecked.assertCheckedNotVisible(
-				key_toggleSwitchLabel = "Show Order Create Time",
-				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
-		}
-
-		task ("And given a placed order") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
-
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			CommerceCheckout.gotoCheckoutViaMiniCart();
-
-			CommerceCheckout.initializersCheckout(
-				newAddressAddress = "Test Address",
-				newAddressCity = "Test City",
-				newAddressCountry = "United States",
-				newAddressName = "Address Name",
-				newAddressZipCode = "Test Zip Code",
-				productName = "U-Joint",
-				productQuantity = 1,
-				productUnitPrice = 24,
-				shippingMethod = "Standard");
-		}
-
-		task ("When the user views the order from the Placed Orders page") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/placed-orders");
-		}
-
-		task ("Then the order date and time is shown") {
-			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yy K", "UTC");
-
-			AssertTextEquals.assertPartialText(
-				key_orderId = "",
-				locator1 = "CommerceOrders#PLACED_ORDERS_LIST_DATE",
-				value1 = ${currentDate});
-		}
-
-		task ("When the user views the order from the placed orders details page") {
-			Button.click(button = "View");
-		}
-
-		task ("Then the order date and time is shown") {
-			AssertTextEquals.assertPartialText(
-				locator1 = "CommerceOrders#ORDER_DETAILS_DATE",
-				value1 = ${currentDate});
-		}
 	}
 
 	@description = "Verify the order time isn't shown in the order date when the Show Order Creation Time toggle is unchecked in the Placed Orders widget."
@@ -790,6 +729,8 @@ definition {
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
+			CommerceAcceleratorsInitializer.changeProductsSorting(sortingType = "Name Ascending");
+
 			FrontStore.addInitializerProductToCart(
 				productName = "Bushings",
 				productQuantity = 1);
@@ -1022,7 +963,7 @@ definition {
 			value1 = "Roma");
 
 		Select(
-			locator1 = "Select#REGION",
+			locator1 = "Select#NEW_REGION",
 			value1 = "Roma");
 
 		Type(
@@ -1092,266 +1033,6 @@ definition {
 				key_titleName = "Shipping Address",
 				locator1 = "CommerceOrders#ORDER_GENERAL_DETAILS_DESCRIPTION",
 				value1 = ${address});
-		}
-	}
-
-	@description = "Verify the order time is shown in the order date when the Show Order Creation Time checkbox is checked in global settings."
-	@priority = 3
-	test GlobalSettingsForOrderDateConfiguration {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
-		property portal.acceptance = "false";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Given a buyer user connected to the Commerce Account") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("And given the Show Order Creation Time checkbox is checked by default in global settings") {
-			SystemSettings.openSystemSettingsAdmin();
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "Orders",
-				configurationName = "Placed Orders",
-				configurationScope = "Widget Scope");
-
-			AssertChecked.assertCheckedNotVisible(
-				checkboxName = "Show Order Create Time",
-				locator1 = "Checkbox#ANY_CHECKBOX");
-		}
-
-		task ("And given the buyer has placed an order") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			CommerceCheckout.gotoCheckoutViaMiniCart();
-
-			CommerceCheckout.initializersCheckout(
-				newAddressAddress = "Test Address",
-				newAddressCity = "Test City",
-				newAddressCountry = "United States",
-				newAddressName = "Address Name",
-				newAddressZipCode = "Test Zip Code",
-				productName = "U-Joint",
-				productQuantity = 1,
-				productUnitPrice = 24,
-				shippingMethod = "Standard");
-		}
-
-		task ("When the buyer views the order from the placed orders details page") {
-			Button.click(button = "Go to Order Details");
-		}
-
-		task ("Then the order date and time is shown") {
-			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yy K", "UTC");
-
-			AssertTextEquals.assertPartialText(
-				locator1 = "CommerceOrders#ORDER_DETAILS_DATE",
-				value1 = ${currentDate});
-		}
-
-		task ("Given the Show Order Creation Time checkbox is unchecked in global settings") {
-			User.logoutAndLoginPG();
-
-			SystemSettings.openSystemSettingsAdmin();
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "Orders",
-				configurationName = "Placed Orders",
-				configurationScope = "Widget Scope");
-
-			Uncheck.uncheckNotVisible(
-				checkboxName = "Show Order Create Time",
-				locator1 = "Checkbox#ANY_CHECKBOX");
-
-			Button.clickSave();
-
-			Alert.viewSuccessMessage();
-		}
-
-		task ("When the buyer views the order from the placed orders details page") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/placed-orders");
-
-			Button.click(button = "View");
-		}
-
-		task ("Then the order date is shown without the time") {
-			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yy", "UTC");
-
-			AssertTextEquals(
-				locator1 = "CommerceOrders#ORDER_DETAILS_DATE",
-				value1 = ${currentDate});
-		}
-	}
-
-	@description = "Verify the order date formats shown in the Placed Orders list and details pages are localized."
-	@priority = 3
-	test LocalDateFormat {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
-		property osgi.module.configuration.file.names = "com.liferay.commerce.order.content.web.internal.portlet.configuration.CommerceOrderContentPortletInstanceConfiguration.config";
-		property osgi.module.configurations = "showCommerceOrderCreateTime=\"false\"";
-		property portal.acceptance = "false";
-
-		task ("Given a buyer user connected to the Commerce Account") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("And given a Language Selector widget is added to the Catalog page") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
-
-			Portlet.addPGCmd(portletName = "Language Selector");
-		}
-
-		task ("And given the buyer has placed an order") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			CommerceCheckout.gotoCheckoutViaMiniCart();
-
-			CommerceCheckout.initializersCheckout(
-				newAddressAddress = "Test Address",
-				newAddressCity = "Test City",
-				newAddressCountry = "United States",
-				newAddressName = "Address Name",
-				newAddressZipCode = "Test Zip Code",
-				productName = "U-Joint",
-				productQuantity = 1,
-				productUnitPrice = 24,
-				shippingMethod = "Standard");
-		}
-
-		task ("And given the buyer changes the language to Hungarian") {
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
-
-			LanguagePortlet.selectLanguagePG(
-				locale = "hu-HU",
-				textIcon = "magyar-Magyarország");
-		}
-
-		task ("When the buyer views the order from the Placed Orders page") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/placed-orders");
-		}
-
-		task ("Then the order date is shown in yyyy.MM.dd. format") {
-			var currentDate = DateUtil.getFormattedCurrentDate("yyyy.MM.dd.", "UTC");
-
-			AssertTextEquals(
-				key_orderId = "",
-				locator1 = "CommerceOrders#PLACED_ORDERS_LIST_DATE",
-				value1 = ${currentDate});
-		}
-
-		task ("When the buyer views the order from the placed orders details page") {
-			Button.click(button = "Megtekintés");
-		}
-
-		task ("Then the order date is shown in yyyy.MM.dd. format") {
-			AssertTextEquals(
-				locator1 = "CommerceOrders#ORDER_DETAILS_DATE",
-				value1 = ${currentDate});
-		}
-
-		task ("Given the buyer changes the language to German") {
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
-
-			LanguagePortlet.selectLanguagePG(
-				locale = "de-DE",
-				textIcon = "deutsch-Deutschland");
-		}
-
-		task ("When the buyer views the order from the Placed Orders page") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/placed-orders");
-		}
-
-		task ("Then the order date is shown in dd.MM.yyyy format") {
-			var currentDate = DateUtil.getFormattedCurrentDate("dd.MM.yyyy", "UTC");
-
-			AssertTextEquals(
-				key_orderId = "",
-				locator1 = "CommerceOrders#PLACED_ORDERS_LIST_DATE",
-				value1 = ${currentDate});
-		}
-
-		task ("When the buyer views the order from the placed orders details page") {
-			Button.click(button = "Aufruf");
-		}
-
-		task ("Then the order date is shown in dd.MM.yyyy format") {
-			AssertTextEquals(
-				locator1 = "CommerceOrders#ORDER_DETAILS_DATE",
-				value1 = ${currentDate});
-		}
-
-		task ("Given the buyer changes the language to English") {
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
-
-			LanguagePortlet.selectLanguagePG(
-				locale = "en_US",
-				textIcon = "english-United States");
-		}
-
-		task ("When the buyer views the order from the Placed Orders page") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/placed-orders");
-		}
-
-		task ("Then the order date is shown in MMM d, yy format") {
-			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yy", "UTC");
-
-			AssertTextEquals(
-				key_orderId = "",
-				locator1 = "CommerceOrders#PLACED_ORDERS_LIST_DATE",
-				value1 = ${currentDate});
-		}
-
-		task ("When the buyer views the order from the placed orders details page") {
-			Button.click(button = "View");
-		}
-
-		task ("Then the order date is shown in MMM d, yy format") {
-			AssertTextEquals(
-				locator1 = "CommerceOrders#ORDER_DETAILS_DATE",
-				value1 = ${currentDate});
 		}
 	}
 
@@ -1608,11 +1289,11 @@ definition {
 			key_orderAuthor = "Commerce Account",
 			locator1 = "CommerceAccelerators#ORDERS_ENTRY_VIEW_BUTTON");
 
-		ClickNoError(
-			key_entryName = "U-Joint",
-			locator1 = "CommerceEntry#ENTRY_NAME_BODY_VERTICAL_ELLIPSIS");
+		Click(
+			key_value = "U-Joint",
+			locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VERTICAL_ELLIPSIS");
 
-		CommerceEntry.clickNoError(menuItem = "Shipments");
+		MenuItem.click(menuItem = "Shipments");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 

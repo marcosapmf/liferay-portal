@@ -149,14 +149,21 @@ public class MBCategoryStagedModelDataHandler
 		MBCategory importedCategory = null;
 
 		if (portletDataContext.isDataStrategyMirror()) {
-			MBCategory existingCategory = fetchStagedModelByUuidAndGroupId(
-				category.getUuid(), portletDataContext.getScopeGroupId());
+			MBCategory existingCategory =
+				_mbCategoryLocalService.fetchMBCategoryByExternalReferenceCode(
+					category.getExternalReferenceCode(),
+					portletDataContext.getScopeGroupId());
+
+			if (existingCategory == null) {
+				existingCategory = fetchStagedModelByUuidAndGroupId(
+					category.getUuid(), portletDataContext.getScopeGroupId());
+			}
 
 			if (existingCategory == null) {
 				serviceContext.setUuid(category.getUuid());
 
 				importedCategory = _mbCategoryLocalService.addCategory(
-					userId, parentCategoryId, category.getName(),
+					null, userId, parentCategoryId, category.getName(),
 					category.getDescription(), category.getDisplayStyle(),
 					emailAddress, inProtocol, inServerName, inServerPort,
 					inUseSSL, inUserName, inPassword, inReadInterval,
@@ -178,7 +185,7 @@ public class MBCategoryStagedModelDataHandler
 		}
 		else {
 			importedCategory = _mbCategoryLocalService.addCategory(
-				userId, parentCategoryId, category.getName(),
+				null, userId, parentCategoryId, category.getName(),
 				category.getDescription(), category.getDisplayStyle(),
 				emailAddress, inProtocol, inServerName, inServerPort, inUseSSL,
 				inUserName, inPassword, inReadInterval, outEmailAddress,

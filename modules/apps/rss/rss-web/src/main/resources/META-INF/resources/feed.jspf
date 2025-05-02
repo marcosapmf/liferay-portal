@@ -72,7 +72,7 @@
 												symbol="calendar"
 											/>
 
-											<span><%= dateTimeFormat.format(syndFeed.getPublishedDate()) %></span>
+											<span><%= dateTimeFormat.format(syndEntry.getPublishedDate()) %></span>
 										</div>
 									</c:if>
 

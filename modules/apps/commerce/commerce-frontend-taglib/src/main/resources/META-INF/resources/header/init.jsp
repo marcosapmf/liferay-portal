@@ -18,8 +18,8 @@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
 <%@ page import="com.liferay.commerce.constants.CommercePortletKeys" %><%@
+page import="com.liferay.commerce.frontend.helper.HeaderHelperUtil" %><%@
 page import="com.liferay.commerce.frontend.model.HeaderActionModel" %><%@
-page import="com.liferay.commerce.frontend.util.HeaderHelperUtil" %><%@
 page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
@@ -55,7 +55,6 @@ long displayBeanId = (long)request.getAttribute("liferay-commerce:header:display
 List<DropdownItem> dropdownItems = (List<DropdownItem>)request.getAttribute("liferay-commerce:header:dropdownItems");
 String externalReferenceCode = (String)request.getAttribute("liferay-commerce:header:externalReferenceCode");
 String externalReferenceCodeEditUrl = (String)request.getAttribute("liferay-commerce:header:externalReferenceCodeEditUrl");
-boolean fullWidth = (boolean)request.getAttribute("liferay-commerce:header:fullWidth");
 Class<?> model = (Class<?>)request.getAttribute("liferay-commerce:header:model");
 String previewUrl = (String)request.getAttribute("liferay-commerce:header:previewUrl");
 String thumbnailUrl = (String)request.getAttribute("liferay-commerce:header:thumbnailUrl");

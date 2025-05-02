@@ -64,10 +64,10 @@ public class AccountEntryPermission {
 
 		if (contains(
 				permissionChecker, accountEntryId,
-				AccountActionKeys.EDIT_ORGANIZATIONS) ||
+				AccountActionKeys.MANAGE_ORGANIZATIONS) ||
 			contains(
 				permissionChecker, accountEntryId,
-				AccountActionKeys.MANAGE_ORGANIZATIONS)) {
+				AccountActionKeys.UPDATE_ORGANIZATIONS)) {
 
 			return true;
 		}

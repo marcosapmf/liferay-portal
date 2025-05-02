@@ -5,9 +5,11 @@
 
 package com.liferay.headless.commerce.delivery.order.client.serdes.v1_0;
 
+import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.Attachment;
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.PlacedOrder;
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.PlacedOrderComment;
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.PlacedOrderItem;
+import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.Step;
 import com.liferay.headless.commerce.delivery.order.client.json.BaseJSONParser;
 
 import java.text.DateFormat;
@@ -76,6 +78,26 @@ public class PlacedOrderSerDes {
 			sb.append("\"accountId\": ");
 
 			sb.append(placedOrder.getAccountId());
+		}
+
+		if (placedOrder.getAttachments() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"attachments\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < placedOrder.getAttachments().length; i++) {
+				sb.append(String.valueOf(placedOrder.getAttachments()[i]));
+
+				if ((i + 1) < placedOrder.getAttachments().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (placedOrder.getAuthor() != null) {
@@ -189,6 +211,20 @@ public class PlacedOrderSerDes {
 			sb.append("\"");
 		}
 
+		if (placedOrder.getFriendlyURLSeparator() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"friendlyURLSeparator\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrder.getFriendlyURLSeparator()));
+
+			sb.append("\"");
+		}
+
 		if (placedOrder.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -252,6 +288,20 @@ public class PlacedOrderSerDes {
 			sb.append("\"orderStatusInfo\": ");
 
 			sb.append(String.valueOf(placedOrder.getOrderStatusInfo()));
+		}
+
+		if (placedOrder.getOrderType() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"orderType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrder.getOrderType()));
+
+			sb.append("\"");
 		}
 
 		if (placedOrder.getOrderTypeExternalReferenceCode() != null) {
@@ -467,6 +517,16 @@ public class PlacedOrderSerDes {
 			sb.append("\"");
 		}
 
+		if (placedOrder.getShipments() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"shipments\": ");
+
+			sb.append(String.valueOf(placedOrder.getShipments()));
+		}
+
 		if (placedOrder.getShippingMethod() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -507,6 +567,26 @@ public class PlacedOrderSerDes {
 			sb.append(_escape(placedOrder.getStatus()));
 
 			sb.append("\"");
+		}
+
+		if (placedOrder.getSteps() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"steps\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < placedOrder.getSteps().length; i++) {
+				sb.append(String.valueOf(placedOrder.getSteps()[i]));
+
+				if ((i + 1) < placedOrder.getSteps().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (placedOrder.getSummary() != null) {
@@ -585,6 +665,14 @@ public class PlacedOrderSerDes {
 			map.put("accountId", String.valueOf(placedOrder.getAccountId()));
 		}
 
+		if (placedOrder.getAttachments() == null) {
+			map.put("attachments", null);
+		}
+		else {
+			map.put(
+				"attachments", String.valueOf(placedOrder.getAttachments()));
+		}
+
 		if (placedOrder.getAuthor() == null) {
 			map.put("author", null);
 		}
@@ -649,6 +737,15 @@ public class PlacedOrderSerDes {
 				String.valueOf(placedOrder.getExternalReferenceCode()));
 		}
 
+		if (placedOrder.getFriendlyURLSeparator() == null) {
+			map.put("friendlyURLSeparator", null);
+		}
+		else {
+			map.put(
+				"friendlyURLSeparator",
+				String.valueOf(placedOrder.getFriendlyURLSeparator()));
+		}
+
 		if (placedOrder.getId() == null) {
 			map.put("id", null);
 		}
@@ -689,6 +786,13 @@ public class PlacedOrderSerDes {
 			map.put(
 				"orderStatusInfo",
 				String.valueOf(placedOrder.getOrderStatusInfo()));
+		}
+
+		if (placedOrder.getOrderType() == null) {
+			map.put("orderType", null);
+		}
+		else {
+			map.put("orderType", String.valueOf(placedOrder.getOrderType()));
 		}
 
 		if (placedOrder.getOrderTypeExternalReferenceCode() == null) {
@@ -832,6 +936,13 @@ public class PlacedOrderSerDes {
 				String.valueOf(placedOrder.getPurchaseOrderNumber()));
 		}
 
+		if (placedOrder.getShipments() == null) {
+			map.put("shipments", null);
+		}
+		else {
+			map.put("shipments", String.valueOf(placedOrder.getShipments()));
+		}
+
 		if (placedOrder.getShippingMethod() == null) {
 			map.put("shippingMethod", null);
 		}
@@ -855,6 +966,13 @@ public class PlacedOrderSerDes {
 		}
 		else {
 			map.put("status", String.valueOf(placedOrder.getStatus()));
+		}
+
+		if (placedOrder.getSteps() == null) {
+			map.put("steps", null);
+		}
+		else {
+			map.put("steps", String.valueOf(placedOrder.getSteps()));
 		}
 
 		if (placedOrder.getSummary() == null) {
@@ -912,6 +1030,9 @@ public class PlacedOrderSerDes {
 			else if (Objects.equals(jsonParserFieldName, "accountId")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "attachments")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "author")) {
 				return false;
 			}
@@ -938,6 +1059,11 @@ public class PlacedOrderSerDes {
 
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "friendlyURLSeparator")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				return false;
 			}
@@ -953,6 +1079,9 @@ public class PlacedOrderSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "orderStatusInfo")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "orderType")) {
 				return false;
 			}
 			else if (Objects.equals(
@@ -1022,6 +1151,9 @@ public class PlacedOrderSerDes {
 
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "shipments")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "shippingMethod")) {
 				return false;
 			}
@@ -1029,6 +1161,9 @@ public class PlacedOrderSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "status")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "steps")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "summary")) {
@@ -1063,6 +1198,22 @@ public class PlacedOrderSerDes {
 				if (jsonParserFieldValue != null) {
 					placedOrder.setAccountId(
 						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "attachments")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					Attachment[] attachmentsArray =
+						new Attachment[jsonParserFieldValues.length];
+
+					for (int i = 0; i < attachmentsArray.length; i++) {
+						attachmentsArray[i] = AttachmentSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					placedOrder.setAttachments(attachmentsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "author")) {
@@ -1112,6 +1263,14 @@ public class PlacedOrderSerDes {
 						(String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "friendlyURLSeparator")) {
+
+				if (jsonParserFieldValue != null) {
+					placedOrder.setFriendlyURLSeparator(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					placedOrder.setId(
@@ -1141,6 +1300,11 @@ public class PlacedOrderSerDes {
 				if (jsonParserFieldValue != null) {
 					placedOrder.setOrderStatusInfo(
 						StatusSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "orderType")) {
+				if (jsonParserFieldValue != null) {
+					placedOrder.setOrderType((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(
@@ -1279,6 +1443,12 @@ public class PlacedOrderSerDes {
 						(String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "shipments")) {
+				if (jsonParserFieldValue != null) {
+					placedOrder.setShipments(
+						ShipmentSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "shippingMethod")) {
 				if (jsonParserFieldValue != null) {
 					placedOrder.setShippingMethod((String)jsonParserFieldValue);
@@ -1292,6 +1462,21 @@ public class PlacedOrderSerDes {
 			else if (Objects.equals(jsonParserFieldName, "status")) {
 				if (jsonParserFieldValue != null) {
 					placedOrder.setStatus((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "steps")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					Step[] stepsArray = new Step[jsonParserFieldValues.length];
+
+					for (int i = 0; i < stepsArray.length; i++) {
+						stepsArray[i] = StepSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					placedOrder.setSteps(stepsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "summary")) {
@@ -1363,6 +1548,10 @@ public class PlacedOrderSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

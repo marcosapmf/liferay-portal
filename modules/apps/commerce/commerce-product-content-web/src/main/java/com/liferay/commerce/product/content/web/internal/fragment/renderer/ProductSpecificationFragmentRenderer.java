@@ -111,7 +111,7 @@ public class ProductSpecificationFragmentRenderer implements FragmentRenderer {
 			InfoDisplayWebKeys.INFO_ITEM);
 
 		try {
-			if ((infoItem == null) || !(infoItem instanceof CPDefinition)) {
+			if (!(infoItem instanceof CPDefinition)) {
 				if (_isEditMode(httpServletRequest)) {
 					_printPortletMessageInfo(
 						httpServletRequest, httpServletResponse,
@@ -198,6 +198,22 @@ public class ProductSpecificationFragmentRenderer implements FragmentRenderer {
 						fragmentRendererContext.getFragmentEntryLink(),
 						"valueElementType")));
 
+			if (cpDefinitionSpecificationOptionValue != null) {
+				CPSpecificationOption cpSpecificationOption =
+					cpDefinitionSpecificationOptionValue.
+						getCPSpecificationOption();
+
+				httpServletRequest.setAttribute(
+					"liferay-commerce:product-specification:visible",
+					cpDefinitionSpecificationOptionValue.isVisible() &&
+					cpSpecificationOption.isVisible());
+			}
+			else {
+				httpServletRequest.setAttribute(
+					"liferay-commerce:product-specification:visible",
+					Boolean.FALSE);
+			}
+
 			requestDispatcher.include(httpServletRequest, httpServletResponse);
 		}
 		catch (Exception exception) {
@@ -221,11 +237,7 @@ public class ProductSpecificationFragmentRenderer implements FragmentRenderer {
 		String layoutMode = ParamUtil.getString(
 			originalHttpServletRequest, "p_l_mode", Constants.VIEW);
 
-		if (layoutMode.equals(Constants.EDIT)) {
-			return true;
-		}
-
-		return false;
+		return layoutMode.equals(Constants.EDIT);
 	}
 
 	private void _printPortletMessageInfo(

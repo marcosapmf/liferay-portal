@@ -18,6 +18,8 @@ import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelModifiedDateComparator;
+import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -32,7 +34,6 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileShortcut;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -96,18 +97,11 @@ public class FileShortcutStagedModelDataHandler
 	public List<FileShortcut> fetchStagedModelsByUuidAndCompanyId(
 		String uuid, long companyId) {
 
-		List<DLFileShortcut> dlFileShortcuts =
+		return TransformUtil.transform(
 			_dlFileShortcutLocalService.getDLFileShortcutsByUuidAndCompanyId(
 				uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				new StagedModelModifiedDateComparator<>());
-
-		List<FileShortcut> fileShortcuts = new ArrayList<>();
-
-		for (DLFileShortcut dlFileShortcut : dlFileShortcuts) {
-			fileShortcuts.add(new LiferayFileShortcut(dlFileShortcut));
-		}
-
-		return fileShortcuts;
+				new StagedModelModifiedDateComparator<>()),
+			dlFileShortcut -> new LiferayFileShortcut(dlFileShortcut));
 	}
 
 	@Override
@@ -196,16 +190,23 @@ public class FileShortcutStagedModelDataHandler
 
 		if (portletDataContext.isDataStrategyMirror()) {
 			FileShortcut existingFileShortcut =
-				fetchStagedModelByUuidAndGroupId(
+				_fetchFileShortcutByExternalReferenceCode(
+					fileShortcut.getExternalReferenceCode(),
+					portletDataContext.getScopeGroupId());
+
+			if (existingFileShortcut == null) {
+				existingFileShortcut = fetchStagedModelByUuidAndGroupId(
 					fileShortcut.getUuid(),
 					portletDataContext.getScopeGroupId());
+			}
 
 			if (existingFileShortcut == null) {
 				serviceContext.setUuid(fileShortcut.getUuid());
 
 				importedFileShortcut = _dlAppLocalService.addFileShortcut(
-					userId, groupId, folderId,
-					importedFileEntry.getFileEntryId(), serviceContext);
+					fileShortcut.getExternalReferenceCode(), userId, groupId,
+					folderId, importedFileEntry.getFileEntryId(),
+					serviceContext);
 			}
 			else {
 				importedFileShortcut = _dlAppLocalService.updateFileShortcut(
@@ -215,8 +216,8 @@ public class FileShortcutStagedModelDataHandler
 		}
 		else {
 			importedFileShortcut = _dlAppLocalService.addFileShortcut(
-				userId, groupId, folderId, importedFileEntry.getFileEntryId(),
-				serviceContext);
+				null, userId, groupId, folderId,
+				importedFileEntry.getFileEntryId(), serviceContext);
 		}
 
 		portletDataContext.importClassedModel(
@@ -268,6 +269,34 @@ public class FileShortcutStagedModelDataHandler
 
 			return null;
 		}
+	}
+
+	private FileShortcut _fetchFileShortcutByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		DLFileShortcut dlFileShortcut =
+			_dlFileShortcutLocalService.
+				fetchDLFileShortcutByExternalReferenceCode(
+					externalReferenceCode, groupId);
+
+		if (dlFileShortcut == null) {
+			if (_log.isDebugEnabled()) {
+				StringBundler sb = new StringBundler(6);
+
+				sb.append("No DLFileShortcut exists with the key {");
+				sb.append("externalReferenceCode=");
+				sb.append(externalReferenceCode);
+				sb.append(", groupId=");
+				sb.append(groupId);
+				sb.append("}");
+
+				_log.debug(sb.toString());
+			}
+
+			return null;
+		}
+
+		return new LiferayFileShortcut(dlFileShortcut);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

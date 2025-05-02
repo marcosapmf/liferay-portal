@@ -16,6 +16,7 @@ import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
@@ -23,6 +24,7 @@ import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -109,7 +111,8 @@ public interface CommerceChannelRelLocalService
 	 * @param commerceChannelRel the commerce channel rel
 	 * @return the commerce channel rel that was removed
 	 */
-	@Indexable(type = IndexableType.DELETE)
+	@Indexable(type = IndexableType.REINDEX)
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public CommerceChannelRel deleteCommerceChannelRel(
 		CommerceChannelRel commerceChannelRel);
 
@@ -223,14 +226,6 @@ public interface CommerceChannelRelLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<CommerceChannelRel> getCommerceChannelCountries(
-		long commerceChannelId, String name, int start, int end);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getCommerceChannelCountriesCount(
-		long commerceChannelId, String name);
-
 	/**
 	 * Returns the commerce channel rel with the primary key.
 	 *
@@ -287,6 +282,22 @@ public interface CommerceChannelRelLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getCommerceChannelRelsCount(
 		String className, long classPK, String name);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceChannelRel> getCommerceCurrencyCommerceChannelRels(
+		long commerceChannelId, String name, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getCommerceCurrencyCommerceChannelRelsCount(
+		long commerceChannelId, String name);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceChannelRel> getCountryCommerceChannelRels(
+		long commerceChannelId, String name, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getCountryCommerceChannelRelsCount(
+		long commerceChannelId, String name);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();

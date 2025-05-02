@@ -15,7 +15,7 @@
 
 <tr>
 	<td>FRAGMENT_TEXT_IN_COLLECTION_DISPLAY</td>
-	<td>//section[contains(@id,'content')]//div[starts-with(@class,'row')][${row}]/div[contains(@class,'col')][not(.//label)][${column}]//*[not(contains(@class,'tbar'))][normalize-space(text())]</td>
+	<td>//div[contains(@id,'content')]//div[starts-with(@class,'row')][${row}]/div[contains(@class,'col')][not(.//label)][${column}]//*[not(contains(@class,'tbar'))][normalize-space(text())]</td>
 	<td></td>
 </tr>
 <tr>
@@ -139,7 +139,7 @@
 </tr>
 <tr>
 	<td>NO_COLLECTION_SELECTED_MESSAGE</td>
-	<td>//div[@data-name='${key_fragmentName}']//div[contains(@class,'page-editor__collection__message')][normalize-space(text())='${key_messageInfo}']</td>
+	<td>//div[@data-name='${key_fragmentName}']//p[contains(@class,'page-editor__no-fragments-state__message')][normalize-space(text())='${key_messageInfo}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -366,7 +366,7 @@
 </tr>
 <tr>
 	<td>FRAGMENT_BACKGROUND_IMAGE</td>
-	<td>xpath=(//div[contains(@style,'background-image')])[${index}][contains(@style,'${image}')]</td>
+	<td>xpath=(//div[contains(@style,'background-image')])[${index}][contains(@style,'${image}')] | //div/style[contains(text(),'${image}')]</td>
 	<td></td>
 </tr>
 

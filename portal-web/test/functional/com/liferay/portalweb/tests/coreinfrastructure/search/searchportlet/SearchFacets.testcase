@@ -2,7 +2,7 @@
 definition {
 
 	property portal.release = "true";
-	property portal.suite.search.engine = "elasticsearch7";
+	property portal.suite.search.engine = "elasticsearch7,opensearch2";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Web Search";
 
@@ -197,7 +197,7 @@ definition {
 					locator1 = "WCEditWebContent#TEXT_INPUT",
 					value1 = "Liferay ${order}");
 
-				PortletEntry.publish();
+				WebContent.publishWithPermissions();
 			}
 		}
 
@@ -521,7 +521,7 @@ definition {
 			customHeading = "Title");
 
 		SearchFacets.updateFacetConfiguration(
-			displayTemplate = "Compact Layout",
+			displayTemplate = "Compact Layout (Multiselect)",
 			portletName = "Custom Facet");
 
 		Refresh();
@@ -549,7 +549,7 @@ definition {
 			locator1 = "Search#CLEAR_FACET_BUTTON");
 
 		SearchFacets.updateFacetConfiguration(
-			displayTemplate = "Label Layout",
+			displayTemplate = "Label Layout (Multiselect)",
 			portletName = "Custom Facet");
 
 		Refresh();
@@ -1287,7 +1287,7 @@ definition {
 
 		SearchFacets.updateFacetConfiguration(
 			portletName = "Custom Facet",
-			sortOption = "Term Frequency Ascending");
+			sortOption = "Frequency Ascending");
 
 		Refresh();
 
@@ -1297,7 +1297,7 @@ definition {
 
 		SearchFacets.updateFacetConfiguration(
 			portletName = "Custom Facet",
-			sortOption = "Term Value Ascending");
+			sortOption = "Value Ascending");
 
 		Refresh();
 
@@ -1307,7 +1307,7 @@ definition {
 
 		SearchFacets.updateFacetConfiguration(
 			portletName = "Custom Facet",
-			sortOption = "Term Value Descending");
+			sortOption = "Value Descending");
 
 		Refresh();
 
@@ -1770,7 +1770,7 @@ definition {
 
 		SearchFacets.viewFacetTermsSpecificOrder(
 			facetName = "User Facet",
-			termList = "Test Test,carter braxton,john adams,jonathan franklin");
+			termList = "carter braxton,john adams,jonathan franklin,Test Test");
 
 		SearchFacets.updateFacetConfiguration(
 			portletName = "User Facet",
@@ -1780,7 +1780,7 @@ definition {
 
 		SearchFacets.viewFacetTermsSpecificOrder(
 			facetName = "User Facet",
-			termList = "jonathan franklin,john adams,carter braxton,Test Test");
+			termList = "Test Test,jonathan franklin,john adams,carter braxton");
 	}
 
 	@description = "This is a use case for LPS-194520."
@@ -1805,7 +1805,7 @@ definition {
 				structureName = "Test Structure",
 				webContentTitle = "Test Structure WebContent");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Create a basic web content article") {
@@ -1875,7 +1875,7 @@ definition {
 				structureName = "Test Structure",
 				webContentTitle = "WC Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Add the Custom Facet to the search page") {
@@ -2096,9 +2096,7 @@ definition {
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "WebContent Title 1");
 
-		WebContent.addCP(webContentTitle = "WebContent Title 1.1");
-
-		PortletEntry.publish();
+		WebContent.editCP(webContentTitleEdit = "WebContent Title 1.1");
 
 		WebContent.viewVersion(
 			version = "1.1",
@@ -2160,7 +2158,7 @@ definition {
 			webContentText = "Unlocalized text field",
 			webContentTitle = "WC Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewWithStructureCP(
 			webContentText = "Unlocalized text field",
@@ -2762,6 +2760,8 @@ definition {
 	@description = "This is a use case for LPS-185631."
 	@priority = 4
 	test ViewDefaultEmptySearchResultsAndPaginationConfiguration {
+		property custom.properties = "search.container.page.delta.values=4,20,40,60";
+
 		task ("Assert 'Show Default Empty Result Message' and 'Show Default Pagination' are checked by default within the Search Results widget configuration") {
 			SearchPage.openSearchPage();
 

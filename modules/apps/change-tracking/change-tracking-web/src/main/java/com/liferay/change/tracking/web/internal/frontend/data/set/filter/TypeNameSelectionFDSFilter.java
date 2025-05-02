@@ -8,6 +8,7 @@ package com.liferay.change.tracking.web.internal.frontend.data.set.filter;
 import com.liferay.frontend.data.set.filter.BaseSelectionFDSFilter;
 import com.liferay.frontend.data.set.filter.FDSFilter;
 import com.liferay.frontend.data.set.filter.SelectionFDSFilterItem;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,10 @@ import org.osgi.service.component.annotations.Component;
 @Component(service = FDSFilter.class)
 public class TypeNameSelectionFDSFilter extends BaseSelectionFDSFilter {
 
-	public TypeNameSelectionFDSFilter(Map<Long, String> typeNamesMap) {
+	public TypeNameSelectionFDSFilter(
+		long selectedTypeName, Map<Long, String> typeNamesMap) {
+
+		_selectedTypeName = selectedTypeName;
 		_typeNamesMap = typeNamesMap;
 	}
 
@@ -34,6 +38,28 @@ public class TypeNameSelectionFDSFilter extends BaseSelectionFDSFilter {
 	@Override
 	public String getLabel() {
 		return "types";
+	}
+
+	@Override
+	public Map<String, Object> getPreloadedData() {
+		if (_selectedTypeName == 0) {
+			return null;
+		}
+
+		List<SelectionFDSFilterItem> selectionFDSFilterItems =
+			new ArrayList<>();
+
+		for (Map.Entry<Long, String> entry : _typeNamesMap.entrySet()) {
+			if (entry.getKey() == _selectedTypeName) {
+				selectionFDSFilterItems.add(
+					new SelectionFDSFilterItem(
+						entry.getValue(), String.valueOf(entry.getKey())));
+			}
+		}
+
+		return HashMapBuilder.<String, Object>put(
+			"selectedItems", selectionFDSFilterItems
+		).build();
 	}
 
 	@Override
@@ -52,6 +78,7 @@ public class TypeNameSelectionFDSFilter extends BaseSelectionFDSFilter {
 		return selectionFDSFilterItems;
 	}
 
+	private final long _selectedTypeName;
 	private final Map<Long, String> _typeNamesMap;
 
 }

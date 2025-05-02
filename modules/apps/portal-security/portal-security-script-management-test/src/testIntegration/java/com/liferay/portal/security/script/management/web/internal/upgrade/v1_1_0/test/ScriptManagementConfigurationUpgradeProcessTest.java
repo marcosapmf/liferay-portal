@@ -77,7 +77,7 @@ public class ScriptManagementConfigurationUpgradeProcessTest {
 	}
 
 	@Test
-	public void testDoUpgradeSafeResources() throws Exception {
+	public void testUpgradeSafeResources() throws Exception {
 		try (Closeable closeable =
 				ScriptManagementConfigurationTestUtil.saveWithCloseable(true)) {
 
@@ -100,16 +100,19 @@ public class ScriptManagementConfigurationUpgradeProcessTest {
 				TestPropsValues.getUserId());
 
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-				"PublishedWorkflowDefinition", StringUtil.randomId(),
+				null, TestPropsValues.getCompanyId(),
+				TestPropsValues.getUserId(), "PublishedWorkflowDefinition",
+				StringUtil.randomId(),
 				_getContentBytes("workflow-definition-1.json"));
 
 			_workflowDefinitionManager.saveWorkflowDefinition(
-				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+				null, TestPropsValues.getCompanyId(),
+				TestPropsValues.getUserId(),
 				"UnpublishedGroovyWorkflowDefinition", StringUtil.randomId(),
 				_getContentBytes("workflow-definition-2.json"));
 			_workflowDefinitionManager.saveWorkflowDefinition(
-				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+				null, TestPropsValues.getCompanyId(),
+				TestPropsValues.getUserId(),
 				"UnpublishedJavaWorkflowDefinition", StringUtil.randomId(),
 				_getContentBytes("workflow-definition-3.json"));
 		}
@@ -126,10 +129,10 @@ public class ScriptManagementConfigurationUpgradeProcessTest {
 	}
 
 	@Test
-	public void testDoUpgradeUnsafeResourceActiveGroovyObjectAction()
+	public void testUpgradeUnsafeResourceActiveGroovyObjectAction()
 		throws Exception {
 
-		_testDoUpgrade(
+		_testUpgrade(
 			() -> _addObjectAction(
 				true, StringUtil.randomId(),
 				ObjectActionExecutorConstants.KEY_GROOVY, _objectDefinition,
@@ -137,10 +140,10 @@ public class ScriptManagementConfigurationUpgradeProcessTest {
 	}
 
 	@Test
-	public void testDoUpgradeUnsafeResourceActiveGroovyObjectValidation()
+	public void testUpgradeUnsafeResourceActiveGroovyObjectValidation()
 		throws Exception {
 
-		_testDoUpgrade(
+		_testUpgrade(
 			() -> _addObjectValidationRule(
 				true, ObjectValidationRuleConstants.ENGINE_TYPE_GROOVY,
 				StringUtil.randomId(), _objectDefinition,
@@ -148,24 +151,26 @@ public class ScriptManagementConfigurationUpgradeProcessTest {
 	}
 
 	@Test
-	public void testDoUpgradeUnsafeResourcePublishedGroovyWorkflowDefinition()
+	public void testUpgradeUnsafeResourcePublishedGroovyWorkflowDefinition()
 		throws Exception {
 
-		_testDoUpgrade(
+		_testUpgrade(
 			() -> _workflowDefinitionManager.deployWorkflowDefinition(
-				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-				StringUtil.randomId(), StringUtil.randomId(),
+				null, TestPropsValues.getCompanyId(),
+				TestPropsValues.getUserId(), StringUtil.randomId(),
+				StringUtil.randomId(),
 				_getContentBytes("workflow-definition-2.json")));
 	}
 
 	@Test
-	public void testDoUpgradeUnsafeResourcePublishedJavaWorkflowDefinition()
+	public void testUpgradeUnsafeResourcePublishedJavaWorkflowDefinition()
 		throws Exception {
 
-		_testDoUpgrade(
+		_testUpgrade(
 			() -> _workflowDefinitionManager.deployWorkflowDefinition(
-				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-				StringUtil.randomId(), StringUtil.randomId(),
+				null, TestPropsValues.getCompanyId(),
+				TestPropsValues.getUserId(), StringUtil.randomId(),
+				StringUtil.randomId(),
 				_getContentBytes("workflow-definition-3.json")));
 	}
 
@@ -227,12 +232,13 @@ public class ScriptManagementConfigurationUpgradeProcessTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				userId, 0, false, true, false, false,
+				userId, 0, null, false, false, true, false, false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				false, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(),
 				Arrays.asList(
 					new TextObjectFieldBuilder(
 					).labelMap(
@@ -275,8 +281,7 @@ public class ScriptManagementConfigurationUpgradeProcessTest {
 		}
 	}
 
-	private void _testDoUpgrade(
-			UnsafeSupplier<Object, Exception> unsafeSupplier)
+	private void _testUpgrade(UnsafeSupplier<Object, Exception> unsafeSupplier)
 		throws Exception {
 
 		try (Closeable closeable =

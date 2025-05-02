@@ -13,14 +13,19 @@ import com.liferay.layout.service.base.LayoutClassedModelUsageLocalServiceBaseIm
 import com.liferay.layout.util.constants.LayoutClassedModelUsageConstants;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.mass.delete.MassDeleteCacheThreadLocal;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -75,7 +80,31 @@ public class LayoutClassedModelUsageLocalServiceImpl
 
 	@Override
 	public void deleteLayoutClassedModelUsages(long classNameId, long classPK) {
-		layoutClassedModelUsagePersistence.removeByCN_CPK(classNameId, classPK);
+		Map<Long, List<LayoutClassedModelUsage>>
+			partitionLayoutClassedModelUsages =
+				MassDeleteCacheThreadLocal.getMassDeleteCache(
+					LayoutClassedModelUsageLocalServiceImpl.class.getName() +
+						".deleteLayoutClassedModelUsages#" + classNameId,
+					() -> MapUtil.toPartitionMap(
+						layoutClassedModelUsagePersistence.findByC_CN(
+							CompanyThreadLocal.getCompanyId(), classNameId),
+						LayoutClassedModelUsage::getClassPK));
+
+		if (partitionLayoutClassedModelUsages == null) {
+			layoutClassedModelUsagePersistence.removeByCN_CPK(
+				classNameId, classPK);
+
+			return;
+		}
+
+		List<LayoutClassedModelUsage> layoutClassedModelUsages =
+			partitionLayoutClassedModelUsages.remove(classPK);
+
+		ListUtil.isNotEmptyForEach(
+			layoutClassedModelUsages,
+			layoutClassedModelUsage ->
+				layoutClassedModelUsagePersistence.remove(
+					layoutClassedModelUsage));
 	}
 
 	@Override

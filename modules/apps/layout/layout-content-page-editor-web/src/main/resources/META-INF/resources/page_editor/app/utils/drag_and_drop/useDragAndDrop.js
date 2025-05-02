@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {openToast, throttle} from 'frontend-js-web';
+import {throttle} from 'frontend-js-web';
 import React, {
 	useCallback,
 	useContext,
@@ -16,18 +16,18 @@ import React, {
 import {useDrag, useDrop} from 'react-dnd';
 import {getEmptyImage} from 'react-dnd-html5-backend';
 
-import {FRAGMENT_ENTRY_TYPES} from '../../config/constants/fragmentEntryTypes';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../config/constants/layoutDataItemTypes';
 import {config} from '../../config/index';
-import {
-	useCollectionItemIndex,
-	useParentToControlsId,
-	useToControlsId,
-} from '../../contexts/CollectionItemContext';
-import {useSelectItem} from '../../contexts/ControlsContext';
+import {useIsDisabledCollectionItem} from '../../contexts/CollectionItemContext';
+import {useActiveItemIds, useSelectItem} from '../../contexts/ControlsContext';
 import {useSelectorRef} from '../../contexts/StoreContext';
-import {formIsMapped} from '../formIsMapped';
-import {hasFormParent} from '../hasFormParent';
+import {useGetWidgets} from '../../contexts/WidgetsContext';
+import {isMultistepForm} from '../../utils/isMultistepForm';
+import {openFormConversionModal} from '../../utils/openFormConversionModal';
+import {getFormParent} from '../getFormParent';
+import {isMovementValid} from '../isMovementValid';
+import isStepper from '../isStepper';
+import toMovementItem from '../toMovementItem';
 import {DRAG_DROP_TARGET_TYPE} from './constants/dragDropTargetType';
 import defaultComputeHover from './defaultComputeHover';
 import getDropData from './getDropData';
@@ -36,6 +36,10 @@ export const initialDragDrop = {
 	canDrag: true,
 
 	dispatch: null,
+
+	fragmentEntryLinksRef: {
+		current: {},
+	},
 
 	layoutDataRef: {
 		current: {
@@ -50,35 +54,29 @@ export const initialDragDrop = {
 		/**
 		 * Item that is being dragged
 		 */
-		dropItem: null,
+		dragSource: null,
 
 		/**
 		 * Target item where the item is being dragged true.
-		 * If elevate is true, dropTargetItem is the sibling
+		 * If elevate is true, dropTarget is the sibling
 		 * of drop item, otherwise is it's parent.
 		 */
-		dropTargetItem: null,
+		dropTarget: null,
 
 		/**
-		 * When false, an "invalid drop" advise should be shown
-		 * to users.
-		 */
-		droppable: true,
-
-		/**
-		 * If true, dropTargetItem is the sibling of dropItem
+		 * If true, dropTarget is the sibling of dragSource
 		 * and targetPosition determines the item index.
 		 */
 		elevate: false,
 
 		/**
-		 * Vertical position relative to dropTargetItem
+		 * Vertical position relative to dropTarget
 		 * (bottom, middle, top)
 		 */
 		targetPositionWithMiddle: null,
 
 		/**
-		 * Vertical position relative to dropTargetItem
+		 * Vertical position relative to dropTarget
 		 * (bottom, top)
 		 */
 		targetPositionWithoutMiddle: null,
@@ -96,17 +94,13 @@ export const initialDragDrop = {
 const DragAndDropContext = React.createContext(initialDragDrop);
 
 export function useDropTargetData() {
-	const {dropTargetItem, targetPositionWithMiddle} =
+	const {dropTarget, targetPositionWithMiddle} =
 		useContext(DragAndDropContext).state;
 
 	return {
-		item: dropTargetItem,
+		item: dropTarget,
 		position: targetPositionWithMiddle,
 	};
-}
-
-export function useIsDroppable() {
-	return useContext(DragAndDropContext).state.droppable;
 }
 
 export function useSetCanDrag() {
@@ -127,19 +121,42 @@ export function NotDraggableArea({children}) {
 	);
 }
 
-export function useDragItem(sourceItem, onDragEnd, onBegin = () => {}) {
-	const {canDrag, dispatch, layoutDataRef, state} =
+export function useDragItem(source, onDragEnd, onBegin = () => {}) {
+	const {canDrag, dispatch, fragmentEntryLinksRef, layoutDataRef, state} =
 		useContext(DragAndDropContext);
+
+	const activeItemIds = useActiveItemIds();
+
 	const sourceRef = useRef(null);
 
+	const getWidgets = useGetWidgets();
+
 	const item = {
-		...sourceItem,
-		id: sourceItem.itemId,
+		...source,
+		id: source.itemId,
 		namespace: config.portletNamespace,
 	};
 
-	if (!sourceItem.origin) {
+	if (!item.origin) {
 		delete item.origin;
+	}
+
+	// Calculate sources array, take items from activeItemIds if it's multiSelection
+
+	let sources = [item];
+
+	if (activeItemIds.length > 1) {
+		sources = [
+			...activeItemIds
+				.filter((id) => layoutDataRef.current.items[id])
+				.map((id) =>
+					toMovementItem(
+						id,
+						layoutDataRef.current,
+						fragmentEntryLinksRef.current
+					)
+				),
+		];
 	}
 
 	const [{isDraggingSource}, handlerRef, previewRef] = useDrag({
@@ -156,8 +173,11 @@ export function useDragItem(sourceItem, onDragEnd, onBegin = () => {}) {
 		end() {
 			computeDrop({
 				dispatch,
+				fragmentEntryLinksRef,
+				getWidgets,
 				layoutDataRef,
 				onDragEnd,
+				sources,
 				state,
 			});
 		},
@@ -177,26 +197,23 @@ export function useDragItem(sourceItem, onDragEnd, onBegin = () => {}) {
 }
 
 export function useDragSymbol(
-	{fragmentEntryType, icon, isWidget, label, type},
+	{fieldTypes, fragmentEntryType, icon, isWidget, label, portletId, type},
 	onDragEnd
 ) {
 	const selectItem = useSelectItem();
 
-	const sourceItem = useMemo(
-		() => ({
+	const {handlerRef, isDraggingSource, sourceRef} = useDragItem(
+		{
+			fieldTypes,
 			fragmentEntryType,
 			icon,
 			isSymbol: true,
 			isWidget,
 			itemId: label,
 			name: label,
+			portletId,
 			type,
-		}),
-		[fragmentEntryType, icon, isWidget, label, type]
-	);
-
-	const {handlerRef, isDraggingSource, sourceRef} = useDragItem(
-		sourceItem,
+		},
 		onDragEnd,
 		() => selectItem(null)
 	);
@@ -225,30 +242,20 @@ export function useDropClear() {
 	return dropClearRef;
 }
 
-export function useDropTarget(_targetItem, computeHover = defaultComputeHover) {
-	const collectionItemIndex = useCollectionItemIndex();
-	const toControlsId = useToControlsId();
-	const parentToControlsId = useParentToControlsId();
+export function useDropTarget(targetItem, computeHover = defaultComputeHover) {
+	const isDisabledCollectionItem = useIsDisabledCollectionItem();
 
 	const {dispatch, layoutDataRef, state, targetRefs} =
 		useContext(DragAndDropContext);
+
 	const targetRef = useRef(null);
 
-	const targetItem = useMemo(
-		() => ({
-			..._targetItem,
-			collectionItemIndex,
-			parentToControlsId,
-			toControlsId,
-		}),
-		[_targetItem, collectionItemIndex, toControlsId, parentToControlsId]
-	);
-
 	const isOverTarget =
-		state.dropTargetItem &&
+		state.dropTarget &&
 		targetItem &&
-		state.dropTargetItem.toControlsId(state.dropTargetItem.itemId) ===
-			targetItem.toControlsId(targetItem.itemId);
+		state.dropTarget.itemId === targetItem.itemId;
+
+	const coordsRef = useRef({x: 0, y: 0});
 
 	const [, setDropTargetRef] = useDrop({
 		accept: Object.values(LAYOUT_DATA_ITEM_TYPES),
@@ -256,27 +263,49 @@ export function useDropTarget(_targetItem, computeHover = defaultComputeHover) {
 			if (source.origin !== targetItem.origin) {
 				return;
 			}
+
+			const monitorCoords = monitor.getSourceClientOffset();
+
+			if (
+				coordsRef.current.x === monitorCoords.x &&
+				coordsRef.current.y === monitorCoords.y
+			) {
+				return;
+			}
+
+			coordsRef.current = monitorCoords;
+
 			computeHover({
 				dispatch,
 				layoutDataRef,
 				monitor,
 				sourceItem: source,
+				state,
 				targetItem,
 				targetRefs,
-				toControlsId,
 			});
 		},
 	});
 
 	useEffect(() => {
-		const itemId = toControlsId(targetItem.itemId);
+		const itemId = targetItem.itemId;
+
+		if (isDisabledCollectionItem) {
+			return;
+		}
 
 		targetRefs.set(itemId, targetRef);
 
 		return () => {
 			targetRefs.delete(itemId);
 		};
-	}, [layoutDataRef, targetItem, targetRef, targetRefs, toControlsId]);
+	}, [
+		isDisabledCollectionItem,
+		layoutDataRef,
+		targetItem,
+		targetRef,
+		targetRefs,
+	]);
 
 	const setTargetRef = useCallback(
 		(element) => {
@@ -289,10 +318,8 @@ export function useDropTarget(_targetItem, computeHover = defaultComputeHover) {
 
 	return {
 		isOverTarget,
-		sourceItem: state.dropItem,
-		targetItemId: state.dropTargetItem?.toControlsId(
-			state.dropTargetItem.itemId
-		),
+		sourceItem: state.dragSource,
+		targetItemId: state.dropTarget?.itemId,
 		targetPosition: state.targetPositionWithMiddle,
 		targetRef: setTargetRef,
 	};
@@ -315,18 +342,31 @@ export function DragAndDropContextProvider({children}) {
 		return throttle(reducerDispatch, 100);
 	}, [reducerDispatch]);
 
+	const fragmentEntryLinksRef = useSelectorRef(
+		(state) => state.fragmentEntryLinks
+	);
+
 	const layoutDataRef = useSelectorRef((state) => state.layoutData);
 
 	const dragAndDropContext = useMemo(
 		() => ({
 			canDrag,
 			dispatch,
+			fragmentEntryLinksRef,
 			layoutDataRef,
 			setCanDrag,
 			state,
 			targetRefs,
 		}),
-		[canDrag, dispatch, layoutDataRef, state, targetRefs, setCanDrag]
+		[
+			canDrag,
+			dispatch,
+			fragmentEntryLinksRef,
+			layoutDataRef,
+			state,
+			targetRefs,
+			setCanDrag,
+		]
 	);
 
 	return (
@@ -336,71 +376,61 @@ export function DragAndDropContextProvider({children}) {
 	);
 }
 
-function computeDrop({dispatch, layoutDataRef, onDragEnd, state}) {
-	if (!state.droppable) {
-		let message = '';
+function computeDrop({
+	dispatch,
+	fragmentEntryLinksRef,
+	getWidgets,
+	layoutDataRef,
+	onDragEnd,
+	sources,
+	state,
+}) {
+	const {dragSource, dropTarget, targetPositionWithoutMiddle} = state;
 
-		if (state.dropTargetItem.type === LAYOUT_DATA_ITEM_TYPES.dropZone) {
-			message = Liferay.Language.get(
-				'fragments-and-widgets-cannot-be-placed-inside-this-area'
-			);
-		}
-		else if (
-			state.dropTargetItem.type === LAYOUT_DATA_ITEM_TYPES.collection
-		) {
-			message = Liferay.Language.get(
-				'fragments-cannot-be-placed-inside-an-unmapped-collection-display-fragment'
-			);
-		}
-		else if (
-			state.dropTargetItem.type === LAYOUT_DATA_ITEM_TYPES.form &&
-			!formIsMapped(state.dropTargetItem)
-		) {
-			message = Liferay.Language.get(
-				'fragments-cannot-be-placed-inside-an-unmapped-form-container'
-			);
-		}
-		else if (
-			state.dropItem.fragmentEntryType === FRAGMENT_ENTRY_TYPES.input
-		) {
-			message = Liferay.Language.get(
-				'form-components-can-only-be-placed-inside-a-mapped-form-container'
-			);
-		}
-		else if (
-			state.dropItem.isWidget &&
-			hasFormParent(state.dropItem, layoutDataRef.current)
-		) {
-			message = Liferay.Language.get(
-				'widgets-cannot-be-placed-inside-a-form-container'
-			);
-		}
-		else if (state.dropItem.parentId !== state.dropTargetItem.itemId) {
-			message = Liferay.Language.get('an-unexpected-error-occurred');
-		}
-
-		if (message) {
-			openToast({
-				message,
-				type: 'danger',
-			});
-		}
-
-		dispatch(initialDragDrop.state);
-
+	if (!dragSource) {
 		return;
 	}
 
-	if (state.dropItem && state.dropTargetItem) {
-		const {dropItemId, position} = getDropData({
-			isElevation: state.elevate,
-			layoutDataRef,
-			sourceItemId: state.dropItem.itemId,
-			targetItemId: state.dropTargetItem.itemId,
-			targetPosition: state.targetPositionWithoutMiddle,
-		});
+	// Get the definitive target id where the drag source item drops
 
-		onDragEnd(dropItemId, position);
+	const {position, targetId} = getDropData({
+		isElevation: state.elevate,
+		layoutDataRef,
+		sourceItemId: dragSource.itemId,
+		targetItemId: dropTarget.itemId,
+		targetPosition: targetPositionWithoutMiddle,
+	});
+
+	if (
+		!isMovementValid({
+			fragmentEntryLinks: fragmentEntryLinksRef.current,
+			getWidgets,
+			layoutData: layoutDataRef.current,
+			onInvalid: () => dispatch(initialDragDrop.state),
+			sources,
+			targetId,
+			type: 'drop',
+		})
+	) {
+		return;
+	}
+
+	if (dragSource && dropTarget) {
+		const targetItem = layoutDataRef.current.items[targetId];
+		const formParent = getFormParent(targetItem, layoutDataRef.current);
+
+		if (
+			formParent &&
+			sources.some((item) => isStepper(item)) &&
+			!isMultistepForm(formParent)
+		) {
+			openFormConversionModal({
+				onContinue: async () => onDragEnd(targetId, position),
+			});
+		}
+		else {
+			onDragEnd(targetId, position);
+		}
 	}
 
 	dispatch(initialDragDrop.state);

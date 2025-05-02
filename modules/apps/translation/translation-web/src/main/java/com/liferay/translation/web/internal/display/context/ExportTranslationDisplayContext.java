@@ -102,28 +102,19 @@ public class ExportTranslationDisplayContext {
 			return null;
 		}
 
-		List<Map<String, String>> experiences = new ArrayList<>();
-
-		List<SegmentsExperience> segmentsExperiences =
-			_getSegmentsExperiences();
-
-		for (SegmentsExperience segmentsExperience : segmentsExperiences) {
-			experiences.add(
-				HashMapBuilder.put(
-					"label",
-					segmentsExperience.getName(_themeDisplay.getLocale())
-				).put(
-					"segment",
-					_getSegmentsEntryName(
-						segmentsExperience.getSegmentsEntryId(),
-						_themeDisplay.getLocale())
-				).put(
-					"value",
-					String.valueOf(segmentsExperience.getSegmentsExperienceId())
-				).build());
-		}
-
-		return experiences;
+		return TransformUtil.transform(
+			_getSegmentsExperiences(),
+			segmentsExperience -> HashMapBuilder.put(
+				"label", segmentsExperience.getName(_themeDisplay.getLocale())
+			).put(
+				"segment",
+				_getSegmentsEntryName(
+					segmentsExperience.getSegmentsEntryId(),
+					_themeDisplay.getLocale())
+			).put(
+				"value",
+				String.valueOf(segmentsExperience.getSegmentsExperienceId())
+			).build());
 	}
 
 	public Map<String, Object> getExportTranslationData() throws Exception {
@@ -163,7 +154,7 @@ public class ExportTranslationDisplayContext {
 		).put(
 			"pathModule", PortalUtil.getPathModule()
 		).put(
-			"redirectURL", getRedirect()
+			"redirectURL", PortalUtil.escapeRedirect(getRedirect())
 		).build();
 	}
 

@@ -30,7 +30,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -79,12 +78,12 @@ public class AccountAddressChannelResourceImpl
 				Address.class.getName(), address.getAddressId(), null,
 				pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems = _commerceChannelRelService.getCommerceChannelRelsCount(
+		int totalCount = _commerceChannelRelService.getCommerceChannelRelsCount(
 			Address.class.getName(), address.getAddressId());
 
 		return Page.of(
 			_toAccountAddressChannels(commerceChannelRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@NestedField(
@@ -108,12 +107,12 @@ public class AccountAddressChannelResourceImpl
 				Address.class.getName(), addressId, search,
 				pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems = _commerceChannelRelService.getCommerceChannelRelsCount(
+		int totalCount = _commerceChannelRelService.getCommerceChannelRelsCount(
 			Address.class.getName(), addressId, search);
 
 		return Page.of(
 			_toAccountAddressChannels(commerceChannelRel), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@Override
@@ -179,8 +178,9 @@ public class AccountAddressChannelResourceImpl
 				accountAddressChannel.getAddressChannelExternalReferenceCode();
 
 			commerceChannel =
-				_commerceChannelService.fetchByExternalReferenceCode(
-					externalReferenceCode, serviceContext.getCompanyId());
+				_commerceChannelService.
+					fetchCommerceChannelByExternalReferenceCode(
+						externalReferenceCode, serviceContext.getCompanyId());
 
 			if (commerceChannel == null) {
 				throw new NoSuchChannelException(
@@ -227,15 +227,10 @@ public class AccountAddressChannelResourceImpl
 			List<CommerceChannelRel> commerceChannelRels)
 		throws Exception {
 
-		List<AccountAddressChannel> accountAddressChannels = new ArrayList<>();
-
-		for (CommerceChannelRel commerceChannelRel : commerceChannelRels) {
-			accountAddressChannels.add(
-				_toAccountAddressChannel(
-					commerceChannelRel.getCommerceChannelRelId()));
-		}
-
-		return accountAddressChannels;
+		return transform(
+			commerceChannelRels,
+			commerceChannelRel -> _toAccountAddressChannel(
+				commerceChannelRel.getCommerceChannelRelId()));
 	}
 
 	@Reference(

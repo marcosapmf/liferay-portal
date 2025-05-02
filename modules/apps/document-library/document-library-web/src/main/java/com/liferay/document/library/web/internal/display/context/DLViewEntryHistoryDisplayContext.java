@@ -9,6 +9,7 @@ import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.util.comparator.FileVersionVersionComparator;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.User;
@@ -55,7 +56,8 @@ public class DLViewEntryHistoryDisplayContext {
 			return _backURL;
 		}
 
-		_backURL = ParamUtil.getString(_renderRequest, "backURL");
+		_backURL = ParamUtil.getString(
+			_httpServletRequest, "backURL", _getRedirect());
 
 		return _backURL;
 	}
@@ -117,11 +119,16 @@ public class DLViewEntryHistoryDisplayContext {
 		int status = _getFileEntryStatus();
 
 		searchContainer.setResultsAndTotal(
-			() -> ListUtil.sort(
-				_fileEntry.getFileVersions(
-					status, searchContainer.getStart(),
-					searchContainer.getEnd()),
-				new FileVersionVersionComparator(false)),
+			() -> {
+				List<FileVersion> fileVersions = ListUtil.sort(
+					_fileEntry.getFileVersions(
+						status, QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+					new FileVersionVersionComparator(false));
+
+				return fileVersions.subList(
+					searchContainer.getStart(),
+					Math.min(searchContainer.getEnd(), fileVersions.size()));
+			},
 			_fileEntry.getFileVersionsCount(status));
 
 		return searchContainer;

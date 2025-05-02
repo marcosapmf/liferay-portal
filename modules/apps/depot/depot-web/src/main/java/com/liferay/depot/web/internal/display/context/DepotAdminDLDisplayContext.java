@@ -8,7 +8,6 @@ package com.liferay.depot.web.internal.display.context;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.document.library.configuration.DLSizeLimitConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -51,14 +50,14 @@ public class DepotAdminDLDisplayContext {
 	}
 
 	public Map<String, Object> getFileSizePerMimeTypeData() {
-		List<Map<String, Object>> sizeList = new ArrayList<>();
+		List<Map<String, Object>> sizes = new ArrayList<>();
 
 		Map<String, Long> groupMimeTypeSizeLimit =
 			_dlSizeLimitConfigurationProvider.getGroupMimeTypeSizeLimit(
 				_depotEntry.getGroupId());
 
 		groupMimeTypeSizeLimit.forEach(
-			(mimeType, size) -> sizeList.add(
+			(mimeType, size) -> sizes.add(
 				HashMapBuilder.<String, Object>put(
 					"mimeType", mimeType
 				).put(
@@ -66,7 +65,7 @@ public class DepotAdminDLDisplayContext {
 				).build()));
 
 		return HashMapBuilder.<String, Object>put(
-			"sizeList", sizeList
+			"sizeList", sizes
 		).build();
 	}
 
@@ -91,14 +90,6 @@ public class DepotAdminDLDisplayContext {
 
 		return PropertiesParamUtil.getBoolean(
 			unicodeProperties, _httpServletRequest, "directoryIndexingEnabled");
-	}
-
-	public boolean isShowFileSizePerMimeType() {
-		if (FeatureFlagManagerUtil.isEnabled("LPS-114786")) {
-			return true;
-		}
-
-		return false;
 	}
 
 	private final DepotEntry _depotEntry;

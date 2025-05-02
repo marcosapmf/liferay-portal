@@ -283,7 +283,7 @@ public class BaseAutoDeployer implements AutoDeployer {
 			displayName = displayName.substring(1);
 		}
 
-		StringBundler sb = new StringBundler(69);
+		StringBundler sb = new StringBundler(77);
 
 		sb.append("<display-name>");
 		sb.append(displayName);
@@ -341,6 +341,15 @@ public class BaseAutoDeployer implements AutoDeployer {
 			sb.append("<taglib>");
 			sb.append("<taglib-uri>");
 			sb.append("http://xmlns.jcp.org/portlet_3_0");
+			sb.append("</taglib-uri>");
+			sb.append("<taglib-location>");
+			sb.append("/WEB-INF/tld/liferay-portlet_3_0.tld");
+			sb.append("</taglib-location>");
+			sb.append("</taglib>");
+
+			sb.append("<taglib>");
+			sb.append("<taglib-uri>");
+			sb.append("jakarta.tags.portlet");
 			sb.append("</taglib-uri>");
 			sb.append("<taglib-location>");
 			sb.append("/WEB-INF/tld/liferay-portlet.tld");
@@ -454,9 +463,6 @@ public class BaseAutoDeployer implements AutoDeployer {
 			true);
 
 		return filterMap;
-	}
-
-	public void updateDeployDirectory(File srcFile) throws Exception {
 	}
 
 	protected String auiTaglibDTD;
@@ -587,6 +593,9 @@ public class BaseAutoDeployer implements AutoDeployer {
 				DeployUtil.getResourcePath(
 					tempDirPaths, "liferay-portlet_2_0.tld"),
 				srcFile + "/WEB-INF/tld/liferay-portlet_2_0.tld");
+			FileUtil.copyFile(
+				portletTaglibDTD,
+				srcFile + "/WEB-INF/tld/liferay-portlet_3_0.tld");
 		}
 
 		if (Validator.isNotNull(portletExtTaglibDTD)) {
@@ -641,8 +650,6 @@ public class BaseAutoDeployer implements AutoDeployer {
 		if (deployDir == null) {
 			return;
 		}
-
-		updateDeployDirectory(srcFile);
 
 		FileUtil.copyDirectory(srcFile, deployDir);
 	}

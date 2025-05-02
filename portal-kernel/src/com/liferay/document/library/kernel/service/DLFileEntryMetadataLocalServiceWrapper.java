@@ -130,6 +130,16 @@ public class DLFileEntryMetadataLocalServiceWrapper
 	}
 
 	@Override
+	public void deleteFileEntryMetadataByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_dlFileEntryMetadataLocalService.
+			deleteFileEntryMetadataByExternalReferenceCode(
+				externalReferenceCode, companyId);
+	}
+
+	@Override
 	public void deleteFileVersionFileEntryMetadata(long fileVersionId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -260,6 +270,15 @@ public class DLFileEntryMetadataLocalServiceWrapper
 			fileEntryMetadataId);
 	}
 
+	@Override
+	public DLFileEntryMetadata fetchDLFileEntryMetadataByExternalReferenceCode(
+		String externalReferenceCode, long companyId) {
+
+		return _dlFileEntryMetadataLocalService.
+			fetchDLFileEntryMetadataByExternalReferenceCode(
+				externalReferenceCode, companyId);
+	}
+
 	/**
 	 * Returns the document library file entry metadata with the matching UUID and company.
 	 *
@@ -311,6 +330,16 @@ public class DLFileEntryMetadataLocalServiceWrapper
 
 		return _dlFileEntryMetadataLocalService.getDLFileEntryMetadata(
 			fileEntryMetadataId);
+	}
+
+	@Override
+	public DLFileEntryMetadata getDLFileEntryMetadataByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dlFileEntryMetadataLocalService.
+			getDLFileEntryMetadataByExternalReferenceCode(
+				externalReferenceCode, companyId);
 	}
 
 	/**
@@ -456,7 +485,7 @@ public class DLFileEntryMetadataLocalServiceWrapper
 
 	@Override
 	public void updateFileEntryMetadata(
-			long companyId,
+			String externalReferenceCode, long companyId,
 			java.util.List<com.liferay.dynamic.data.mapping.kernel.DDMStructure>
 				ddmStructures,
 			long fileEntryId, long fileVersionId,
@@ -467,13 +496,14 @@ public class DLFileEntryMetadataLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_dlFileEntryMetadataLocalService.updateFileEntryMetadata(
-			companyId, ddmStructures, fileEntryId, fileVersionId,
-			ddmFormValuesMap, serviceContext);
+			externalReferenceCode, companyId, ddmStructures, fileEntryId,
+			fileVersionId, ddmFormValuesMap, serviceContext);
 	}
 
 	@Override
 	public void updateFileEntryMetadata(
-			long fileEntryTypeId, long fileEntryId, long fileVersionId,
+			String externalReferenceCode, long fileEntryTypeId,
+			long fileEntryId, long fileVersionId,
 			java.util.Map
 				<String, com.liferay.dynamic.data.mapping.kernel.DDMFormValues>
 					ddmFormValuesMap,
@@ -481,8 +511,8 @@ public class DLFileEntryMetadataLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_dlFileEntryMetadataLocalService.updateFileEntryMetadata(
-			fileEntryTypeId, fileEntryId, fileVersionId, ddmFormValuesMap,
-			serviceContext);
+			externalReferenceCode, fileEntryTypeId, fileEntryId, fileVersionId,
+			ddmFormValuesMap, serviceContext);
 	}
 
 	@Override

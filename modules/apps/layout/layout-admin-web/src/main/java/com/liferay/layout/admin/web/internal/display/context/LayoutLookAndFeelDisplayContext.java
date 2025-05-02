@@ -17,11 +17,11 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.layout.admin.constants.LayoutScreenNavigationEntryConstants;
 import com.liferay.layout.admin.web.internal.item.selector.MasterLayoutPageTemplateEntryItemSelectorCriterion;
-import com.liferay.layout.admin.web.internal.item.selector.StyleBookEntryItemSelectorCriterion;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -44,7 +44,9 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.style.book.item.selector.StyleBookEntryItemSelectorCriterion;
 import com.liferay.style.book.model.StyleBookEntry;
+import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
 import com.liferay.style.book.util.DefaultStyleBookEntryUtil;
 
 import java.util.List;
@@ -247,26 +249,24 @@ public class LayoutLookAndFeelDisplayContext {
 	}
 
 	public String getStyleBookEntryName() {
+		StyleBookEntry styleBookEntry = null;
+
 		Layout selLayout = _layoutsAdminDisplayContext.getSelLayout();
 
-		StyleBookEntry defaultStyleBookEntry =
-			DefaultStyleBookEntryUtil.getDefaultStyleBookEntry(selLayout);
+		if (FeatureFlagManagerUtil.isEnabled(
+				selLayout.getCompanyId(), "LPD-30204")) {
 
-		if (selLayout.getStyleBookEntryId() > 0) {
-			return defaultStyleBookEntry.getName();
+			styleBookEntry = DefaultStyleBookEntryUtil.getDefaultStyleBookEntry(
+				selLayout);
+		}
+		else if (selLayout.getStyleBookEntryId() > 0) {
+			styleBookEntry = StyleBookEntryLocalServiceUtil.fetchStyleBookEntry(
+				selLayout.getStyleBookEntryId());
 		}
 
-		if (defaultStyleBookEntry == null) {
-			return LanguageUtil.get(_httpServletRequest, "styles-from-theme");
-		}
-
-		if (hasEditableMasterLayout() &&
-			(selLayout.getMasterLayoutPlid() > 0)) {
-
-			return LanguageUtil.get(_httpServletRequest, "styles-from-master");
-		}
-
-		return LanguageUtil.get(_httpServletRequest, "styles-by-default");
+		return DefaultStyleBookEntryUtil.getStyleBookEntryName(
+			_layoutsAdminDisplayContext.getSelLayout(),
+			_themeDisplay.getLocale(), styleBookEntry);
 	}
 
 	public List<TabsItem> getTabsItems() {

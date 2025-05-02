@@ -197,14 +197,9 @@ public class CPOptionDisplayContext {
 	}
 
 	public boolean isCPOptionSelectDate() {
-		if (Objects.equals(
-				CPConstants.PRODUCT_OPTION_SELECT_DATE_KEY,
-				_cpOption.getCommerceOptionTypeKey())) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			CPConstants.PRODUCT_OPTION_SELECT_DATE_KEY,
+			_cpOption.getCommerceOptionTypeKey());
 	}
 
 	protected final CPRequestHelper cpRequestHelper;
@@ -228,8 +223,8 @@ public class CPOptionDisplayContext {
 		fdsActionDropdownItems.add(
 			new FDSActionDropdownItem(
 				null, "trash", "delete",
-				LanguageUtil.get(cpRequestHelper.getRequest(), "delete"),
-				"delete", "delete", "headless"));
+				LanguageUtil.get(cpRequestHelper.getRequest(), "delete"), null,
+				"delete", null));
 
 		return fdsActionDropdownItems;
 	}

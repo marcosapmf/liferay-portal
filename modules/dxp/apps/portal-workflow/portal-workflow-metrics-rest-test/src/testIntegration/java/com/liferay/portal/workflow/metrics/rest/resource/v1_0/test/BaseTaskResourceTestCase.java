@@ -23,8 +23,9 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
@@ -42,7 +43,7 @@ import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.TaskSerDes;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,7 +82,7 @@ public abstract class BaseTaskResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -95,10 +96,15 @@ public abstract class BaseTaskResourceTestCase {
 
 		_taskResource.setContextCompany(testCompany);
 
-		TaskResource.Builder builder = TaskResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		taskResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		taskResource = TaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -112,7 +118,32 @@ public abstract class BaseTaskResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Task task1 = randomTask();
+
+		String json = objectMapper.writeValueAsString(task1);
+
+		Task task2 = TaskSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(task1, task2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Task task = randomTask();
+
+		String json1 = objectMapper.writeValueAsString(task);
+		String json2 = TaskSerDes.toJSON(task);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -127,40 +158,6 @@ public abstract class BaseTaskResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Task task1 = randomTask();
-
-		String json = objectMapper.writeValueAsString(task1);
-
-		Task task2 = TaskSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(task1, task2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Task task = randomTask();
-
-		String json1 = objectMapper.writeValueAsString(task);
-		String json2 = TaskSerDes.toJSON(task);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -191,95 +188,6 @@ public abstract class BaseTaskResourceTestCase {
 	}
 
 	@Test
-	public void testGetProcessTasksPage() throws Exception {
-		Long processId = testGetProcessTasksPage_getProcessId();
-		Long irrelevantProcessId =
-			testGetProcessTasksPage_getIrrelevantProcessId();
-
-		Page<Task> page = taskResource.getProcessTasksPage(processId);
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantProcessId != null) {
-			Task irrelevantTask = testGetProcessTasksPage_addTask(
-				irrelevantProcessId, randomIrrelevantTask());
-
-			page = taskResource.getProcessTasksPage(irrelevantProcessId);
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(irrelevantTask, (List<Task>)page.getItems());
-			assertValid(
-				page,
-				testGetProcessTasksPage_getExpectedActions(
-					irrelevantProcessId));
-		}
-
-		Task task1 = testGetProcessTasksPage_addTask(processId, randomTask());
-
-		Task task2 = testGetProcessTasksPage_addTask(processId, randomTask());
-
-		page = taskResource.getProcessTasksPage(processId);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(task1, (List<Task>)page.getItems());
-		assertContains(task2, (List<Task>)page.getItems());
-		assertValid(
-			page, testGetProcessTasksPage_getExpectedActions(processId));
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetProcessTasksPage_getExpectedActions(Long processId)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		Map createBatchAction = new HashMap<>();
-		createBatchAction.put("method", "POST");
-		createBatchAction.put(
-			"href",
-			"http://localhost:8080/o/portal-workflow-metrics/v1.0/processes/{processId}/tasks/batch".
-				replace("{processId}", String.valueOf(processId)));
-
-		expectedActions.put("createBatch", createBatchAction);
-
-		return expectedActions;
-	}
-
-	protected Task testGetProcessTasksPage_addTask(Long processId, Task task)
-		throws Exception {
-
-		return taskResource.postProcessTask(processId, task);
-	}
-
-	protected Long testGetProcessTasksPage_getProcessId() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected Long testGetProcessTasksPage_getIrrelevantProcessId()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
-	public void testPostProcessTask() throws Exception {
-		Task randomTask = randomTask();
-
-		Task postTask = testPostProcessTask_addTask(randomTask);
-
-		assertEquals(randomTask, postTask);
-		assertValid(postTask);
-	}
-
-	protected Task testPostProcessTask_addTask(Task task) throws Exception {
-		return taskResource.postProcessTask(
-			testGetProcessTasksPage_getProcessId(), task);
-	}
-
-	@Test
 	public void testDeleteProcessTask() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Task task = testDeleteProcessTask_addTask();
@@ -293,7 +201,6 @@ public abstract class BaseTaskResourceTestCase {
 			404,
 			taskResource.getProcessTaskHttpResponse(
 				testDeleteProcessTask_getProcessId(task), task.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			taskResource.getProcessTaskHttpResponse(
@@ -441,6 +348,80 @@ public abstract class BaseTaskResourceTestCase {
 	}
 
 	@Test
+	public void testGetProcessTasksPage() throws Exception {
+		Long processId = testGetProcessTasksPage_getProcessId();
+		Long irrelevantProcessId =
+			testGetProcessTasksPage_getIrrelevantProcessId();
+
+		Page<Task> page = taskResource.getProcessTasksPage(processId);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantProcessId != null) {
+			Task irrelevantTask = testGetProcessTasksPage_addTask(
+				irrelevantProcessId, randomIrrelevantTask());
+
+			page = taskResource.getProcessTasksPage(irrelevantProcessId);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantTask, (List<Task>)page.getItems());
+			assertValid(
+				page,
+				testGetProcessTasksPage_getExpectedActions(
+					irrelevantProcessId));
+		}
+
+		Task task1 = testGetProcessTasksPage_addTask(processId, randomTask());
+
+		Task task2 = testGetProcessTasksPage_addTask(processId, randomTask());
+
+		page = taskResource.getProcessTasksPage(processId);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(task1, (List<Task>)page.getItems());
+		assertContains(task2, (List<Task>)page.getItems());
+		assertValid(
+			page, testGetProcessTasksPage_getExpectedActions(processId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetProcessTasksPage_getExpectedActions(Long processId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/portal-workflow-metrics/v1.0/processes/{processId}/tasks/batch".
+				replace("{processId}", String.valueOf(processId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
+	}
+
+	protected Task testGetProcessTasksPage_addTask(Long processId, Task task)
+		throws Exception {
+
+		return taskResource.postProcessTask(processId, task);
+	}
+
+	protected Long testGetProcessTasksPage_getProcessId() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetProcessTasksPage_getIrrelevantProcessId()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
 	public void testPatchProcessTask() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Task task = testPatchProcessTask_addTask();
@@ -480,6 +461,21 @@ public abstract class BaseTaskResourceTestCase {
 	protected Task testPatchProcessTaskComplete_addTask() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProcessTask() throws Exception {
+		Task randomTask = randomTask();
+
+		Task postTask = testPostProcessTask_addTask(randomTask);
+
+		assertEquals(randomTask, postTask);
+		assertValid(postTask);
+	}
+
+	protected Task testPostProcessTask_addTask(Task task) throws Exception {
+		return taskResource.postProcessTask(
+			testGetProcessTasksPage_getProcessId(), task);
 	}
 
 	@Test
@@ -1299,13 +1295,11 @@ public abstract class BaseTaskResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1315,7 +1309,7 @@ public abstract class BaseTaskResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(task.getDateCompletion()));
+				sb.append(_format.format(task.getDateCompletion()));
 			}
 
 			return sb.toString();
@@ -1330,13 +1324,11 @@ public abstract class BaseTaskResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1346,7 +1338,7 @@ public abstract class BaseTaskResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(task.getDateCreated()));
+				sb.append(_format.format(task.getDateCreated()));
 			}
 
 			return sb.toString();
@@ -1361,13 +1353,11 @@ public abstract class BaseTaskResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1377,7 +1367,7 @@ public abstract class BaseTaskResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(task.getDateModified()));
+				sb.append(_format.format(task.getDateModified()));
 			}
 
 			return sb.toString();
@@ -1636,12 +1626,12 @@ public abstract class BaseTaskResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1650,11 +1640,16 @@ public abstract class BaseTaskResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1686,6 +1681,24 @@ public abstract class BaseTaskResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1707,16 +1720,6 @@ public abstract class BaseTaskResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -1814,7 +1817,9 @@ public abstract class BaseTaskResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseTaskResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.portal.workflow.metrics.rest.resource.v1_0.TaskResource

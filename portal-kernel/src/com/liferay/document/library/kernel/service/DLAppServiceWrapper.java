@@ -252,12 +252,14 @@ public class DLAppServiceWrapper
 	@Override
 	public com.liferay.portal.kernel.repository.model.FileShortcut
 			addFileShortcut(
-				long repositoryId, long folderId, long toFileEntryId,
+				String externalReferenceCode, long repositoryId, long folderId,
+				long toFileEntryId,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlAppService.addFileShortcut(
-			repositoryId, folderId, toFileEntryId, serviceContext);
+			externalReferenceCode, repositoryId, folderId, toFileEntryId,
+			serviceContext);
 	}
 
 	/**
@@ -587,6 +589,15 @@ public class DLAppServiceWrapper
 		_dlAppService.deleteFileEntry(fileEntryId);
 	}
 
+	@Override
+	public void deleteFileEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_dlAppService.deleteFileEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	/**
 	 * Deletes the file entry with the title in the folder.
 	 *
@@ -615,6 +626,15 @@ public class DLAppServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_dlAppService.deleteFileShortcut(fileShortcutId);
+	}
+
+	@Override
+	public void deleteFileShortcutByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_dlAppService.deleteFileShortcutByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -1022,11 +1042,11 @@ public class DLAppServiceWrapper
 	@Override
 	public com.liferay.portal.kernel.repository.model.FileEntry
 			getFileEntryByExternalReferenceCode(
-				long groupId, String externalReferenceCode)
+				String externalReferenceCode, long groupId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlAppService.getFileEntryByExternalReferenceCode(
-			groupId, externalReferenceCode);
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -1077,6 +1097,16 @@ public class DLAppServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlAppService.getFileShortcut(fileShortcutId);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.repository.model.FileShortcut
+			getFileShortcutByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dlAppService.getFileShortcutByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -2162,6 +2192,13 @@ public class DLAppServiceWrapper
 		return _dlAppService.search(repositoryId, searchContext, query);
 	}
 
+	@Override
+	public void subscribeFileEntry(long groupId, long fileEntryId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_dlAppService.subscribeFileEntry(groupId, fileEntryId);
+	}
+
 	/**
 	 * Subscribe the user to changes in documents of the file entry type. This
 	 * method is only supported by the Liferay repository.
@@ -2224,6 +2261,13 @@ public class DLAppServiceWrapper
 
 		_dlAppService.unlockFolder(
 			repositoryId, parentFolderId, name, lockUuid);
+	}
+
+	@Override
+	public void unsubscribeFileEntry(long groupId, long fileEntryId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_dlAppService.unsubscribeFileEntry(groupId, fileEntryId);
 	}
 
 	/**

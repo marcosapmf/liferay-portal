@@ -325,7 +325,9 @@ definition {
 				menuItem = "Configure",
 				pageName = "Test Page Name 2");
 
-			PagesAdmin.toggleHiddenFromNavigationMenuWidget(toggleValue = "enable");
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Hidden from Menu Display",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 
 			PortletEntry.save();
 		}
@@ -940,7 +942,7 @@ definition {
 <#if entries?has_content>
 	<#list entries as navItem>
 		<#assign customFields = navItem.getExpandoAttributes()/>
-		${customFields["subtitle"]}
+		${customFields["Subtitle"]}
 			''';
 
 			WidgetTemplates.openWidgetTemplatesAdmin(siteURLKey = "test-site-name");

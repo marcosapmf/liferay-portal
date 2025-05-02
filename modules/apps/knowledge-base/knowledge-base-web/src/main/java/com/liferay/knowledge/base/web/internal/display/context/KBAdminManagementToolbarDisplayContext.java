@@ -30,7 +30,6 @@ import com.liferay.knowledge.base.web.internal.util.comparator.KBOrderByComparat
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -435,11 +434,7 @@ public class KBAdminManagementToolbarDisplayContext {
 	}
 
 	public boolean isSearch() {
-		if (Validator.isNotNull(_getKeywords())) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(_getKeywords());
 	}
 
 	public boolean isShowInfoButton() {
@@ -447,13 +442,7 @@ public class KBAdminManagementToolbarDisplayContext {
 	}
 
 	public boolean isTrashEnabled() throws PortalException {
-		if (FeatureFlagManagerUtil.isEnabled("LPS-188058") &&
-			_trashHelper.isTrashEnabled(_themeDisplay.getScopeGroupId())) {
-
-			return true;
-		}
-
-		return false;
+		return _trashHelper.isTrashEnabled(_themeDisplay.getScopeGroupId());
 	}
 
 	private SearchContainer<Object> _createSearchContainer()

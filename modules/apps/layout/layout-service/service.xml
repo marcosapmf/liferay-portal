@@ -35,6 +35,10 @@
 		<finder name="Plid" return-type="Collection" where="containerKey IS NOT NULL">
 			<finder-column name="plid" />
 		</finder>
+		<finder name="C_CN" return-type="Collection" where="containerKey IS NOT NULL">
+			<finder-column name="companyId" />
+			<finder-column name="classNameId" />
+		</finder>
 		<finder name="CN_CPK" return-type="Collection" where="containerKey IS NOT NULL">
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
@@ -93,7 +97,7 @@
 
 		<!-- Other fields -->
 
-		<column change-tracking-resolution-type="merge" name="content" type="String" />
+		<column name="content" type="String" />
 		<column name="languageId" type="String" />
 		<column name="plid" type="long" />
 		<column name="lastPublishDate" type="Date" />

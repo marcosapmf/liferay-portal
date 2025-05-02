@@ -1,7 +1,9 @@
 @component-name = "portal-search"
 definition {
 
-	property portal.release = "true";
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
 	property portal.suite.search.engine = "solr";
 	property portal.upstream = "true";
 	property solr.enabled = "true";
@@ -11,6 +13,10 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
+
+		Navigator.openURL();
 	}
 
 	tearDown {
@@ -24,7 +30,7 @@ definition {
 	@description = "This is a use case for LPS-89561."
 	@priority = 4
 	test AssertSearchURLWhenModifyingPagination {
-		property custom.properties = "search.container.page.default.delta=10";
+		property custom.properties = "search.container.page.default.delta=10${line.separator}feature.flag.LPD-35013=true";
 
 		for (var count : list "1,2,3,4,5,6,7,8,9,10,11") {
 			JSONWebcontent.addWebContent(
@@ -114,7 +120,7 @@ definition {
 	@description = "This is a use case for LPS-95670."
 	@priority = 4
 	test AssertSuggestionsCannotOfferInvalidWordsAsSuggestion {
-		property custom.properties = "locales.enabled=de_DE,en_US${line.separator}locales=de_DE,en_US${line.separator}index.search.spell.checker.dictionary[de_DE]=spellchecker/dictionary_de_DE.txt${line.separator}index.search.spell.checker.supported.locales=en_US,es_ES,de_DE";
+		property custom.properties = "locales.enabled=de_DE,en_US${line.separator}locales=de_DE,en_US${line.separator}index.search.spell.checker.dictionary[de_DE]=spellchecker/dictionary_de_DE.txt${line.separator}index.search.spell.checker.supported.locales=en_US,es_ES,de_DE${line.separator}feature.flag.LPD-35013=true";
 		property index.search.spell.checker.enabled = "true";
 		property search.environment.suite.exclude = "true";
 		property test.liferay.virtual.instance = "false";
@@ -169,7 +175,7 @@ definition {
 	@description = "This is a use case for LPS-90078."
 	@priority = 4
 	test ModifyPaginationPortalProperties {
-		property custom.properties = "search.container.page.default.delta=2";
+		property custom.properties = "search.container.page.default.delta=2${line.separator}feature.flag.LPD-35013=true";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -666,6 +672,10 @@ definition {
 
 	@priority = 3
 	test SearchBlogsScopedToPage {
+		task ("Enable Scope Configuration") {
+			Portlet.enableScopeConfiguration();
+		}
+
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Blogs Page");
@@ -833,7 +843,7 @@ definition {
 	@description = "This test will assert that configurations set within the Embedded search bar will be used when searching via the Widget search bar"
 	@priority = 4
 	test SearchDifferentScopesViaSearchWidget {
-		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}feature.flag.LPD-35013=true";
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentTitle = "Potato Document",

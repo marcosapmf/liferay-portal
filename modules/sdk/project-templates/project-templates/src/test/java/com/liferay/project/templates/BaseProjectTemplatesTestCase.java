@@ -1079,7 +1079,7 @@ public interface BaseProjectTemplatesTestCase {
 			String... args)
 		throws Exception {
 
-		String[] completeArgs = new String[args.length + 3];
+		String[] completeArgs = new String[args.length + 5];
 
 		System.arraycopy(args, 0, completeArgs, 0, args.length);
 
@@ -1090,6 +1090,21 @@ public interface BaseProjectTemplatesTestCase {
 		completeArgs[args.length + 2] =
 			"-Drepository.private.password=" +
 				System.getProperty("repository.private.password");
+
+		String javaVersion = System.getProperty("java.version");
+
+		if (javaVersion.startsWith("17")) {
+			javaVersion = "17";
+		}
+
+		if (javaVersion.startsWith("21")) {
+			javaVersion = "21";
+		}
+
+		completeArgs[args.length + 3] =
+			"-Djava.compiler.source.version=" + javaVersion;
+		completeArgs[args.length + 4] =
+			"-Djava.compiler.target.version=" + javaVersion;
 
 		MavenExecutor.Result result = mavenExecutor.execute(
 			projectDir, completeArgs);
@@ -1310,8 +1325,8 @@ public interface BaseProjectTemplatesTestCase {
 
 		testContains(
 			gradleProjectDir, "package.json",
-			"build/resources/main/META-INF/resources",
-			"liferay-npm-bundler\": \"2.30.0", "\"main\": \"lib/index.es.js\"");
+			"build/resources/main/META-INF/resources", "esbuild\": \"^0.20.2",
+			"\"main\": \"js/index.js\"");
 
 		testNotContains(
 			gradleProjectDir, "package.json",
@@ -2211,8 +2226,7 @@ public interface BaseProjectTemplatesTestCase {
 	public default void writeM2TmpForMavenWorkspace(File projectDir)
 		throws Exception {
 
-		File gettingStartedFile = new File(
-			projectDir, "GETTING_STARTED.markdown");
+		File gettingStartedFile = new File(projectDir, "GETTING_STARTED.md");
 		File pomXmlFile = new File(projectDir, "pom.xml");
 
 		if (gettingStartedFile.exists() && pomXmlFile.exists()) {

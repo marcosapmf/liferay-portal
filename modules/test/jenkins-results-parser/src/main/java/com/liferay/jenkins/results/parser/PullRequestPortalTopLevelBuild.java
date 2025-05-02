@@ -174,12 +174,6 @@ public class PullRequestPortalTopLevelBuild
 	}
 
 	public String getStableJobResult() {
-		Job stableJob = _getStableJob();
-
-		if (stableJob == null) {
-			return null;
-		}
-
 		if (_stableJobResult != null) {
 			return _stableJobResult;
 		}
@@ -189,6 +183,22 @@ public class PullRequestPortalTopLevelBuild
 		int stableJobDownstreamBuildsSize = stableJobDownstreamBuilds.size();
 
 		if (stableJobDownstreamBuildsSize == 0) {
+			return null;
+		}
+
+		String result = getResult();
+
+		if (result == null) {
+			return null;
+		}
+
+		if (result.equals("SUCCESS")) {
+			_stableJobResult = result;
+		}
+
+		Job stableJob = _getStableJob();
+
+		if (stableJob == null) {
 			return null;
 		}
 
@@ -205,14 +215,12 @@ public class PullRequestPortalTopLevelBuild
 			return null;
 		}
 
-		String result = getResult();
 		int stableJobDownstreamBuildsSuccessCount =
 			getJobVariantsDownstreamBuildCount(
 				stableJobBatchNames, "SUCCESS", null);
 
-		if (((result != null) && result.equals("SUCCESS")) ||
-			(stableJobDownstreamBuildsSuccessCount ==
-				stableJobDownstreamBuildsSize)) {
+		if (stableJobDownstreamBuildsSuccessCount ==
+				stableJobDownstreamBuildsSize) {
 
 			_stableJobResult = "SUCCESS";
 		}
@@ -269,11 +277,7 @@ public class PullRequestPortalTopLevelBuild
 			}
 		}
 
-		if (failedDownstreamBuilds.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return failedDownstreamBuilds.isEmpty();
 	}
 
 	protected Element getFailedStableJobSummaryElement() {

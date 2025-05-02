@@ -15,6 +15,7 @@ export interface FragmentEntryLink<
 	EditableId extends string = string,
 	ConfigurationFieldId extends string = string,
 > {
+	actions?: Record<string, {icon: string; title: string; url: string}>;
 	collectionContent?: Record<string, string>;
 	comments: FragmentEntryLinkComment[];
 	configuration: Record<string, unknown>;
@@ -37,6 +38,7 @@ export interface FragmentEntryLink<
 			[key in ConfigurationFieldId]: EditableValue;
 		};
 	};
+	fieldTypes: string[];
 	fragmentEntryId: string;
 	fragmentEntryKey: string;
 	fragmentEntryLinkId: string;

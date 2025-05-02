@@ -26,35 +26,27 @@
 					var calendarResourceId = instance.calendarResourceId;
 
 					if (calendarResourceId) {
-						Liferay.Util.openWindow({
-							dialog: {
-								after: {
-									destroy: function (event) {
-										remoteServices.getResourceCalendars(
-											calendarResourceId,
-											(calendars) => {
-												var calendarList =
-													window
-														.<portlet:namespace />calendarLists[
-														calendarResourceId
-													];
+						Liferay.Util.openModal({
+							containerProps: {},
+							iframeBodyCssClass: '',
+							onClose: function (event) {
+								remoteServices.getResourceCalendars(
+									calendarResourceId,
+									(calendars) => {
+										var calendarList =
+											window
+												.<portlet:namespace />calendarLists[
+												calendarResourceId
+											];
 
-												calendarList.set(
-													'calendars',
-													calendars
-												);
+										calendarList.set('calendars', calendars);
 
-												<portlet:namespace />syncCalendarsMap();
+										<portlet:namespace />syncCalendarsMap();
 
-												<portlet:namespace />scheduler.load();
-											}
-										);
-									},
-								},
-								destroyOnHide: true,
-								modal: true,
+										<portlet:namespace />scheduler.load();
+									}
+								);
 							},
-							refreshWindow: window,
 							title: '<liferay-ui:message key="add-calendar" />',
 
 							<portlet:renderURL var="editCalendarURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
@@ -62,7 +54,7 @@
 								<portlet:param name="calendarResourceId" value="{calendarResourceId}" />
 							</portlet:renderURL>
 
-							uri: Liferay.CalendarUtil.fillURLParameters(
+							url: Liferay.CalendarUtil.fillURLParameters(
 								decodeURIComponent('<%= editCalendarURL %>'),
 								{
 									calendarResourceId: calendarResourceId,
@@ -111,17 +103,11 @@
 						windowState="<%= LiferayWindowState.POP_UP.toString() %>"
 					/>
 
-					Liferay.Util.openWindow({
-						dialog: {
-							destroyOnHide: true,
-							modal: true,
-						},
-						dialogIframe: {
-							bodyCssClass: 'dialog-with-footer',
-						},
-						refreshWindow: window,
+					Liferay.Util.openModal({
+						containerProps: {},
+						iframeBodyCssClass: 'dialog-with-footer',
 						title: '<liferay-ui:message key="permissions" />',
-						uri: decodeURIComponent('<%= permissionsURL %>'),
+						url: decodeURIComponent('<%= permissionsURL %>'),
 					});
 				},
 				id: 'permissions',
@@ -155,7 +141,7 @@
 		id: '<portlet:namespace />calendarsMenu',
 		items: [
 			{
-				caption: '<liferay-ui:message key="add-calendar-booking" />',
+				caption: '<liferay-ui:message key="add-event" />',
 				fn: function (event) {
 					var instance = this;
 
@@ -169,19 +155,14 @@
 						<portlet:param name="calendarId" value="{calendarId}" />
 					</portlet:renderURL>
 
-					Liferay.Util.openWindow({
-						dialog: {
-							after: {
-								destroy: function (event) {
-									<portlet:namespace />scheduler.load();
-								},
-							},
-							destroyOnHide: true,
-							modal: true,
+					Liferay.Util.openModal({
+						containerProps: {},
+						iframeBodyCssClass: '',
+						onClose: function (event) {
+							<portlet:namespace />scheduler.load();
 						},
-						refreshWindow: window,
 						title: '<liferay-ui:message key="new-calendar-booking" />',
-						uri: Liferay.CalendarUtil.fillURLParameters(
+						url: Liferay.CalendarUtil.fillURLParameters(
 							decodeURIComponent('<%= addCalendarBookingURL %>'),
 							{
 								calendarId: activeCalendar.get('calendarId'),
@@ -215,45 +196,37 @@
 
 					var activeCalendar = calendarList.activeItem;
 
-					Liferay.Util.openWindow({
-						dialog: {
-							after: {
-								destroy: function (event) {
-									remoteServices.getCalendar(
-										activeCalendar.get('calendarId'),
-										(calendar) => {
-											var activeCalendarId =
-												activeCalendar.get('calendarId');
+					Liferay.Util.openModal({
+						containerProps: {},
+						iframeBodyCssClass: '',
+						onClose: function (event) {
+							remoteServices.getCalendar(
+								activeCalendar.get('calendarId'),
+								(calendar) => {
+									var activeCalendarId =
+										activeCalendar.get('calendarId');
 
-											var calendars = calendarList
-												.get('calendars')
-												.map((item) => {
-													if (
-														activeCalendarId ===
-														item.get('calendarId')
-													) {
-														item = calendar;
-													}
+									var calendars = calendarList
+										.get('calendars')
+										.map((item) => {
+											if (
+												activeCalendarId ===
+												item.get('calendarId')
+											) {
+												item = calendar;
+											}
 
-													return item;
-												});
+											return item;
+										});
 
-											calendarList.set(
-												'calendars',
-												calendars
-											);
+									calendarList.set('calendars', calendars);
 
-											<portlet:namespace />syncCalendarsMap();
+									<portlet:namespace />syncCalendarsMap();
 
-											<portlet:namespace />scheduler.load();
-										}
-									);
-								},
-							},
-							destroyOnHide: true,
-							modal: true,
+									<portlet:namespace />scheduler.load();
+								}
+							);
 						},
-						refreshWindow: window,
 						title: '<liferay-ui:message key="calendar-settings" />',
 
 						<portlet:renderURL var="editCalendarURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
@@ -261,7 +234,7 @@
 							<portlet:param name="calendarId" value="{calendarId}" />
 						</portlet:renderURL>
 
-						uri: Liferay.CalendarUtil.fillURLParameters(
+						url: Liferay.CalendarUtil.fillURLParameters(
 							decodeURIComponent('<%= editCalendarURL %>'),
 							{
 								calendarId: activeCalendar.get('calendarId'),
@@ -282,20 +255,12 @@
 
 					var activeCalendar = calendarList.activeItem;
 
-					Liferay.Util.openWindow({
-						dialog: {
-							after: {
-								destroy: function (event) {
-									<portlet:namespace />scheduler.load();
-								},
-							},
-							destroyOnHide: true,
-							modal: true,
+					Liferay.Util.openModal({
+						containerProps: {},
+						iframeBodyCssClass: 'dialog-with-footer',
+						onClose: function (event) {
+							<portlet:namespace />scheduler.load();
 						},
-						dialogIframe: {
-							bodyCssClass: 'dialog-with-footer',
-						},
-						refreshWindow: window,
 						title: '<liferay-ui:message key="permissions" />',
 
 						<liferay-security:permissionsURL
@@ -307,7 +272,7 @@
 							windowState="<%= LiferayWindowState.POP_UP.toString() %>"
 						/>
 
-						uri: Liferay.CalendarUtil.fillURLParameters(
+						url: Liferay.CalendarUtil.fillURLParameters(
 							decodeURIComponent('<%= permissionsURL %>'),
 							{
 								modelResourceDescription:

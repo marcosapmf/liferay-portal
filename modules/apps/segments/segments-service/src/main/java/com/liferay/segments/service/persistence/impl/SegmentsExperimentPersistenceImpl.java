@@ -650,7 +650,6 @@ public class SegmentsExperimentPersistenceImpl
 		"(segmentsExperiment.uuid IS NULL OR segmentsExperiment.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the segments experiment where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchExperimentException</code> if it could not be found.
@@ -836,68 +835,13 @@ public class SegmentsExperimentPersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					SegmentsExperiment.class)) {
+		SegmentsExperiment segmentsExperiment = fetchByUUID_G(uuid, groupId);
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUUID_G;
-
-			Object[] finderArgs = new Object[] {uuid, groupId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_SEGMENTSEXPERIMENT_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (segmentsExperiment == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -2980,7 +2924,6 @@ public class SegmentsExperimentPersistenceImpl
 			"(segmentsExperiment.segmentsExperimentKey IS NULL OR segmentsExperiment.segmentsExperimentKey = '')";
 
 	private FinderPath _finderPathFetchByG_S;
-	private FinderPath _finderPathCountByG_S;
 
 	/**
 	 * Returns the segments experiment where groupId = &#63; and segmentsExperimentKey = &#63; or throws a <code>NoSuchExperimentException</code> if it could not be found.
@@ -3174,68 +3117,14 @@ public class SegmentsExperimentPersistenceImpl
 	 */
 	@Override
 	public int countByG_S(long groupId, String segmentsExperimentKey) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					SegmentsExperiment.class)) {
+		SegmentsExperiment segmentsExperiment = fetchByG_S(
+			groupId, segmentsExperimentKey);
 
-			segmentsExperimentKey = Objects.toString(segmentsExperimentKey, "");
-
-			FinderPath finderPath = _finderPathCountByG_S;
-
-			Object[] finderArgs = new Object[] {groupId, segmentsExperimentKey};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_SEGMENTSEXPERIMENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_S_GROUPID_2);
-
-				boolean bindSegmentsExperimentKey = false;
-
-				if (segmentsExperimentKey.isEmpty()) {
-					sb.append(_FINDER_COLUMN_G_S_SEGMENTSEXPERIMENTKEY_3);
-				}
-				else {
-					bindSegmentsExperimentKey = true;
-
-					sb.append(_FINDER_COLUMN_G_S_SEGMENTSEXPERIMENTKEY_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					if (bindSegmentsExperimentKey) {
-						queryPos.add(segmentsExperimentKey);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (segmentsExperiment == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_G_S_GROUPID_2 =
@@ -3248,7 +3137,6 @@ public class SegmentsExperimentPersistenceImpl
 		"(segmentsExperiment.segmentsExperimentKey IS NULL OR segmentsExperiment.segmentsExperimentKey = '')";
 
 	private FinderPath _finderPathFetchByG_S_P;
-	private FinderPath _finderPathCountByG_S_P;
 
 	/**
 	 * Returns the segments experiment where groupId = &#63; and segmentsExperienceId = &#63; and plid = &#63; or throws a <code>NoSuchExperimentException</code> if it could not be found.
@@ -3444,61 +3332,14 @@ public class SegmentsExperimentPersistenceImpl
 	public int countByG_S_P(
 		long groupId, long segmentsExperienceId, long plid) {
 
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					SegmentsExperiment.class)) {
+		SegmentsExperiment segmentsExperiment = fetchByG_S_P(
+			groupId, segmentsExperienceId, plid);
 
-			FinderPath finderPath = _finderPathCountByG_S_P;
-
-			Object[] finderArgs = new Object[] {
-				groupId, segmentsExperienceId, plid
-			};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(_SQL_COUNT_SEGMENTSEXPERIMENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_S_P_GROUPID_2);
-
-				sb.append(_FINDER_COLUMN_G_S_P_SEGMENTSEXPERIENCEID_2);
-
-				sb.append(_FINDER_COLUMN_G_S_P_PLID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					queryPos.add(segmentsExperienceId);
-
-					queryPos.add(plid);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (segmentsExperiment == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_G_S_P_GROUPID_2 =
@@ -3656,8 +3497,6 @@ public class SegmentsExperimentPersistenceImpl
 			};
 
 			finderCache.putResult(
-				_finderPathCountByUUID_G, args, Long.valueOf(1));
-			finderCache.putResult(
 				_finderPathFetchByUUID_G, args, segmentsExperimentModelImpl);
 
 			args = new Object[] {
@@ -3665,7 +3504,6 @@ public class SegmentsExperimentPersistenceImpl
 				segmentsExperimentModelImpl.getSegmentsExperimentKey()
 			};
 
-			finderCache.putResult(_finderPathCountByG_S, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByG_S, args, segmentsExperimentModelImpl);
 
@@ -3675,8 +3513,6 @@ public class SegmentsExperimentPersistenceImpl
 				segmentsExperimentModelImpl.getPlid()
 			};
 
-			finderCache.putResult(
-				_finderPathCountByG_S_P, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByG_S_P, args, segmentsExperimentModelImpl);
 		}
@@ -4371,6 +4207,7 @@ public class SegmentsExperimentPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -4382,19 +4219,20 @@ public class SegmentsExperimentPersistenceImpl
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("segmentsEntryId");
-		ctStrictColumnNames.add("segmentsExperienceId");
-		ctStrictColumnNames.add("segmentsExperimentKey");
-		ctStrictColumnNames.add("plid");
-		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("description");
-		ctStrictColumnNames.add("typeSettings");
-		ctStrictColumnNames.add("status");
+		ctMergeColumnNames.add("segmentsEntryId");
+		ctMergeColumnNames.add("segmentsExperienceId");
+		ctMergeColumnNames.add("segmentsExperimentKey");
+		ctMergeColumnNames.add("plid");
+		ctMergeColumnNames.add("name");
+		ctMergeColumnNames.add("description");
+		ctMergeColumnNames.add("typeSettings");
+		ctMergeColumnNames.add("status");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("segmentsExperimentId"));
@@ -4452,11 +4290,6 @@ public class SegmentsExperimentPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
-
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
@@ -4522,24 +4355,12 @@ public class SegmentsExperimentPersistenceImpl
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "segmentsExperimentKey"}, true);
 
-		_finderPathCountByG_S = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"groupId", "segmentsExperimentKey"}, false);
-
 		_finderPathFetchByG_S_P = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_S_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"groupId", "segmentsExperienceId", "plid"}, true);
-
-		_finderPathCountByG_S_P = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S_P",
-			new String[] {
-				Long.class.getName(), Long.class.getName(), Long.class.getName()
-			},
-			new String[] {"groupId", "segmentsExperienceId", "plid"}, false);
 
 		SegmentsExperimentUtil.setPersistence(this);
 	}

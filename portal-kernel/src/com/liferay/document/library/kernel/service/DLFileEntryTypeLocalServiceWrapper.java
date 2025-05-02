@@ -234,10 +234,11 @@ public class DLFileEntryTypeLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteFileEntryType(DLFileEntryType dlFileEntryType)
+	public DLFileEntryType deleteFileEntryType(DLFileEntryType dlFileEntryType)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_dlFileEntryTypeLocalService.deleteFileEntryType(dlFileEntryType);
+		return _dlFileEntryTypeLocalService.deleteFileEntryType(
+			dlFileEntryType);
 	}
 
 	@Override
@@ -630,6 +631,14 @@ public class DLFileEntryTypeLocalServiceWrapper
 	@Override
 	public java.util.List<DLFileEntryType> getFileEntryTypes(long[] groupIds) {
 		return _dlFileEntryTypeLocalService.getFileEntryTypes(groupIds);
+	}
+
+	@Override
+	public java.util.List<DLFileEntryType> getFileEntryTypesByCompanyId(
+		long companyId) {
+
+		return _dlFileEntryTypeLocalService.getFileEntryTypesByCompanyId(
+			companyId);
 	}
 
 	@Override

@@ -16,10 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -48,7 +50,7 @@ public class CartComment implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(CartComment.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getAuthor() {
 		if (_authorSupplier != null) {
 			author = _authorSupplier.get();
@@ -89,7 +91,89 @@ public class CartComment implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _authorSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Long getAuthorId() {
+		if (_authorIdSupplier != null) {
+			authorId = _authorIdSupplier.get();
+
+			_authorIdSupplier = null;
+		}
+
+		return authorId;
+	}
+
+	public void setAuthorId(Long authorId) {
+		this.authorId = authorId;
+
+		_authorIdSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setAuthorId(
+		UnsafeSupplier<Long, Exception> authorIdUnsafeSupplier) {
+
+		_authorIdSupplier = () -> {
+			try {
+				return authorIdUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Long authorId;
+
+	@JsonIgnore
+	private Supplier<Long> _authorIdSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getAuthorPortraitURL() {
+		if (_authorPortraitURLSupplier != null) {
+			authorPortraitURL = _authorPortraitURLSupplier.get();
+
+			_authorPortraitURLSupplier = null;
+		}
+
+		return authorPortraitURL;
+	}
+
+	public void setAuthorPortraitURL(String authorPortraitURL) {
+		this.authorPortraitURL = authorPortraitURL;
+
+		_authorPortraitURLSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setAuthorPortraitURL(
+		UnsafeSupplier<String, Exception> authorPortraitURLUnsafeSupplier) {
+
+		_authorPortraitURLSupplier = () -> {
+			try {
+				return authorPortraitURLUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String authorPortraitURL;
+
+	@JsonIgnore
+	private Supplier<String> _authorPortraitURLSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getContent() {
 		if (_contentSupplier != null) {
 			content = _contentSupplier.get();
@@ -130,7 +214,7 @@ public class CartComment implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _contentSupplier;
 
-	@Schema(example = "AB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -171,7 +255,7 @@ public class CartComment implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -210,7 +294,48 @@ public class CartComment implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Date getModifiedDate() {
+		if (_modifiedDateSupplier != null) {
+			modifiedDate = _modifiedDateSupplier.get();
+
+			_modifiedDateSupplier = null;
+		}
+
+		return modifiedDate;
+	}
+
+	public void setModifiedDate(Date modifiedDate) {
+		this.modifiedDate = modifiedDate;
+
+		_modifiedDateSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setModifiedDate(
+		UnsafeSupplier<Date, Exception> modifiedDateUnsafeSupplier) {
+
+		_modifiedDateSupplier = () -> {
+			try {
+				return modifiedDateUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Date modifiedDate;
+
+	@JsonIgnore
+	private Supplier<Date> _modifiedDateSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getOrderId() {
 		if (_orderIdSupplier != null) {
 			orderId = _orderIdSupplier.get();
@@ -251,7 +376,7 @@ public class CartComment implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _orderIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getRestricted() {
 		if (_restrictedSupplier != null) {
 			restricted = _restrictedSupplier.get();
@@ -319,6 +444,9 @@ public class CartComment implements Serializable {
 
 		sb.append("{");
 
+		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
+			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+
 		String author = getAuthor();
 
 		if (author != null) {
@@ -331,6 +459,34 @@ public class CartComment implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(author));
+
+			sb.append("\"");
+		}
+
+		Long authorId = getAuthorId();
+
+		if (authorId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"authorId\": ");
+
+			sb.append(authorId);
+		}
+
+		String authorPortraitURL = getAuthorPortraitURL();
+
+		if (authorPortraitURL != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"authorPortraitURL\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(authorPortraitURL));
 
 			sb.append("\"");
 		}
@@ -379,6 +535,22 @@ public class CartComment implements Serializable {
 			sb.append(id);
 		}
 
+		Date modifiedDate = getModifiedDate();
+
+		if (modifiedDate != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"modifiedDate\": ");
+
+			sb.append("\"");
+
+			sb.append(liferayToJSONDateFormat.format(modifiedDate));
+
+			sb.append("\"");
+		}
+
 		Long orderId = getOrderId();
 
 		if (orderId != null) {
@@ -408,8 +580,8 @@ public class CartComment implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.delivery.cart.dto.v1_0.CartComment",
 		name = "x-class-name"
 	)

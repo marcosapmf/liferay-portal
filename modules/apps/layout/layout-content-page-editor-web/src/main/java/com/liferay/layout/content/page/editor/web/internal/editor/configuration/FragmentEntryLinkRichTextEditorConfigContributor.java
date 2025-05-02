@@ -38,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"editor.config.key=fragmenEntryLinkRichTextEditor",
+		"editor.config.key=fragmentEntryLinkRichTextEditor",
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET
 	},
 	service = EditorConfigContributor.class
@@ -214,7 +214,7 @@ public class FragmentEntryLinkRichTextEditorConfigContributor
 		return JSONUtil.put(
 			"add",
 			JSONUtil.put(
-				"buttons", toJSONArray("['image', 'hline']")
+				"buttons", JSONUtil.putAll("image", "hline")
 			).put(
 				"tabIndex", 1
 			)
@@ -245,16 +245,35 @@ public class FragmentEntryLinkRichTextEditorConfigContributor
 		return JSONUtil.putAll(
 			_getToolbarsStylesSelectionsImageJSONObject(),
 			_getToolbarsStylesSelectionsLinkJSONObject(),
-			_getToolbarsStylesSelectionsTextJSONObject(locale));
+			_getToolbarsStylesSelectionsTextJSONObject(locale),
+			_getToolbarsStylesSelectionsTableJSONObject());
 	}
 
 	private JSONObject _getToolbarsStylesSelectionsLinkJSONObject() {
 		return JSONUtil.put(
-			"buttons", toJSONArray("['linkEditBrowse']")
+			"buttons", JSONUtil.put("linkEditBrowse")
 		).put(
 			"name", "link"
 		).put(
 			"test", "AlloyEditor.SelectionTest.link"
+		);
+	}
+
+	private JSONObject _getToolbarsStylesSelectionsTableJSONObject() {
+		return JSONUtil.put(
+			"buttons",
+			JSONUtil.putAll(
+				"tableHeading", "tableRow", "tableColumn", "tableCell",
+				"tableRemove")
+		).put(
+			"getArrowBoxClasses",
+			"AlloyEditor.SelectionGetArrowBoxClasses.table"
+		).put(
+			"name", "table"
+		).put(
+			"setPosition", "AlloyEditor.SelectionSetPosition.table"
+		).put(
+			"test", "AlloyEditor.SelectionTest.table"
 		);
 	}
 
@@ -267,6 +286,10 @@ public class FragmentEntryLinkRichTextEditorConfigContributor
 				_getStyleFormatsJSONObject(locale),
 				"bold", "italic", "underline", "ol",
 				"ul", "linkBrowse",
+
+				// Separate
+
+				"table",
 
 				// Separate
 

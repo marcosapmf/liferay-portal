@@ -20,6 +20,7 @@ import {TranslationsContainer} from './TranslationsContainer';
 import {useObjectDetailsForm} from './useObjectDetailsForm';
 
 import './ObjectDetails.scss';
+import {SeoContainer} from './SeoContainer';
 
 export type Scope = {
 	items: LabelValueObject[];
@@ -33,6 +34,7 @@ interface EditObjectDetailsProps {
 	hasUpdateObjectDefinitionPermission: boolean;
 	isApproved: boolean;
 	isRootDescendantNode: boolean;
+	isRootNode: boolean;
 	label: LocalizedValue<string>;
 	learnResourceContext: any;
 	nonRelationshipObjectFieldsInfo: {
@@ -78,6 +80,7 @@ export default function EditObjectDetails({
 	hasUpdateObjectDefinitionPermission,
 	isApproved,
 	isRootDescendantNode,
+	isRootNode,
 	label,
 	learnResourceContext,
 	nonRelationshipObjectFieldsInfo,
@@ -134,9 +137,8 @@ export default function EditObjectDetails({
 			}
 
 			if (!draft) {
-				const publishResponse = await API.postObjectDefinitionPublish(
-					values.id as number
-				);
+				const publishResponse: any =
+					await API.postObjectDefinitionPublish(values.id as number);
 
 				if (!publishResponse.ok) {
 					const {title} = (await publishResponse.json()) as {
@@ -206,11 +208,13 @@ export default function EditObjectDetails({
 					}
 					isApproved={isApproved}
 					isRootDescendantNode={isRootDescendantNode}
-					label={stringUtils.getLocalizableLabel(
-						values.defaultLanguageId as Liferay.Language.Locale,
-						values.label,
-						values.name
-					)}
+					isRootNode={isRootNode}
+					label={stringUtils.getLocalizableLabel({
+						fallbackLabel: values.name,
+						fallbackLanguageId:
+							values.defaultLanguageId as Liferay.Language.Locale,
+						labels: values.label,
+					})}
 					objectDefinitionExternalReferenceCode={
 						objectDefinitionExternalReferenceCode
 					}
@@ -378,6 +382,22 @@ export default function EditObjectDetails({
 							/>
 						</ClayPanel.Body>
 					</ClayPanel>
+
+					{Liferay.FeatureFlags['LPD-21926'] && (
+						<ClayPanel
+							collapsable
+							defaultExpanded
+							displayTitle={Liferay.Language.get('seo')}
+							displayType="unstyled"
+						>
+							<ClayPanel.Body>
+								<SeoContainer
+									setValues={setValues}
+									values={values}
+								/>
+							</ClayPanel.Body>
+						</ClayPanel>
+					)}
 				</Sheet>
 			</div>
 		</>

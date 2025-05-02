@@ -79,13 +79,13 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 			_user.getUserId());
 
 		_accountEntry = _accountEntryLocalService.addAccountEntry(
-			_user.getUserId(), 0, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null,
+			StringPool.BLANK, _user.getUserId(), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null, null,
 			"business", 1, _serviceContext);
 
 		_commerceCurrency = _commerceCurrencyLocalService.addCommerceCurrency(
-			_user.getUserId(), RandomTestUtil.randomString(),
+			null, _user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomString(), BigDecimal.ONE,
 			RandomTestUtil.randomLocaleStringMap(), 2, 2, "HALF_EVEN", false,
@@ -105,13 +105,6 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 			testGroup.getGroupId(), _user.getUserId(),
 			_accountEntry.getAccountEntryId(),
 			_commerceCurrency.getCommerceCurrencyId());
-	}
-
-	@Ignore
-	@Override
-	@Test
-	public void testDeleteOrderItem() throws Exception {
-		super.testDeleteOrderItem();
 	}
 
 	@Ignore
@@ -176,11 +169,27 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 		super.testGraphQLDeleteOrderItem();
 	}
 
-	@Ignore
 	@Override
 	@Test
 	public void testPatchOrderItem() throws Exception {
-		super.testPatchOrderItem();
+		OrderItem postOrderItem = orderItemResource.postOrderIdOrderItem(
+			_commerceOrder.getCommerceOrderId(), randomPatchOrderItem());
+
+		OrderItem randomPatchOrderItem = randomPatchOrderItem();
+
+		orderItemResource.patchOrderItem(
+			postOrderItem.getId(), randomPatchOrderItem);
+
+		OrderItem expectedPatchOrderItem = postOrderItem.clone();
+
+		BaseOrderResourceTestCase.BeanTestUtil.copyProperties(
+			randomPatchOrderItem, expectedPatchOrderItem);
+
+		OrderItem getOrderItem = orderItemResource.getOrderItem(
+			postOrderItem.getId());
+
+		assertEquals(expectedPatchOrderItem, getOrderItem);
+		assertValid(getOrderItem);
 	}
 
 	@Ignore
@@ -333,7 +342,7 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 			{
 				bookedQuantityId =
 					commerceOrderItem.getCommerceInventoryBookedQuantityId();
-				deliveryGroup = commerceOrderItem.getDeliveryGroup();
+				deliveryGroupName = commerceOrderItem.getDeliveryGroupName();
 				discountManuallyAdjusted =
 					commerceOrderItem.isDiscountManuallyAdjusted();
 				externalReferenceCode =
@@ -348,6 +357,7 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 				quantity = commerceOrderItem.getQuantity();
 				requestedDeliveryDate =
 					commerceOrderItem.getRequestedDeliveryDate();
+				shippable = commerceOrderItem.isShippable();
 				shippedQuantity = commerceOrderItem.getShippedQuantity();
 				shippingAddressId = commerceOrderItem.getShippingAddressId();
 				sku = commerceOrderItem.getSku();
@@ -418,9 +428,14 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 				printedNote = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				quantity = BigDecimal.valueOf(RandomTestUtil.randomInt(1, 100));
+				replacedSkuExternalReferenceCode =
+					RandomTestUtil.randomString();
 				requestedDeliveryDate = RandomTestUtil.nextDate();
+				shippable = RandomTestUtil.randomBoolean();
 				shippedQuantity = BigDecimal.valueOf(
 					RandomTestUtil.randomInt());
+				shippingAddressExternalReferenceCode =
+					RandomTestUtil.randomString();
 				shippingAddressId = RandomTestUtil.randomLong();
 				sku = cpInstance.getSku();
 				skuExternalReferenceCode =

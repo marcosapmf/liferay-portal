@@ -216,10 +216,6 @@ public class PropsValues {
 	public static final String AUTH_TOKEN_SHARED_SECRET = PropsUtil.get(
 		PropsKeys.AUTH_TOKEN_SHARED_SECRET);
 
-	public static final boolean AUTO_DEPLOY_CUSTOM_PORTLET_XML =
-		GetterUtil.getBoolean(
-			PropsUtil.get(PropsKeys.AUTO_DEPLOY_CUSTOM_PORTLET_XML));
-
 	public static final String AUTO_DEPLOY_DEPLOY_DIR = PropsUtil.get(
 		PropsKeys.AUTO_DEPLOY_DEPLOY_DIR);
 
@@ -340,6 +336,9 @@ public class PropsValues {
 	public static final String[] COMBO_ALLOWED_FILE_EXTENSIONS =
 		PropsUtil.getArray(PropsKeys.COMBO_ALLOWED_FILE_EXTENSIONS);
 
+	public static final int COMBO_ALLOWED_FILE_MAX_SIZE = GetterUtil.getInteger(
+		PropsUtil.get(PropsKeys.COMBO_ALLOWED_FILE_MAX_SIZE));
+
 	public static final boolean COMBO_CHECK_TIMESTAMP = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.COMBO_CHECK_TIMESTAMP));
 
@@ -384,6 +383,10 @@ public class PropsValues {
 	public static final boolean COMPANY_LOGIN_PREPOPULATE_DOMAIN =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.COMPANY_LOGIN_PREPOPULATE_DOMAIN));
+
+	public static final boolean COMPANY_PREDICTABLE_COMPANY_IDS_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get(PropsKeys.COMPANY_PREDICTABLE_COMPANY_IDS_ENABLED));
 
 	public static final String COMPANY_SECURITY_AUTH_TYPE = PropsUtil.get(
 		PropsKeys.COMPANY_SECURITY_AUTH_TYPE);
@@ -1010,6 +1013,10 @@ public class PropsValues {
 	public static final String JDBC_DEFAULT_USERNAME = PropsUtil.get(
 		PropsKeys.JDBC_DEFAULT_USERNAME);
 
+	public static long JDBC_READ_DATA_SOURCE_UNAVAILABLE_TIMEOUT =
+		GetterUtil.getLong(
+			PropsUtil.get(PropsKeys.JDBC_READ_DATA_SOURCE_UNAVAILABLE_TIMEOUT));
+
 	public static final boolean JSON_SERVICE_AUTH_TOKEN_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.JSON_SERVICE_AUTH_TOKEN_ENABLED));
@@ -1290,6 +1297,15 @@ public class PropsValues {
 
 	public static final String MAIL_SESSION_MAIL_TRANSPORT_PROTOCOL =
 		PropsUtil.get(PropsKeys.MAIL_SESSION_MAIL_TRANSPORT_PROTOCOL);
+
+	public static final String MARKETPLACE_CLIENT_ID = PropsUtil.get(
+		PropsKeys.MARKETPLACE_CLIENT_ID);
+
+	public static final String MARKETPLACE_REDIRECT = PropsUtil.get(
+		PropsKeys.MARKETPLACE_REDIRECT);
+
+	public static final String MARKETPLACE_URL = PropsUtil.get(
+		PropsKeys.MARKETPLACE_URL);
 
 	public static final boolean MEMBERSHIP_POLICY_AUTO_VERIFY =
 		GetterUtil.getBoolean(
@@ -1777,21 +1793,21 @@ public class PropsValues {
 		PropsKeys.PORTAL_INSTANCE_PROTOCOL);
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String PORTAL_JAAS_AUTH_TYPE = GetterUtil.getString(
 		PropsUtil.get(PropsKeys.PORTAL_JAAS_AUTH_TYPE));
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static boolean PORTAL_JAAS_ENABLE = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.PORTAL_JAAS_ENABLE));
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final boolean PORTAL_JAAS_PLAIN_PASSWORD =
@@ -2084,7 +2100,7 @@ public class PropsValues {
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.SESSION_ENABLE_URL_WITH_SESSION_ID));
 
-	public static final int SESSION_MAX_ALLOWED = GetterUtil.getInteger(
+	public static int SESSION_MAX_ALLOWED = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.SESSION_MAX_ALLOWED));
 
 	public static String[] SESSION_PHISHING_PROTECTED_ATTRIBUTES =
@@ -2213,12 +2229,6 @@ public class PropsValues {
 	public static final String[] SPRING_CONFIGS = PropsUtil.getArray(
 		PropsKeys.SPRING_CONFIGS);
 
-	public static final String[]
-		SPRING_HIBERNATE_CONFIGURATION_PROXY_FACTORY_PRELOAD_CLASSLOADER_CLASSES =
-			PropsUtil.getArray(
-				PropsKeys.
-					SPRING_HIBERNATE_CONFIGURATION_PROXY_FACTORY_PRELOAD_CLASSLOADER_CLASSES);
-
 	public static volatile boolean SPRING_HIBERNATE_SESSION_DELEGATED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.SPRING_HIBERNATE_SESSION_DELEGATED));
@@ -2244,10 +2254,6 @@ public class PropsValues {
 			PropsUtil.get(
 				PropsKeys.
 					STAGING_DRAFT_EXPORT_IMPORT_CONFIGURATION_CLEAN_UP_COUNT));
-
-	public static final int STAGING_GROUPS_IN_MEMORY_FILTER_LIMIT =
-		GetterUtil.getInteger(
-			PropsUtil.get(PropsKeys.STAGING_GROUPS_IN_MEMORY_FILTER_LIMIT));
 
 	public static final boolean STAGING_LIVE_GROUP_LOCKING_ENABLED =
 		GetterUtil.getBoolean(
@@ -2286,6 +2292,11 @@ public class PropsValues {
 	public static final boolean TEMPLATE_ENGINE_CACHE_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.TEMPLATE_ENGINE_CACHE_ENABLED));
+
+	public static final boolean TEMPLATE_ENGINE_FREEMARKER_COMPANY_RESTRICT =
+		GetterUtil.getBoolean(
+			PropsUtil.get(
+				PropsKeys.TEMPLATE_ENGINE_FREEMARKER_COMPANY_RESTRICT));
 
 	public static final boolean
 		TEMPLATE_ENGINE_FREEMARKER_TRANSACTION_READ_ONLY =
@@ -2402,6 +2413,14 @@ public class PropsValues {
 	public static final boolean UPGRADE_REPORT_ENABLED = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.UPGRADE_REPORT_ENABLED));
 
+	public static final long UPGRADE_REPORT_SQL_STATEMENT_THRESHOLD =
+		GetterUtil.getLong(
+			PropsUtil.get(PropsKeys.UPGRADE_REPORT_SQL_STATEMENT_THRESHOLD));
+
+	public static final long UPGRADE_REPORT_UPGRADE_PROCESS_THRESHOLD =
+		GetterUtil.getLong(
+			PropsUtil.get(PropsKeys.UPGRADE_REPORT_UPGRADE_PROCESS_THRESHOLD));
+
 	public static boolean USER_GROUPS_NAME_ALLOW_NUMERIC =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.USER_GROUPS_NAME_ALLOW_NUMERIC));
@@ -2477,6 +2496,14 @@ public class PropsValues {
 	public static final boolean USERS_UPDATE_LAST_LOGIN = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.USERS_UPDATE_LAST_LOGIN));
 
+	public static final long USERS_UPDATE_LAST_LOGIN_BATCH_INTERVAL =
+		GetterUtil.getLong(
+			PropsUtil.get(PropsKeys.USERS_UPDATE_LAST_LOGIN_BATCH_INTERVAL));
+
+	public static final int USERS_UPDATE_LAST_LOGIN_BATCH_SIZE =
+		GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.USERS_UPDATE_LAST_LOGIN_BATCH_SIZE));
+
 	public static final boolean VALUE_OBJECT_ENTITY_CACHE_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.VALUE_OBJECT_ENTITY_CACHE_ENABLED));
@@ -2508,11 +2535,6 @@ public class PropsValues {
 
 	public static final String[] VIRTUAL_HOSTS_IGNORE_EXTENSIONS =
 		PropsUtil.getArray(PropsKeys.VIRTUAL_HOSTS_IGNORE_EXTENSIONS);
-
-	public static final int VIRTUAL_HOSTS_PER_COMPANY_IN_MEMORY_FILTER_LIMIT =
-		GetterUtil.getInteger(
-			PropsUtil.get(
-				PropsKeys.VIRTUAL_HOSTS_PER_COMPANY_IN_MEMORY_FILTER_LIMIT));
 
 	public static final boolean VIRTUAL_HOSTS_STRICT_ACCESS =
 		GetterUtil.getBoolean(
@@ -2591,18 +2613,11 @@ public class PropsValues {
 	public static final String WIDGET_SERVLET_MAPPING = PropsUtil.get(
 		PropsKeys.WIDGET_SERVLET_MAPPING);
 
-	public static final boolean WORK_DIR_OVERRIDE_ENABLED =
-		GetterUtil.getBoolean(
-			PropsUtil.get(PropsKeys.WORK_DIR_OVERRIDE_ENABLED));
-
 	public static final int XML_RPC_MAX_PARAMETERS = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.XML_RPC_MAX_PARAMETERS), 50);
 
 	public static final boolean XML_SECURITY_ENABLED = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.XML_SECURITY_ENABLED));
-
-	public static boolean XML_SITEMAP_INDEX_ENABLED = GetterUtil.getBoolean(
-		PropsUtil.get(PropsKeys.XML_SITEMAP_INDEX_ENABLED));
 
 	public static final boolean XML_VALIDATION_ENABLED = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.XML_VALIDATION_ENABLED));

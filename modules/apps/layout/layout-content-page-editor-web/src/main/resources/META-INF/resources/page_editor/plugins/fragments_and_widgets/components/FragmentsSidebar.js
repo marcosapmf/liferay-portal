@@ -4,7 +4,9 @@
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
+import {ClayDropDownWithItems} from '@clayui/drop-down';
 import {
+	MarketplaceButton,
 	SearchForm,
 	SearchResultsMessage,
 	isNullOrUndefined,
@@ -17,14 +19,10 @@ import {FRAGMENTS_DISPLAY_STYLES} from '../../../app/config/constants/fragmentsD
 import {HIGHLIGHTED_COLLECTION_ID} from '../../../app/config/constants/highlightedCollectionId';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../app/config/constants/layoutDataItemTypes';
 import {config} from '../../../app/config/index';
-import {
-	useDispatch,
-	useSelector,
-	useSelectorRef,
-} from '../../../app/contexts/StoreContext';
-import selectWidgetFragmentEntryLinks from '../../../app/selectors/selectWidgetFragmentEntryLinks';
-import loadWidgets from '../../../app/thunks/loadWidgets';
+import {useSelector} from '../../../app/contexts/StoreContext';
+import {useLoadWidgets} from '../../../app/contexts/WidgetsContext';
 import SidebarPanelHeader from '../../../common/components/SidebarPanelHeader';
+import {TABS_IDS} from '../config/constants/tabsIds';
 import SearchResultsPanel from './SearchResultsPanel';
 import TabsPanel from './TabsPanel';
 import {ReorderSetsModal} from './reorder_sets_modal/ReorderSetsModal';
@@ -79,15 +77,14 @@ const collectionFilter = (collections, searchValue) => {
 		.filter(hasChildren);
 };
 
-const normalizeWidget = (widget) => {
+export function normalizeWidget(widget) {
 	return {
 		data: {
-			instanceable: widget.instanceable,
 			portletId: widget.portletId,
 			portletItemId: widget.portletItemId || null,
-			used: widget.used,
 		},
-		disabled: !widget.instanceable && widget.used,
+		deprecated: widget.deprecated,
+		disabled: !widget.instanceable && (widget.used || widget.embedded),
 		highlighted: widget.highlighted,
 		icon: widget.instanceable ? 'square-hole-multi' : 'square-hole',
 		itemId: widget.portletId,
@@ -98,7 +95,7 @@ const normalizeWidget = (widget) => {
 		preview: '',
 		type: LAYOUT_DATA_ITEM_TYPES.fragment,
 	};
-};
+}
 
 const normalizeCollection = (collection) => {
 	const normalizedElement = {
@@ -117,6 +114,7 @@ const normalizeCollection = (collection) => {
 
 const normalizeFragmentEntry = (fragmentEntry) => ({
 	data: {
+		fieldTypes: fragmentEntry.fieldTypes,
 		fragmentEntryKey: fragmentEntry.fragmentEntryKey,
 		groupId: fragmentEntry.groupId,
 		type: fragmentEntry.type,
@@ -132,11 +130,10 @@ const normalizeFragmentEntry = (fragmentEntry) => ({
 export default function FragmentsSidebar() {
 	const fragments = useSelector((state) => state.fragments);
 	const widgets = useSelector((state) => state.widgets);
+	const permissions = useSelector((state) => state.permissions);
 
-	const dispatch = useDispatch();
-	const widgetFragmentEntryLinksRef = useSelectorRef(
-		selectWidgetFragmentEntryLinks
-	);
+	const loadWidgets = useLoadWidgets();
+
 	const [loadingWidgets, setLoadingWidgets] = useState(false);
 
 	const [activeTabId, setActiveTabId] = useSessionState(
@@ -160,6 +157,7 @@ export default function FragmentsSidebar() {
 						normalizeFragmentEntry(fragmentEntry)
 					),
 					collectionId: collection.fragmentCollectionId,
+					deprecated: collection.deprecated,
 					label: collection.name,
 				})),
 				id: COLLECTION_IDS.fragments,
@@ -210,16 +208,15 @@ export default function FragmentsSidebar() {
 	);
 
 	useEffect(() => {
-		if (searchValue && !widgets) {
+		if (widgets) {
+			setLoadingWidgets(false);
+		}
+		else if (searchValue || activeTabId === TABS_IDS.widgets) {
 			setLoadingWidgets(true);
 
-			dispatch(
-				loadWidgets({
-					fragmentEntryLinks: widgetFragmentEntryLinksRef.current,
-				})
-			).then(() => setLoadingWidgets(false));
+			loadWidgets();
 		}
-	}, [dispatch, searchValue, widgetFragmentEntryLinksRef, widgets]);
+	}, [activeTabId, loadWidgets, searchValue, widgets]);
 
 	const viewButtonLabel = sub(
 		Liferay.Language.get('switch-to-x-view'),
@@ -231,7 +228,7 @@ export default function FragmentsSidebar() {
 	return (
 		<>
 			<SidebarPanelHeader>
-				{Liferay.Language.get('fragments-and-widgets')}
+				{Liferay.Language.get('components')}
 			</SidebarPanelHeader>
 
 			<SearchResultsMessage numberOfResults={numberOfResults} />
@@ -246,47 +243,84 @@ export default function FragmentsSidebar() {
 						onChange={setSearchValue}
 					/>
 
-					<ClayButtonWithIcon
-						aria-label={Liferay.Language.get('reorder-sets')}
-						borderless
-						className="lfr-portal-tooltip ml-2 mt-0"
-						data-tooltip-align="bottom-right"
-						displayType="secondary"
-						onClick={() => setShowReorderModal(true)}
-						size="sm"
-						symbol="order-arrow"
-						title={Liferay.Language.get('reorder-sets')}
+					<ClayDropDownWithItems
+						items={[
+							{
+								label: Liferay.Language.get('reorder-sets'),
+								onClick: () => {
+									setShowReorderModal(true);
+								},
+								symbolLeft: 'order-arrow',
+							},
+							{
+								disabled: displayStyleButtonDisabled,
+								label: viewButtonLabel,
+								onClick: () => {
+									setDisplayStyle(
+										displayStyle ===
+											FRAGMENTS_DISPLAY_STYLES.LIST
+											? FRAGMENTS_DISPLAY_STYLES.CARDS
+											: FRAGMENTS_DISPLAY_STYLES.LIST
+									);
+								},
+								symbolLeft:
+									displayStyleButtonDisabled ||
+									displayStyle ===
+										FRAGMENTS_DISPLAY_STYLES.LIST
+										? 'cards2'
+										: 'list',
+							},
+						]}
+						renderMenuOnClick
+						trigger={
+							<ClayButtonWithIcon
+								aria-label={Liferay.Language.get(
+									'components-options'
+								)}
+								className="components-options ml-2"
+								data-tooltip-align="top"
+								displayType="unstyled"
+								size="sm"
+								symbol="ellipsis-v"
+								title={Liferay.Language.get(
+									'components-options'
+								)}
+							/>
+						}
 					/>
 
-					<ClayButtonWithIcon
-						aria-label={viewButtonLabel}
-						borderless
-						className="lfr-portal-tooltip ml-2 mt-0"
-						data-tooltip-align="bottom-right"
-						disabled={displayStyleButtonDisabled}
-						displayType="secondary"
-						onClick={() => {
-							setDisplayStyle(
-								displayStyle === FRAGMENTS_DISPLAY_STYLES.LIST
-									? FRAGMENTS_DISPLAY_STYLES.CARDS
-									: FRAGMENTS_DISPLAY_STYLES.LIST
-							);
-						}}
-						size="sm"
-						symbol={
-							displayStyleButtonDisabled ||
-							displayStyle === FRAGMENTS_DISPLAY_STYLES.LIST
-								? 'cards2'
-								: 'list'
-						}
-						title={viewButtonLabel}
-					/>
+					{Liferay.FeatureFlags['LPD-34938'] &&
+					permissions.VIEW_MARKETPLACE ? (
+						<MarketplaceButton
+							body={Liferay.Language.get(
+								'we-are-excited-to-share-that-marketplace-is-now-part-of-page-builder'
+							)}
+							fragmentPortletNamespace={
+								config.fragmentPortletNamespace
+							}
+							fragmentsImportURL={config.fragmentsImportURL}
+							heading={Liferay.Language.get(
+								'marketplace-is-now-in-page-builder'
+							)}
+							isMarketplaceButtonVisited={
+								config.isMarketplaceButtonVisited
+							}
+							permissions={{
+								installFreeApps:
+									permissions.INSTALL_FREE_BUNDLED_APPS_MARKETPLACE,
+								purchaseAndInstallPaidApps:
+									permissions.PURCHASE_AND_INSTALL_PAID_APPS_MARKETPLACE,
+							}}
+							portletNamespace={config.portletNamespace}
+						/>
+					) : null}
 				</div>
 
 				{searchValue ? (
 					<SearchResultsPanel
 						filteredTabs={filteredTabs}
 						loading={loadingWidgets}
+						searchValue={searchValue}
 					/>
 				) : (
 					<TabsPanel

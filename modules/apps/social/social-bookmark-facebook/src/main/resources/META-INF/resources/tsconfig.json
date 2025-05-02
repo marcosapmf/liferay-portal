@@ -1,15 +1,14 @@
 {
-	"@generated": "390f2981fb105cab08abcd68665a17bf3988f550",
+	"@generated": "dd7a4360e2fdbececa16d831d92f06deecac4b51",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 			"social-bookmarks-taglib": [

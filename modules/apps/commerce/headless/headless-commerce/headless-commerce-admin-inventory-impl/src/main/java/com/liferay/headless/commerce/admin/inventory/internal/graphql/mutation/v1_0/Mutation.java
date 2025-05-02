@@ -7,18 +7,20 @@ package com.liferay.headless.commerce.admin.inventory.internal.graphql.mutation.
 
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.ReplenishmentItem;
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.Warehouse;
+import com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseAccount;
+import com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseAccountGroup;
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseChannel;
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseItem;
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseOrderType;
 import com.liferay.headless.commerce.admin.inventory.resource.v1_0.ReplenishmentItemResource;
+import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseAccountGroupResource;
+import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseAccountResource;
 import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseChannelResource;
 import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseItemResource;
 import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseOrderTypeResource;
 import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -62,6 +64,22 @@ public class Mutation {
 			warehouseResourceComponentServiceObjects;
 	}
 
+	public static void setWarehouseAccountResourceComponentServiceObjects(
+		ComponentServiceObjects<WarehouseAccountResource>
+			warehouseAccountResourceComponentServiceObjects) {
+
+		_warehouseAccountResourceComponentServiceObjects =
+			warehouseAccountResourceComponentServiceObjects;
+	}
+
+	public static void setWarehouseAccountGroupResourceComponentServiceObjects(
+		ComponentServiceObjects<WarehouseAccountGroupResource>
+			warehouseAccountGroupResourceComponentServiceObjects) {
+
+		_warehouseAccountGroupResourceComponentServiceObjects =
+			warehouseAccountGroupResourceComponentServiceObjects;
+	}
+
 	public static void setWarehouseChannelResourceComponentServiceObjects(
 		ComponentServiceObjects<WarehouseChannelResource>
 			warehouseChannelResourceComponentServiceObjects) {
@@ -84,38 +102,6 @@ public class Mutation {
 
 		_warehouseOrderTypeResourceComponentServiceObjects =
 			warehouseOrderTypeResourceComponentServiceObjects;
-	}
-
-	@GraphQLField
-	public boolean deleteReplenishmentItemByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_replenishmentItemResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			replenishmentItemResource ->
-				replenishmentItemResource.
-					deleteReplenishmentItemByExternalReferenceCode(
-						externalReferenceCode));
-
-		return true;
-	}
-
-	@GraphQLField
-	public ReplenishmentItem patchReplenishmentItemByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("replenishmentItem") ReplenishmentItem
-				replenishmentItem)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_replenishmentItemResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			replenishmentItemResource ->
-				replenishmentItemResource.
-					patchReplenishmentItemByExternalReferenceCode(
-						externalReferenceCode, replenishmentItem));
 	}
 
 	@GraphQLField
@@ -148,6 +134,22 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public boolean deleteReplenishmentItemByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_replenishmentItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			replenishmentItemResource ->
+				replenishmentItemResource.
+					deleteReplenishmentItemByExternalReferenceCode(
+						externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
 	public ReplenishmentItem patchReplenishmentItem(
 			@GraphQLName("replenishmentItemId") Long replenishmentItemId,
 			@GraphQLName("replenishmentItem") ReplenishmentItem
@@ -163,19 +165,19 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Response createReplenishmentItemsPageExportBatch(
-			@GraphQLName("sku") String sku,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("contentType") String contentType,
-			@GraphQLName("fieldNames") String fieldNames)
+	public ReplenishmentItem patchReplenishmentItemByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("replenishmentItem") ReplenishmentItem
+				replenishmentItem)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_replenishmentItemResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			replenishmentItemResource ->
-				replenishmentItemResource.postReplenishmentItemsPageExportBatch(
-					sku, callbackURL, contentType, fieldNames));
+				replenishmentItemResource.
+					patchReplenishmentItemByExternalReferenceCode(
+						externalReferenceCode, replenishmentItem));
 	}
 
 	@GraphQLField
@@ -211,24 +213,89 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Response createWarehousesPageExportBatch(
-			@GraphQLName("search") String search,
-			@GraphQLName("filter") String filterString,
-			@GraphQLName("sort") String sortsString,
+	public Response createReplenishmentItemsPageExportBatch(
+			@GraphQLName("sku") String sku,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("contentType") String contentType,
 			@GraphQLName("fieldNames") String fieldNames)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
+			_replenishmentItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			replenishmentItemResource ->
+				replenishmentItemResource.postReplenishmentItemsPageExportBatch(
+					sku, callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
+	public ReplenishmentItem updateReplenishmentItemByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("replenishmentItem") ReplenishmentItem
+				replenishmentItem)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_replenishmentItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			replenishmentItemResource ->
+				replenishmentItemResource.
+					putReplenishmentItemByExternalReferenceCode(
+						externalReferenceCode, replenishmentItem));
+	}
+
+	@GraphQLField
+	public boolean deleteWarehouseByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
 			_warehouseResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			warehouseResource ->
-				warehouseResource.postWarehousesPageExportBatch(
-					search,
-					_filterBiFunction.apply(warehouseResource, filterString),
-					_sortsBiFunction.apply(warehouseResource, sortsString),
-					callbackURL, contentType, fieldNames));
+				warehouseResource.deleteWarehouseByExternalReferenceCode(
+					externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public boolean deleteWarehouseId(@GraphQLName("id") Long id)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_warehouseResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseResource -> warehouseResource.deleteWarehouseId(id));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response patchWarehouseByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("warehouse") Warehouse warehouse)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_warehouseResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseResource ->
+				warehouseResource.patchWarehouseByExternalReferenceCode(
+					externalReferenceCode, warehouse));
+	}
+
+	@GraphQLField
+	public Response patchWarehouseId(
+			@GraphQLName("id") Long id,
+			@GraphQLName("warehouse") Warehouse warehouse)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_warehouseResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseResource -> warehouseResource.patchWarehouseId(
+				id, warehouse));
 	}
 
 	@GraphQLField
@@ -256,22 +323,28 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public boolean deleteWarehouseByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+	public Response createWarehousesPageExportBatch(
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
 		throws Exception {
 
-		_applyVoidComponentServiceObjects(
+		return _applyComponentServiceObjects(
 			_warehouseResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			warehouseResource ->
-				warehouseResource.deleteWarehouseByExternalReferenceCode(
-					externalReferenceCode));
-
-		return true;
+				warehouseResource.postWarehousesPageExportBatch(
+					search,
+					_filterBiFunction.apply(warehouseResource, filterString),
+					_sortsBiFunction.apply(warehouseResource, sortsString),
+					callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
-	public Response patchWarehouseByExternalReferenceCode(
+	public Warehouse updateWarehouseByExternalReferenceCode(
 			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("warehouse") Warehouse warehouse)
 		throws Exception {
@@ -280,33 +353,162 @@ public class Mutation {
 			_warehouseResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			warehouseResource ->
-				warehouseResource.patchWarehouseByExternalReferenceCode(
+				warehouseResource.putWarehouseByExternalReferenceCode(
 					externalReferenceCode, warehouse));
 	}
 
 	@GraphQLField
-	public boolean deleteWarehouseId(@GraphQLName("id") Long id)
+	public boolean deleteWarehouseAccount(
+			@GraphQLName("warehouseAccountId") Long warehouseAccountId)
 		throws Exception {
 
 		_applyVoidComponentServiceObjects(
-			_warehouseResourceComponentServiceObjects,
+			_warehouseAccountResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			warehouseResource -> warehouseResource.deleteWarehouseId(id));
+			warehouseAccountResource ->
+				warehouseAccountResource.deleteWarehouseAccount(
+					warehouseAccountId));
 
 		return true;
 	}
 
 	@GraphQLField
-	public Response patchWarehouseId(
-			@GraphQLName("id") Long id,
-			@GraphQLName("warehouse") Warehouse warehouse)
+	public Response deleteWarehouseAccountBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_warehouseResourceComponentServiceObjects,
+			_warehouseAccountResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			warehouseResource -> warehouseResource.patchWarehouseId(
-				id, warehouse));
+			warehouseAccountResource ->
+				warehouseAccountResource.deleteWarehouseAccountBatch(
+					callbackURL, object));
+	}
+
+	@GraphQLField
+	public WarehouseAccount
+			createWarehouseByExternalReferenceCodeWarehouseAccount(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("warehouseAccount") WarehouseAccount
+					warehouseAccount)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_warehouseAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseAccountResource ->
+				warehouseAccountResource.
+					postWarehouseByExternalReferenceCodeWarehouseAccount(
+						externalReferenceCode, warehouseAccount));
+	}
+
+	@GraphQLField
+	public WarehouseAccount createWarehouseIdWarehouseAccount(
+			@GraphQLName("id") Long id,
+			@GraphQLName("warehouseAccount") WarehouseAccount warehouseAccount)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_warehouseAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseAccountResource ->
+				warehouseAccountResource.postWarehouseIdWarehouseAccount(
+					id, warehouseAccount));
+	}
+
+	@GraphQLField
+	public Response createWarehouseIdWarehouseAccountBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_warehouseAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseAccountResource ->
+				warehouseAccountResource.postWarehouseIdWarehouseAccountBatch(
+					callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deleteWarehouseAccountGroup(
+			@GraphQLName("warehouseAccountGroupId") Long
+				warehouseAccountGroupId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_warehouseAccountGroupResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseAccountGroupResource ->
+				warehouseAccountGroupResource.deleteWarehouseAccountGroup(
+					warehouseAccountGroupId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteWarehouseAccountGroupBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_warehouseAccountGroupResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseAccountGroupResource ->
+				warehouseAccountGroupResource.deleteWarehouseAccountGroupBatch(
+					callbackURL, object));
+	}
+
+	@GraphQLField
+	public WarehouseAccountGroup
+			createWarehouseByExternalReferenceCodeWarehouseAccountGroup(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("warehouseAccountGroup") WarehouseAccountGroup
+					warehouseAccountGroup)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_warehouseAccountGroupResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseAccountGroupResource ->
+				warehouseAccountGroupResource.
+					postWarehouseByExternalReferenceCodeWarehouseAccountGroup(
+						externalReferenceCode, warehouseAccountGroup));
+	}
+
+	@GraphQLField
+	public WarehouseAccountGroup createWarehouseIdWarehouseAccountGroup(
+			@GraphQLName("id") Long id,
+			@GraphQLName("warehouseAccountGroup") WarehouseAccountGroup
+				warehouseAccountGroup)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_warehouseAccountGroupResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseAccountGroupResource ->
+				warehouseAccountGroupResource.
+					postWarehouseIdWarehouseAccountGroup(
+						id, warehouseAccountGroup));
+	}
+
+	@GraphQLField
+	public Response createWarehouseIdWarehouseAccountGroupBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_warehouseAccountGroupResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseAccountGroupResource ->
+				warehouseAccountGroupResource.
+					postWarehouseIdWarehouseAccountGroupBatch(
+						callbackURL, object));
 	}
 
 	@GraphQLField
@@ -385,56 +587,16 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Response deleteWarehouseItemByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+	public boolean deleteWarehouseItem(@GraphQLName("id") Long id)
 		throws Exception {
 
-		return _applyComponentServiceObjects(
-			_warehouseItemResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			warehouseItemResource ->
-				warehouseItemResource.
-					deleteWarehouseItemByExternalReferenceCode(
-						externalReferenceCode));
-	}
-
-	@GraphQLField
-	public Response patchWarehouseItemByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("warehouseItem") WarehouseItem warehouseItem)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_warehouseItemResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			warehouseItemResource ->
-				warehouseItemResource.patchWarehouseItemByExternalReferenceCode(
-					externalReferenceCode, warehouseItem));
-	}
-
-	@GraphQLField
-	public WarehouseItem createWarehouseItemByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("warehouseItem") WarehouseItem warehouseItem)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_warehouseItemResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			warehouseItemResource ->
-				warehouseItemResource.postWarehouseItemByExternalReferenceCode(
-					externalReferenceCode, warehouseItem));
-	}
-
-	@GraphQLField
-	public Response deleteWarehouseItem(@GraphQLName("id") Long id)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
+		_applyVoidComponentServiceObjects(
 			_warehouseItemResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			warehouseItemResource -> warehouseItemResource.deleteWarehouseItem(
 				id));
+
+		return true;
 	}
 
 	@GraphQLField
@@ -452,6 +614,22 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public boolean deleteWarehouseItemByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_warehouseItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseItemResource ->
+				warehouseItemResource.
+					deleteWarehouseItemByExternalReferenceCode(
+						externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
 	public Response patchWarehouseItem(
 			@GraphQLName("id") Long id,
 			@GraphQLName("warehouseItem") WarehouseItem warehouseItem)
@@ -462,6 +640,20 @@ public class Mutation {
 			this::_populateResourceContext,
 			warehouseItemResource -> warehouseItemResource.patchWarehouseItem(
 				id, warehouseItem));
+	}
+
+	@GraphQLField
+	public Response patchWarehouseItemByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("warehouseItem") WarehouseItem warehouseItem)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_warehouseItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseItemResource ->
+				warehouseItemResource.patchWarehouseItemByExternalReferenceCode(
+					externalReferenceCode, warehouseItem));
 	}
 
 	@GraphQLField
@@ -505,6 +697,34 @@ public class Mutation {
 			warehouseItemResource ->
 				warehouseItemResource.postWarehouseIdWarehouseItemBatch(
 					callbackURL, object));
+	}
+
+	@GraphQLField
+	public WarehouseItem createWarehouseItemByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("warehouseItem") WarehouseItem warehouseItem)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_warehouseItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseItemResource ->
+				warehouseItemResource.postWarehouseItemByExternalReferenceCode(
+					externalReferenceCode, warehouseItem));
+	}
+
+	@GraphQLField
+	public WarehouseItem updateWarehouseItemByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("warehouseItem") WarehouseItem warehouseItem)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_warehouseItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			warehouseItemResource ->
+				warehouseItemResource.putWarehouseItemByExternalReferenceCode(
+					externalReferenceCode, warehouseItem));
 	}
 
 	@GraphQLField
@@ -664,6 +884,50 @@ public class Mutation {
 	}
 
 	private void _populateResourceContext(
+			WarehouseAccountResource warehouseAccountResource)
+		throws Exception {
+
+		warehouseAccountResource.setContextAcceptLanguage(_acceptLanguage);
+		warehouseAccountResource.setContextCompany(_company);
+		warehouseAccountResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		warehouseAccountResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		warehouseAccountResource.setContextUriInfo(_uriInfo);
+		warehouseAccountResource.setContextUser(_user);
+		warehouseAccountResource.setGroupLocalService(_groupLocalService);
+		warehouseAccountResource.setRoleLocalService(_roleLocalService);
+
+		warehouseAccountResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		warehouseAccountResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
+			WarehouseAccountGroupResource warehouseAccountGroupResource)
+		throws Exception {
+
+		warehouseAccountGroupResource.setContextAcceptLanguage(_acceptLanguage);
+		warehouseAccountGroupResource.setContextCompany(_company);
+		warehouseAccountGroupResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		warehouseAccountGroupResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		warehouseAccountGroupResource.setContextUriInfo(_uriInfo);
+		warehouseAccountGroupResource.setContextUser(_user);
+		warehouseAccountGroupResource.setGroupLocalService(_groupLocalService);
+		warehouseAccountGroupResource.setRoleLocalService(_roleLocalService);
+
+		warehouseAccountGroupResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		warehouseAccountGroupResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
 			WarehouseChannelResource warehouseChannelResource)
 		throws Exception {
 
@@ -732,6 +996,10 @@ public class Mutation {
 		_replenishmentItemResourceComponentServiceObjects;
 	private static ComponentServiceObjects<WarehouseResource>
 		_warehouseResourceComponentServiceObjects;
+	private static ComponentServiceObjects<WarehouseAccountResource>
+		_warehouseAccountResourceComponentServiceObjects;
+	private static ComponentServiceObjects<WarehouseAccountGroupResource>
+		_warehouseAccountGroupResourceComponentServiceObjects;
 	private static ComponentServiceObjects<WarehouseChannelResource>
 		_warehouseChannelResourceComponentServiceObjects;
 	private static ComponentServiceObjects<WarehouseItemResource>
@@ -741,12 +1009,15 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

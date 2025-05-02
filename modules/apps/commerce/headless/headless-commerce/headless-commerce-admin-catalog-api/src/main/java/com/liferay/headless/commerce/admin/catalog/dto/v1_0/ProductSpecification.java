@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -30,7 +28,6 @@ import javax.annotation.Generated;
 
 import javax.validation.Valid;
 import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -41,8 +38,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Generated("")
 @GraphQLName("ProductSpecification")
+@io.swagger.v3.oas.annotations.media.Schema(requiredProperties = {"value"})
 @JsonFilter("Liferay.Vulcan")
-@Schema(requiredProperties = {"specificationKey", "value"})
 @XmlRootElement(name = "ProductSpecification")
 public class ProductSpecification implements Serializable {
 
@@ -55,8 +52,49 @@ public class ProductSpecification implements Serializable {
 			ProductSpecification.class, json);
 	}
 
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCodeSupplier != null) {
+			externalReferenceCode = _externalReferenceCodeSupplier.get();
+
+			_externalReferenceCodeSupplier = null;
+		}
+
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+
+		_externalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		_externalReferenceCodeSupplier = () -> {
+			try {
+				return externalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String externalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _externalReferenceCodeSupplier;
+
 	@DecimalMin("0")
-	@Schema(example = "31130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "31130")
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -95,7 +133,7 @@ public class ProductSpecification implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getKey() {
 		if (_keySupplier != null) {
 			key = _keySupplier.get();
@@ -134,7 +172,7 @@ public class ProductSpecification implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _keySupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		example = "{en_US=Hand Saw, hr_HR=Product Name HR, hu_HU=Product Name HU}"
 	)
 	@Valid
@@ -178,8 +216,54 @@ public class ProductSpecification implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _labelSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
+	public String getOptionCategoryExternalReferenceCode() {
+		if (_optionCategoryExternalReferenceCodeSupplier != null) {
+			optionCategoryExternalReferenceCode =
+				_optionCategoryExternalReferenceCodeSupplier.get();
+
+			_optionCategoryExternalReferenceCodeSupplier = null;
+		}
+
+		return optionCategoryExternalReferenceCode;
+	}
+
+	public void setOptionCategoryExternalReferenceCode(
+		String optionCategoryExternalReferenceCode) {
+
+		this.optionCategoryExternalReferenceCode =
+			optionCategoryExternalReferenceCode;
+
+		_optionCategoryExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setOptionCategoryExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			optionCategoryExternalReferenceCodeUnsafeSupplier) {
+
+		_optionCategoryExternalReferenceCodeSupplier = () -> {
+			try {
+				return optionCategoryExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String optionCategoryExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _optionCategoryExternalReferenceCodeSupplier;
+
 	@DecimalMin("0")
-	@Schema(example = "30129")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30129")
 	public Long getOptionCategoryId() {
 		if (_optionCategoryIdSupplier != null) {
 			optionCategoryId = _optionCategoryIdSupplier.get();
@@ -221,7 +305,7 @@ public class ProductSpecification implements Serializable {
 	private Supplier<Long> _optionCategoryIdSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "1.2")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "1.2")
 	public Double getPriority() {
 		if (_prioritySupplier != null) {
 			priority = _prioritySupplier.get();
@@ -263,7 +347,7 @@ public class ProductSpecification implements Serializable {
 	private Supplier<Double> _prioritySupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "30129")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30129")
 	public Long getProductId() {
 		if (_productIdSupplier != null) {
 			productId = _productIdSupplier.get();
@@ -304,8 +388,54 @@ public class ProductSpecification implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _productIdSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
+	public String getSpecificationExternalReferenceCode() {
+		if (_specificationExternalReferenceCodeSupplier != null) {
+			specificationExternalReferenceCode =
+				_specificationExternalReferenceCodeSupplier.get();
+
+			_specificationExternalReferenceCodeSupplier = null;
+		}
+
+		return specificationExternalReferenceCode;
+	}
+
+	public void setSpecificationExternalReferenceCode(
+		String specificationExternalReferenceCode) {
+
+		this.specificationExternalReferenceCode =
+			specificationExternalReferenceCode;
+
+		_specificationExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setSpecificationExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			specificationExternalReferenceCodeUnsafeSupplier) {
+
+		_specificationExternalReferenceCodeSupplier = () -> {
+			try {
+				return specificationExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String specificationExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _specificationExternalReferenceCodeSupplier;
+
 	@DecimalMin("0")
-	@Schema(example = "30129")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30129")
 	public Long getSpecificationId() {
 		if (_specificationIdSupplier != null) {
 			specificationId = _specificationIdSupplier.get();
@@ -346,7 +476,7 @@ public class ProductSpecification implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _specificationIdSupplier;
 
-	@Schema(example = "specification-key")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "specification-key")
 	public String getSpecificationKey() {
 		if (_specificationKeySupplier != null) {
 			specificationKey = _specificationKeySupplier.get();
@@ -382,13 +512,12 @@ public class ProductSpecification implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	@NotEmpty
 	protected String specificationKey;
 
 	@JsonIgnore
 	private Supplier<String> _specificationKeySupplier;
 
-	@Schema(example = "1.1")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "1.1")
 	public Double getSpecificationPriority() {
 		if (_specificationPrioritySupplier != null) {
 			specificationPriority = _specificationPrioritySupplier.get();
@@ -429,7 +558,9 @@ public class ProductSpecification implements Serializable {
 	@JsonIgnore
 	private Supplier<Double> _specificationPrioritySupplier;
 
-	@Schema(example = "{en_US=Croatia, hr_HR=Hrvatska, hu_HU=Horvatorszag}")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		example = "{en_US=Croatia, hr_HR=Hrvatska, hu_HU=Horvatorszag}"
+	)
 	@Valid
 	public Map<String, String> getValue() {
 		if (_valueSupplier != null) {
@@ -472,6 +603,47 @@ public class ProductSpecification implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _valueSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
+	public Boolean getVisible() {
+		if (_visibleSupplier != null) {
+			visible = _visibleSupplier.get();
+
+			_visibleSupplier = null;
+		}
+
+		return visible;
+	}
+
+	public void setVisible(Boolean visible) {
+		this.visible = visible;
+
+		_visibleSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setVisible(
+		UnsafeSupplier<Boolean, Exception> visibleUnsafeSupplier) {
+
+		_visibleSupplier = () -> {
+			try {
+				return visibleUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean visible;
+
+	@JsonIgnore
+	private Supplier<Boolean> _visibleSupplier;
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -499,6 +671,22 @@ public class ProductSpecification implements Serializable {
 		StringBundler sb = new StringBundler();
 
 		sb.append("{");
+
+		String externalReferenceCode = getExternalReferenceCode();
+
+		if (externalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
 
 		Long id = getId();
 
@@ -540,6 +728,23 @@ public class ProductSpecification implements Serializable {
 			sb.append(_toJSON(label));
 		}
 
+		String optionCategoryExternalReferenceCode =
+			getOptionCategoryExternalReferenceCode();
+
+		if (optionCategoryExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"optionCategoryExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(optionCategoryExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		Long optionCategoryId = getOptionCategoryId();
 
 		if (optionCategoryId != null) {
@@ -574,6 +779,23 @@ public class ProductSpecification implements Serializable {
 			sb.append("\"productId\": ");
 
 			sb.append(productId);
+		}
+
+		String specificationExternalReferenceCode =
+			getSpecificationExternalReferenceCode();
+
+		if (specificationExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"specificationExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(specificationExternalReferenceCode));
+
+			sb.append("\"");
 		}
 
 		Long specificationId = getSpecificationId();
@@ -628,13 +850,25 @@ public class ProductSpecification implements Serializable {
 			sb.append(_toJSON(value));
 		}
 
+		Boolean visible = getVisible();
+
+		if (visible != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"visible\": ");
+
+			sb.append(visible);
+		}
+
 		sb.append("}");
 
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductSpecification",
 		name = "x-class-name"
 	)

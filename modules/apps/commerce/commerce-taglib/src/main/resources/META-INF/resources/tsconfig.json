@@ -1,15 +1,14 @@
 {
-	"@generated": "e7e7dc829236bfd4729bdaf40711406f3faac4a3",
+	"@generated": "675ee157a35be1ee3c4f3324879f50c91979b80e",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 			"commerce-frontend-js": [

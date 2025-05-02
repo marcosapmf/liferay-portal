@@ -35,29 +35,10 @@ public abstract class BasePortalTestBatch<T extends PortalBatchBuildData>
 		buildParameters.put(
 			"test.batch.name", portalBatchBuildData.getBatchName());
 
-		Map<String, String> environmentVariables = new HashMap<>();
-
-		environmentVariables.put(
-			"TEST_PORTAL_BRANCH_NAME",
-			portalBatchBuildData.getPortalUpstreamBranchName());
-
-		if (JenkinsResultsParserUtil.isCINode()) {
-			String batchName = portalBatchBuildData.getBatchName();
-
-			environmentVariables.put("ANT_OPTS", getAntOpts(batchName));
-			environmentVariables.put("JAVA_HOME", getJavaHome(batchName));
-			environmentVariables.put("PATH", getPath(batchName));
-		}
-
-		environmentVariables.putAll(
-			portalBatchBuildData.getTopLevelBuildParameters());
-
-		environmentVariables.putAll(portalBatchBuildData.getBuildParameters());
-
 		AntUtil.callTarget(
 			getPrimaryPortalWorkspaceDirectory(), "build-test-batch.xml",
 			portalBatchBuildData.getBatchName(), buildParameters,
-			environmentVariables, getAntLibDir());
+			getEnvironmentVariables(), getAntLibDir());
 	}
 
 	protected File getAntLibDir() {
@@ -73,6 +54,32 @@ public abstract class BasePortalTestBatch<T extends PortalBatchBuildData>
 	@Override
 	protected T getBatchBuildData() {
 		return super.getBatchBuildData();
+	}
+
+	protected Map<String, String> getEnvironmentVariables() {
+		Map<String, String> environmentVariables = new HashMap<>();
+
+		PortalBatchBuildData portalBatchBuildData = getBatchBuildData();
+
+		environmentVariables.put(
+			"TEST_PORTAL_BRANCH_NAME",
+			portalBatchBuildData.getPortalUpstreamBranchName());
+
+		if (JenkinsResultsParserUtil.isCINode()) {
+			String batchName = portalBatchBuildData.getBatchName();
+
+			environmentVariables.put("ANT_OPTS", getAntOpts(batchName));
+			environmentVariables.put("JAVA_HOME", getJavaHome(batchName));
+			environmentVariables.put("JAVA_OPTS", getJavaOpts(batchName));
+			environmentVariables.put("PATH", getPath(batchName));
+		}
+
+		environmentVariables.putAll(
+			portalBatchBuildData.getTopLevelBuildParameters());
+
+		environmentVariables.putAll(portalBatchBuildData.getBuildParameters());
+
+		return environmentVariables;
 	}
 
 	protected File getPrimaryPortalWorkspaceDirectory() {

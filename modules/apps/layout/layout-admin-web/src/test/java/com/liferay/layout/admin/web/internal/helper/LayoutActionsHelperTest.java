@@ -11,7 +11,9 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.After;
@@ -23,6 +25,7 @@ import org.junit.Test;
 
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 
 /**
  * @author Eudaldo Alonso
@@ -36,10 +39,9 @@ public class LayoutActionsHelperTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_setGroup();
-		_setUpLayout();
 		_setUpLayoutLocalServiceUtil();
-		_setUpLayoutPermissionUtil();
+
+		_layoutPermissionUtilMockedStatic.reset();
 	}
 
 	@After
@@ -52,38 +54,149 @@ public class LayoutActionsHelperTest {
 	public void testIsShowDeleteActionForLastPublicPageOnDefaultSite()
 		throws PortalException {
 
+		Layout layout = _getLayout(_getGroup());
+
+		_setUpLayoutPermissionUtil(layout, ActionKeys.DELETE);
+
 		LayoutActionsHelper layoutActionsHelper = new LayoutActionsHelper(
 			null, _themeDisplay, null);
 
-		Assert.assertFalse(layoutActionsHelper.isShowDeleteAction(_layout));
+		Assert.assertFalse(layoutActionsHelper.isShowDeleteAction(layout));
 	}
 
-	private void _setGroup() {
+	@Test
+	@TestInfo("LPS-140136")
+	public void testIsShowDiscardDraftAction() throws PortalException {
+		Layout layout = _getLayout(_getGroup());
+
+		LayoutActionsHelper layoutActionsHelper = new LayoutActionsHelper(
+			null, _themeDisplay, null);
+
+		Assert.assertFalse(
+			layoutActionsHelper.isShowDiscardDraftActions(layout));
+
+		_setUpLayoutPermissionUtil(layout, ActionKeys.UPDATE);
+
+		Assert.assertFalse(
+			layoutActionsHelper.isShowDiscardDraftActions(layout));
+
 		Mockito.when(
-			_group.isGuest()
+			layout.isTypeContent()
 		).thenReturn(
 			true
 		);
+
+		Layout draftLayout = _getLayout(layout.getGroup());
+
+		Mockito.when(
+			layout.fetchDraftLayout()
+		).thenReturn(
+			draftLayout
+		);
+
+		Assert.assertFalse(
+			layoutActionsHelper.isShowDiscardDraftActions(layout));
+
+		Mockito.when(
+			draftLayout.isDraft()
+		).thenReturn(
+			true
+		);
+
+		Assert.assertTrue(
+			layoutActionsHelper.isShowDiscardDraftActions(layout));
+
+		_setUpLayoutPermissionUtil(layout);
+
+		Assert.assertFalse(
+			layoutActionsHelper.isShowDiscardDraftActions(layout));
 	}
 
-	private void _setUpLayout() {
+	@Test
+	@TestInfo("LPS-140136")
+	public void testIsShowPreviewDraftAction() throws PortalException {
+		Layout layout = _getLayout(_getGroup());
+
+		LayoutActionsHelper layoutActionsHelper = new LayoutActionsHelper(
+			null, _themeDisplay, null);
+
+		Assert.assertFalse(
+			layoutActionsHelper.isShowPreviewDraftActions(layout));
+
+		_setUpPreviewDraftPermission(layout);
+
+		Assert.assertFalse(
+			layoutActionsHelper.isShowPreviewDraftActions(layout));
+
+		Layout draftLayout = _getLayout(layout.getGroup());
+
 		Mockito.when(
-			_layout.getGroup()
+			layout.fetchDraftLayout()
 		).thenReturn(
-			_group
+			draftLayout
+		);
+
+		Assert.assertTrue(
+			layoutActionsHelper.isShowPreviewDraftActions(layout));
+
+		Mockito.when(
+			layout.isPublished()
+		).thenReturn(
+			true
+		);
+
+		Assert.assertFalse(
+			layoutActionsHelper.isShowPreviewDraftActions(layout));
+
+		Mockito.when(
+			draftLayout.isDraft()
+		).thenReturn(
+			true
+		);
+
+		Assert.assertTrue(
+			layoutActionsHelper.isShowPreviewDraftActions(layout));
+
+		_layoutPermissionUtilMockedStatic.reset();
+
+		Assert.assertFalse(
+			layoutActionsHelper.isShowPreviewDraftActions(layout));
+	}
+
+	private Group _getGroup() {
+		Group group = Mockito.mock(Group.class);
+
+		Mockito.when(
+			group.isGuest()
+		).thenReturn(
+			true
+		);
+
+		return group;
+	}
+
+	private Layout _getLayout(Group group) {
+		Layout layout = Mockito.mock(Layout.class);
+
+		Mockito.when(
+			layout.getGroup()
+		).thenReturn(
+			group
 		);
 
 		Mockito.when(
-			_layout.isPrivateLayout()
+			layout.isPrivateLayout()
 		).thenReturn(
 			false
 		);
 
 		Mockito.when(
-			_layout.isRootLayout()
+			layout.isRootLayout()
 		).thenReturn(
 			true
 		);
+
+		return layout;
 	}
 
 	private void _setUpLayoutLocalServiceUtil() {
@@ -95,18 +208,28 @@ public class LayoutActionsHelperTest {
 		);
 	}
 
-	private void _setUpLayoutPermissionUtil() {
+	private void _setUpLayoutPermissionUtil(
+		Layout layout, String... actionIds) {
+
 		_layoutPermissionUtilMockedStatic.when(
 			() -> LayoutPermissionUtil.contains(
-				_themeDisplay.getPermissionChecker(), _layout,
-				ActionKeys.DELETE)
+				Mockito.eq(_themeDisplay.getPermissionChecker()),
+				Mockito.eq(layout), Mockito.anyString())
+		).thenAnswer(
+			(Answer<Boolean>)invocationOnMock -> ArrayUtil.contains(
+				actionIds, invocationOnMock.getArgument(2, String.class))
+		);
+	}
+
+	private void _setUpPreviewDraftPermission(Layout layout) {
+		_layoutPermissionUtilMockedStatic.when(
+			() -> LayoutPermissionUtil.containsLayoutPreviewDraftPermission(
+				_themeDisplay.getPermissionChecker(), layout)
 		).thenReturn(
 			true
 		);
 	}
 
-	private final Group _group = Mockito.mock(Group.class);
-	private final Layout _layout = Mockito.mock(Layout.class);
 	private final MockedStatic<LayoutLocalServiceUtil>
 		_layoutLocalServiceUtilMockedStatic = Mockito.mockStatic(
 			LayoutLocalServiceUtil.class);

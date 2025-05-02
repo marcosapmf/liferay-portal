@@ -5,6 +5,8 @@
 
 package com.liferay.portal.search.web.internal.search.results.portlet.shared.search;
 
+import com.liferay.portal.kernel.dao.search.SearchPaginationUtil;
+import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
@@ -14,6 +16,8 @@ import com.liferay.portal.search.web.internal.search.results.portlet.SearchResul
 import com.liferay.portal.search.web.internal.util.SearchStringUtil;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchContributor;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchSettings;
+
+import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -79,9 +83,18 @@ public class SearchResultsPortletSharedSearchContributor
 		portletSharedSearchSettings.setPaginationDelta(paginationDelta);
 		searchRequestBuilder.size(paginationDelta);
 
+		SearchContext searchContext = searchRequestBuilder.withSearchContextGet(
+			Function.identity());
+
 		int paginationStart = GetterUtil.getInteger(
 			portletSharedSearchSettings.getParameter(
 				paginationStartParameterName));
+
+		int[] startAndEnd = SearchPaginationUtil.calculateStartAndEnd(
+			paginationStart, paginationDelta);
+
+		searchContext.setEnd(startAndEnd[1]);
+		searchContext.setStart(startAndEnd[0]);
 
 		if (paginationStart > 0) {
 			portletSharedSearchSettings.setPaginationStart(paginationStart);

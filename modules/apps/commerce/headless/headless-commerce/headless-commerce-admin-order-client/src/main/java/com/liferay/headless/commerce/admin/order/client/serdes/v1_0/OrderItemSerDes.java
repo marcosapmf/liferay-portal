@@ -5,7 +5,6 @@
 
 package com.liferay.headless.commerce.admin.order.client.serdes.v1_0;
 
-import com.liferay.headless.commerce.admin.order.client.dto.v1_0.CustomField;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.OrderItem;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.VirtualItem;
 import com.liferay.headless.commerce.admin.order.client.json.BaseJSONParser;
@@ -74,7 +73,7 @@ public class OrderItemSerDes {
 			sb.append("[");
 
 			for (int i = 0; i < orderItem.getCustomFields().length; i++) {
-				sb.append(String.valueOf(orderItem.getCustomFields()[i]));
+				sb.append(orderItem.getCustomFields()[i]);
 
 				if ((i + 1) < orderItem.getCustomFields().length) {
 					sb.append(", ");
@@ -104,6 +103,20 @@ public class OrderItemSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(orderItem.getDeliveryGroup()));
+
+			sb.append("\"");
+		}
+
+		if (orderItem.getDeliveryGroupName() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"deliveryGroupName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(orderItem.getDeliveryGroupName()));
 
 			sb.append("\"");
 		}
@@ -392,6 +405,20 @@ public class OrderItemSerDes {
 			sb.append("\"");
 		}
 
+		if (orderItem.getReplacedSkuExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacedSkuExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(orderItem.getReplacedSkuExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (orderItem.getReplacedSkuId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -418,6 +445,16 @@ public class OrderItemSerDes {
 			sb.append("\"");
 		}
 
+		if (orderItem.getShippable() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"shippable\": ");
+
+			sb.append(orderItem.getShippable());
+		}
+
 		if (orderItem.getShippedQuantity() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -436,6 +473,21 @@ public class OrderItemSerDes {
 			sb.append("\"shippingAddress\": ");
 
 			sb.append(String.valueOf(orderItem.getShippingAddress()));
+		}
+
+		if (orderItem.getShippingAddressExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"shippingAddressExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(orderItem.getShippingAddressExternalReferenceCode()));
+
+			sb.append("\"");
 		}
 
 		if (orderItem.getShippingAddressId() != null) {
@@ -637,6 +689,15 @@ public class OrderItemSerDes {
 		else {
 			map.put(
 				"deliveryGroup", String.valueOf(orderItem.getDeliveryGroup()));
+		}
+
+		if (orderItem.getDeliveryGroupName() == null) {
+			map.put("deliveryGroupName", null);
+		}
+		else {
+			map.put(
+				"deliveryGroupName",
+				String.valueOf(orderItem.getDeliveryGroupName()));
 		}
 
 		if (orderItem.getDiscountAmount() == null) {
@@ -859,6 +920,16 @@ public class OrderItemSerDes {
 			map.put("replacedSku", String.valueOf(orderItem.getReplacedSku()));
 		}
 
+		if (orderItem.getReplacedSkuExternalReferenceCode() == null) {
+			map.put("replacedSkuExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"replacedSkuExternalReferenceCode",
+				String.valueOf(
+					orderItem.getReplacedSkuExternalReferenceCode()));
+		}
+
 		if (orderItem.getReplacedSkuId() == null) {
 			map.put("replacedSkuId", null);
 		}
@@ -877,6 +948,13 @@ public class OrderItemSerDes {
 					orderItem.getRequestedDeliveryDate()));
 		}
 
+		if (orderItem.getShippable() == null) {
+			map.put("shippable", null);
+		}
+		else {
+			map.put("shippable", String.valueOf(orderItem.getShippable()));
+		}
+
 		if (orderItem.getShippedQuantity() == null) {
 			map.put("shippedQuantity", null);
 		}
@@ -893,6 +971,16 @@ public class OrderItemSerDes {
 			map.put(
 				"shippingAddress",
 				String.valueOf(orderItem.getShippingAddress()));
+		}
+
+		if (orderItem.getShippingAddressExternalReferenceCode() == null) {
+			map.put("shippingAddressExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"shippingAddressExternalReferenceCode",
+				String.valueOf(
+					orderItem.getShippingAddressExternalReferenceCode()));
 		}
 
 		if (orderItem.getShippingAddressId() == null) {
@@ -1014,6 +1102,9 @@ public class OrderItemSerDes {
 			else if (Objects.equals(jsonParserFieldName, "deliveryGroup")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "deliveryGroupName")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "discountAmount")) {
 				return false;
 			}
@@ -1126,6 +1217,12 @@ public class OrderItemSerDes {
 			else if (Objects.equals(jsonParserFieldName, "replacedSku")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"replacedSkuExternalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "replacedSkuId")) {
 				return false;
 			}
@@ -1134,10 +1231,19 @@ public class OrderItemSerDes {
 
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "shippable")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "shippedQuantity")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "shippingAddress")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"shippingAddressExternalReferenceCode")) {
+
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "shippingAddressId")) {
@@ -1197,12 +1303,16 @@ public class OrderItemSerDes {
 					Object[] jsonParserFieldValues =
 						(Object[])jsonParserFieldValue;
 
-					CustomField[] customFieldsArray =
-						new CustomField[jsonParserFieldValues.length];
+					com.liferay.headless.commerce.admin.order.client.custom.
+						field.CustomField[] customFieldsArray = new
+						com.liferay.headless.commerce.admin.order.client.custom.
+							field.CustomField[jsonParserFieldValues.length];
 
 					for (int i = 0; i < customFieldsArray.length; i++) {
-						customFieldsArray[i] = CustomFieldSerDes.toDTO(
-							(String)jsonParserFieldValues[i]);
+						customFieldsArray[i] =
+							com.liferay.headless.commerce.admin.order.client.
+								custom.field.CustomField.toDTO(
+									(String)jsonParserFieldValues[i]);
 					}
 
 					orderItem.setCustomFields(customFieldsArray);
@@ -1217,6 +1327,12 @@ public class OrderItemSerDes {
 			else if (Objects.equals(jsonParserFieldName, "deliveryGroup")) {
 				if (jsonParserFieldValue != null) {
 					orderItem.setDeliveryGroup((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "deliveryGroupName")) {
+				if (jsonParserFieldValue != null) {
+					orderItem.setDeliveryGroupName(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "discountAmount")) {
@@ -1405,6 +1521,15 @@ public class OrderItemSerDes {
 					orderItem.setReplacedSku((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"replacedSkuExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					orderItem.setReplacedSkuExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "replacedSkuId")) {
 				if (jsonParserFieldValue != null) {
 					orderItem.setReplacedSkuId(
@@ -1419,6 +1544,11 @@ public class OrderItemSerDes {
 						toDate((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "shippable")) {
+				if (jsonParserFieldValue != null) {
+					orderItem.setShippable((Boolean)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "shippedQuantity")) {
 				if (jsonParserFieldValue != null) {
 					orderItem.setShippedQuantity(
@@ -1430,6 +1560,15 @@ public class OrderItemSerDes {
 					orderItem.setShippingAddress(
 						ShippingAddressSerDes.toDTO(
 							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"shippingAddressExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					orderItem.setShippingAddressExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "shippingAddressId")) {
@@ -1553,6 +1692,10 @@ public class OrderItemSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

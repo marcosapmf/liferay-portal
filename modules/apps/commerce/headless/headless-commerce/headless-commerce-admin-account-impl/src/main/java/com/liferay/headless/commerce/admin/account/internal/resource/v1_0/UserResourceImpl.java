@@ -5,7 +5,6 @@
 
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
-import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryService;
 import com.liferay.commerce.util.CommerceAccountHelper;
@@ -34,11 +33,13 @@ import org.osgi.service.component.annotations.ServiceScope;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/user.properties",
 	scope = ServiceScope.PROTOTYPE, service = UserResource.class
 )
+@Deprecated
 public class UserResourceImpl extends BaseUserResourceImpl {
 
 	@Override
@@ -47,14 +48,8 @@ public class UserResourceImpl extends BaseUserResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		ServiceContext serviceContext = _serviceContextHelper.getServiceContext(
 			accountEntry.getAccountEntryGroupId());

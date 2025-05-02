@@ -21,9 +21,11 @@ const QUERY_CONTRIBUTORS_OPTIONS = {
 
 function QuerySettings({
 	applyIndexerClauses,
+	assetSubtypesMap,
 	clauseContributorsList,
 	frameworkConfig,
 	onApplyIndexerClausesChange,
+	onAssetSubtypesMapChange,
 	onChangeClauseContributorsVisibility,
 	onChangeIndexerClausesHelpVisibility,
 	onChangeQueryContributorsHelpVisibility,
@@ -130,6 +132,13 @@ function QuerySettings({
 									</div>
 
 									<SelectTypes
+										assetSubtypesMap={assetSubtypesMap}
+										initialSelectedTypes={
+											frameworkConfig.searchableAssetTypes
+										}
+										onAssetSubtypesMapChange={
+											onAssetSubtypesMapChange
+										}
 										onFetchSearchableTypes={
 											onFetchSearchableTypes
 										}
@@ -137,9 +146,6 @@ function QuerySettings({
 											onFrameworkConfigChange
 										}
 										searchableTypes={searchableTypes}
-										selectedTypes={
-											frameworkConfig.searchableAssetTypes
-										}
 									/>
 								</>
 							)}

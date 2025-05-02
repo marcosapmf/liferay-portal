@@ -31,8 +31,9 @@ public class EmailAddressLocalServiceImpl
 
 	@Override
 	public EmailAddress addEmailAddress(
-			long userId, String className, long classPK, String address,
-			long listTypeId, boolean primary, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, String className,
+			long classPK, String address, long listTypeId, boolean primary,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		User user = _userPersistence.findByPrimaryKey(userId);
@@ -48,6 +49,7 @@ public class EmailAddressLocalServiceImpl
 			emailAddressId);
 
 		emailAddress.setUuid(serviceContext.getUuid());
+		emailAddress.setExternalReferenceCode(externalReferenceCode);
 		emailAddress.setCompanyId(user.getCompanyId());
 		emailAddress.setUserId(user.getUserId());
 		emailAddress.setUserName(user.getFullName());
@@ -110,8 +112,8 @@ public class EmailAddressLocalServiceImpl
 
 	@Override
 	public EmailAddress updateEmailAddress(
-			long emailAddressId, String address, long listTypeId,
-			boolean primary)
+			String externalReferenceCode, long emailAddressId, String address,
+			long listTypeId, boolean primary)
 		throws PortalException {
 
 		validate(emailAddressId, 0, 0, 0, address, listTypeId, primary);
@@ -119,6 +121,7 @@ public class EmailAddressLocalServiceImpl
 		EmailAddress emailAddress = emailAddressPersistence.findByPrimaryKey(
 			emailAddressId);
 
+		emailAddress.setExternalReferenceCode(externalReferenceCode);
 		emailAddress.setAddress(address);
 		emailAddress.setListTypeId(listTypeId);
 		emailAddress.setPrimary(primary);

@@ -47,6 +47,10 @@ public class DTOProperty {
 		return _name;
 	}
 
+	public Boolean getReadOnly() {
+		return _readOnly;
+	}
+
 	public String getType() {
 		return _type;
 	}
@@ -67,6 +71,10 @@ public class DTOProperty {
 		_name = name;
 	}
 
+	public void setReadOnly(boolean readOnly) {
+		_readOnly = readOnly;
+	}
+
 	public void setRequired(boolean required) {
 		_required = required;
 	}
@@ -79,6 +87,7 @@ public class DTOProperty {
 	private List<DTOProperty> _dtoProperties = new ArrayList<>();
 	private final Map<String, Object> _extensions;
 	private String _name;
+	private Boolean _readOnly;
 	private boolean _required;
 	private String _type;
 

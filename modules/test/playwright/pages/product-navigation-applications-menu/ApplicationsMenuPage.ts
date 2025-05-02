@@ -8,23 +8,33 @@ import {Locator, Page, expect} from '@playwright/test';
 import {HomePage} from '../portal-web/HomePage';
 
 export class ApplicationsMenuPage {
+	private readonly accountGroupsItem: Locator;
 	private readonly accountsItem: Locator;
+	private readonly accountUsersItem: Locator;
 	private readonly aiCreatorLink: Locator;
 	private readonly announcementsItem: Locator;
 	private readonly apiBuilderMenuItem: Locator;
-	private readonly applicationsMenuTabButton: Locator;
+	private readonly auditItem: Locator;
+	readonly applicationsMenuTabButton: Locator;
 	private readonly blueprintsItem: Locator;
 	private readonly clientExtensionsLink: Locator;
 	private readonly commerceChannelsMenuItem: Locator;
+	private readonly commerceCurrenciesMenuItem: Locator;
 	private readonly commerceDiscountsMenuItem: Locator;
 	private readonly commerceOrdersMenuItem: Locator;
 	private readonly commercePanelButton: Locator;
+	private readonly commerceProductConfigurationListsMenuItem: Locator;
 	private readonly commerceReturnsMenuItem: Locator;
 	private readonly commerceShipmentsMenuItem: Locator;
 	private readonly commerceSpecificationsMenuItem: Locator;
+	private readonly commerceTaxCategoriesMenuItem: Locator;
+	private readonly componentsMenuItem: Locator;
 	private readonly controlPanelButton: Locator;
+	private readonly countriesManagementItem: Locator;
 	private readonly customFieldsMenuItem: Locator;
 	private readonly dataMigrationCenterMenuItem: Locator;
+	readonly exportMenuItem: Locator;
+	readonly importMenuItem: Locator;
 	private readonly dataSetManagerMenuItem: Locator;
 	private readonly defaultPermissionsLink: Locator;
 	private readonly gogoShellItem: Locator;
@@ -35,11 +45,13 @@ export class ApplicationsMenuPage {
 	private readonly objectsMenuItem: Locator;
 	private readonly metricsItem: Locator;
 	private readonly page: Page;
+	private readonly passwordPoliciesAdminItem: Locator;
 	private readonly paymentsMenuItem: Locator;
 	private readonly picklistsMenuItem: Locator;
 	private readonly processBuilderItem: Locator;
 	private readonly productsMenuItem: Locator;
 	private readonly queueMenuItem: Locator;
+	private readonly resultRankingsItem: Locator;
 	private readonly rolesItem: Locator;
 	private readonly samlAdminItem: Locator;
 	private readonly searchItem: Locator;
@@ -48,13 +60,22 @@ export class ApplicationsMenuPage {
 	private readonly systemSettingsItem: Locator;
 	private readonly serverAdministrationItem: Locator;
 	private readonly siteTemplatesButton: Locator;
+	private readonly userGroupsItem: Locator;
 	private readonly usersAndOrganizationsItem: Locator;
 	private readonly virtualInstancesItem: Locator;
 
 	constructor(page: Page) {
+		this.accountGroupsItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Account Groups',
+		});
 		this.accountsItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Accounts',
+		});
+		this.accountUsersItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Account Users',
 		});
 		this.aiCreatorLink = page.getByRole('link', {
 			exact: true,
@@ -71,6 +92,10 @@ export class ApplicationsMenuPage {
 		this.applicationsMenuTabButton = page.getByRole('tab', {
 			name: 'Applications',
 		});
+		this.auditItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Audit',
+		});
 		this.blueprintsItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Blueprints',
@@ -81,6 +106,10 @@ export class ApplicationsMenuPage {
 		this.commerceChannelsMenuItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Channels',
+		});
+		this.commerceCurrenciesMenuItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Currencies',
 		});
 		this.commerceDiscountsMenuItem = page.getByRole('menuitem', {
 			exact: true,
@@ -93,6 +122,13 @@ export class ApplicationsMenuPage {
 		this.commercePanelButton = page.getByRole('tab', {
 			name: 'Commerce',
 		});
+		this.commerceProductConfigurationListsMenuItem = page.getByRole(
+			'menuitem',
+			{
+				exact: true,
+				name: 'Product Configurations',
+			}
+		);
 		this.commerceReturnsMenuItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Returns',
@@ -105,8 +141,20 @@ export class ApplicationsMenuPage {
 			exact: true,
 			name: 'Specifications',
 		});
+		this.commerceTaxCategoriesMenuItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Tax Categories',
+		});
+		this.componentsMenuItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Components',
+		});
 		this.controlPanelButton = page.getByRole('tab', {
 			name: 'Control Panel',
+		});
+		this.countriesManagementItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Countries Management',
 		});
 		this.customFieldsMenuItem = page.getByRole('menuitem', {
 			exact: true,
@@ -120,6 +168,14 @@ export class ApplicationsMenuPage {
 		this.dataMigrationCenterMenuItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Data Migration Center',
+		});
+		this.exportMenuItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Export',
+		});
+		this.importMenuItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Import',
 		});
 		this.dataSetManagerMenuItem = page.getByRole('menuitem', {
 			exact: true,
@@ -150,6 +206,10 @@ export class ApplicationsMenuPage {
 			name: 'Objects',
 		});
 		this.page = page;
+		this.passwordPoliciesAdminItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Password Policies',
+		});
 		this.paymentsMenuItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Payments',
@@ -169,6 +229,10 @@ export class ApplicationsMenuPage {
 		this.queueMenuItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Queue',
+		});
+		this.resultRankingsItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Result Rankings',
 		});
 		this.rolesItem = page.getByRole('menuitem', {
 			exact: true,
@@ -202,6 +266,10 @@ export class ApplicationsMenuPage {
 			exact: true,
 			name: 'System Settings',
 		});
+		this.userGroupsItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'User Groups',
+		});
 		this.usersAndOrganizationsItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Users and Organizations',
@@ -221,10 +289,40 @@ export class ApplicationsMenuPage {
 		}
 	}
 
-	async goToAccounts() {
-		await this.goto();
+	async goToAccountGroups(forceReload = true) {
+		if (forceReload) {
+			await this.goto();
+		}
+		else {
+			await this.homePage.openApplicationMenu();
+		}
+
+		await this.controlPanelButton.click();
+		await this.accountGroupsItem.click();
+	}
+
+	async goToAccounts(forceReload = true) {
+		if (forceReload) {
+			await this.goto();
+		}
+		else {
+			await this.homePage.openApplicationMenu();
+		}
+
 		await this.controlPanelButton.click();
 		await this.accountsItem.click();
+	}
+
+	async goToAccountUsers(forceReload = true) {
+		if (forceReload) {
+			await this.goto();
+		}
+		else {
+			await this.homePage.openApplicationMenu();
+		}
+
+		await this.controlPanelButton.click();
+		await this.accountUsersItem.click();
 	}
 
 	async goToAnnouncements() {
@@ -232,8 +330,8 @@ export class ApplicationsMenuPage {
 		await this.announcementsItem.click();
 	}
 
-	async goToDataSetManager() {
-		await this.goToControlPanel();
+	async goToDataSetManager(checkTabVisibility = true) {
+		await this.goToControlPanel(checkTabVisibility);
 		await this.dataSetManagerMenuItem.click();
 	}
 
@@ -252,8 +350,27 @@ export class ApplicationsMenuPage {
 		await this.clientExtensionsLink.click();
 	}
 
-	async goToCustomFields() {
+	async goToComponents() {
 		await this.goto();
+		await this.controlPanelButton.click();
+		await this.componentsMenuItem.click();
+	}
+
+	async goToCountriesManagement() {
+		await this.goto();
+		await this.controlPanelButton.click();
+		await this.countriesManagementItem.click();
+	}
+
+	async goToCustomFields(forceReload = true) {
+		if (forceReload) {
+			await this.goto();
+		}
+		else {
+			await this.homePage.openApplicationMenu();
+
+			await expect(this.applicationsMenuTabButton).toBeVisible();
+		}
 		await this.controlPanelButton.click();
 		await this.customFieldsMenuItem.click();
 	}
@@ -261,6 +378,16 @@ export class ApplicationsMenuPage {
 	async goToDataMigrationCenter() {
 		await this.goToApplicationsMenu();
 		await this.dataMigrationCenterMenuItem.click();
+	}
+
+	async goToExport() {
+		await this.goToApplicationsMenu();
+		await this.exportMenuItem.click();
+	}
+
+	async goToImport() {
+		await this.goToApplicationsMenu();
+		await this.importMenuItem.click();
 	}
 
 	async goToDefaultPermissions() {
@@ -288,6 +415,13 @@ export class ApplicationsMenuPage {
 		await this.objectsMenuItem.click();
 	}
 
+	async goToObjectDefinition(objectDefinitionName: string) {
+		await this.goToControlPanel();
+		await this.page
+			.getByRole('menuitem', {name: objectDefinitionName})
+			.click();
+	}
+
 	async goToPicklists() {
 		await this.goToControlPanel();
 		await this.picklistsMenuItem.click();
@@ -308,9 +442,22 @@ export class ApplicationsMenuPage {
 		await this.siteTemplatesButton.click();
 	}
 
-	async goToSites() {
-		await this.goToControlPanel();
+	async goToSites(forceReload = true) {
+		if (forceReload) {
+			await this.goto();
+		}
+		else {
+			await this.homePage.openApplicationMenu();
+
+			await expect(this.applicationsMenuTabButton).toBeVisible();
+		}
+
+		await this.controlPanelButton.click();
 		await this.sitesItem.click();
+	}
+
+	async goToGlobalSite() {
+		await this.goToSite('Global');
 	}
 
 	async goToSystemSettings() {
@@ -318,8 +465,17 @@ export class ApplicationsMenuPage {
 		await this.systemSettingsItem.click();
 	}
 
-	async goToInstanceSettings() {
-		await this.goToControlPanel();
+	async goToInstanceSettings(forceReload = true) {
+		if (forceReload) {
+			await this.goto();
+		}
+		else {
+			await this.homePage.openApplicationMenu();
+
+			await expect(this.applicationsMenuTabButton).toBeVisible();
+		}
+
+		await this.controlPanelButton.click();
 		await this.instanceSettingsMenuItem.click();
 	}
 
@@ -331,6 +487,11 @@ export class ApplicationsMenuPage {
 	async goToCommerceChannels(checkTabVisibility = true) {
 		await this.goToCommercePanel(checkTabVisibility);
 		await this.commerceChannelsMenuItem.click();
+	}
+
+	async goToCommerceCurrencies(checkTabVisibility = true) {
+		await this.goToCommercePanel(checkTabVisibility);
+		await this.commerceCurrenciesMenuItem.click();
 	}
 
 	async goToCommerceDiscounts() {
@@ -348,8 +509,13 @@ export class ApplicationsMenuPage {
 		await this.commerceOrdersMenuItem.click();
 	}
 
-	async goToCommerceReturns() {
-		await this.goToCommercePanel();
+	async goToCommerceProductConfigurationLists(checkTabVisibility = true) {
+		await this.goToCommercePanel(checkTabVisibility);
+		await this.commerceProductConfigurationListsMenuItem.click();
+	}
+
+	async goToCommerceReturns(checkTabVisibility = true) {
+		await this.goToCommercePanel(checkTabVisibility);
 		await this.commerceReturnsMenuItem.click();
 	}
 
@@ -363,13 +529,24 @@ export class ApplicationsMenuPage {
 		await this.commerceSpecificationsMenuItem.click();
 	}
 
-	async goToPayments() {
-		await this.goToCommercePanel();
+	async goToCommerceTaxCategories(checkTabVisibility = true) {
+		await this.goto();
+		await this.goToCommercePanel(checkTabVisibility);
+		await this.commerceTaxCategoriesMenuItem.click();
+	}
+
+	async goToPasswordPolicies() {
+		await this.goToControlPanel();
+		await this.passwordPoliciesAdminItem.click();
+	}
+
+	async goToPayments(checkTabVisibility = true) {
+		await this.goToCommercePanel(checkTabVisibility);
 		await this.paymentsMenuItem.click();
 	}
 
-	async goToProducts() {
-		await this.goToCommercePanel();
+	async goToProducts(checkTabVisibility = true) {
+		await this.goToCommercePanel(checkTabVisibility);
 		await this.productsMenuItem.click();
 	}
 
@@ -383,8 +560,8 @@ export class ApplicationsMenuPage {
 		await this.page.getByRole('link', {exact: true, name}).click();
 	}
 
-	async goToControlPanel() {
-		await this.goto();
+	async goToControlPanel(checkTabVisibility = true) {
+		await this.goto(checkTabVisibility);
 		await this.controlPanelButton.click();
 	}
 
@@ -403,14 +580,27 @@ export class ApplicationsMenuPage {
 		await this.processBuilderItem.click();
 	}
 
-	async goToRoles() {
-		await this.goto();
+	async goToResultRankings() {
+		await this.goToApplicationsMenu();
+		await this.resultRankingsItem.click();
+	}
+
+	async goToRoles(checkTabVisibility = true) {
+		await this.goto(checkTabVisibility);
 		await this.controlPanelButton.click();
 		await this.rolesItem.click();
 	}
 
-	async goToSamlAdmin() {
-		await this.goto();
+	async goToSamlAdmin(forceReload = true) {
+		if (forceReload) {
+			await this.goto();
+		}
+		else {
+			await this.homePage.openApplicationMenu();
+
+			await expect(this.applicationsMenuTabButton).toBeVisible();
+		}
+
 		await this.controlPanelButton.click();
 		await this.samlAdminItem.click();
 	}
@@ -419,6 +609,19 @@ export class ApplicationsMenuPage {
 		await this.goto();
 		await this.controlPanelButton.click();
 		await this.serviceAccountsItem.click();
+	}
+
+	async goToUserGroups(forceReload = true) {
+		if (forceReload) {
+			await this.goto();
+		}
+		else {
+			await this.homePage.openApplicationMenu();
+
+			await expect(this.applicationsMenuTabButton).toBeVisible();
+		}
+		await this.controlPanelButton.click();
+		await this.userGroupsItem.click();
 	}
 
 	async goToUsersAndOrganizations(forceReload = true) {
@@ -435,9 +638,21 @@ export class ApplicationsMenuPage {
 		await this.usersAndOrganizationsItem.click();
 	}
 
+	async goToUsersAndOrganizationsWithLimitedAccess() {
+		await this.homePage.openApplicationMenu();
+		await this.controlPanelButton.click();
+		await this.usersAndOrganizationsItem.click();
+	}
+
 	async goToVirtualInstances() {
 		await this.goto();
 		await this.controlPanelButton.click();
 		await this.virtualInstancesItem.click();
+	}
+
+	async goToAudit() {
+		await this.goto();
+		await this.controlPanelButton.click();
+		await this.auditItem.click();
 	}
 }

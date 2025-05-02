@@ -4,11 +4,14 @@ definition {
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Product Info Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(minium = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Setup: Create an account with a buyer user") {
 			CommerceEntry.addAccountEntryUser(
@@ -120,14 +123,14 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "34.00",
 				productName = "Torque Converters",
 				productQuantity = 1,
 				productSku = "MIN55859",
-				productTotalPrice = "34.00");
+				productTotalPrice = "$ 34.00");
 
 			CommerceOrders.viewOrderPrices(
 				deliveryPrice = "0.00",
@@ -137,7 +140,7 @@ definition {
 		}
 
 		task ("And then 1 product is not imported (ABS Sensor)") {
-			AssertElementPresent(
+			AssertElementNotPresent(
 				key_productName = "ABS Sensor",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 		}
@@ -296,7 +299,7 @@ definition {
 				productName = "ABS Sensor",
 				productQuantity = 1,
 				productSku = "MIN93015",
-				productTotalPrice = "50.00");
+				productTotalPrice = "$ 50.00");
 
 			CommerceOrders.viewOrderPrices(
 				deliveryPrice = "0.00",
@@ -306,11 +309,11 @@ definition {
 		}
 
 		task ("And then 2 products are not imported (U-Joint and Torque Convertes") {
-			AssertElementPresent(
+			AssertElementNotPresent(
 				key_productName = "U-Joint",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 
-			AssertElementPresent(
+			AssertElementNotPresent(
 				key_productName = "Torque Converters",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 		}
@@ -420,17 +423,17 @@ definition {
 				productName = "Engine Mount",
 				productQuantity = 1,
 				productSku = "MIN00675",
-				productTotalPrice = "120.00");
+				productTotalPrice = "$ 120.00");
 
-			AssertNotVisible(
+			AssertElementNotPresent(
 				key_productName = "U-Joint",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 
-			AssertNotVisible(
+			AssertElementNotPresent(
 				key_productName = "Torque Converters",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 
-			AssertNotVisible(
+			AssertElementNotPresent(
 				key_productName = "ABS Sensor",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 
@@ -551,21 +554,21 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "34.00",
 				productName = "Torque Converters",
 				productQuantity = 2,
 				productSku = "MIN55859",
-				productTotalPrice = "68.00");
+				productTotalPrice = "$ 68.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "120.00",
 				productName = "Engine Mount",
 				productQuantity = 1,
 				productSku = "MIN00675",
-				productTotalPrice = "120.00");
+				productTotalPrice = "$ 120.00");
 
 			CommerceOrders.viewOrderPrices(
 				deliveryPrice = "0.00",
@@ -575,7 +578,7 @@ definition {
 		}
 
 		task ("And then the subscription product is not imported (ABS Sensor)") {
-			AssertElementPresent(
+			AssertElementNotPresent(
 				key_productName = "ABS Sensor",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 		}
@@ -729,7 +732,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productDiscount = "20.00",
@@ -737,14 +740,14 @@ definition {
 				productName = "ABS Sensor",
 				productQuantity = 2,
 				productSku = "MIN93015",
-				productTotalPrice = "80.00");
+				productTotalPrice = "$ 80.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "34.00",
 				productName = "Torque Converters",
 				productQuantity = 2,
 				productSku = "MIN55859",
-				productTotalPrice = "68.00");
+				productTotalPrice = "$ 68.00");
 
 			CommerceOrders.viewOrderPrices(
 				deliveryPrice = "0.00",
@@ -957,21 +960,21 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "50.00",
 				productName = "ABS Sensor",
 				productQuantity = 2,
 				productSku = "MIN93015",
-				productTotalPrice = "100.00");
+				productTotalPrice = "$ 100.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "34.00",
 				productName = "Torque Converters",
 				productQuantity = 2,
 				productSku = "MIN55859",
-				productTotalPrice = "68.00");
+				productTotalPrice = "$ 68.00");
 		}
 
 		task ("And when the user complete the order") {
@@ -1007,21 +1010,21 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "50.00",
 				productName = "ABS Sensor",
 				productQuantity = 2,
 				productSku = "MIN93015",
-				productTotalPrice = "100.00");
+				productTotalPrice = "$ 100.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "34.00",
 				productName = "Torque Converters",
 				productQuantity = 2,
 				productSku = "MIN55859",
-				productTotalPrice = "68.00");
+				productTotalPrice = "$ 68.00");
 
 			AssertTextEquals.assertPartialText(
 				key_priceName = "Subtotal",
@@ -1127,28 +1130,28 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "50.00",
 				productName = "ABS Sensor",
 				productQuantity = 4,
 				productSku = "MIN93015",
-				productTotalPrice = "200.00");
+				productTotalPrice = "$ 200.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "15.00",
 				productName = "Transmission Cooler Line Assembly",
 				productQuantity = 1,
 				productSku = "MIN55860",
-				productTotalPrice = "15.00");
+				productTotalPrice = "$ 15.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "34.00",
 				productName = "Torque Converters",
 				productQuantity = 1,
 				productSku = "MIN55859",
-				productTotalPrice = "34.00");
+				productTotalPrice = "$ 34.00");
 		}
 	}
 

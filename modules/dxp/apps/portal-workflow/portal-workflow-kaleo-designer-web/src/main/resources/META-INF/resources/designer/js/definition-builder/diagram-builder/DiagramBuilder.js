@@ -10,6 +10,7 @@ import React, {
 	useRef,
 	useState,
 } from 'react';
+import {flushSync} from 'react-dom';
 import ReactFlow, {
 	Background,
 	Controls,
@@ -70,7 +71,7 @@ export default function DiagramBuilder() {
 		setHasGroovyOrJavaScript,
 		setShowDefinitionInfo,
 		statuses,
-		version,
+		workflowDefinitionVersions,
 	} = useContext(DefinitionBuilderContext);
 	const reactFlowWrapperRef = useRef(null);
 	const [collidingElements, setCollidingElements] = useState(null);
@@ -198,6 +199,30 @@ export default function DiagramBuilder() {
 		setReactFlowInstance(reactFlowInstance);
 	};
 
+	const onNodeDrag = (event, node) => {
+		const reactFlowBounds =
+			reactFlowWrapperRef.current.getBoundingClientRect();
+
+		const position = reactFlowInstance.project({
+			x:
+				event.clientX -
+				reactFlowBounds.left -
+				elementRectangle.mouseXInRectangle,
+			y:
+				event.clientY -
+				reactFlowBounds.top -
+				elementRectangle.mouseYInRectangle,
+		});
+
+		const filteredElements = elements.filter(
+			(element) => element.id !== node.id
+		);
+
+		setCollidingElements(
+			getCollidingElements(filteredElements, elementRectangle, position)
+		);
+	};
+
 	const onNodeDragStart = (event) => {
 		const elementRectangle = event.currentTarget.getBoundingClientRect();
 		const reactFlowBounds =
@@ -233,25 +258,28 @@ export default function DiagramBuilder() {
 				elementRectangle.mouseYInRectangle,
 		});
 
-		setElements((elements) =>
-			elements.map((element) => {
-				if (element.id === node.id) {
-					element = {
-						...element,
-						position,
-					};
-				}
+		flushSync(() => {
+			setElements((elements) =>
+				elements.map((element) => {
+					if (element.id === node.id) {
+						element = {
+							...element,
+							position,
+						};
+					}
 
-				return element;
-			})
-		);
+					return element;
+				})
+			);
+		});
 
-		const newElements = elements.filter(
+		const filteredElements = elements.filter(
 			(element) => element.id !== node.id
 		);
 
 		if (
-			getCollidingElements(newElements, elementRectangle, position).length
+			getCollidingElements(filteredElements, elementRectangle, position)
+				.length
 		) {
 			setElements((elements) =>
 				elements.map((element) => {
@@ -262,6 +290,8 @@ export default function DiagramBuilder() {
 					return element;
 				})
 			);
+
+			setCollidingElements(null);
 		}
 	};
 
@@ -370,10 +400,14 @@ export default function DiagramBuilder() {
 		}
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [currentEditor, deserialize, version]);
+	}, [currentEditor, deserialize, workflowDefinitionVersions]);
 
 	useEffect(() => {
-		if (definitionName && version !== 0 && !deserialize) {
+		if (
+			definitionName &&
+			workflowDefinitionVersions.length !== 0 &&
+			!deserialize
+		) {
 			retrieveDefinitionRequest(definitionName)
 				.then((response) => response.json())
 				.then(
@@ -437,7 +471,7 @@ export default function DiagramBuilder() {
 		}
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [definitionName, version]);
+	}, [definitionName, workflowDefinitionVersions]);
 
 	const contextProps = {
 		collidingElements,
@@ -470,6 +504,7 @@ export default function DiagramBuilder() {
 						onDragOver={onDragOver}
 						onDrop={onDrop}
 						onLoad={onLoad}
+						onNodeDrag={onNodeDrag}
 						onNodeDragStart={onNodeDragStart}
 						onNodeDragStop={onNodeDragStop}
 					/>

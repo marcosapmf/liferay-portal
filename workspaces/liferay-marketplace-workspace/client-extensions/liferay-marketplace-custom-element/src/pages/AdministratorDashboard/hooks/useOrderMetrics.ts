@@ -7,8 +7,8 @@ import {addDays, eachDayOfInterval, format} from 'date-fns';
 import useSWR from 'swr';
 
 import SearchBuilder from '../../../core/SearchBuilder';
-import {ORDER_TYPES} from '../../../enums/Order';
-import HeadlessCommerceAdminOrderImpl from '../../../services/rest/HeadlessCommerceAdminOrder';
+import {OrderTypes} from '../../../enums/Order';
+import HeadlessCommerceAdminOrder from '../../../services/rest/HeadlessCommerceAdminOrder';
 
 export const METRIC_PARAMETER = {
 	month: 30,
@@ -23,8 +23,8 @@ type FilterType = 'month' | 'q1' | 'q2' | 'q3' | 'q4' | 'week';
 
 export const orderSearchBuilder = new SearchBuilder()
 	.in('orderTypeExternalReferenceCode', [
-		ORDER_TYPES.CLOUDAPP,
-		ORDER_TYPES.DXPAPP,
+		OrderTypes.CLOUDAPP,
+		OrderTypes.DXPAPP,
 	])
 	.and();
 
@@ -74,7 +74,7 @@ const useOrderMetrics = (param: FilterType) => {
 
 		const response = await Promise.all(
 			requestsParams.map((searchParam) =>
-				HeadlessCommerceAdminOrderImpl.getOrders(searchParam)
+				HeadlessCommerceAdminOrder.getOrders(searchParam)
 			)
 		);
 
@@ -153,7 +153,7 @@ const useOrderChartLineMetrics = () => {
 
 		const response = await Promise.all(
 			requestsParams.map((searchParam) =>
-				HeadlessCommerceAdminOrderImpl.getOrders(searchParam)
+				HeadlessCommerceAdminOrder.getOrders(searchParam)
 			)
 		);
 

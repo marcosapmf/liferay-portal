@@ -19,6 +19,7 @@ import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.PlacedOrderAddress;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Region;
@@ -62,13 +63,13 @@ public class PlacedOrderAddressResourceTest
 			_user.getUserId());
 
 		_accountEntry = _accountEntryLocalService.addAccountEntry(
-			_user.getUserId(), 0, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null,
+			StringPool.BLANK, _user.getUserId(), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null,
 			RandomTestUtil.randomString(), "business", 1, _serviceContext);
 
 		_commerceCurrency = _commerceCurrencyLocalService.addCommerceCurrency(
-			_user.getUserId(), RandomTestUtil.randomString(),
+			null, _user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomString(), BigDecimal.ONE, new HashMap<>(), 2,
 			2, "HALF_EVEN", false, RandomTestUtil.nextDouble(), true);
@@ -106,7 +107,7 @@ public class PlacedOrderAddressResourceTest
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {
 			"city", "description", "name", "phoneNumber", "street1", "street2",
-			"street3", "zip"
+			"street3", "subtype", "zip"
 		};
 	}
 
@@ -115,12 +116,12 @@ public class PlacedOrderAddressResourceTest
 		Address address = _addressLocalService.addAddress(
 			RandomTestUtil.randomString(), _user.getUserId(),
 			AccountEntry.class.getName(), _accountEntry.getAccountEntryId(),
+			_country.getCountryId(), 0, _region.getRegionId(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), true,
+			RandomTestUtil.randomString(), false, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), _region.getRegionId(),
-			_country.getCountryId(), 0, true, false,
-			RandomTestUtil.randomString(), _serviceContext);
+			_serviceContext);
 
 		_addresses.add(address);
 
@@ -141,6 +142,7 @@ public class PlacedOrderAddressResourceTest
 				street1 = address.getStreet1();
 				street2 = address.getStreet2();
 				street3 = address.getStreet3();
+				subtype = address.getSubtype();
 				type = RandomTestUtil.randomString();
 				typeId = RandomTestUtil.randomInt();
 				vatNumber = StringUtil.toLowerCase(
@@ -186,22 +188,7 @@ public class PlacedOrderAddressResourceTest
 
 	@Override
 	protected PlacedOrderAddress
-			testGetPlacedOrderPlacedOrderBillingAddres_addPlacedOrderAddress()
-		throws Exception {
-
-		return _updateBillingAndShippingAddresses();
-	}
-
-	@Override
-	protected Long testGetPlacedOrderPlacedOrderBillingAddres_getPlacedOrderId()
-		throws Exception {
-
-		return _commerceOrder.getCommerceOrderId();
-	}
-
-	@Override
-	protected PlacedOrderAddress
-			testGetPlacedOrderPlacedOrderShippingAddres_addPlacedOrderAddress()
+			testGetPlacedOrderPlacedOrderBillingAddress_addPlacedOrderAddress()
 		throws Exception {
 
 		return _updateBillingAndShippingAddresses();
@@ -209,7 +196,23 @@ public class PlacedOrderAddressResourceTest
 
 	@Override
 	protected Long
-			testGetPlacedOrderPlacedOrderShippingAddres_getPlacedOrderId()
+			testGetPlacedOrderPlacedOrderBillingAddress_getPlacedOrderId()
+		throws Exception {
+
+		return _commerceOrder.getCommerceOrderId();
+	}
+
+	@Override
+	protected PlacedOrderAddress
+			testGetPlacedOrderPlacedOrderShippingAddress_addPlacedOrderAddress()
+		throws Exception {
+
+		return _updateBillingAndShippingAddresses();
+	}
+
+	@Override
+	protected Long
+			testGetPlacedOrderPlacedOrderShippingAddress_getPlacedOrderId()
 		throws Exception {
 
 		return _commerceOrder.getCommerceOrderId();
@@ -235,7 +238,7 @@ public class PlacedOrderAddressResourceTest
 
 	@Override
 	protected Long
-			testGraphQLGetPlacedOrderPlacedOrderBillingAddres_getPlacedOrderId()
+			testGraphQLGetPlacedOrderPlacedOrderBillingAddress_getPlacedOrderId()
 		throws Exception {
 
 		return _commerceOrder.getCommerceOrderId();
@@ -243,7 +246,7 @@ public class PlacedOrderAddressResourceTest
 
 	@Override
 	protected Long
-			testGraphQLGetPlacedOrderPlacedOrderShippingAddres_getPlacedOrderId()
+			testGraphQLGetPlacedOrderPlacedOrderShippingAddress_getPlacedOrderId()
 		throws Exception {
 
 		return _commerceOrder.getCommerceOrderId();

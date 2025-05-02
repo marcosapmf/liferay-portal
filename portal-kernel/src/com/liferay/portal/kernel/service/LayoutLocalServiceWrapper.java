@@ -400,21 +400,13 @@ public class LayoutLocalServiceWrapper
 
 	@Override
 	public Layout copyLayoutContent(
-			long segmentsExperienceId, Layout sourceLayout, Layout targetLayout)
+			long sourceSegmentsExperienceId, Layout sourceLayout,
+			long targetSegmentsExperienceId, Layout targetLayout)
 		throws Exception {
 
 		return _layoutLocalService.copyLayoutContent(
-			segmentsExperienceId, sourceLayout, targetLayout);
-	}
-
-	@Override
-	public Layout copyLayoutContent(
-			long[] segmentsExperienceIds, Layout sourceLayout,
-			Layout targetLayout)
-		throws Exception {
-
-		return _layoutLocalService.copyLayoutContent(
-			segmentsExperienceIds, sourceLayout, targetLayout);
+			sourceSegmentsExperienceId, sourceLayout,
+			targetSegmentsExperienceId, targetLayout);
 	}
 
 	/**
@@ -705,11 +697,6 @@ public class LayoutLocalServiceWrapper
 	}
 
 	@Override
-	public Layout fetchLayout(long classNameId, long classPK) {
-		return _layoutLocalService.fetchLayout(classNameId, classPK);
-	}
-
-	@Override
 	public Layout fetchLayout(
 		String uuid, long groupId, boolean privateLayout) {
 
@@ -734,8 +721,7 @@ public class LayoutLocalServiceWrapper
 
 	@Override
 	public Layout fetchLayoutByIconImageId(
-			boolean privateLayout, long iconImageId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		boolean privateLayout, long iconImageId) {
 
 		return _layoutLocalService.fetchLayoutByIconImageId(
 			privateLayout, iconImageId);
@@ -913,21 +899,6 @@ public class LayoutLocalServiceWrapper
 
 		return _layoutLocalService.getLayoutByFriendlyURL(
 			groupId, privateLayout, friendlyURL);
-	}
-
-	/**
-	 * Returns the layout for the icon image; throws a {@link
-	 * NoSuchLayoutException} otherwise.
-	 *
-	 * @param iconImageId the primary key of the icon image
-	 * @return Returns the layout for the icon image
-	 * @throws PortalException if a portal exception occurred
-	 */
-	@Override
-	public Layout getLayoutByIconImageId(long iconImageId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _layoutLocalService.getLayoutByIconImageId(iconImageId);
 	}
 
 	/**
@@ -1969,6 +1940,15 @@ public class LayoutLocalServiceWrapper
 			groupId, privateLayout, layoutId, typeSettings, iconBytes, themeId,
 			colorSchemeId, styleBookEntryId, css, faviconFileEntryId,
 			masterLayoutPlid);
+	}
+
+	@Override
+	public void updateLayoutContent(
+			String data, Layout layout, long segmentsExperienceId)
+		throws Exception {
+
+		_layoutLocalService.updateLayoutContent(
+			data, layout, segmentsExperienceId);
 	}
 
 	/**

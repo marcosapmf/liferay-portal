@@ -20,7 +20,6 @@ renderResponse.setTitle((oAuthClientEntry == null) ? LanguageUtil.get(request, "
 
 <portlet:actionURL name="/oauth_client_admin/update_oauth_client_entry" var="updateOAuthClientEntryURL">
 	<portlet:param name="mvcRenderCommandName" value="/oauth_client_admin/update_oauth_client_entry" />
-	<portlet:param name="redirect" value="<%= HtmlUtil.escape(redirect) %>" />
 </portlet:actionURL>
 
 <aui:form action="<%= updateOAuthClientEntryURL %>" id="oauth-client-entry-fm" method="post" name="oauth-client-entry-fm" onSubmit="event.preventDefault();">
@@ -57,11 +56,13 @@ renderResponse.setTitle((oAuthClientEntry == null) ? LanguageUtil.get(request, "
 
 				<aui:input helpMessage="oauth-client-as-well-known-uri-help" label="oauth-client-as-well-known-uri" name="authServerWellKnownURI" type="text" />
 
+				<aui:input helpMessage="metadata-cache-time-help" label="metadata-cache-time" name="metadataCacheTime" type="text" value="<%= (oAuthClientEntry != null) ? oAuthClientEntry.getMetadataCacheTime() : OAuthClientEntryConstants.METADATA_CACHE_TIME_DEFAULT %>" />
+
 				<aui:input
+					cssClass="client-info-textarea"
 					helpMessage="oauth-client-info-json-help"
 					label="oauth-client-info-json"
 					name="infoJSON"
-					style="min-height: 600px;"
 					type="textarea"
 					value='<%=
 						JSONUtil.put(
@@ -83,10 +84,10 @@ renderResponse.setTitle((oAuthClientEntry == null) ? LanguageUtil.get(request, "
 				<aui:input name="oAuthClientEntryId" type="hidden" value="<%= (oAuthClientEntry != null) ? oAuthClientEntry.getOAuthClientEntryId() : 0 %>" />
 
 				<aui:input
+					cssClass="request-parameters-textarea"
 					helpMessage='<%= LanguageUtil.format(request, "oauth-client-default-auth-request-parameters-json-help", "https://www.iana.org/assignments/oauth-parameters", false) %>'
 					label="oauth-client-default-auth-request-parameters-json"
 					name="authRequestParametersJSON"
-					style="min-height: 200px;"
 					type="textarea"
 					value='<%=
 						JSONUtil.put(
@@ -102,10 +103,10 @@ renderResponse.setTitle((oAuthClientEntry == null) ? LanguageUtil.get(request, "
 				/>
 
 				<aui:input
+					cssClass="request-parameters-textarea"
 					helpMessage='<%= LanguageUtil.format(request, "oauth-client-default-token-request-parameters-json-help", "https://www.iana.org/assignments/oauth-parameters", false) %>'
 					label="oauth-client-default-token-request-parameters-json"
 					name="tokenRequestParametersJSON"
-					style="min-height: 200px;"
 					type="textarea"
 					value='<%=
 						JSONUtil.put(
@@ -118,11 +119,11 @@ renderResponse.setTitle((oAuthClientEntry == null) ? LanguageUtil.get(request, "
 
 				<h3 class="sheet-subtitle"><liferay-ui:message key="oauth-client-oidc-specific-configurations" /></h3>
 
-				<aui:input helpMessage="oauth-client-oidc-user-info-mapper-json-help" label="oauth-client-oidc-user-info-mapper-json" name="OIDCUserInfoMapperJSON" style="min-height: 400px;" type="textarea" value="<%= OAuthClientEntryConstants.OIDC_USER_INFO_MAPPER_JSON %>" />
+				<aui:input cssClass="info-mapper-textarea" helpMessage="oauth-client-oidc-user-info-mapper-json-help" label="oauth-client-oidc-user-info-mapper-json" name="OIDCUserInfoMapperJSON" type="textarea" value="<%= OAuthClientEntryConstants.OIDC_USER_INFO_MAPPER_JSON %>" />
 
 				<aui:button-row>
 					<aui:button onClick='<%= liferayPortletResponse.getNamespace() + "doSubmit();" %>' type="submit" />
-					<aui:button href="<%= HtmlUtil.escape(redirect) %>" type="cancel" />
+					<aui:button href="<%= redirect %>" type="cancel" />
 				</aui:button-row>
 			</aui:fieldset>
 		</div>

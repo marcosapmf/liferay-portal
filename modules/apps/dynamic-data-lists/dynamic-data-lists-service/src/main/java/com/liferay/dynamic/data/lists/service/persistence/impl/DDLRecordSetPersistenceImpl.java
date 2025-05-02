@@ -642,7 +642,6 @@ public class DDLRecordSetPersistenceImpl
 		"(ddlRecordSet.uuid IS NULL OR ddlRecordSet.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the ddl record set where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchRecordSetException</code> if it could not be found.
@@ -827,68 +826,13 @@ public class DDLRecordSetPersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					DDLRecordSet.class)) {
+		DDLRecordSet ddlRecordSet = fetchByUUID_G(uuid, groupId);
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUUID_G;
-
-			Object[] finderArgs = new Object[] {uuid, groupId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_DDLRECORDSET_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (ddlRecordSet == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -3630,7 +3574,6 @@ public class DDLRecordSetPersistenceImpl
 		"ddlRecordSet.DDMStructureId IN (";
 
 	private FinderPath _finderPathFetchByG_R;
-	private FinderPath _finderPathCountByG_R;
 
 	/**
 	 * Returns the ddl record set where groupId = &#63; and recordSetKey = &#63; or throws a <code>NoSuchRecordSetException</code> if it could not be found.
@@ -3816,68 +3759,13 @@ public class DDLRecordSetPersistenceImpl
 	 */
 	@Override
 	public int countByG_R(long groupId, String recordSetKey) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					DDLRecordSet.class)) {
+		DDLRecordSet ddlRecordSet = fetchByG_R(groupId, recordSetKey);
 
-			recordSetKey = Objects.toString(recordSetKey, "");
-
-			FinderPath finderPath = _finderPathCountByG_R;
-
-			Object[] finderArgs = new Object[] {groupId, recordSetKey};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_DDLRECORDSET_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_R_GROUPID_2);
-
-				boolean bindRecordSetKey = false;
-
-				if (recordSetKey.isEmpty()) {
-					sb.append(_FINDER_COLUMN_G_R_RECORDSETKEY_3);
-				}
-				else {
-					bindRecordSetKey = true;
-
-					sb.append(_FINDER_COLUMN_G_R_RECORDSETKEY_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					if (bindRecordSetKey) {
-						queryPos.add(recordSetKey);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (ddlRecordSet == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_G_R_GROUPID_2 =
@@ -4032,8 +3920,6 @@ public class DDLRecordSetPersistenceImpl
 			};
 
 			finderCache.putResult(
-				_finderPathCountByUUID_G, args, Long.valueOf(1));
-			finderCache.putResult(
 				_finderPathFetchByUUID_G, args, ddlRecordSetModelImpl);
 
 			args = new Object[] {
@@ -4041,7 +3927,6 @@ public class DDLRecordSetPersistenceImpl
 				ddlRecordSetModelImpl.getRecordSetKey()
 			};
 
-			finderCache.putResult(_finderPathCountByG_R, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByG_R, args, ddlRecordSetModelImpl);
 		}
@@ -4718,6 +4603,7 @@ public class DDLRecordSetPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -4727,24 +4613,25 @@ public class DDLRecordSetPersistenceImpl
 		ctStrictColumnNames.add("companyId");
 		ctStrictColumnNames.add("userId");
 		ctStrictColumnNames.add("userName");
-		ctStrictColumnNames.add("versionUserId");
-		ctStrictColumnNames.add("versionUserName");
+		ctMergeColumnNames.add("versionUserId");
+		ctMergeColumnNames.add("versionUserName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("DDMStructureId");
-		ctStrictColumnNames.add("recordSetKey");
-		ctStrictColumnNames.add("version");
-		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("description");
-		ctStrictColumnNames.add("minDisplayRows");
-		ctStrictColumnNames.add("scope");
-		ctStrictColumnNames.add("settings_");
-		ctStrictColumnNames.add("lastPublishDate");
+		ctMergeColumnNames.add("DDMStructureId");
+		ctMergeColumnNames.add("recordSetKey");
+		ctMergeColumnNames.add("version");
+		ctMergeColumnNames.add("name");
+		ctMergeColumnNames.add("description");
+		ctMergeColumnNames.add("minDisplayRows");
+		ctMergeColumnNames.add("scope");
+		ctMergeColumnNames.add("settings_");
+		ctMergeColumnNames.add("lastPublishDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK, Collections.singleton("recordSetId"));
 		_ctColumnNamesMap.put(
@@ -4797,11 +4684,6 @@ public class DDLRecordSetPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
-
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
@@ -4872,11 +4754,6 @@ public class DDLRecordSetPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_R",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "recordSetKey"}, true);
-
-		_finderPathCountByG_R = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_R",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"groupId", "recordSetKey"}, false);
 
 		DDLRecordSetUtil.setPersistence(this);
 	}

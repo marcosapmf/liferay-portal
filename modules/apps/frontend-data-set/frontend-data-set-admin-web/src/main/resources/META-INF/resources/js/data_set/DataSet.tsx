@@ -7,19 +7,17 @@ import ClayButton from '@clayui/button';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayNavigationBar from '@clayui/navigation-bar';
 import {IClientExtensionRenderer} from '@liferay/frontend-data-set-web';
+import {
+	ILearnResourceContext,
+	LearnResourcesContext,
+} from 'frontend-js-components-web';
 import {fetch} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
-import {IDataSet} from '../DataSets';
-import {FDSViewType} from '../FDSViews';
-import {
-	API_URL,
-	DEFAULT_FETCH_HEADERS,
-	OBJECT_RELATIONSHIP,
-} from '../utils/constants';
+import {API_URL, DEFAULT_FETCH_HEADERS} from '../utils/constants';
 import getFields from '../utils/getFields';
 import openDefaultFailureToast from '../utils/openDefaultFailureToast';
-import {IFieldTreeItem} from '../utils/types';
+import {IDataSet, IFieldTreeItem} from '../utils/types';
 import Actions from './actions/Actions';
 import Details from './details/Details';
 import Filters from './filters/Filters';
@@ -61,40 +59,45 @@ const NAVIGATION_BAR_ITEMS = [
 
 export interface IDataSetSectionProps {
 	backURL: string;
-	dataSet: IDataSet | FDSViewType;
-	fdsClientExtensionCellRenderers: IClientExtensionRenderer[];
-	fdsFilterClientExtensions: IClientExtensionRenderer[];
+	cellClientExtensionRenderers: IClientExtensionRenderer[];
+	dataSet: IDataSet;
 	fieldTreeItems: Array<IFieldTreeItem>;
+	filterClientExtensionRenderers: IClientExtensionRenderer[];
 	namespace: string;
 	onActiveSectionChange: (section: number) => void;
-	onDataSetUpdate: (data: FDSViewType) => void;
+	onDataSetUpdate: (data: IDataSet) => void;
+	resolvedRESTSchemas: string[];
 	restApplications: string[];
-	saveFDSFieldsURL: string;
-	saveFDSSortURL: string;
+	saveDataSetSortURL: string;
+	saveDataSetTableSectionsURL: string;
 	spritemap: string;
 }
 
 const DataSet = ({
 	backURL,
 	dataSetERC,
-	fdsClientExtensionCellRenderers,
-	fdsFilterClientExtensions,
+	cellClientExtensionRenderers,
 	fdsViewId,
+	filterClientExtensionRenderers,
+	learnResources,
 	namespace,
+	resolvedRESTSchemas = [],
 	restApplications,
-	saveFDSFieldsURL,
-	saveFDSSortURL,
+	saveDataSetSortURL,
+	saveDataSetTableSectionsURL,
 	spritemap,
 }: {
 	backURL: string;
+	cellClientExtensionRenderers: IClientExtensionRenderer[];
 	dataSetERC: string;
-	fdsClientExtensionCellRenderers: IClientExtensionRenderer[];
-	fdsFilterClientExtensions: IClientExtensionRenderer[];
 	fdsViewId: string;
+	filterClientExtensionRenderers: IClientExtensionRenderer[];
+	learnResources: ILearnResourceContext;
 	namespace: string;
+	resolvedRESTSchemas: string[];
 	restApplications: string[];
-	saveFDSFieldsURL: string;
-	saveFDSSortURL: string;
+	saveDataSetSortURL: string;
+	saveDataSetTableSectionsURL: string;
 	spritemap: string;
 }) => {
 	const [activeIndex, setActiveIndex] = useState(0);
@@ -106,9 +109,7 @@ const DataSet = ({
 
 	useEffect(() => {
 		const getDataSet = async () => {
-			const url = Liferay.FeatureFlags['LPD-15729']
-				? `${API_URL.DATA_SETS}/by-external-reference-code/${dataSetERC}`
-				: `${API_URL.DATA_SETS}/${fdsViewId}?nestedFields=${OBJECT_RELATIONSHIP.FDS_ENTRY_FDS_VIEW}`;
+			const url = `${API_URL.DATA_SETS}/by-external-reference-code/${dataSetERC}`;
 
 			const response = await fetch(url, {
 				headers: DEFAULT_FETCH_HEADERS,
@@ -119,11 +120,7 @@ const DataSet = ({
 			if (responseJSON?.id) {
 				setDataSet(responseJSON);
 
-				const {restApplication, restSchema} = Liferay.FeatureFlags[
-					'LPD-15729'
-				]
-					? responseJSON
-					: responseJSON[OBJECT_RELATIONSHIP.FDS_ENTRY_FDS_VIEW];
+				const {restApplication, restSchema} = responseJSON;
 
 				getFields({restApplication, restSchema}).then((fields) => {
 					setFieldTreeItems(fields);
@@ -142,47 +139,54 @@ const DataSet = ({
 	const Content = NAVIGATION_BAR_ITEMS[activeIndex].Component;
 
 	return (
-		<div className="cadmin fds-view">
-			<ClayNavigationBar
-				triggerLabel={NAVIGATION_BAR_ITEMS[activeIndex].label}
-			>
-				{NAVIGATION_BAR_ITEMS.map((item, index) => (
-					<ClayNavigationBar.Item
-						active={index === activeIndex}
-						key={index}
-					>
-						<ClayButton onClick={() => setActiveIndex(index)}>
-							{item.label}
-						</ClayButton>
-					</ClayNavigationBar.Item>
-				))}
-			</ClayNavigationBar>
+		<LearnResourcesContext.Provider value={learnResources}>
+			<div className="cadmin fds-view">
+				<ClayNavigationBar
+					triggerLabel={NAVIGATION_BAR_ITEMS[activeIndex].label}
+				>
+					{NAVIGATION_BAR_ITEMS.map((item, index) => (
+						<ClayNavigationBar.Item
+							active={index === activeIndex}
+							key={index}
+						>
+							<ClayButton onClick={() => setActiveIndex(index)}>
+								{item.label}
+							</ClayButton>
+						</ClayNavigationBar.Item>
+					))}
+				</ClayNavigationBar>
 
-			{loading ? (
-				<ClayLoadingIndicator />
-			) : (
-				dataSet && (
-					<Content
-						backURL={backURL}
-						dataSet={dataSet}
-						fdsClientExtensionCellRenderers={
-							fdsClientExtensionCellRenderers
-						}
-						fdsFilterClientExtensions={fdsFilterClientExtensions}
-						fieldTreeItems={fieldTreeItems}
-						namespace={namespace}
-						onActiveSectionChange={(tab) => setActiveIndex(tab)}
-						onDataSetUpdate={(updatedDataSet) => {
-							setDataSet({...dataSet, ...updatedDataSet});
-						}}
-						restApplications={restApplications}
-						saveFDSFieldsURL={saveFDSFieldsURL}
-						saveFDSSortURL={saveFDSSortURL}
-						spritemap={spritemap}
-					/>
-				)
-			)}
-		</div>
+				{loading ? (
+					<ClayLoadingIndicator />
+				) : (
+					dataSet && (
+						<Content
+							backURL={backURL}
+							cellClientExtensionRenderers={
+								cellClientExtensionRenderers
+							}
+							dataSet={dataSet}
+							fieldTreeItems={fieldTreeItems}
+							filterClientExtensionRenderers={
+								filterClientExtensionRenderers
+							}
+							namespace={namespace}
+							onActiveSectionChange={(tab) => setActiveIndex(tab)}
+							onDataSetUpdate={(updatedDataSet) => {
+								setDataSet({...dataSet, ...updatedDataSet});
+							}}
+							resolvedRESTSchemas={resolvedRESTSchemas}
+							restApplications={restApplications}
+							saveDataSetSortURL={saveDataSetSortURL}
+							saveDataSetTableSectionsURL={
+								saveDataSetTableSectionsURL
+							}
+							spritemap={spritemap}
+						/>
+					)
+				)}
+			</div>
+		</LearnResourcesContext.Provider>
 	);
 };
 

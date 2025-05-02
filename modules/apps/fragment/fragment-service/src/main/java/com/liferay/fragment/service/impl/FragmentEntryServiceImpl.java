@@ -72,7 +72,7 @@ public class FragmentEntryServiceImpl extends FragmentEntryServiceBaseImpl {
 		return fragmentEntryLocalService.addFragmentEntry(
 			null, getUserId(), groupId, fragmentCollectionId, fragmentEntryKey,
 			name, css, html, js, false, configuration, null, previewFileEntryId,
-			false, type, null, status, serviceContext);
+			false, false, type, null, status, serviceContext);
 	}
 
 	@Override
@@ -81,8 +81,8 @@ public class FragmentEntryServiceImpl extends FragmentEntryServiceBaseImpl {
 			long fragmentCollectionId, String fragmentEntryKey, String name,
 			String css, String html, String js, boolean cacheable,
 			String configuration, String icon, long previewFileEntryId,
-			boolean readOnly, int type, String typeOptions, int status,
-			ServiceContext serviceContext)
+			boolean marketplace, boolean readOnly, int type, String typeOptions,
+			int status, ServiceContext serviceContext)
 		throws PortalException {
 
 		_portletResourcePermission.check(
@@ -92,8 +92,8 @@ public class FragmentEntryServiceImpl extends FragmentEntryServiceBaseImpl {
 		return fragmentEntryLocalService.addFragmentEntry(
 			externalReferenceCode, getUserId(), groupId, fragmentCollectionId,
 			fragmentEntryKey, name, css, html, js, cacheable, configuration,
-			icon, previewFileEntryId, readOnly, type, typeOptions, status,
-			serviceContext);
+			icon, previewFileEntryId, marketplace, readOnly, type, typeOptions,
+			status, serviceContext);
 	}
 
 	@Override
@@ -633,16 +633,15 @@ public class FragmentEntryServiceImpl extends FragmentEntryServiceBaseImpl {
 				fragmentCollectionId)
 		).and(
 			() -> {
-				if (Validator.isNotNull(name)) {
-					return DSLFunctionFactoryUtil.lower(
-						FragmentCompositionTable.INSTANCE.name
-					).like(
-						_customSQL.keywords(name, true, WildcardMode.SURROUND)
-							[0]
-					);
+				if (Validator.isNull(name)) {
+					return null;
 				}
 
-				return null;
+				return DSLFunctionFactoryUtil.lower(
+					FragmentCompositionTable.INSTANCE.name
+				).like(
+					_customSQL.keywords(name, true, WildcardMode.SURROUND)[0]
+				);
 			}
 		).and(
 			() -> {
@@ -693,16 +692,15 @@ public class FragmentEntryServiceImpl extends FragmentEntryServiceBaseImpl {
 			).withParentheses()
 		).and(
 			() -> {
-				if (Validator.isNotNull(name)) {
-					return DSLFunctionFactoryUtil.lower(
-						FragmentEntryTable.INSTANCE.name
-					).like(
-						_customSQL.keywords(name, true, WildcardMode.SURROUND)
-							[0]
-					);
+				if (Validator.isNull(name)) {
+					return null;
 				}
 
-				return null;
+				return DSLFunctionFactoryUtil.lower(
+					FragmentEntryTable.INSTANCE.name
+				).like(
+					_customSQL.keywords(name, true, WildcardMode.SURROUND)[0]
+				);
 			}
 		).and(
 			() -> {

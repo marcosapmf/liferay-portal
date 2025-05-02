@@ -6,9 +6,11 @@
 package com.liferay.commerce.pricing.web.internal.portlet.action;
 
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
+import com.liferay.commerce.price.list.exception.CommercePriceEntryPriceException;
 import com.liferay.commerce.price.list.exception.CommercePriceListMaxPriceValueException;
 import com.liferay.commerce.price.list.exception.CommercePriceListMinPriceValueException;
 import com.liferay.commerce.price.list.exception.DuplicateCommercePriceEntryException;
+import com.liferay.commerce.price.list.exception.DuplicateCommercePriceEntryExternalReferenceCodeException;
 import com.liferay.commerce.price.list.exception.NoSuchPriceEntryException;
 import com.liferay.commerce.price.list.exception.NoSuchPriceListException;
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
@@ -127,21 +129,10 @@ public class EditCPInstanceCommercePriceEntryMVCActionCommand
 			}
 		}
 		catch (Exception exception) {
-			if (exception instanceof NoSuchCPInstanceException ||
-				exception instanceof NoSuchPriceEntryException ||
-				exception instanceof NoSuchPriceListException ||
-				exception instanceof PrincipalException) {
-
-				SessionErrors.add(actionRequest, exception.getClass());
-
-				actionResponse.setRenderParameter("mvcPath", "/error.jsp");
-			}
-			else if (exception instanceof
-						CommercePriceListMaxPriceValueException ||
-					 exception instanceof
-						 CommercePriceListMinPriceValueException ||
-					 exception instanceof
-						 DuplicateCommercePriceEntryException) {
+			if (exception instanceof CommercePriceEntryPriceException ||
+				exception instanceof CommercePriceListMaxPriceValueException ||
+				exception instanceof CommercePriceListMinPriceValueException ||
+				exception instanceof DuplicateCommercePriceEntryException) {
 
 				hideDefaultErrorMessage(actionRequest);
 				hideDefaultSuccessMessage(actionRequest);
@@ -152,6 +143,17 @@ public class EditCPInstanceCommercePriceEntryMVCActionCommand
 					actionRequest, "redirect");
 
 				sendRedirect(actionRequest, actionResponse, redirect);
+			}
+			else if (exception instanceof
+						DuplicateCommercePriceEntryExternalReferenceCodeException ||
+					 exception instanceof NoSuchCPInstanceException ||
+					 exception instanceof NoSuchPriceEntryException ||
+					 exception instanceof NoSuchPriceListException ||
+					 exception instanceof PrincipalException) {
+
+				SessionErrors.add(actionRequest, exception.getClass());
+
+				actionResponse.setRenderParameter("mvcPath", "/error.jsp");
 			}
 			else {
 				throw exception;
@@ -175,13 +177,17 @@ public class EditCPInstanceCommercePriceEntryMVCActionCommand
 		boolean overrideDiscount = ParamUtil.getBoolean(
 			actionRequest, "overrideDiscount");
 		BigDecimal discountLevel1 = _commercePriceFormatter.parse(
-			actionRequest, "discountLevel1");
+			actionRequest, false, CommercePriceEntry.class.getName(),
+			"discountLevel1");
 		BigDecimal discountLevel2 = _commercePriceFormatter.parse(
-			actionRequest, "discountLevel2");
+			actionRequest, false, CommercePriceEntry.class.getName(),
+			"discountLevel2");
 		BigDecimal discountLevel3 = _commercePriceFormatter.parse(
-			actionRequest, "discountLevel3");
+			actionRequest, false, CommercePriceEntry.class.getName(),
+			"discountLevel3");
 		BigDecimal discountLevel4 = _commercePriceFormatter.parse(
-			actionRequest, "discountLevel4");
+			actionRequest, false, CommercePriceEntry.class.getName(),
+			"discountLevel4");
 		int displayDateMonth = ParamUtil.getInteger(
 			actionRequest, "displayDateMonth");
 		int displayDateDay = ParamUtil.getInteger(
@@ -220,7 +226,7 @@ public class EditCPInstanceCommercePriceEntryMVCActionCommand
 			actionRequest, "neverExpire");
 
 		BigDecimal price = _commercePriceFormatter.parse(
-			actionRequest, "price");
+			actionRequest, false, CommercePriceEntry.class.getName(), "price");
 		boolean priceOnApplication = ParamUtil.getBoolean(
 			actionRequest, "priceOnApplication");
 

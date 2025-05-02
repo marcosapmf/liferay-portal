@@ -3,111 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ProductType, ProductTypeLabels} from '../../enums/Product';
 import {Liferay} from '../../liferay/liferay';
-
-export type AccountBriefProps = {
-	externalReferenceCode: string;
-	id: number;
-	name: string;
-};
-
-export type MemberProps = {
-	accountBriefs: AccountBriefProps[];
-	dateCreated: string;
-	email: string;
-	image: string;
-	isCustomerAccount: boolean;
-	isInvitedMember: boolean;
-	isPublisherAccount: boolean;
-	lastLoginDate: string;
-	name: string;
-	role: string;
-	userId: number;
-};
-
-export type UserAccountProps = {
-	accountBriefs: AccountBrief[];
-	dateCreated: string;
-	emailAddress: string;
-	id: number;
-	image: string;
-	lastLoginDate: string;
-	name: string;
-	roleBriefs: {
-		id: number;
-		name: string;
-	}[];
-};
-
-export const customerRoles = ['Account Administrator', 'Account Buyer'];
-
-export const publisherRoles = ['Account Administrator', 'App Editor'];
-
-export const publisherAppPermissionDescriptions: PermissionDescription[] = [
-	{
-		permissionName: 'Create new apps',
-		permissionTooltip: 'Create and submit new apps and versions',
-		permittedRoles: ['App Editor'],
-	},
-	{
-		permissionName: 'Manage apps owned by me',
-		permissionTooltip:
-			'Manage apps and versions I own as a publisher - version, hide or delete.',
-		permittedRoles: ['App Editor'],
-	},
-	{
-		permissionName: 'Manage all apps',
-		permissionTooltip:
-			'Manage any app in the business - version, hide or delete.',
-		permittedRoles: ['App Editor'],
-	},
-	{
-		permissionName: 'Create app pricing',
-		permissionTooltip:
-			'Sell apps in the Marketplace, edit pricing structure for apps in the business.',
-		permittedRoles: ['App Editor'],
-	},
-];
-
-export const publisherDashboardPermissionDescriptions: PermissionDescription[] =
-	[
-		{
-			permissionName: 'Manage my own member profile',
-			permissionTooltip: 'Manage my own profile information (via Okta)',
-			permittedRoles: ['Account Administrator', 'App Editor'],
-		},
-		{
-			permissionName: 'View account members',
-			permissionTooltip: 'View all members and roles in my account.',
-			permittedRoles: ['Account Administrator', 'App Editor'],
-		},
-		{
-			permissionName: 'Change my account from free to paid',
-			permissionTooltip:
-				'Allows a greater set of functionality related to offering paid apps in the Marketplace',
-			permittedRoles: ['Account Administrator'],
-		},
-		{
-			permissionName: 'View orders',
-			permissionTooltip:
-				'View all orders of apps sold in the marketplace and the associated customer information.',
-			permittedRoles: ['Account Administrator'],
-		},
-		{
-			permissionName: 'Manage publisher account profile',
-			permissionTooltip:
-				'Manage the name, description, address, contact (phone and email) of the account.',
-			permittedRoles: ['Account Administrator'],
-		},
-		{
-			permissionName: 'Manage members and roles',
-			permissionTooltip:
-				'Manage roles of your team members - invite & remove',
-			permittedRoles: ['Account Administrator'],
-		},
-	];
-
-export const adminRoles = ['Account Administrator'];
 
 export function formatDate(date: string) {
 	const locale = Liferay.ThemeDisplay.getLanguageId().replace('_', '-');
@@ -130,35 +27,11 @@ export function getProductTypeFromSpecifications(
 ) {
 	let productType = 'no type';
 
-	specifications.forEach((specification: ProductSpecification) => {
+	for (const specification of specifications) {
 		if (specification.specificationKey === 'type') {
 			productType = specification.value.en_US;
 
-			if (productType === 'cloud') {
-				productType = 'Cloud';
-			}
-			else if (productType === 'dxp') {
-				productType = 'DXP';
-			}
+			return ProductTypeLabels[productType as ProductType] ?? productType;
 		}
-	});
-
-	return productType;
-}
-
-export function getRolesList(
-	accountBriefs: AccountBrief[],
-	selectedAccountId: number
-) {
-	const rolesList: string[] = [];
-
-	const accountBrief = accountBriefs.find(
-		(accountBrief) => accountBrief.id === selectedAccountId
-	);
-
-	accountBrief?.roleBriefs.forEach((role) => {
-		rolesList.push(role.name);
-	});
-
-	return rolesList.join(', ');
+	}
 }

@@ -7,21 +7,22 @@ import {Locator, Page} from '@playwright/test';
 
 export class ActionPage {
 	readonly nameInput: Locator;
+	readonly page: Page;
 	readonly scriptInput: Locator;
 	readonly selectActionType: Locator;
-	readonly page: Page;
 
 	constructor(page: Page) {
 		this.nameInput = page.locator('#name');
+		this.page = page;
 		this.scriptInput = page.locator('#script');
 		this.selectActionType = page.locator('#type');
-		this.page = page;
 	}
 
 	async fillWorkflowAction(name: string, script: string, typeOption: string) {
 		await this.nameInput.fill(name);
 		await this.selectActionType.selectOption(typeOption);
 		await this.scriptInput.fill(script);
+		await this.scriptInput.blur();
 	}
 
 	async getTypeSelectOption(optionValue: string) {

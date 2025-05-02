@@ -1,4 +1,4 @@
-@component-name = "portal-security"
+@component-name = "portal-application-security"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -183,7 +183,7 @@ definition {
 	@description = "Users could login through the UI."
 	@priority = 5
 	test LoginWithUI {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property app.server.types = "jboss,tomcat,weblogic,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
@@ -201,7 +201,7 @@ definition {
 	@description = "This is a use case for LPS-150234. Login page not breaks visually when user enters his credentials incorrectly."
 	@priority = 5
 	test LoginWithUIUsingWrongCredentials {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property app.server.types = "jboss,tomcat,weblogic,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -224,7 +224,7 @@ definition {
 	@description = "This is a use case for LPS-150234. Login page not breaks visually when user enters his credentials incorrectly and one MFA verifier is enabled."
 	@priority = 5
 	test LoginWithUIUsingWrongCredentialsAndMFAIsEnabled {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property app.server.types = "jboss,tomcat,weblogic,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -251,77 +251,6 @@ definition {
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_DISMISSIBLE",
 				value1 = "Authentication failed due to incorrect credentials or account lockout. Click \"Forgot Password\" if the correct credentials were provided.");
-		}
-	}
-
-	@description = "This is a use case for LRQA-43015. Ignore test due to OpenAM 12 doesn't support Tomcat 9."
-	@ignore = "true"
-	@priority = 5
-	test OpenSSOSmoke {
-		property custom.properties = "javascript.single.page.application.enabled=false";
-		property dummy.socket.proxy.disabled = "true";
-		property openam.enabled = "true";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Go to http://test.able.com:8080/openam and run ant command") {
-			Navigator.openSpecificURL(url = "http://test.able.com:8080/openam");
-
-			AntCommands.runCommand("build-test-openam.xml", "run-openam-tools");
-		}
-
-		task ("Wait for OpenAM setup") {
-			var pauseCount = 0;
-
-			while ((IsElementNotPresent(locator1 = "TextInput#TEXT")) && (${pauseCount} != 20)) {
-				Refresh();
-
-				// Wait for OpenAM configuration to finish. See LRQA-28959 for more details.
-
-				Pause(value1 = 30000);
-
-				var pauseCount = ${pauseCount} + 1;
-
-				echo("Pause count: ${pauseCount}");
-			}
-
-			if (${pauseCount} == 20) {
-				fail("OpenAM setup timed out after 10 minutes.");
-			}
-		}
-
-		task ("Login and configure open SSO") {
-			User.firstLoginPG();
-
-			PortalSettings.gotoConfiguration(
-				baseURL = "http://localhost:8080",
-				configurationCategory = "SSO",
-				configurationName = "OpenSSO",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.configureOpenSSO(
-				openSsoLoginURL = "http://test.able.com:8080/openam/UI/Login?goto=http://www.able.com:8080/c/portal/login",
-				openSsoLogoutURL = "http://test.able.com:8080/openam/UI/Logout?goto=http://www.able.com:8080/web/guest/home",
-				openSsoServiceURL = "http://test.able.com:8080/openam");
-		}
-
-		task ("Test SSO connection") {
-			PortalSettings.gotoConfiguration(
-				baseURL = "http://localhost:8080",
-				configurationCategory = "SSO",
-				configurationName = "OpenSSO",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.testOpenSSOConnection();
-		}
-
-		task ("Logout and login with open SSO") {
-			User.logoutPG();
-
-			User.loginUserWithOpenSSOEnabledPG(
-				hostsURL = "http://www.able.com:8080",
-				password = "password",
-				userScreenName = "test");
 		}
 	}
 
@@ -362,84 +291,6 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LRQA-27622. Users could login using Token Based SSO."
-	@priority = 5
-	test TokenBasedSSOSmoke {
-		property portal.acceptance = "true";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Login and reset token based SSO configuration") {
-			User.firstLoginPG();
-
-			SystemSettings.openSystemSettingsAdmin();
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "SSO",
-				configurationName = "Token Based SSO",
-				configurationScope = "System Scope");
-
-			SystemSettings.resetConfiguration();
-		}
-
-		task ("Enable and save configuration") {
-			FormFields.enableCheckbox(fieldName = "Enabled");
-
-			FormFields.selectSelectOption(
-				fieldName = "Token Location",
-				selectOption = "Request Header");
-
-			SystemSettings.saveConfiguration();
-
-			// The pause is necessary because it takes a while to load new configuration
-
-			Pause(value1 = 3000);
-		}
-
-		task ("Run and command") {
-			AntCommands.runCommand("build-test-token-based-sso.xml", "verify-token-based-login -Dportal.url=http://localhost:8080/web/guest -Duser.token=test@liferay.com");
-		}
-
-		task ("Disable configuration") {
-			FormFields.disableCheckbox(fieldName = "Enabled");
-
-			SystemSettings.saveConfiguration();
-		}
-
-		task ("Add CP able.com") {
-			HeadlessPortalInstanceAPI.addPortalInstance(
-				domain = "www.able.com",
-				portalInstanceId = "www.able.com",
-				virtualHost = "www.able.com");
-		}
-
-		task ("Login at able.com and enable token based SSO") {
-			User.firstLoginUI(
-				password = PropsUtil.get("default.admin.password"),
-				specificURL = "http://www.able.com:8080",
-				userEmailAddress = "test@www.able.com");
-
-			PortalSettings.openInstanceSettingsAdmin(baseURL = "http://www.able.com:8080");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "SSO",
-				configurationName = "Token Based SSO",
-				configurationScope = "Virtual Instance Scope");
-
-			FormFields.enableCheckbox(fieldName = "enabled");
-
-			SystemSettings.saveConfiguration();
-
-			// The pause is necessary because it takes a while to load new configuration
-
-			Pause(value1 = 3000);
-		}
-
-		task ("Run ant command") {
-			AntCommands.runCommand("build-test-token-based-sso.xml", "verify-token-based-login -Dportal.url=http://www.able.com:8080/web/guest -Duser.token=test@www.able.com");
-		}
-	}
-
 	@description = "This is a use case for LPS-150388 TC-1/5: Admin password need to be set on first startup if the default admin password property is not set."
 	@priority = 5
 	test UserSetNewPasswordWithoutPasswordProperty {
@@ -470,7 +321,7 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LRQA-27619. Verify that LDAP and OpenSSO portlets are present at Instance Settings."
+	@description = "This is a use case for LRQA-27619. Verify that LDAP portlet is present at Instance Settings."
 	@priority = 5
 	test ViewInstanceSettingsAuthentication {
 		property osgi.app.includes = "portal-security-sso-openid";
@@ -485,10 +336,6 @@ definition {
 
 		task ("View LDAP CP authentication settings") {
 			PortalSettings.viewAuthenticationLDAPCP();
-		}
-
-		task ("View openSSO CP authentication settings") {
-			PortalSettings.viewAuthenticationOpenSSOCP();
 		}
 	}
 

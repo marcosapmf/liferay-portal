@@ -26,6 +26,7 @@ import com.liferay.batch.engine.internal.strategy.OnErrorContinueBatchEngineImpo
 import com.liferay.batch.engine.internal.strategy.OnErrorFailBatchEngineImportStrategy;
 import com.liferay.batch.engine.internal.task.progress.BatchEngineTaskProgress;
 import com.liferay.batch.engine.internal.task.progress.BatchEngineTaskProgressFactory;
+import com.liferay.batch.engine.internal.util.ErrorMessageUtil;
 import com.liferay.batch.engine.internal.util.ItemIndexThreadLocal;
 import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.batch.engine.service.BatchEngineImportTaskErrorLocalService;
@@ -37,13 +38,18 @@ import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 
@@ -94,11 +100,33 @@ public class BatchEngineImportTaskExecutorImpl
 			startTime = System.currentTimeMillis();
 		}
 
-		SafeCloseable safeCloseable = CompanyThreadLocal.setWithSafeCloseable(
-			batchEngineImportTask.getCompanyId(),
-			CTCollectionThreadLocal.getCTCollectionId());
+		SafeCloseable safeCloseable1 =
+			CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+				batchEngineImportTask.getCompanyId(),
+				CTCollectionThreadLocal.getCTCollectionId());
 
-		try {
+		File file;
+
+		try (InputStream inputStream =
+				_batchEngineImportTaskLocalService.openContentInputStream(
+					batchEngineImportTask.getBatchEngineImportTaskId())) {
+
+			file = FileUtil.createTempFile(inputStream);
+		}
+		catch (Throwable throwable) {
+			_log.error(
+				"Unable to save batch engine import task content as temp file" +
+					batchEngineImportTask,
+				throwable);
+
+			_updateBatchEngineImportTask(
+				BatchEngineTaskExecuteStatus.FAILED, batchEngineImportTask,
+				throwable);
+
+			return;
+		}
+
+		try (SafeCloseable safeCloseable2 = SearchContext.openBatchMode()) {
 			batchEngineImportTask.setExecuteStatus(
 				BatchEngineTaskExecuteStatus.STARTED.toString());
 			batchEngineImportTask.setStartTime(new Date());
@@ -108,10 +136,10 @@ public class BatchEngineImportTaskExecutorImpl
 					BatchEngineTaskContentType.valueOf(
 						batchEngineImportTask.getContentType()));
 
-			batchEngineImportTask.setTotalItemsCount(
-				batchEngineTaskProgress.getTotalItemsCount(
-					_batchEngineImportTaskLocalService.openContentInputStream(
-						batchEngineImportTask.getBatchEngineImportTaskId())));
+			try (InputStream inputStream = new FileInputStream(file)) {
+				batchEngineImportTask.setTotalItemsCount(
+					batchEngineTaskProgress.getTotalItemsCount(inputStream));
+			}
 
 			_batchEngineImportTaskLocalService.updateBatchEngineImportTask(
 				batchEngineImportTask);
@@ -119,7 +147,7 @@ public class BatchEngineImportTaskExecutorImpl
 			BatchEngineTaskExecutorUtil.execute(
 				checkPermissions,
 				() -> _importItems(
-					batchEngineImportTask, batchEngineTaskItemDelegate),
+					batchEngineImportTask, batchEngineTaskItemDelegate, file),
 				_userLocalService.getUser(batchEngineImportTask.getUserId()));
 
 			_updateBatchEngineImportTask(
@@ -134,14 +162,15 @@ public class BatchEngineImportTaskExecutorImpl
 
 			_updateBatchEngineImportTask(
 				BatchEngineTaskExecuteStatus.FAILED, batchEngineImportTask,
-				throwable.toString());
+				throwable);
 		}
 		finally {
+			file.delete();
 
 			// LPS-167011 Because of call to _updateBatchEngineImportTask when
 			// catching a Throwable
 
-			safeCloseable.close();
+			safeCloseable1.close();
 		}
 
 		if (_log.isInfoEnabled()) {
@@ -273,7 +302,9 @@ public class BatchEngineImportTaskExecutorImpl
 			batchEngineImportTask.getCompanyId(),
 			batchEngineImportTask.getUserId(),
 			batchEngineImportTask.getBatchEngineImportTaskId(), null,
-			processedItemsCount, exception.toString());
+			processedItemsCount,
+			ErrorMessageUtil.getErrorMessage(
+				exception, batchEngineImportTask.getUserId()));
 
 		if (batchEngineImportTask.getImportStrategy() ==
 				BatchEngineImportTaskConstants.
@@ -289,20 +320,21 @@ public class BatchEngineImportTaskExecutorImpl
 		}
 	}
 
-	private void _importItems(
+	private Void _importItems(
 			BatchEngineImportTask batchEngineImportTask,
-			BatchEngineTaskItemDelegate<?> batchEngineTaskItemDelegate)
+			BatchEngineTaskItemDelegate<?> batchEngineTaskItemDelegate,
+			File file)
 		throws Throwable {
 
 		Map<String, Serializable> parameters = _getParameters(
 			batchEngineImportTask);
 
-		try (BatchEngineImportTaskItemReader batchEngineImportTaskItemReader =
+		try (InputStream inputStream = new FileInputStream(file);
+			BatchEngineImportTaskItemReader batchEngineImportTaskItemReader =
 				_getBatchEngineImportTaskItemReader(
-					batchEngineImportTask,
-					_batchEngineImportTaskLocalService.openContentInputStream(
-						batchEngineImportTask.getBatchEngineImportTaskId()),
-					parameters)) {
+					batchEngineImportTask, inputStream, parameters);
+			SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
 
 			BatchEngineTaskItemDelegateExecutor
 				batchEngineTaskItemDelegateExecutor =
@@ -366,6 +398,8 @@ public class BatchEngineImportTaskExecutorImpl
 					items, processedItemsCount);
 			}
 		}
+
+		return null;
 	}
 
 	private Object _readItem(
@@ -390,10 +424,12 @@ public class BatchEngineImportTaskExecutorImpl
 
 	private void _updateBatchEngineImportTask(
 		BatchEngineTaskExecuteStatus batchEngineTaskExecuteStatus,
-		BatchEngineImportTask batchEngineImportTask, String errorMessage) {
+		BatchEngineImportTask batchEngineImportTask, Throwable throwable) {
 
 		batchEngineImportTask.setEndTime(new Date());
-		batchEngineImportTask.setErrorMessage(errorMessage);
+		batchEngineImportTask.setErrorMessage(
+			ErrorMessageUtil.getErrorMessage(
+				throwable, batchEngineImportTask.getUserId()));
 		batchEngineImportTask.setExecuteStatus(
 			batchEngineTaskExecuteStatus.toString());
 

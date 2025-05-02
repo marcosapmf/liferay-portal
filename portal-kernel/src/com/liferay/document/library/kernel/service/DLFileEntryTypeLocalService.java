@@ -186,11 +186,12 @@ public interface DLFileEntryTypeLocalService
 	public void deleteDLFolderDLFileEntryTypes(
 		long folderId, long[] fileEntryTypeIds);
 
+	@Indexable(type = IndexableType.DELETE)
 	@SystemEvent(
 		action = SystemEventConstants.ACTION_SKIP,
 		type = SystemEventConstants.TYPE_DELETE
 	)
-	public void deleteFileEntryType(DLFileEntryType dlFileEntryType)
+	public DLFileEntryType deleteFileEntryType(DLFileEntryType dlFileEntryType)
 		throws PortalException;
 
 	public void deleteFileEntryType(long fileEntryTypeId)
@@ -436,6 +437,9 @@ public interface DLFileEntryTypeLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntryType> getFileEntryTypes(long[] groupIds);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DLFileEntryType> getFileEntryTypesByCompanyId(long companyId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntryType> getFolderFileEntryTypes(

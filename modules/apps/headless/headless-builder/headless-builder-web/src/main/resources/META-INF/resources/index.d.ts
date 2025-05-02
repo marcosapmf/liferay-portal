@@ -13,7 +13,7 @@ interface APIApplicationItem extends BaseItem {
 interface APIEndpointFilter {
 	id: number;
 	oDataFilter: string;
-	r_apiEndpointToAPIFilters_c_apiEndpointId: number;
+	r_apiEndpointToAPIFilters_l_apiEndpointId: number;
 }
 
 interface APIEndpointItem extends BaseItem {
@@ -23,9 +23,9 @@ interface APIEndpointItem extends BaseItem {
 	path: string;
 	pathParameter: string;
 	pathParameterDescription: string;
-	r_apiApplicationToAPIEndpoints_c_apiApplicationId: string;
-	r_requestAPISchemaToAPIEndpoints_c_apiSchemaId?: number;
-	r_responseAPISchemaToAPIEndpoints_c_apiSchemaId?: number;
+	r_apiApplicationToAPIEndpoints_l_apiApplicationId: string;
+	r_requestAPISchemaToAPIEndpoints_l_apiSchemaId?: number;
+	r_responseAPISchemaToAPIEndpoints_l_apiSchemaId?: number;
 	retrieveType: APIListType;
 	scope: APIListType;
 }
@@ -33,7 +33,7 @@ interface APIEndpointItem extends BaseItem {
 interface APIEndpointSort {
 	id: number;
 	oDataSort: string;
-	r_apiEndpointToAPISorts_c_apiEndpointId: number;
+	r_apiEndpointToAPISorts_l_apiEndpointId: number;
 }
 
 interface APIListType {
@@ -52,7 +52,7 @@ interface APISchemaItem extends BaseItem {
 	apiSchemaToAPIProperties?: APIProperty[];
 	mainObjectDefinitionERC: string;
 	name: string;
-	r_apiApplicationToAPISchemas_c_apiApplicationId?: string;
+	r_apiApplicationToAPISchemas_l_apiApplicationId?: string;
 }
 
 interface APISchemaPropertyItem {
@@ -68,8 +68,15 @@ interface APISchemaPropertyItem {
 	objectFieldERC: string;
 	objectFieldId: number;
 	objectRelationshipNames: string;
-	r_apiSchemaToAPIProperties_c_apiSchemaERC: string;
-	r_apiSchemaToAPIProperties_c_apiSchemaId: number;
+	r_apiPropertyToAPIProperties_l_apiPropertyId: number;
+	r_apiSchemaToAPIProperties_l_apiSchemaERC: string;
+	r_apiSchemaToAPIProperties_l_apiSchemaId: number;
+	type: schemaPropertyItem;
+}
+
+interface schemaPropertyItem {
+	key: string;
+	name: string;
 }
 
 interface APISchemaUIData {
@@ -257,6 +264,7 @@ interface TreeViewItemData {
 	businessType: ObjectFieldBusinessType;
 	children?: TreeViewItemData[];
 	description?: string;
+	externalReferenceCode?: string;
 	id?: number;
 	name: string;
 	objectDefinitionName: string;
@@ -264,7 +272,8 @@ interface TreeViewItemData {
 	objectFieldId: number;
 	objectFieldName: string;
 	objectRelationshipNames?: string;
-	r_apiSchemaToAPIProperties_c_apiSchemaId: number;
+	r_apiPropertyToAPIProperties_l_apiPropertyId: number;
+	r_apiSchemaToAPIProperties_l_apiSchemaId: number;
 	type: string;
 }
 
@@ -282,9 +291,9 @@ type APIEndpointUIData = {
 	path: string;
 	pathParameter: string;
 	pathParameterDescription: string;
-	r_apiApplicationToAPIEndpoints_c_apiApplicationId: string;
-	r_requestAPISchemaToAPIEndpoints_c_apiSchemaId: number;
-	r_responseAPISchemaToAPIEndpoints_c_apiSchemaId: number;
+	r_apiApplicationToAPIEndpoints_l_apiApplicationId: string;
+	r_requestAPISchemaToAPIEndpoints_l_apiSchemaId: number;
+	r_responseAPISchemaToAPIEndpoints_l_apiSchemaId: number;
 	retrieveType: APIListType;
 	scope: APIListType;
 };
@@ -303,7 +312,7 @@ type EndpointDataError = {
 	parameter: boolean;
 	path: boolean;
 	pathParameter: boolean;
-	r_requestAPISchemaToAPIEndpoints_c_apiSchemaId: boolean;
+	r_requestAPISchemaToAPIEndpoints_l_apiSchemaId: boolean;
 	retrieveType: boolean;
 	scope: boolean;
 };

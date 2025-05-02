@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.pricing.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.pricing.dto.v1_0.DiscountRule;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,18 +46,18 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface DiscountRuleResource {
 
+	public Response deleteDiscountRule(Long id) throws Exception;
+
+	public Response deleteDiscountRuleBatch(String callbackURL, Object object)
+		throws Exception;
+
 	public Page<DiscountRule>
 			getDiscountByExternalReferenceCodeDiscountRulesPage(
 				String externalReferenceCode, Pagination pagination)
 		throws Exception;
 
-	public DiscountRule postDiscountByExternalReferenceCodeDiscountRule(
-			String externalReferenceCode, DiscountRule discountRule)
-		throws Exception;
-
-	public Response deleteDiscountRule(Long id) throws Exception;
-
-	public Response deleteDiscountRuleBatch(String callbackURL, Object object)
+	public Page<DiscountRule> getDiscountIdDiscountRulesPage(
+			Long id, Pagination pagination)
 		throws Exception;
 
 	public DiscountRule getDiscountRule(Long id) throws Exception;
@@ -67,8 +65,8 @@ public interface DiscountRuleResource {
 	public Response patchDiscountRule(Long id, DiscountRule discountRule)
 		throws Exception;
 
-	public Page<DiscountRule> getDiscountIdDiscountRulesPage(
-			Long id, Pagination pagination)
+	public DiscountRule postDiscountByExternalReferenceCodeDiscountRule(
+			String externalReferenceCode, DiscountRule discountRule)
 		throws Exception;
 
 	public DiscountRule postDiscountIdDiscountRule(
@@ -101,7 +99,8 @@ public interface DiscountRuleResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -126,19 +125,23 @@ public interface DiscountRuleResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

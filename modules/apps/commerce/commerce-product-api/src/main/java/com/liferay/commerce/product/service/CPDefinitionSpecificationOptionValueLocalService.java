@@ -84,9 +84,10 @@ public interface CPDefinitionSpecificationOptionValueLocalService
 
 	public CPDefinitionSpecificationOptionValue
 			addCPDefinitionSpecificationOptionValue(
-				long cpDefinitionId, long cpSpecificationOptionId,
-				long cpOptionCategoryId, double priority,
-				Map<Locale, String> valueMap, ServiceContext serviceContext)
+				String externalReferenceCode, long cpDefinitionId,
+				long cpSpecificationOptionId, long cpOptionCategoryId,
+				double priority, Map<Locale, String> valueMap, boolean visible,
+				ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -255,6 +256,11 @@ public interface CPDefinitionSpecificationOptionValueLocalService
 		fetchCPDefinitionSpecificationOptionValue(
 			long cpDefinitionId, String key);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CPDefinitionSpecificationOptionValue
+		fetchCPDefinitionSpecificationOptionValueByExternalReferenceCode(
+			String externalReferenceCode, long companyId);
+
 	/**
 	 * Returns the cp definition specification option value matching the UUID and group.
 	 *
@@ -281,6 +287,12 @@ public interface CPDefinitionSpecificationOptionValueLocalService
 	public CPDefinitionSpecificationOptionValue
 			getCPDefinitionSpecificationOptionValue(
 				long CPDefinitionSpecificationOptionValueId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CPDefinitionSpecificationOptionValue
+			getCPDefinitionSpecificationOptionValueByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
 		throws PortalException;
 
 	/**
@@ -319,19 +331,19 @@ public interface CPDefinitionSpecificationOptionValueLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CPDefinitionSpecificationOptionValue>
 		getCPDefinitionSpecificationOptionValues(
-			long cpSpecificationOptionId, int start, int end);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<CPDefinitionSpecificationOptionValue>
-		getCPDefinitionSpecificationOptionValues(
-			long cpDefinitionId, int start, int end,
+			long cpDefinitionId, Boolean visible, int start, int end,
 			OrderByComparator<CPDefinitionSpecificationOptionValue>
 				orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CPDefinitionSpecificationOptionValue>
 		getCPDefinitionSpecificationOptionValues(
-			long cpDefinitionId, long cpOptionCategoryId);
+			long cpSpecificationOptionId, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPDefinitionSpecificationOptionValue>
+		getCPDefinitionSpecificationOptionValues(
+			long cpDefinitionId, long cpOptionCategoryId, Boolean visible);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CPDefinitionSpecificationOptionValue>
@@ -377,7 +389,7 @@ public interface CPDefinitionSpecificationOptionValueLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getCPDefinitionSpecificationOptionValuesCount(
-		long cpDefinitionId);
+		long cpDefinitionId, Boolean visible);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getCPSpecificationOptionDefinitionValuesCount(
@@ -423,9 +435,11 @@ public interface CPDefinitionSpecificationOptionValueLocalService
 
 	public CPDefinitionSpecificationOptionValue
 			updateCPDefinitionSpecificationOptionValue(
+				String externalReferenceCode,
 				long cpDefinitionSpecificationOptionValueId,
 				long cpOptionCategoryId, String key, double priority,
-				Map<Locale, String> valueMap, ServiceContext serviceContext)
+				Map<Locale, String> valueMap, boolean visible,
+				ServiceContext serviceContext)
 		throws PortalException;
 
 	public CPDefinitionSpecificationOptionValue updateCPOptionCategoryId(

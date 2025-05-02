@@ -91,6 +91,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletMode;
@@ -198,8 +199,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 	@Override
 	public Layout fetchDraftLayout() {
-		return LayoutLocalServiceUtil.fetchLayout(
-			PortalUtil.getClassNameId(Layout.class), getPlid());
+		return LayoutLocalServiceUtil.fetchDraftLayout(getPlid());
 	}
 
 	/**
@@ -303,6 +303,28 @@ public class LayoutImpl extends LayoutBaseImpl {
 		}
 
 		return layouts;
+	}
+
+	@Override
+	public String[] getAvailableLanguageIds() {
+		Set<String> availableLanguageIds = new TreeSet<>();
+
+		Collections.addAll(
+			availableLanguageIds, super.getAvailableLanguageIds());
+
+		for (LayoutFriendlyURL layoutFriendlyURL :
+				LayoutFriendlyURLLocalServiceUtil.getLayoutFriendlyURLs(
+					getPlid())) {
+
+			if (LanguageUtil.isAvailableLocale(
+					layoutFriendlyURL.getGroupId(),
+					layoutFriendlyURL.getLanguageId())) {
+
+				availableLanguageIds.add(layoutFriendlyURL.getLanguageId());
+			}
+		}
+
+		return availableLanguageIds.toArray(new String[0]);
 	}
 
 	@Override
@@ -710,10 +732,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 	@Override
 	public String getIcon() {
-		if (isTypeCollection()) {
-			return "list";
-		}
-
 		if (isTypeContent()) {
 			return "page";
 		}
@@ -892,7 +910,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 	@Override
 	public String getThemeSetting(String key, String device) {
-		return getThemeSetting(key, device, false);
+		return getThemeSetting(key, device, isInheritLookAndFeel());
 	}
 
 	@Override
@@ -1433,18 +1451,8 @@ public class LayoutImpl extends LayoutBaseImpl {
 	}
 
 	@Override
-	public boolean isTypeCollection() {
-		if (Objects.equals(getType(), LayoutConstants.TYPE_COLLECTION)) {
-			return true;
-		}
-
-		return false;
-	}
-
-	@Override
 	public boolean isTypeContent() {
-		if (Objects.equals(getType(), LayoutConstants.TYPE_COLLECTION) ||
-			Objects.equals(getType(), LayoutConstants.TYPE_CONTENT) ||
+		if (Objects.equals(getType(), LayoutConstants.TYPE_CONTENT) ||
 			Objects.equals(getType(), LayoutConstants.TYPE_UTILITY) ||
 			Objects.equals(
 				_getLayoutTypeControllerType(), LayoutConstants.TYPE_CONTENT)) {

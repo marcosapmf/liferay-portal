@@ -6,11 +6,16 @@
 import ClayButton from '@clayui/button';
 import {TreeView} from '@clayui/core';
 import ClayIcon from '@clayui/icon';
-import {openModal, openToast, sub} from 'frontend-js-web';
+import {ClayTooltipProvider} from '@clayui/tooltip';
+import {openModal, openToast} from 'frontend-js-components-web';
+import {sub} from 'frontend-js-web';
 import React, {Dispatch, SetStateAction} from 'react';
 
 import EditAPIPropertyModalContent from './modals/EditAPIPropertyModalContent';
-import {BUSINESS_TYPES_TO_SYMBOLS} from './utils/constants';
+import {
+	ALLOWED_BUSINESS_TYPES,
+	BUSINESS_TYPES_TO_SYMBOLS,
+} from './utils/constants';
 
 interface PropertiesTreeViewProps {
 	schemaUIData: APISchemaUIData;
@@ -29,7 +34,10 @@ export default function PropertiesTreeView({
 	setSchemaUIData,
 }: PropertiesTreeViewProps) {
 	const getIconName = (businessType: ObjectFieldBusinessType) => {
-		if (businessType) {
+		if (
+			businessType &&
+			Object.keys(BUSINESS_TYPES_TO_SYMBOLS).includes(businessType)
+		) {
 			return BUSINESS_TYPES_TO_SYMBOLS[businessType];
 		}
 
@@ -125,6 +133,7 @@ export default function PropertiesTreeView({
 						objectDefinitionName,
 						objectFieldId,
 						objectFieldName,
+						r_apiPropertyToAPIProperties_l_apiPropertyId,
 					}) => (
 						<TreeView.Item
 							actions={
@@ -172,9 +181,30 @@ export default function PropertiesTreeView({
 
 							<span className="treeview-item-label">{name}</span>
 
+							{(!ALLOWED_BUSINESS_TYPES.includes(businessType) ||
+								r_apiPropertyToAPIProperties_l_apiPropertyId !==
+									0) && (
+								<ClayTooltipProvider>
+									<span
+										className="inline-item-after"
+										title={Liferay.Language.get(
+											'under-development'
+										)}
+									>
+										<ClayIcon
+											className="text-secondary"
+											symbol="warning-full"
+										/>
+									</span>
+								</ClayTooltipProvider>
+							)}
+
 							<span className="text-truncate treeview-item-path">
 								&nbsp;
-								{`(${objectDefinitionName}.${objectFieldName})`}
+								{ALLOWED_BUSINESS_TYPES.includes(
+									businessType
+								) &&
+									`(${objectDefinitionName}.${objectFieldName})`}
 							</span>
 						</TreeView.Item>
 					)}

@@ -7,12 +7,16 @@ definition {
 	property minimum.slave.ram = "24";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Depot";
+	property testray.main.component.name = "Asset Libraries";
 
 	setUp {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -1008,7 +1012,7 @@ definition {
 			webContentImage = "Document_1.jpg",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		JSONLayout.addWidgetToPublicLayout(
 			groupName = "Site Name",
@@ -2066,7 +2070,7 @@ definition {
 			webContentImage = "Document_1.jpg",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		JSONLayout.addWidgetToPublicLayout(
 			groupName = "Site Name",
@@ -4309,7 +4313,7 @@ definition {
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Navigator.gotoSitePage(
 			pageName = "Test Page",
@@ -4586,7 +4590,7 @@ definition {
 			webContentContent = "Web Content Content",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Navigator.gotoSitePage(
 			pageName = "Test Page",

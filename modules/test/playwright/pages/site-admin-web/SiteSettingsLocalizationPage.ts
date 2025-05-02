@@ -5,21 +5,24 @@
 
 import {Locator, Page} from '@playwright/test';
 
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import {SiteSettingsPage} from './SiteSettingsPage';
 
 export class SiteSettingsLocalizationPage {
 	readonly page: Page;
 
+	readonly availableLanguages: Locator;
 	readonly customDefaultLanguageOption: Locator;
 	readonly defaultLanguageOption: Locator;
 	readonly defaultLanguageSingleSelect: Locator;
-	readonly saveButton: Locator;
 	readonly siteSettingsPage: SiteSettingsPage;
 
 	constructor(page: Page) {
 		this.page = page;
 
+		this.availableLanguages = page.locator(
+			'[id="_com_liferay_site_admin_web_portlet_SiteSettingsPortlet_siteLanguageConfiguration"]'
+		);
 		this.customDefaultLanguageOption = page.getByLabel(
 			'Define a custom default language and additional available languages for this site.'
 		);
@@ -29,17 +32,15 @@ export class SiteSettingsLocalizationPage {
 		this.defaultLanguageSingleSelect = page.locator(
 			`select[name="_com_liferay_site_admin_web_portlet_SiteSettingsPortlet_TypeSettingsProperties--languageId--"]`
 		);
-		this.saveButton = page.getByRole('button', {name: 'Save'});
 		this.siteSettingsPage = new SiteSettingsPage(page);
 	}
 
-	async goto() {
-		await this.siteSettingsPage.goToSiteSetting('Localization');
-	}
-
-	async saveConfiguration() {
-		this.saveButton.click();
-		await waitForSuccessAlert(this.page);
+	async goto(siteUrl?: Site['friendlyUrlPath']) {
+		await this.siteSettingsPage.goToSiteSetting(
+			'Localization',
+			'Languages',
+			siteUrl
+		);
 	}
 
 	async selectCustomDefaultLanguageOption() {
@@ -50,9 +51,51 @@ export class SiteSettingsLocalizationPage {
 		await this.defaultLanguageOption.click();
 	}
 
-	async setCustomDefaultLanguage(languageOption: string) {
-		await this.defaultLanguageSingleSelect.click();
+	async setCustomDefaultLanguage(
+		languageOption: string,
+		siteUrl?: Site['friendlyUrlPath']
+	) {
+		await this.goto(siteUrl);
+
+		await clickAndExpectToBeVisible({
+			target: this.defaultLanguageSingleSelect,
+			trigger: this.page.getByRole('radio', {
+				name: 'Define a custom default language',
+			}),
+		});
+
 		await this.defaultLanguageSingleSelect.selectOption(languageOption);
-		await this.saveConfiguration();
+
+		await this.siteSettingsPage.saveConfiguration();
+
+		await this.page.waitForLoadState();
+	}
+
+	async disableAllLanguagesExceptSp(siteUrl?: Site['friendlyUrlPath']) {
+		await this.goto(siteUrl);
+
+		await this.page.getByLabel('Transfer Item Left to Right').click();
+
+		await this.page
+			.getByRole('listbox')
+			.first()
+			.selectOption([
+				'en_US',
+				'ar_SA',
+				'ca_ES',
+				'nl_NL',
+				'zh_CN',
+				'fi_FI',
+				'fr_FR',
+				'de_DE',
+				'hu_HU',
+				'ja_JP',
+				'pt_BR',
+				'sv_SE',
+			]);
+
+		await this.page.getByLabel('Transfer Item Left to Right').click();
+
+		await this.siteSettingsPage.saveConfiguration();
 	}
 }

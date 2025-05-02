@@ -8,10 +8,13 @@ package com.liferay.client.extension.internal.service.taglib;
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.internal.service.taglib.util.ClientExtensionDynamicIncludeUtil;
 import com.liferay.client.extension.model.ClientExtensionEntryRel;
+import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.type.GlobalJSCET;
 import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -20,10 +23,12 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -85,29 +90,52 @@ public abstract class BaseDynamicInclude implements DynamicInclude {
 				continue;
 			}
 
-			printWriter.print("<script");
-			printWriter.print(
-				ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
-					httpServletRequest));
+			_writeScript(
+				globalJSCET, httpServletRequest,
+				typeSettingsUnicodeProperties.getProperty(
+					"loadType", StringPool.BLANK),
+				printWriter);
+		}
 
-			String loadType = typeSettingsUnicodeProperties.getProperty(
-				"loadType", StringPool.BLANK);
+		if (!FeatureFlagManagerUtil.isEnabled(
+				themeDisplay.getCompanyId(), "LPD-30371")) {
 
-			if (Validator.isNotNull(loadType) &&
-				!Objects.equals(loadType, "default")) {
+			return;
+		}
 
-				printWriter.print(StringPool.SPACE);
-				printWriter.print(loadType);
-				printWriter.print(StringPool.SPACE);
+		try {
+			List<CET> cets = cetManager.getCETs(
+				themeDisplay.getCompanyId(), null,
+				ClientExtensionEntryConstants.TYPE_GLOBAL_JS,
+				Pagination.of(QueryUtil.ALL_POS, QueryUtil.ALL_POS), null);
+
+			for (CET cet : cets) {
+				GlobalJSCET globalJSCET = (GlobalJSCET)cet;
+
+				if (!StringUtil.equalsIgnoreCase(
+						globalJSCET.getScope(), "company")) {
+
+					continue;
+				}
+
+				String scriptLocation = globalJSCET.getScriptLocation();
+
+				if (Validator.isNull(scriptLocation) ||
+					!StringUtil.equalsIgnoreCase(
+						scriptLocation, getScriptLocation())) {
+
+					continue;
+				}
+
+				_writeScript(
+					globalJSCET, httpServletRequest, null, printWriter);
 			}
-
-			printWriter.print(StringPool.SPACE);
-			printWriter.print(
-				_toScriptElementAttributes(
-					globalJSCET.getScriptElementAttributesJSON()));
-			printWriter.print(" src=\"");
-			printWriter.print(globalJSCET.getURL());
-			printWriter.print("\"></script>");
+		}
+		catch (Exception exception) {
+			_log.error(
+				"Unable to inject JavaScript client extensions for company " +
+					themeDisplay.getCompanyId(),
+				exception);
 		}
 	}
 
@@ -176,6 +204,31 @@ public abstract class BaseDynamicInclude implements DynamicInclude {
 		}
 
 		return stringBuilder.toString();
+	}
+
+	private void _writeScript(
+		GlobalJSCET globalJSCET, HttpServletRequest httpServletRequest,
+		String loadType, PrintWriter printWriter) {
+
+		printWriter.print("<script");
+		printWriter.print(
+			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+				httpServletRequest));
+
+		if (Validator.isNotNull(loadType) &&
+			!Objects.equals(loadType, "default")) {
+
+			printWriter.print(StringPool.SPACE);
+			printWriter.print(loadType);
+		}
+
+		printWriter.print(StringPool.SPACE);
+		printWriter.print(
+			_toScriptElementAttributes(
+				globalJSCET.getScriptElementAttributesJSON()));
+		printWriter.print(" src=\"");
+		printWriter.print(globalJSCET.getURL());
+		printWriter.print("\"></script>");
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

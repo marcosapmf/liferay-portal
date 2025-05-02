@@ -7,6 +7,8 @@ create unique index IX_1CF99E19 on CacheDisabledEntry (name[$COLUMN_LENGTH:75$])
 
 create index IX_4F11FECA on CacheFieldEntry (groupId);
 
+create index IX_D7D86B01 on DefinedDefaultOrderEntry (name[$COLUMN_LENGTH:75$]);
+
 create unique index IX_1B0249DC on ERCCompanyEntry (externalReferenceCode[$COLUMN_LENGTH:75$], companyId);
 create index IX_84557D43 on ERCCompanyEntry (uuid_[$COLUMN_LENGTH:75$]);
 
@@ -23,6 +25,15 @@ create unique index IX_1F1BC169 on ERCVersionedEntryVersion (uuid_[$COLUMN_LENGT
 create unique index IX_6E042099 on EagerBlobEntry (uuid_[$COLUMN_LENGTH:75$], groupId);
 
 create index IX_420C1E47 on FinderWhereClauseEntry (name[$COLUMN_LENGTH:75$]);
+
+create unique index IX_393E011D on IndexEntry (companyId, ctCollectionId, externalReferenceCode[$COLUMN_LENGTH:75$]);
+create index IX_366486F8 on IndexEntry (ownerId);
+create index IX_24229732 on IndexEntry (ownerType, ownerId, plid);
+create index IX_18CD6471 on IndexEntry (plid);
+create index IX_A157BA68 on IndexEntry (portletId[$COLUMN_LENGTH:75$], ownerType, ownerId, companyId);
+create unique index IX_A3ADF069 on IndexEntry (portletId[$COLUMN_LENGTH:75$], ownerType, ownerId, plid, ctCollectionId);
+create index IX_49C16EA9 on IndexEntry (portletId[$COLUMN_LENGTH:75$], ownerType, plid);
+create index IX_1D983CA on IndexEntry (portletId[$COLUMN_LENGTH:75$], plid);
 
 create unique index IX_2FF02DF5 on LVEntry (groupId, head, uniqueGroupKey[$COLUMN_LENGTH:75$]);
 create index IX_8F9FD921 on LVEntry (groupId, uniqueGroupKey[$COLUMN_LENGTH:75$]);
@@ -54,6 +65,8 @@ create index IX_61FDBFF1 on PermissionCheckFinderEntry (groupId);
 create unique index IX_32712A54 on RedundantIndexEntry (companyId, name[$COLUMN_LENGTH:75$]);
 
 create index IX_DA817981 on RenameFinderColumnEntry (columnToRename[$COLUMN_LENGTH:75$]);
+
+create index IX_3C1F4D9A on UndefinedDefaultOrderEntry (name[$COLUMN_LENGTH:75$]);
 
 create index IX_6770C47D on VersionedEntry (groupId, head);
 create unique index IX_AAA6F330 on VersionedEntry (headId);

@@ -5,6 +5,10 @@
 
 package com.liferay.commerce.internal.product.content.contributor;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.commerce.constants.CommerceWebKeys;
+import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngine;
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngineRegistry;
 import com.liferay.commerce.inventory.engine.CommerceInventoryEngine;
@@ -71,15 +75,30 @@ public class StockQuantityCPContentContributor implements CPContentContributor {
 			_cpDefinitionInventoryEngineRegistry.getCPDefinitionInventoryEngine(
 				cpDefinitionInventory);
 
+		CommerceContext commerceContext =
+			(CommerceContext)httpServletRequest.getAttribute(
+				CommerceWebKeys.COMMERCE_CONTEXT);
+
 		boolean displayStockQuantity =
-			cpDefinitionInventoryEngine.isDisplayStockQuantity(cpInstance);
+			cpDefinitionInventoryEngine.isDisplayStockQuantity(
+				commerceContext.getCPConfigurationListId(
+					cpInstance.getGroupId()),
+				cpInstance);
 
 		if (displayStockQuantity) {
+			long accountEntryId = AccountConstants.ACCOUNT_ENTRY_ID_GUEST;
+
+			AccountEntry accountEntry = commerceContext.getAccountEntry();
+
+			if (accountEntry != null) {
+				accountEntryId = accountEntry.getAccountEntryId();
+			}
+
 			BigDecimal stockQuantity =
 				_commerceInventoryEngine.getStockQuantity(
-					cpInstance.getCompanyId(), cpInstance.getGroupId(),
-					commerceChannel.getGroupId(), cpInstance.getSku(),
-					StringPool.BLANK);
+					cpInstance.getCompanyId(), accountEntryId,
+					cpInstance.getGroupId(), commerceChannel.getGroupId(),
+					cpInstance.getSku(), StringPool.BLANK);
 
 			jsonObject.put(
 				CPContentContributorConstants.STOCK_QUANTITY_NAME,

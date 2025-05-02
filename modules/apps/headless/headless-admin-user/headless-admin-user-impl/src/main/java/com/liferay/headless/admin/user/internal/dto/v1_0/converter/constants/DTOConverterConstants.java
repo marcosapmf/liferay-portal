@@ -6,7 +6,7 @@
 package com.liferay.headless.admin.user.internal.dto.v1_0.converter.constants;
 
 /**
- * @author Joao Victor
+ * @author João Victor
  */
 public class DTOConverterConstants {
 
@@ -21,6 +21,10 @@ public class DTOConverterConstants {
 	public static final String ORGANIZATION_RESOURCE_DTO_CONVERTER =
 		"(component.name=com.liferay.headless.admin.user.internal.dto.v1_0." +
 			"converter.OrganizationResourceDTOConverter)";
+
+	public static final String POSTAL_ADDRESS_DTO_CONVERTER =
+		"(component.name=com.liferay.headless.admin.user.internal.dto.v1_0." +
+			"converter.PostalAddressDTOConverter)";
 
 	public static final String USER_GROUP_RESOURCE_DTO_CONVERTER =
 		"(component.name=com.liferay.headless.admin.user.internal.dto.v1_0." +

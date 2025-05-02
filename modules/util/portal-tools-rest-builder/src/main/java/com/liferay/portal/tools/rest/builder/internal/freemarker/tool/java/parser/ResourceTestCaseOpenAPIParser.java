@@ -5,6 +5,7 @@
 
 package com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.JavaMethodParameter;
@@ -31,31 +32,22 @@ public class ResourceTestCaseOpenAPIParser {
 	public static List<JavaMethodSignature> getJavaMethodSignatures(
 		ConfigYAML configYAML, OpenAPIYAML openAPIYAML, String schemaName) {
 
-		List<JavaMethodSignature> javaMethodSignatures = new ArrayList<>();
-
-		List<JavaMethodSignature> resourceJavaMethodSignatures =
+		return TransformUtil.transform(
 			ResourceOpenAPIParser.getJavaMethodSignatures(
-				configYAML, openAPIYAML, schemaName);
-
-		for (JavaMethodSignature resourceJavaMethodSignature :
-				resourceJavaMethodSignatures) {
-
-			javaMethodSignatures.add(
-				new JavaMethodSignature(
-					resourceJavaMethodSignature.getPath(),
-					resourceJavaMethodSignature.getPathItem(),
-					resourceJavaMethodSignature.getOperation(),
-					resourceJavaMethodSignature.getRequestBodyMediaTypes(),
-					resourceJavaMethodSignature.getSchemaName(),
-					resourceJavaMethodSignature.getJavaMethodParameters(),
-					_getMethodName(resourceJavaMethodSignature),
-					_getReturnType(
-						configYAML.getApiPackagePath(),
-						resourceJavaMethodSignature.getReturnType(),
-						_getVersion(openAPIYAML))));
-		}
-
-		return javaMethodSignatures;
+				configYAML, openAPIYAML, schemaName),
+			javaMethodSignature -> new JavaMethodSignature(
+				javaMethodSignature.getPath(),
+				javaMethodSignature.getPathItem(),
+				javaMethodSignature.getOperation(),
+				javaMethodSignature.getRequestBodyMediaTypes(),
+				javaMethodSignature.getSchemaName(),
+				javaMethodSignature.getJavaMethodParameters(),
+				_getMethodName(javaMethodSignature),
+				_getReturnType(
+					configYAML.getApiPackagePath(),
+					javaMethodSignature.getReturnType(),
+					_getVersion(openAPIYAML)),
+				javaMethodSignature.getParentSchemaName()));
 	}
 
 	public static String getParameters(

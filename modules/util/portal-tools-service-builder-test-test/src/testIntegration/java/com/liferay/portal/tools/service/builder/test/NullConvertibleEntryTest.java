@@ -6,6 +6,7 @@
 package com.liferay.portal.tools.service.builder.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -30,35 +31,27 @@ public class NullConvertibleEntryTest {
 		new LiferayIntegrationTestRule();
 
 	@Test
-	public void testFetchNullConvertibleEntry() {
-		NullConvertibleEntry nullConvertibleEntry =
-			_nullConvertibleEntryLocalService.addNullConvertibleEntry(
-				(String)null);
+	public void test() {
+		NullConvertibleEntry nullConvertibleEntry = null;
 
-		Assert.assertEquals(
-			nullConvertibleEntry,
-			_nullConvertibleEntryLocalService.fetchNullConvertibleEntry(null));
-	}
+		try {
+			nullConvertibleEntry =
+				_nullConvertibleEntryLocalService.addNullConvertibleEntry(
+					(String)null);
 
-	@Test
-	public void testGetNullConvertibleEntries() {
-		int initialCount =
-			_nullConvertibleEntryLocalService.getNullConvertibleEntries(null);
-
-		NullConvertibleEntry nullConvertibleEntry =
-			_nullConvertibleEntryLocalService.addNullConvertibleEntry(
-				(String)null);
-
-		Assert.assertEquals(
-			initialCount + 1,
-			_nullConvertibleEntryLocalService.getNullConvertibleEntries(null));
-
-		_nullConvertibleEntryLocalService.deleteNullConvertibleEntry(
-			nullConvertibleEntry);
-
-		Assert.assertEquals(
-			initialCount,
-			_nullConvertibleEntryLocalService.getNullConvertibleEntries(null));
+			Assert.assertEquals(
+				nullConvertibleEntry,
+				_nullConvertibleEntryLocalService.fetchNullConvertibleEntry(
+					null));
+			Assert.assertEquals(
+				nullConvertibleEntry.getName(), StringPool.BLANK);
+		}
+		finally {
+			if (nullConvertibleEntry != null) {
+				_nullConvertibleEntryLocalService.deleteNullConvertibleEntry(
+					nullConvertibleEntry);
+			}
+		}
 	}
 
 	@Inject

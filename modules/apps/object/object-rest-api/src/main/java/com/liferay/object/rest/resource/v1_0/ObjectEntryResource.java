@@ -6,8 +6,8 @@
 package com.liferay.object.rest.resource.v1_0;
 
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.object.rest.dto.v1_0.ValidationRequest;
+import com.liferay.object.rest.dto.v1_0.ValidationResponse;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -44,14 +44,80 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ObjectEntryResource {
 
+	public void deleteByExternalReferenceCode(String externalReferenceCode)
+		throws Exception;
+
+	public void deleteObjectEntry(Long objectEntryId) throws Exception;
+
+	public Response deleteObjectEntryBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteScopeScopeKeyByExternalReferenceCode(
+			String scopeKey, String externalReferenceCode)
+		throws Exception;
+
+	public ObjectEntry getByExternalReferenceCode(String externalReferenceCode)
+		throws Exception;
+
+	public ObjectEntry getByExternalReferenceCodeByVersion(
+			String externalReferenceCode, Integer version)
+		throws Exception;
+
+	public Page<ObjectEntry> getByExternalReferenceCodeVersionsPage(
+			String externalReferenceCode, Pagination pagination)
+		throws Exception;
+
 	public Page<ObjectEntry> getObjectEntriesPage(
 			Boolean flatten, String search,
 			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Page<ObjectEntry> getObjectEntriesVersionsPage(
+			Long objectEntryId, Pagination pagination)
+		throws Exception;
+
+	public ObjectEntry getObjectEntry(Long objectEntryId) throws Exception;
+
+	public ObjectEntry getObjectEntryByVersion(
+			Long objectEntryId, Integer version)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getObjectEntryPermissionsPage(Long objectEntryId, String roleNames)
+		throws Exception;
+
+	public ObjectEntry getScopeScopeKeyByExternalReferenceCode(
+			String scopeKey, String externalReferenceCode)
+		throws Exception;
+
+	public Page<ObjectEntry> getScopeScopeKeyPage(
+			String scopeKey, Boolean flatten, String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public ObjectEntry patchByExternalReferenceCode(
+			String externalReferenceCode, ObjectEntry objectEntry)
+		throws Exception;
+
+	public ObjectEntry patchObjectEntry(
+			Long objectEntryId, ObjectEntry objectEntry)
+		throws Exception;
+
+	public ObjectEntry patchScopeScopeKeyByExternalReferenceCode(
+			String scopeKey, String externalReferenceCode,
+			ObjectEntry objectEntry)
 		throws Exception;
 
 	public Response postObjectEntriesPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
 			String contentType, String fieldNames)
 		throws Exception;
 
@@ -61,6 +127,25 @@ public interface ObjectEntryResource {
 	public Response postObjectEntryBatch(String callbackURL, Object object)
 		throws Exception;
 
+	public ObjectEntry postScopeScopeKey(
+			String scopeKey, ObjectEntry objectEntry)
+		throws Exception;
+
+	public ValidationResponse postScopeScopeKeyValidate(
+			String scopeKey, ValidationRequest validationRequest)
+		throws Exception;
+
+	public ValidationResponse postValidate(ValidationRequest validationRequest)
+		throws Exception;
+
+	public ObjectEntry putByExternalReferenceCode(
+			String externalReferenceCode, ObjectEntry objectEntry)
+		throws Exception;
+
+	public ObjectEntry putByExternalReferenceCodeByVersionRestore(
+			String externalReferenceCode, Integer version)
+		throws Exception;
+
 	public ObjectEntry
 			putByExternalReferenceCodeCurrentExternalReferenceCodeObjectRelationshipNameRelatedExternalReferenceCode(
 				String currentExternalReferenceCode,
@@ -68,37 +153,29 @@ public interface ObjectEntryResource {
 				String relatedExternalReferenceCode)
 		throws Exception;
 
-	public void deleteByExternalReferenceCode(String externalReferenceCode)
+	public void putByExternalReferenceCodeObjectActionObjectActionName(
+			String externalReferenceCode, String objectActionName)
 		throws Exception;
 
-	public ObjectEntry getByExternalReferenceCode(String externalReferenceCode)
+	public ObjectEntry putObjectEntry(
+			Long objectEntryId, ObjectEntry objectEntry)
 		throws Exception;
 
-	public ObjectEntry patchByExternalReferenceCode(
-			String externalReferenceCode, ObjectEntry objectEntry)
+	public Response putObjectEntryBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public ObjectEntry putByExternalReferenceCode(
-			String externalReferenceCode, ObjectEntry objectEntry)
+	public ObjectEntry putObjectEntryByVersionRestore(
+			Long objectEntryId, Integer version)
 		throws Exception;
 
-	public void
-			putByExternalReferenceCodeObjectEntryExternalReferenceCodeObjectActionObjectActionName(
-				String objectEntryExternalReferenceCode,
-				String objectActionName)
+	public void putObjectEntryObjectActionObjectActionName(
+			Long objectEntryId, String objectActionName)
 		throws Exception;
 
-	public void deleteScopeScopeKeyByExternalReferenceCode(
-			String scopeKey, String externalReferenceCode)
-		throws Exception;
-
-	public ObjectEntry getScopeScopeKeyByExternalReferenceCode(
-			String scopeKey, String externalReferenceCode)
-		throws Exception;
-
-	public ObjectEntry patchScopeScopeKeyByExternalReferenceCode(
-			String scopeKey, String externalReferenceCode,
-			ObjectEntry objectEntry)
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			putObjectEntryPermissionsPage(
+				Long objectEntryId,
+				com.liferay.portal.vulcan.permission.Permission[] permissions)
 		throws Exception;
 
 	public ObjectEntry putScopeScopeKeyByExternalReferenceCode(
@@ -110,48 +187,6 @@ public interface ObjectEntryResource {
 			putScopeScopeKeyByExternalReferenceCodeObjectActionObjectActionName(
 				String scopeKey, String externalReferenceCode,
 				String objectActionName)
-		throws Exception;
-
-	public void deleteObjectEntry(Long objectEntryId) throws Exception;
-
-	public Response deleteObjectEntryBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public ObjectEntry getObjectEntry(Long objectEntryId) throws Exception;
-
-	public ObjectEntry patchObjectEntry(
-			Long objectEntryId, ObjectEntry objectEntry)
-		throws Exception;
-
-	public ObjectEntry putObjectEntry(
-			Long objectEntryId, ObjectEntry objectEntry)
-		throws Exception;
-
-	public Response putObjectEntryBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public void putObjectEntryObjectActionObjectActionName(
-			Long objectEntryId, String objectActionName)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getObjectEntryPermissionsPage(Long objectEntryId, String roleNames)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			putObjectEntryPermissionsPage(
-				Long objectEntryId,
-				com.liferay.portal.vulcan.permission.Permission[] permissions)
-		throws Exception;
-
-	public Page<ObjectEntry> getScopeScopeKeyPage(
-			String scopeKey, Boolean flatten, String search,
-			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public ObjectEntry postScopeScopeKey(
-			String scopeKey, ObjectEntry objectEntry)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -176,7 +211,8 @@ public interface ObjectEntryResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -201,19 +237,23 @@ public interface ObjectEntryResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

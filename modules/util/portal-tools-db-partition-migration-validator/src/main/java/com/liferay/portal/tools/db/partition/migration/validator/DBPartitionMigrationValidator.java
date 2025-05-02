@@ -101,6 +101,10 @@ public class DBPartitionMigrationValidator {
 			_exit(_LIFERAY_COMMON_EXIT_CODE_HELP);
 		}
 
+		System.out.println(
+			"This tool is a beta feature. It is experimental and not " +
+				"supported.");
+
 		String jdbcURL = DatabaseUtil.replaceSchemaName(
 			commandLine.getOptionValue("jdbc-url"),
 			commandLine.getOptionValue("schema-name"));
@@ -128,7 +132,9 @@ public class DBPartitionMigrationValidator {
 
 		try {
 			String exportFilePath = _write(
-				DatabaseUtil.exportLiferayDatabase(_connection),
+				DatabaseUtil.exportLiferayDatabase(
+					_connection,
+					Long.parseLong(commandLine.getOptionValue("company-id"))),
 				commandLine.getOptionValue("output-dir"));
 
 			System.out.println(
@@ -146,6 +152,8 @@ public class DBPartitionMigrationValidator {
 	private static Options _getExportOptions() {
 		Options options = new Options();
 
+		options.addRequiredOption(
+			null, "company-id", true, "Set the company ID.");
 		options.addOption(
 			null, "output-dir", true, "Set the output directory.");
 		options.addRequiredOption(null, "jdbc-url", true, "Set the JDBC URL.");
@@ -193,6 +201,10 @@ public class DBPartitionMigrationValidator {
 
 		PrintWriter printWriter = new PrintWriter(byteArrayOutputStream);
 
+		helpFormatter.printWrapped(
+			printWriter, _HELP_WIDTH,
+			"Liferay Database Partition Migration Validator Tool. This tool " +
+				"is a beta feature. It is experimental and not supported.\n\n");
 		helpFormatter.printUsage(
 			printWriter, _HELP_WIDTH,
 			"./db_partition_migration_validator.sh <command> [parameters]");
@@ -255,6 +267,10 @@ public class DBPartitionMigrationValidator {
 
 			_exit(_LIFERAY_COMMON_EXIT_CODE_HELP);
 		}
+
+		System.out.println(
+			"This tool is a beta feature. It is experimental and not " +
+				"supported.");
 
 		try {
 			_sourceLiferayDatabase = _read(

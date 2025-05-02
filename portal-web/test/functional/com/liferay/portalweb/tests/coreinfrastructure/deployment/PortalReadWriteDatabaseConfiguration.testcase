@@ -1,4 +1,4 @@
-@component-name = "core-infrastructure"
+@component-name = "portal-core-infra"
 definition {
 
 	property app.server.types = "tomcat";
@@ -57,7 +57,7 @@ definition {
 
 		MenuItem.click(menuItem = "Checkout");
 
-		while ((IsTextEqual(locator1 = "DocumentsAndMedia#ICON_DOCUMENT_WORKFLOW_STATUS", value1 = "Draft")) && (maxIterations = "6")) {
+		while ((IsElementPresent(locator1 = "DocumentsAndMedia#ICON_DOCUMENT_WORKFLOW_STATUS_DRAFT")) && (maxIterations = "6")) {
 			Refresh();
 		}
 
@@ -146,6 +146,27 @@ definition {
 
 	@priority = 3
 	test SmokeWithJDBC {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		Smoke.viewWelcomeContentPage();
+
+		ServerAdministration.openServerAdmin();
+
+		ServerAdministration.addCategoryLogLevels(
+			categoryLevel = "ALL",
+			categoryName = "com.liferay.portal.dao.jdbc.util.DynamicDataSource");
+
+		Smoke.runSmoke();
+
+		AssertConsoleTextPresent(value1 = "Returning write data source");
+
+		AssertConsoleTextPresent(value1 = "Returning read data source");
+	}
+
+	@priority = 3
+	test SmokeWithJDBCAndReadDataSourceTimeout {
+		property custom.properties = "jdbc.read.data.source.unavailable.timeout=5000";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 

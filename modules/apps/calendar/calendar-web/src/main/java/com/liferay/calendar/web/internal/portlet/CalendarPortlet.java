@@ -1323,7 +1323,7 @@ public class CalendarPortlet extends MVCPortlet {
 			resourceRequest, "calendarIds");
 		TimeZone timeZone = _getTimeZone(resourceRequest);
 
-		if (!ArrayUtil.isEmpty(calendarIds)) {
+		if (ArrayUtil.isNotEmpty(calendarIds)) {
 			java.util.Calendar endTimeJCalendar = _getJCalendar(
 				resourceRequest, "endTime");
 			java.util.Calendar startTimeJCalendar = _getJCalendar(
@@ -1336,7 +1336,7 @@ public class CalendarPortlet extends MVCPortlet {
 				new long[0], -1, null, startTimeJCalendar.getTimeInMillis(),
 				endTimeJCalendar.getTimeInMillis(), timeZone, true, statuses,
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				new CalendarBookingStartTimeComparator(true));
+				CalendarBookingStartTimeComparator.getInstance(true));
 
 			int eventsPerPage = ParamUtil.getInteger(
 				resourceRequest, "eventsPerPage");

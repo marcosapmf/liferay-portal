@@ -75,6 +75,24 @@
 		},
 		{
 			"properties": {
+				"enabled": {
+					"default": false,
+					"description": "Enable postprocessing of all legacy markup in fragments, web content, and blogs so that Adaptive Media is able to work with it. Enabling this option may impact the performance of your sites.",
+					"title": "Enabled",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.adaptive.media.image.content.transformer.backwards.compatibility.internal.configuration.AMBackwardsCompatibilityHtmlContentTransformerConfiguration",
+					"title": "Backwards Compatibility HTML Content Transformer"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Backwards Compatibility HTML Content Transformer"
+		},
+		{
+			"properties": {
 				"imageVariants": {
 					"items": {
 						"type": "string"
@@ -127,6 +145,12 @@
 					},
 					"type": "array"
 				},
+				"contentRecommenderMostPopularItemsEnabled": {
+					"type": "boolean"
+				},
+				"contentRecommenderUserPersonalizationEnabled": {
+					"type": "boolean"
+				},
 				"firstSync": {
 					"default": true,
 					"type": "boolean"
@@ -172,6 +196,12 @@
 						"type": "string"
 					},
 					"type": "array"
+				},
+				"previousContentRecommenderMostPopularItemsEnabled": {
+					"type": "boolean"
+				},
+				"previousContentRecommenderUserPersonalizationEnabled": {
+					"type": "boolean"
 				},
 				"previousSyncAllAccounts": {
 					"type": "boolean"
@@ -496,6 +526,208 @@
 		},
 		{
 			"properties": {
+				"captchaEngine": {
+					"default": "com.liferay.captcha.simplecaptcha.SimpleCaptchaImpl",
+					"description": "Set the engine used to generate captchas. reCAPTCHA uses an external service that must be configured independently but provides an audible alternative which makes the captcha accessible to the visually impaired. See https://www.google.com/recaptcha/admin/create for details.",
+					"title": "CAPTCHA Engine",
+					"type": "string"
+				},
+				"createAccountCaptchaEnabled": {
+					"default": true,
+					"title": "Create Account CAPTCHA Enabled",
+					"type": "boolean"
+				},
+				"maxChallenges": {
+					"default": 1,
+					"description": "Set the maximum number of captcha checks per portlet session. Set this value to 0 to always check. Set this value to a number less than 0 to never check. Unauthenticated users will always be checked on every request if captcha checks are enabled.",
+					"title": "Maximum Challenges",
+					"type": "number"
+				},
+				"messageBoardsEditCategoryCaptchaEnabled": {
+					"default": false,
+					"title": "Message Boards Edit Category CAPTCHA Enabled",
+					"type": "boolean"
+				},
+				"messageBoardsEditMessageCaptchaEnabled": {
+					"default": false,
+					"title": "Message Boards Edit Message CAPTCHA Enabled",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.captcha.configuration.CaptchaConfiguration",
+					"title": "CAPTCHA"
+				},
+				"reCaptchaNoScriptURL": {
+					"default": "https://www.google.com/recaptcha/api/fallback?k=",
+					"title": "reCAPTCHA No Script URL",
+					"type": "string"
+				},
+				"reCaptchaPrivateKey": {
+					"title": "reCAPTCHA Private Key",
+					"type": "string"
+				},
+				"reCaptchaPublicKey": {
+					"title": "reCAPTCHA Public Key",
+					"type": "string"
+				},
+				"reCaptchaScriptURL": {
+					"default": "https://www.google.com/recaptcha/api.js",
+					"title": "reCAPTCHA Script URL",
+					"type": "string"
+				},
+				"reCaptchaVerifyURL": {
+					"default": "https://www.google.com/recaptcha/api/siteverify",
+					"title": "reCAPTCHA Verify URL",
+					"type": "string"
+				},
+				"sendPasswordCaptchaEnabled": {
+					"default": true,
+					"title": "Send Password CAPTCHA Enabled",
+					"type": "boolean"
+				},
+				"simpleCaptchaBackgroundProducers": {
+					"default": "nl.captcha.backgrounds.FlatColorBackgroundProducer|nl.captcha.backgrounds.GradiatedBackgroundProducer|nl.captcha.backgrounds.SquigglesBackgroundProducer|nl.captcha.backgrounds.TransparentBackgroundProducer",
+					"description": "Input class names that implement nl.captcha.backgrounds.BackgroundProducer. These classes will be randomly used by Simple CAPTCHA to generate a background for a captcha image.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Simple CAPTCHA Background Producers",
+					"type": "array"
+				},
+				"simpleCaptchaGimpyRenderers": {
+					"default": "com.liferay.captcha.simplecaptcha.gimpy.BlockGimpyRenderer|com.liferay.captcha.simplecaptcha.gimpy.DropShadowGimpyRenderer|nl.captcha.gimpy.FishEyeGimpyRenderer|com.liferay.captcha.simplecaptcha.gimpy.RippleGimpyRenderer|nl.captcha.gimpy.ShearGimpyRenderer",
+					"description": "Input class names that implement nl.captcha.gimpy.GimpyRenderer. These classes will be randomly used by Simple CAPTCHA to gimp a captcha image.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Simple CAPTCHA Gimpy Renderers",
+					"type": "array"
+				},
+				"simpleCaptchaHeight": {
+					"default": 50,
+					"description": "Set the height for captcha images generated by Simple CAPTCHA.",
+					"title": "Simple CAPTCHA Height",
+					"type": "number"
+				},
+				"simpleCaptchaNoiseProducers": {
+					"default": "nl.captcha.noise.CurvedLineNoiseProducer|nl.captcha.noise.StraightLineNoiseProducer",
+					"description": "Input class names that implement nl.captcha.noise.NoiseProducer. These classes will be randomly used by Simple CAPTCHA to add noise to a captcha image.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Simple CAPTCHA Noise Producers",
+					"type": "array"
+				},
+				"simpleCaptchaTextProducers": {
+					"default": "com.liferay.captcha.simplecaptcha.PinNumberTextProducer|nl.captcha.text.producer.DefaultTextProducer|nl.captcha.text.producer.FiveLetterFirstNameTextProducer",
+					"description": "Input class names that implement nl.captcha.text.producer.TextProducer. These classes will be randomly used by Simple CAPTCHA to generate text for a captcha image.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Simple CAPTCHA Text Producers",
+					"type": "array"
+				},
+				"simpleCaptchaWidth": {
+					"default": 150,
+					"description": "Set the width for captcha images generated by Simple CAPTCHA.",
+					"title": "Simple CAPTCHA Width",
+					"type": "number"
+				},
+				"simpleCaptchaWordRenderers": {
+					"default": "nl.captcha.text.renderer.DefaultWordRenderer",
+					"description": "Input class names that implement nl.captcha.text.renderer.WordRenderer. These classes will be randomly used by Simple CAPTCHA to render text for a captcha image.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Simple CAPTCHA Word Renderers",
+					"type": "array"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "CAPTCHA"
+		},
+		{
+			"properties": {
+				"captchaName": {
+					"type": "string"
+				},
+				"customElementExternalReferenceCode": {
+					"type": "string"
+				},
+				"pid": {
+					"const": "com.liferay.captcha.internal.configuration.FunctionCaptchaImplConfiguration"
+				}
+			},
+			"required": [
+				"pid",
+				"captchaName",
+				"customElementExternalReferenceCode"
+			]
+		},
+		{
+			"properties": {
+				"emailFromAddress": {
+					"default": "",
+					"title": "Email from Address",
+					"type": "string"
+				},
+				"emailFromName": {
+					"default": "",
+					"title": "Email from Name",
+					"type": "string"
+				},
+				"invitationEmailBody": {
+					"description": "Provide a localized template for the body of user invitation emails.",
+					"properties": {
+					},
+					"title": "Invitation Email Body",
+					"type": "object"
+				},
+				"invitationEmailSubject": {
+					"description": "Provide a localized template for the subject of user invitation emails.",
+					"properties": {
+					},
+					"title": "Invitation Email Subject",
+					"type": "object"
+				},
+				"pid": {
+					"const": "com.liferay.change.tracking.configuration.CTCollectionEmailConfiguration",
+					"title": "Publications Email Notifications"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Publications Email Notifications"
+		},
+		{
+			"properties": {
+				"modificationDeletionConflictCheckEnabled": {
+					"default": false,
+					"description": "Check this option to automatically check all modification deletion conflicts by default. This will let you review any deletion conflicts and prevent Liferay from overwriting deletions made in a publication when updating production.",
+					"title": "Modification Deletion Conflict Check Enabled",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.change.tracking.configuration.CTConflictConfiguration",
+					"title": "Publications Conflicts"
+				},
+				"schemaVersionCheckEnabled": {
+					"default": false,
+					"description": "Enabling the schema version check will allow unpublished publications to go out-of-date after an upgrade.",
+					"title": "Schema Version Check Enabled",
+					"type": "boolean"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Publications Conflicts"
+		},
+		{
+			"properties": {
 				"defaultCTCollectionTemplateId": {
 					"default": 0,
 					"title": "Default Publication Template ID",
@@ -559,7 +791,7 @@
 					"title": "Publications View Changes"
 				},
 				"productionOnlyApplication": {
-					"default": "com_liferay_dispatch_web_internal_portlet_DispatchPortlet, com_liferay_my_account_web_portlet_MyAccountPortlet, com_liferay_notification_web_internal_portlet_NotificationTemplatesPortlet, com_liferay_oauth_client_admin_web_internal_portlet_OAuthClientAdminPortlet, com_liferay_oauth2_provider_web_internal_portlet_OAuth2AdminPortlet, com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet, com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet, com_liferay_password_policies_admin_web_portlet_PasswordPoliciesAdminPortlet, com_liferay_portal_language_override_web_internal_portlet_PLOPortlet, com_liferay_portal_search_tuning_rankings_web_internal_portlet_ResultRankingsPortlet, com_liferay_portal_search_tuning_synonyms_web_internal_portlet_SynonymsPortlet, com_liferay_search_experiences_web_internal_blueprint_admin_portlet_SXPBlueprintAdminPortlet",
+					"default": "com_liferay_dispatch_web_internal_portlet_DispatchPortlet, com_liferay_my_account_web_portlet_MyAccountPortlet, com_liferay_notification_web_internal_portlet_NotificationTemplatesPortlet, com_liferay_oauth_client_admin_web_internal_portlet_OAuthClientAdminPortlet, com_liferay_oauth2_provider_web_internal_portlet_OAuth2AdminPortlet, com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet, com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet, com_liferay_password_policies_admin_web_portlet_PasswordPoliciesAdminPortlet, com_liferay_portal_language_override_web_internal_portlet_PLOPortlet, com_liferay_portal_search_tuning_rankings_web_internal_portlet_ResultRankingsPortlet, com_liferay_portal_search_tuning_synonyms_web_internal_portlet_SynonymsPortlet, com_liferay_search_experiences_web_internal_blueprint_admin_portlet_SXPBlueprintAdminPortlet, com_liferay_users_admin_web_portlet_UsersAdminPortlet",
 					"description": "These applications do not participate in a publication. Any data saved will be saved directly into production.",
 					"items": {
 						"type": "string"
@@ -567,8 +799,13 @@
 					"title": "Production Only Application",
 					"type": "array"
 				},
+				"showAllData": {
+					"description": "Show all data in the data tab when reviewing a change as an administrator.",
+					"title": "Show All Data When Reviewing Changes",
+					"type": "boolean"
+				},
 				"unsupportedApplication": {
-					"default": "com_liferay_account_admin_web_internal_portlet_AccountEntriesAdminPortlet, com_liferay_batch_planner_web_internal_portlet_BatchPlannerPortlet, com_liferay_users_admin_web_portlet_UsersAdminPortlet",
+					"default": "com_liferay_account_admin_web_internal_portlet_AccountEntriesAdminPortlet, com_liferay_batch_planner_web_internal_portlet_BatchPlannerPortlet",
 					"description": "These applications do not support publications. Any data saved in a publication will result in an error.",
 					"items": {
 						"type": "string"
@@ -720,6 +957,22 @@
 		},
 		{
 			"properties": {
+				"cpConfigurationListDiscovery": {
+					"title": "Product Configuration Discovery Method",
+					"type": "string"
+				},
+				"pid": {
+					"const": "com.liferay.commerce.product.configuration.CPConfigurationListRelConfiguration",
+					"title": "Product Configurations"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Product Configurations"
+		},
+		{
+			"properties": {
 				"pid": {
 					"const": "com.liferay.commerce.product.configuration.CPDefinitionOptionRelConfiguration",
 					"title": "Product Options"
@@ -758,6 +1011,29 @@
 				"pid"
 			],
 			"title": "Friendly URL"
+		},
+		{
+			"properties": {
+				"enabled": {
+					"default": false,
+					"title": "Enabled",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.commerce.product.configuration.CProductVersionConfiguration",
+					"title": "Product Versioning"
+				},
+				"versionThreshold": {
+					"default": 5,
+					"min": 0,
+					"title": "Versions to Retain",
+					"type": "number"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Product Versioning"
 		},
 		{
 			"properties": {
@@ -1239,6 +1515,45 @@
 		},
 		{
 			"properties": {
+				"enableFriendlyURLWithExtension": {
+					"default": false,
+					"description": "Add the file extension to the file entry friendly URL by default.",
+					"title": "Enable Friendly URL With Extension",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.document.library.configuration.DLFileEntryFriendlyURLConfiguration",
+					"title": "File Entry Friendly URL"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "File Entry Friendly URL"
+		},
+		{
+			"properties": {
+				"fileMimeTypes": {
+					"default": "*",
+					"description": "A file mime type of * will permit all file mime types.",
+					"items": {
+						"type": "string"
+					},
+					"title": "File Mime Types",
+					"type": "array"
+				},
+				"pid": {
+					"const": "com.liferay.document.library.configuration.DLFileEntryMimeTypeConfiguration",
+					"title": "Mime Type"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Mime Type"
+		},
+		{
+			"properties": {
 				"clientId": {
 					"description": "Set the OAuth 2 client id for the Google Drive API. Go to {0} to create it.",
 					"title": "Client ID",
@@ -1472,14 +1787,14 @@
 		},
 		{
 			"properties": {
-				"javascriptModuleEnabled": {
+				"javaScriptModuleEnabled": {
 					"default": true,
 					"description": "When enabled, fragment JavaScript is embedded in a script as a module instead of as a function.",
 					"title": "Javascript Module Enabled",
 					"type": "boolean"
 				},
 				"pid": {
-					"const": "com.liferay.fragment.configuration.FragmentJavascriptConfiguration",
+					"const": "com.liferay.fragment.configuration.FragmentJavaScriptConfiguration",
 					"title": "Javascript"
 				}
 			},
@@ -2350,7 +2665,7 @@
 					"type": "array"
 				},
 				"headers": {
-					"default": "Access-Control-Allow-Credentials: true|Access-Control-Allow-Headers: *|Access-Control-Allow-Methods: *|Access-Control-Allow-Origin: *",
+					"default": "Access-Control-Allow-Credentials: true|Access-Control-Allow-Headers: *|Access-Control-Allow-Methods: *|Access-Control-Allow-Origin: http://localhost:8080 http://127.0.0.1:8080 ::1",
 					"description": "Set the headers to be sent in response to CORS requests in the form of \"Name: Value\".",
 					"items": {
 						"type": "string"
@@ -2373,6 +2688,38 @@
 				"pid"
 			],
 			"title": "Portal Cross-Origin Resource Sharing (CORS)"
+		},
+		{
+			"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
+			"properties": {
+				"pid": {
+					"const": "com.liferay.portal.search.configuration.SemanticSearchConfiguration",
+					"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
+					"title": "Semantic Search (Beta)"
+				},
+				"textEmbeddingCacheTimeout": {
+					"default": 604800,
+					"title": "Text Embedding Cache Timeout",
+					"type": "number"
+				},
+				"textEmbeddingProviderConfigurationJSONs": {
+					"default": "",
+					"items": {
+						"type": "string"
+					},
+					"title": "Text Embedding Provider Configuration JSONs",
+					"type": "array"
+				},
+				"textEmbeddingsEnabled": {
+					"default": false,
+					"title": "Text Embeddings Enabled",
+					"type": "boolean"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Semantic Search (Beta)"
 		},
 		{
 			"properties": {
@@ -3030,7 +3377,7 @@
 				},
 				"discoveryEndPointCacheInMillis": {
 					"default": 360000,
-					"description": "Discovery endpoint metadata will be cached on this interval in milliseconds. If 0 is set, the metadata is never refreshed.",
+					"description": "Discovery endpoint metadata will be cached on this interval in milliseconds. If set to 0, Ehcache's default time to live value of 600 seconds will be used.",
 					"title": "Discovery Endpoint Cache in Milliseconds",
 					"type": "number"
 				},
@@ -3255,6 +3602,15 @@
 					"title": "Allowed IPs",
 					"type": "array"
 				},
+				"allowedProtocols": {
+					"default": "http|https",
+					"description": "Set which protocols are allowed in redirect URLs. Remove all entries to allow any protocol.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Allowed Protocols",
+					"type": "array"
+				},
 				"pid": {
 					"const": "com.liferay.redirect.internal.configuration.RedirectURLConfiguration",
 					"description": "Configure which domains or IP addresses can be redirected to.",
@@ -3384,38 +3740,6 @@
 				"pid"
 			],
 			"title": "SAML Provider Configuration"
-		},
-		{
-			"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
-			"properties": {
-				"pid": {
-					"const": "com.liferay.search.experiences.configuration.SemanticSearchConfiguration",
-					"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
-					"title": "Semantic Search (Beta)"
-				},
-				"textEmbeddingCacheTimeout": {
-					"default": 604800,
-					"title": "Text Embedding Cache Timeout",
-					"type": "number"
-				},
-				"textEmbeddingProviderConfigurationJSONs": {
-					"default": "",
-					"items": {
-						"type": "string"
-					},
-					"title": "Text Embedding Provider Configuration JSONs",
-					"type": "array"
-				},
-				"textEmbeddingsEnabled": {
-					"default": false,
-					"title": "Text Embeddings Enabled",
-					"type": "boolean"
-				}
-			},
-			"required": [
-				"pid"
-			],
-			"title": "Semantic Search (Beta)"
 		},
 		{
 			"properties": {
@@ -3656,6 +3980,11 @@
 				"pid": {
 					"const": "com.liferay.site.internal.configuration.SitemapCompanyConfiguration",
 					"title": "XML Sitemap"
+				},
+				"xmlSitemapIndexEnabled": {
+					"default": true,
+					"title": "XML Sitemap Index Enabled",
+					"type": "boolean"
 				}
 			},
 			"required": [
@@ -3907,6 +4236,7 @@
 			"enum": [
 				"com.liferay.account.configuration.AccountEntryEmailConfiguration",
 				"com.liferay.account.configuration.AccountEntryEmailDomainsConfiguration",
+				"com.liferay.adaptive.media.image.content.transformer.backwards.compatibility.internal.configuration.AMBackwardsCompatibilityHtmlContentTransformerConfiguration",
 				"com.liferay.adaptive.media.image.internal.configuration.AMImageCompanyConfiguration",
 				"com.liferay.ai.creator.openai.configuration.AICreatorOpenAICompanyConfiguration",
 				"com.liferay.analytics.settings.configuration.AnalyticsConfiguration",
@@ -3915,14 +4245,20 @@
 				"com.liferay.asset.auto.tagger.opennlp.internal.configuration.OpenNLPDocumentAssetAutoTaggerCompanyConfiguration",
 				"com.liferay.asset.categories.configuration.AssetCategoriesCompanyConfiguration",
 				"com.liferay.batch.engine.configuration.BatchEngineTaskCompanyConfiguration",
+				"com.liferay.captcha.configuration.CaptchaConfiguration",
+				"com.liferay.captcha.internal.configuration.FunctionCaptchaImplConfiguration",
+				"com.liferay.change.tracking.configuration.CTCollectionEmailConfiguration",
+				"com.liferay.change.tracking.configuration.CTConflictConfiguration",
 				"com.liferay.change.tracking.configuration.CTSettingsConfiguration",
 				"com.liferay.change.tracking.web.internal.configuration.CTConfiguration",
 				"com.liferay.click.to.chat.web.internal.configuration.ClickToChatConfiguration",
 				"com.liferay.client.extension.type.configuration.CETConfiguration",
 				"com.liferay.commerce.payment.configuration.CommercePaymentEntryAuditConfiguration",
 				"com.liferay.commerce.payment.configuration.CommercePaymentEntryRefundTypeConfiguration",
+				"com.liferay.commerce.product.configuration.CPConfigurationListRelConfiguration",
 				"com.liferay.commerce.product.configuration.CPDefinitionOptionRelConfiguration",
 				"com.liferay.commerce.product.configuration.CPFriendlyURLConfiguration",
+				"com.liferay.commerce.product.configuration.CProductVersionConfiguration",
 				"com.liferay.commerce.qualifier.configuration.AccountEntryCommerceQualifierConfiguration",
 				"com.liferay.commerce.qualifier.configuration.AccountGroupCommerceQualifierConfiguration",
 				"com.liferay.commerce.qualifier.configuration.AddressCommerceQualifierConfiguration",
@@ -3940,13 +4276,15 @@
 				"com.liferay.document.library.asset.auto.tagger.google.cloud.vision.internal.configuration.GCloudVisionAssetAutoTagProviderCompanyConfiguration",
 				"com.liferay.document.library.asset.auto.tagger.microsoft.cognitive.services.internal.configuration.MSCognitiveServicesAssetAutoTagProviderCompanyConfiguration",
 				"com.liferay.document.library.asset.auto.tagger.tensorflow.internal.configuration.TensorFlowImageAssetAutoTagProviderCompanyConfiguration",
+				"com.liferay.document.library.configuration.DLFileEntryFriendlyURLConfiguration",
+				"com.liferay.document.library.configuration.DLFileEntryMimeTypeConfiguration",
 				"com.liferay.document.library.google.drive.configuration.DLGoogleDriveCompanyConfiguration",
 				"com.liferay.document.library.internal.configuration.DLIndexerConfiguration",
 				"com.liferay.document.library.opener.onedrive.web.internal.configuration.DLOneDriveCompanyConfiguration",
 				"com.liferay.document.library.web.internal.configuration.CacheControlConfiguration",
 				"com.liferay.exportimport.configuration.ExportImportServiceConfiguration",
 				"com.liferay.flags.configuration.FlagsGroupServiceConfiguration",
-				"com.liferay.fragment.configuration.FragmentJavascriptConfiguration",
+				"com.liferay.fragment.configuration.FragmentJavaScriptConfiguration",
 				"com.liferay.fragment.configuration.FragmentServiceConfiguration",
 				"com.liferay.fragment.entry.processor.freemarker.internal.configuration.FreeMarkerFragmentEntryProcessorConfiguration",
 				"com.liferay.fragment.web.internal.configuration.FragmentPortletConfiguration",
@@ -3972,6 +4310,7 @@
 				"com.liferay.portal.crypto.hash.provider.message.digest.internal.configuration.MessageDigestCryptoHashProviderConfiguration",
 				"com.liferay.portal.defaultpermissions.configuration.PortalDefaultPermissionsCompanyConfiguration",
 				"com.liferay.portal.remote.cors.configuration.PortalCORSConfiguration",
+				"com.liferay.portal.search.configuration.SemanticSearchConfiguration",
 				"com.liferay.portal.search.elasticsearch7.configuration.DeepPaginationConfiguration",
 				"com.liferay.portal.search.internal.configuration.SiteActivityAsahConfiguration",
 				"com.liferay.portal.search.internal.configuration.UserActivityAsahConfiguration",
@@ -3992,7 +4331,6 @@
 				"com.liferay.product.navigation.personal.menu.configuration.PersonalMenuConfiguration",
 				"com.liferay.redirect.internal.configuration.RedirectURLConfiguration",
 				"com.liferay.saml.runtime.configuration.SamlProviderConfiguration",
-				"com.liferay.search.experiences.configuration.SemanticSearchConfiguration",
 				"com.liferay.search.experiences.internal.configuration.IpstackConfiguration",
 				"com.liferay.search.experiences.internal.configuration.OpenWeatherMapConfiguration",
 				"com.liferay.segments.asah.connector.internal.configuration.SegmentsAsahCompanyConfiguration",

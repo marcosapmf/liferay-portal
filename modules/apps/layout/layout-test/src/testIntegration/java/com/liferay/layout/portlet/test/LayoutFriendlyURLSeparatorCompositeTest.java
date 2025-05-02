@@ -6,11 +6,10 @@
 package com.liferay.layout.portlet.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.friendly.url.configuration.FriendlyURLSeparatorCompanyConfiguration;
+import com.liferay.friendly.url.test.util.configuration.manager.FriendlyURLSeparatorConfigurationManagerTemporarySwapper;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
-import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LayoutFriendlyURLSeparatorComposite;
@@ -20,10 +19,8 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -69,25 +66,20 @@ public class LayoutFriendlyURLSeparatorCompositeTest {
 			FriendlyURLResolverConstants.URL_SEPARATOR_JOURNAL_ARTICLE);
 	}
 
-	@FeatureFlags("LPS-203351")
 	@Test
 	public void testGetLayoutFriendlyURLSeparatorCompositeWithConfiguredURLSeparator()
 		throws Exception {
 
 		String journalArticleFriendlyURLSeparator = "/journal-test1/";
 
-		try (CompanyConfigurationTemporarySwapper
-				companyConfigurationTemporarySwapper =
-					new CompanyConfigurationTemporarySwapper(
+		try (FriendlyURLSeparatorConfigurationManagerTemporarySwapper
+				friendlyURLSeparatorConfigurationManagerTemporarySwapper =
+					new FriendlyURLSeparatorConfigurationManagerTemporarySwapper(
 						_group.getCompanyId(),
-						FriendlyURLSeparatorCompanyConfiguration.class.
-							getName(),
-						HashMapDictionaryBuilder.<String, Object>put(
-							"friendlyURLSeparatorsJSON",
-							JSONUtil.put(
-								JournalArticle.class.getName(),
-								journalArticleFriendlyURLSeparator)
-						).build())) {
+						JSONUtil.put(
+							JournalArticle.class.getName(),
+							journalArticleFriendlyURLSeparator
+						).toString())) {
 
 			_assertGetLayoutFriendlyURLSeparatorComposite(
 				journalArticleFriendlyURLSeparator);

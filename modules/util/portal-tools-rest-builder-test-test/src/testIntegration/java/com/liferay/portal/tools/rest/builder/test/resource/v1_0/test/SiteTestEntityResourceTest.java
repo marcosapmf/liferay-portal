@@ -1,0 +1,176 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2025 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.portal.tools.rest.builder.test.resource.v1_0.test;
+
+import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.test.util.HTTPTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
+import com.liferay.portal.tools.rest.builder.test.client.dto.v1_0.SiteTestEntity;
+import com.liferay.portal.tools.rest.builder.test.client.resource.v1_0.SiteTestEntityResource;
+import com.liferay.portal.util.PropsValues;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+/**
+ * @author Alejandro Tardín
+ */
+@RunWith(Arquillian.class)
+public class SiteTestEntityResourceTest
+	extends BaseSiteTestEntityResourceTestCase {
+
+	@Override
+	@Test
+	public void testPostSiteSiteTestEntity() throws Exception {
+		super.testPostSiteSiteTestEntity();
+
+		_testPostSiteTestEntityBatch();
+	}
+
+	@Override
+	@Test
+	public void testPutSiteTestEntity() throws Exception {
+		super.testPutSiteTestEntity();
+
+		_testPutSiteTestEntityBatch();
+	}
+
+	@Override
+	protected String[] getAdditionalAssertFieldNames() {
+		return new String[] {"description"};
+	}
+
+	private SiteTestEntityResource _createSiteTestEntityResource(
+			String importStrategy, String updateStrategy)
+		throws Exception {
+
+		User testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
+
+		return SiteTestEntityResource.builder(
+		).authentication(
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).parameter(
+			"importStrategy", importStrategy
+		).parameter(
+			"updateStrategy", updateStrategy
+		).build();
+	}
+
+	private void _testPostSiteTestEntityBatch() throws Exception {
+		SiteTestEntity siteTestEntity =
+			testPostSiteSiteTestEntity_addSiteTestEntity(
+				randomSiteTestEntity());
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.batch.engine.internal." +
+					"BatchEngineImportTaskExecutorImpl",
+				LoggerTestUtil.ERROR)) {
+
+			_waitForFinish(
+				"FAILED", true,
+				JSONFactoryUtil.createJSONObject(
+					siteTestEntityResource.
+						postSiteSiteTestEntityBatchHttpResponse(
+							testGroup.getGroupId(), null,
+							JSONUtil.putAll(
+								JSONFactoryUtil.createJSONObject(
+									siteTestEntity.toString()))
+						).getContent()));
+		}
+	}
+
+	private void _testPutSiteTestEntityBatch() throws Exception {
+		SiteTestEntity postSiteTestEntity =
+			siteTestEntityResource.postSiteSiteTestEntity(
+				testGroup.getGroupId(), randomSiteTestEntity());
+
+		String description = RandomTestUtil.randomString();
+
+		postSiteTestEntity.setDescription(description);
+
+		SiteTestEntity randomSiteTestEntity = randomSiteTestEntity();
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.batch.engine.internal.strategy." +
+					"OnErrorContinueBatchEngineImportStrategy",
+				LoggerTestUtil.ERROR)) {
+
+			SiteTestEntityResource siteTestEntityResource =
+				_createSiteTestEntityResource("ON_ERROR_CONTINUE", "UPDATE");
+
+			_waitForFinish(
+				"COMPLETED", true,
+				JSONFactoryUtil.createJSONObject(
+					siteTestEntityResource.putSiteTestEntityBatchHttpResponse(
+						null,
+						JSONUtil.putAll(
+							JSONFactoryUtil.createJSONObject(
+								postSiteTestEntity.toString()),
+							JSONFactoryUtil.createJSONObject(
+								randomSiteTestEntity.toString()))
+					).getContent()));
+		}
+
+		SiteTestEntity actualSiteTestEntity =
+			siteTestEntityResource.getSiteTestEntity(
+				postSiteTestEntity.getId());
+
+		Assert.assertEquals(description, actualSiteTestEntity.getDescription());
+
+		assertHttpResponseStatusCode(
+			404,
+			siteTestEntityResource.
+				getSiteSiteTestEntityByExternalReferenceCodeHttpResponse(
+					randomSiteTestEntity.getExternalReferenceCode(),
+					testGroup.getGroupId()));
+	}
+
+	private JSONObject _waitForFinish(
+			String expectedExecuteStatus, boolean importTask,
+			JSONObject jsonObject)
+		throws Exception {
+
+		String endpoint = StringBundler.concat(
+			"headless-batch-engine/v1.0/",
+			importTask ? "import-task" : "export-task",
+			"/by-external-reference-code/");
+
+		while (true) {
+			jsonObject = HTTPTestUtil.invokeToJSONObject(
+				null, endpoint + jsonObject.getString("externalReferenceCode"),
+				Http.Method.GET);
+
+			String executeStatus = jsonObject.getString("executeStatus");
+
+			if (StringUtil.equals(executeStatus, "COMPLETED") ||
+				StringUtil.equals(executeStatus, "FAILED")) {
+
+				Assert.assertEquals(expectedExecuteStatus, executeStatus);
+
+				return jsonObject;
+			}
+		}
+	}
+
+}

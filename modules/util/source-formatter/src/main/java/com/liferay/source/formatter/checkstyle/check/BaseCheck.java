@@ -330,6 +330,13 @@ public abstract class BaseCheck extends AbstractCheck {
 	}
 
 	protected int getEndLineNumber(DetailAST detailAST) {
+		DetailAST topLevelMethodCallDetailAST = getTopLevelMethodCallDetailAST(
+			detailAST);
+
+		if (topLevelMethodCallDetailAST != null) {
+			detailAST = topLevelMethodCallDetailAST;
+		}
+
 		int endLineNumber = detailAST.getLineNo();
 
 		for (DetailAST childDetailAST :
@@ -341,6 +348,19 @@ public abstract class BaseCheck extends AbstractCheck {
 		}
 
 		return endLineNumber;
+	}
+
+	protected DetailAST getFirstParameterExprDetailAST(
+		DetailAST methodCallDetailAST) {
+
+		List<DetailAST> parameterExprDetailASTList =
+			getParameterExprDetailASTList(methodCallDetailAST);
+
+		if (parameterExprDetailASTList.isEmpty()) {
+			return null;
+		}
+
+		return parameterExprDetailASTList.get(0);
 	}
 
 	protected String getFullyQualifiedTypeName(
@@ -599,18 +619,13 @@ public abstract class BaseCheck extends AbstractCheck {
 			parametersDetailAST, false, TokenTypes.PARAMETER_DEF);
 	}
 
-	protected DetailAST getParameterDetailAST(DetailAST methodCallDetailAST) {
+	protected List<DetailAST> getParameterExprDetailASTList(
+		DetailAST methodCallDetailAST) {
+
 		DetailAST elistDetailAST = methodCallDetailAST.findFirstToken(
 			TokenTypes.ELIST);
 
-		DetailAST exprDetailAST = elistDetailAST.findFirstToken(
-			TokenTypes.EXPR);
-
-		if (exprDetailAST == null) {
-			return null;
-		}
-
-		return exprDetailAST.getFirstChild();
+		return getAllChildTokens(elistDetailAST, false, TokenTypes.EXPR);
 	}
 
 	protected List<String> getParameterNames(DetailAST detailAST) {
@@ -690,6 +705,43 @@ public abstract class BaseCheck extends AbstractCheck {
 		}
 
 		return startLineNumber;
+	}
+
+	protected String getTokenTypeName(DetailAST detailAST) {
+		String lowerCaseTokenTypeName = StringUtil.toLowerCase(
+			detailAST.getText());
+
+		String[] parts = lowerCaseTokenTypeName.split("_", 2);
+
+		return parts[0];
+	}
+
+	protected DetailAST getTopLevelMethodCallDetailAST(DetailAST detailAST) {
+		if ((detailAST.getType() != TokenTypes.DOT) &&
+			(detailAST.getType() != TokenTypes.METHOD_CALL)) {
+
+			return null;
+		}
+
+		DetailAST topLevelMethodCallDetailAST = detailAST;
+
+		while (true) {
+			DetailAST parentDetailAST = topLevelMethodCallDetailAST.getParent();
+
+			if (parentDetailAST.getType() != TokenTypes.DOT) {
+				break;
+			}
+
+			parentDetailAST = parentDetailAST.getParent();
+
+			if (parentDetailAST.getType() != TokenTypes.METHOD_CALL) {
+				break;
+			}
+
+			topLevelMethodCallDetailAST = parentDetailAST;
+		}
+
+		return topLevelMethodCallDetailAST;
 	}
 
 	protected DetailAST getTypeArgumentsDetailAST(DetailAST detailAST) {

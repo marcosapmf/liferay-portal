@@ -77,7 +77,7 @@ definition {
 
 		task ("and Then Object A is published") {
 			AssertVisible(
-				labelText = "approved",
+				labelText = "Approved",
 				locator1 = "ObjectModelBuilder#OBJECT_CARD_LABEL",
 				objectDefinition = "Custom Object 198013 A");
 		}
@@ -115,17 +115,17 @@ definition {
 
 		task ("Then two object definitions are published and one remains in draft status") {
 			AssertVisible(
-				labelText = "approved",
+				labelText = "Approved",
 				locator1 = "ObjectModelBuilder#OBJECT_CARD_LABEL",
 				objectDefinition = "Custom Object 197932 A");
 
 			AssertVisible(
-				labelText = "approved",
+				labelText = "Approved",
 				locator1 = "ObjectModelBuilder#OBJECT_CARD_LABEL",
 				objectDefinition = "Custom Object 197932 B");
 
 			AssertVisible(
-				labelText = "draft",
+				labelText = "Draft",
 				locator1 = "ObjectModelBuilder#OBJECT_CARD_LABEL",
 				objectDefinition = "Custom Object 197932 C");
 		}
@@ -346,8 +346,8 @@ definition {
 			ObjectModelBuilder.openObjectFolderInModelBuilder(objectFolderName = "CustomFolder198088");
 
 			Click(
-				key_connectorLabel = "Relationship",
-				locator1 = "ProcessBuilderKaleoDesignerReact#DIAGRAM_CONNECTOR_LABEL");
+				key_buttonName = "Relationship",
+				locator1 = "ObjectModelBuilder#DIAGRAM_OBJECT_RELATIONSHIP_CONNECTOR_BUTTON");
 
 			ClickNoError(locator1 = "Button#TRASH_ENABLED");
 
@@ -361,7 +361,7 @@ definition {
 		task ("Then the relationship is deleted and the object definition cards persist") {
 			AssertElementNotPresent(
 				key_connectorLabel = "Relationship",
-				locator1 = "ProcessBuilderKaleoDesignerReact#DIAGRAM_CONNECTOR_LABEL");
+				locator1 = "ObjectModelBuilder#DIAGRAM_OBJECT_RELATIONSHIP_CONNECTOR_BUTTON");
 
 			AssertElementPresent(
 				locator1 = "ObjectModelBuilder#OBJECT_DEFINITION_NODE",
@@ -370,54 +370,6 @@ definition {
 			AssertElementPresent(
 				locator1 = "ObjectModelBuilder#OBJECT_DEFINITION_NODE",
 				objectLabel = "Custom Object 088");
-		}
-	}
-
-	@description = "LPS-185674 - Verify the user is able to view multiple object definitions in model builder view"
-	@priority = 4
-	test CanViewMultipleObjectDefinitions {
-		task ("Given several custom object definitions in a created folder") {
-			JSONObjectFolder.addFolder(
-				folderLabel = "Custom Folder 185674",
-				folderName = "CustomFolder185674");
-
-			ObjectAdmin.openObjectAdmin();
-
-			Click.javaScriptClick(
-				folderLabel = "Custom Folder 185674",
-				locator1 = "ObjectAdmin#SIDEBAR_ITEM");
-
-			for (var letter : list "A,B,C") {
-				ObjectAdmin.addNewObject(
-					fieldLabelName = "Custom Object 185674 ${letter}",
-					fieldName = "CustomObject185674${letter}",
-					pluralLabelName = "Custom Objects 185674 ${letter}");
-
-				CreateObject.saveObject();
-			}
-		}
-
-		task ("When the user switches to model builder view") {
-			Click.pauseClickAt(
-				key_text = "View in Model Builder",
-				locator1 = "CustomerPortalSite#ANY_BUTTON");
-		}
-
-		task ("Then the object definitions will be listed in left sidebar") {
-			for (var letter : list "A,B,C") {
-				AssertVisible(
-					key_folderLabel = "Custom Folder 185674",
-					key_objectLabel = "Custom Object 185674 ${letter}",
-					locator1 = "ObjectModelBuilder#SELECT_OBJECT_IN_LEFT_SIDEBAR");
-			}
-		}
-
-		task ("and Then the object definition cards will be visible on the page") {
-			for (var letter : list "A,B,C") {
-				AssertVisible(
-					locator1 = "ObjectModelBuilder#OBJECT_DEFINITION_NODE",
-					objectLabel = "Custom Object 185674 ${letter}");
-			}
 		}
 	}
 

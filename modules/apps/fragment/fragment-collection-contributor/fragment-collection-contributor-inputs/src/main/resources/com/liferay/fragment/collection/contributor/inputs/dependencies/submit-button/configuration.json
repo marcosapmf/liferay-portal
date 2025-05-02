@@ -4,11 +4,37 @@
 			"fields": [
 				{
 					"dataType": "string",
+					"defaultValue": "submit",
+					"label": "type",
+					"name": "type",
+					"type": "select",
+					"typeOptions": {
+						"validValues": [
+							{
+								"value": "previous"
+							},
+							{
+								"value": "next"
+							},
+							{
+								"value": "submit"
+							}
+						]
+					}
+				},
+				{
+					"dataType": "string",
 					"defaultValue": "approved",
 					"label": "submitted-entry-status",
 					"name": "submittedEntryStatus",
 					"type": "select",
 					"typeOptions": {
+						"dependency": {
+							"type": {
+								"type": "equal",
+								"value": "submit"
+							}
+						},
 						"validValues": [
 							{
 								"label": "approved",
@@ -67,8 +93,7 @@
 						]
 					}
 				}
-			],
-			"label": "submit-button-options"
+			]
 		}
 	]
 }

@@ -54,6 +54,23 @@ public interface MessageBoardMessageResource {
 			String callbackURL, Object object)
 		throws Exception;
 
+	public void deleteMessageBoardMessageMyRating(Long messageBoardMessageId)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			deleteMessageBoardMessageMyRatingHttpResponse(
+				Long messageBoardMessageId)
+		throws Exception;
+
+	public void deleteSiteMessageBoardMessageByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			deleteSiteMessageBoardMessageByExternalReferenceCodeHttpResponse(
+				Long siteId, String externalReferenceCode)
+		throws Exception;
+
 	public MessageBoardMessage getMessageBoardMessage(
 			Long messageBoardMessageId)
 		throws Exception;
@@ -62,12 +79,169 @@ public interface MessageBoardMessageResource {
 			Long messageBoardMessageId)
 		throws Exception;
 
+	public Page<MessageBoardMessage>
+			getMessageBoardMessageMessageBoardMessagesPage(
+				Long parentMessageBoardMessageId, Boolean flatten,
+				String search, List<String> aggregations, String filterString,
+				Pagination pagination, String sortString)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getMessageBoardMessageMessageBoardMessagesPageHttpResponse(
+				Long parentMessageBoardMessageId, Boolean flatten,
+				String search, List<String> aggregations, String filterString,
+				Pagination pagination, String sortString)
+		throws Exception;
+
+	public Rating getMessageBoardMessageMyRating(Long messageBoardMessageId)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse getMessageBoardMessageMyRatingHttpResponse(
+			Long messageBoardMessageId)
+		throws Exception;
+
+	public Page<Permission> getMessageBoardMessagePermissionsPage(
+			Long messageBoardMessageId, String roleNames)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getMessageBoardMessagePermissionsPageHttpResponse(
+				Long messageBoardMessageId, String roleNames)
+		throws Exception;
+
+	public Page<MessageBoardMessage>
+			getMessageBoardThreadMessageBoardMessagesPage(
+				Long messageBoardThreadId, String search,
+				List<String> aggregations, String filterString,
+				Pagination pagination, String sortString)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getMessageBoardThreadMessageBoardMessagesPageHttpResponse(
+				Long messageBoardThreadId, String search,
+				List<String> aggregations, String filterString,
+				Pagination pagination, String sortString)
+		throws Exception;
+
+	public MessageBoardMessage
+			getSiteMessageBoardMessageByExternalReferenceCode(
+				Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getSiteMessageBoardMessageByExternalReferenceCodeHttpResponse(
+				Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public MessageBoardMessage getSiteMessageBoardMessageByFriendlyUrlPath(
+			Long siteId, String friendlyUrlPath)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getSiteMessageBoardMessageByFriendlyUrlPathHttpResponse(
+				Long siteId, String friendlyUrlPath)
+		throws Exception;
+
+	public Page<Permission> getSiteMessageBoardMessagePermissionsPage(
+			Long siteId, String roleNames)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getSiteMessageBoardMessagePermissionsPageHttpResponse(
+				Long siteId, String roleNames)
+		throws Exception;
+
+	public Page<MessageBoardMessage> getSiteMessageBoardMessagesPage(
+			Long siteId, Boolean flatten, String search,
+			List<String> aggregations, String filterString,
+			Pagination pagination, String sortString)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse getSiteMessageBoardMessagesPageHttpResponse(
+			Long siteId, Boolean flatten, String search,
+			List<String> aggregations, String filterString,
+			Pagination pagination, String sortString)
+		throws Exception;
+
+	public Page<MessageBoardMessage>
+			getSiteUserMessageBoardMessagesActivityPage(
+				Long siteId, Long userId, Pagination pagination)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getSiteUserMessageBoardMessagesActivityPageHttpResponse(
+				Long siteId, Long userId, Pagination pagination)
+		throws Exception;
+
 	public MessageBoardMessage patchMessageBoardMessage(
 			Long messageBoardMessageId, MessageBoardMessage messageBoardMessage)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse patchMessageBoardMessageHttpResponse(
 			Long messageBoardMessageId, MessageBoardMessage messageBoardMessage)
+		throws Exception;
+
+	public MessageBoardMessage postMessageBoardMessageMessageBoardMessage(
+			Long parentMessageBoardMessageId,
+			MessageBoardMessage messageBoardMessage)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			postMessageBoardMessageMessageBoardMessageHttpResponse(
+				Long parentMessageBoardMessageId,
+				MessageBoardMessage messageBoardMessage)
+		throws Exception;
+
+	public Rating postMessageBoardMessageMyRating(
+			Long messageBoardMessageId, Rating rating)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse postMessageBoardMessageMyRatingHttpResponse(
+			Long messageBoardMessageId, Rating rating)
+		throws Exception;
+
+	public MessageBoardMessage postMessageBoardThreadMessageBoardMessage(
+			Long messageBoardThreadId, MessageBoardMessage messageBoardMessage)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			postMessageBoardThreadMessageBoardMessageHttpResponse(
+				Long messageBoardThreadId,
+				MessageBoardMessage messageBoardMessage)
+		throws Exception;
+
+	public void postMessageBoardThreadMessageBoardMessageBatch(
+			Long messageBoardThreadId, String callbackURL, Object object)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			postMessageBoardThreadMessageBoardMessageBatchHttpResponse(
+				Long messageBoardThreadId, String callbackURL, Object object)
+		throws Exception;
+
+	public void postMessageBoardThreadMessageBoardMessagesPageExportBatch(
+			Long messageBoardThreadId, String search, String filterString,
+			String sortString, String callbackURL, String contentType,
+			String fieldNames)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			postMessageBoardThreadMessageBoardMessagesPageExportBatchHttpResponse(
+				Long messageBoardThreadId, String search, String filterString,
+				String sortString, String callbackURL, String contentType,
+				String fieldNames)
+		throws Exception;
+
+	public void postSiteMessageBoardMessagesPageExportBatch(
+			Long siteId, String search, String filterString, String sortString,
+			String callbackURL, String contentType, String fieldNames)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			postSiteMessageBoardMessagesPageExportBatchHttpResponse(
+				Long siteId, String search, String filterString,
+				String sortString, String callbackURL, String contentType,
+				String fieldNames)
 		throws Exception;
 
 	public MessageBoardMessage putMessageBoardMessage(
@@ -93,44 +267,12 @@ public interface MessageBoardMessageResource {
 				Long messageBoardMessageId)
 		throws Exception;
 
-	public void deleteMessageBoardMessageMyRating(Long messageBoardMessageId)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			deleteMessageBoardMessageMyRatingHttpResponse(
-				Long messageBoardMessageId)
-		throws Exception;
-
-	public Rating getMessageBoardMessageMyRating(Long messageBoardMessageId)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse getMessageBoardMessageMyRatingHttpResponse(
-			Long messageBoardMessageId)
-		throws Exception;
-
-	public Rating postMessageBoardMessageMyRating(
-			Long messageBoardMessageId, Rating rating)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse postMessageBoardMessageMyRatingHttpResponse(
-			Long messageBoardMessageId, Rating rating)
-		throws Exception;
-
 	public Rating putMessageBoardMessageMyRating(
 			Long messageBoardMessageId, Rating rating)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse putMessageBoardMessageMyRatingHttpResponse(
 			Long messageBoardMessageId, Rating rating)
-		throws Exception;
-
-	public Page<Permission> getMessageBoardMessagePermissionsPage(
-			Long messageBoardMessageId, String roleNames)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			getMessageBoardMessagePermissionsPageHttpResponse(
-				Long messageBoardMessageId, String roleNames)
 		throws Exception;
 
 	public Page<Permission> putMessageBoardMessagePermissionsPage(
@@ -165,120 +307,6 @@ public interface MessageBoardMessageResource {
 				Long messageBoardMessageId)
 		throws Exception;
 
-	public Page<MessageBoardMessage>
-			getMessageBoardMessageMessageBoardMessagesPage(
-				Long parentMessageBoardMessageId, Boolean flatten,
-				String search, List<String> aggregations, String filterString,
-				Pagination pagination, String sortString)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			getMessageBoardMessageMessageBoardMessagesPageHttpResponse(
-				Long parentMessageBoardMessageId, Boolean flatten,
-				String search, List<String> aggregations, String filterString,
-				Pagination pagination, String sortString)
-		throws Exception;
-
-	public MessageBoardMessage postMessageBoardMessageMessageBoardMessage(
-			Long parentMessageBoardMessageId,
-			MessageBoardMessage messageBoardMessage)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			postMessageBoardMessageMessageBoardMessageHttpResponse(
-				Long parentMessageBoardMessageId,
-				MessageBoardMessage messageBoardMessage)
-		throws Exception;
-
-	public Page<MessageBoardMessage>
-			getMessageBoardThreadMessageBoardMessagesPage(
-				Long messageBoardThreadId, String search,
-				List<String> aggregations, String filterString,
-				Pagination pagination, String sortString)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			getMessageBoardThreadMessageBoardMessagesPageHttpResponse(
-				Long messageBoardThreadId, String search,
-				List<String> aggregations, String filterString,
-				Pagination pagination, String sortString)
-		throws Exception;
-
-	public void postMessageBoardThreadMessageBoardMessagesPageExportBatch(
-			Long messageBoardThreadId, String search, String filterString,
-			String sortString, String callbackURL, String contentType,
-			String fieldNames)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			postMessageBoardThreadMessageBoardMessagesPageExportBatchHttpResponse(
-				Long messageBoardThreadId, String search, String filterString,
-				String sortString, String callbackURL, String contentType,
-				String fieldNames)
-		throws Exception;
-
-	public MessageBoardMessage postMessageBoardThreadMessageBoardMessage(
-			Long messageBoardThreadId, MessageBoardMessage messageBoardMessage)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			postMessageBoardThreadMessageBoardMessageHttpResponse(
-				Long messageBoardThreadId,
-				MessageBoardMessage messageBoardMessage)
-		throws Exception;
-
-	public void postMessageBoardThreadMessageBoardMessageBatch(
-			Long messageBoardThreadId, String callbackURL, Object object)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			postMessageBoardThreadMessageBoardMessageBatchHttpResponse(
-				Long messageBoardThreadId, String callbackURL, Object object)
-		throws Exception;
-
-	public Page<MessageBoardMessage> getSiteMessageBoardMessagesPage(
-			Long siteId, Boolean flatten, String search,
-			List<String> aggregations, String filterString,
-			Pagination pagination, String sortString)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse getSiteMessageBoardMessagesPageHttpResponse(
-			Long siteId, Boolean flatten, String search,
-			List<String> aggregations, String filterString,
-			Pagination pagination, String sortString)
-		throws Exception;
-
-	public void postSiteMessageBoardMessagesPageExportBatch(
-			Long siteId, String search, String filterString, String sortString,
-			String callbackURL, String contentType, String fieldNames)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			postSiteMessageBoardMessagesPageExportBatchHttpResponse(
-				Long siteId, String search, String filterString,
-				String sortString, String callbackURL, String contentType,
-				String fieldNames)
-		throws Exception;
-
-	public void deleteSiteMessageBoardMessageByExternalReferenceCode(
-			Long siteId, String externalReferenceCode)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			deleteSiteMessageBoardMessageByExternalReferenceCodeHttpResponse(
-				Long siteId, String externalReferenceCode)
-		throws Exception;
-
-	public MessageBoardMessage
-			getSiteMessageBoardMessageByExternalReferenceCode(
-				Long siteId, String externalReferenceCode)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			getSiteMessageBoardMessageByExternalReferenceCodeHttpResponse(
-				Long siteId, String externalReferenceCode)
-		throws Exception;
-
 	public MessageBoardMessage
 			putSiteMessageBoardMessageByExternalReferenceCode(
 				Long siteId, String externalReferenceCode,
@@ -291,24 +319,6 @@ public interface MessageBoardMessageResource {
 				MessageBoardMessage messageBoardMessage)
 		throws Exception;
 
-	public MessageBoardMessage getSiteMessageBoardMessageByFriendlyUrlPath(
-			Long siteId, String friendlyUrlPath)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			getSiteMessageBoardMessageByFriendlyUrlPathHttpResponse(
-				Long siteId, String friendlyUrlPath)
-		throws Exception;
-
-	public Page<Permission> getSiteMessageBoardMessagePermissionsPage(
-			Long siteId, String roleNames)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			getSiteMessageBoardMessagePermissionsPageHttpResponse(
-				Long siteId, String roleNames)
-		throws Exception;
-
 	public Page<Permission> putSiteMessageBoardMessagePermissionsPage(
 			Long siteId, Permission[] permissions)
 		throws Exception;
@@ -316,16 +326,6 @@ public interface MessageBoardMessageResource {
 	public HttpInvoker.HttpResponse
 			putSiteMessageBoardMessagePermissionsPageHttpResponse(
 				Long siteId, Permission[] permissions)
-		throws Exception;
-
-	public Page<MessageBoardMessage>
-			getSiteUserMessageBoardMessagesActivityPage(
-				Long siteId, Long userId, Pagination pagination)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			getSiteUserMessageBoardMessagesActivityPageHttpResponse(
-				Long siteId, Long userId, Pagination pagination)
 		throws Exception;
 
 	public static class Builder {
@@ -426,8 +426,8 @@ public interface MessageBoardMessageResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -534,8 +534,10 @@ public interface MessageBoardMessageResource {
 
 			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -633,538 +635,10 @@ public interface MessageBoardMessageResource {
 					_builder._port + _builder._contextPath +
 						"/o/headless-delivery/v1.0/message-board-messages/batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public MessageBoardMessage getMessageBoardMessage(
-				Long messageBoardMessageId)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				getMessageBoardMessageHttpResponse(messageBoardMessageId);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return MessageBoardMessageSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse getMessageBoardMessageHttpResponse(
-				Long messageBoardMessageId)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}");
-
-			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public MessageBoardMessage patchMessageBoardMessage(
-				Long messageBoardMessageId,
-				MessageBoardMessage messageBoardMessage)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				patchMessageBoardMessageHttpResponse(
-					messageBoardMessageId, messageBoardMessage);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return MessageBoardMessageSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse patchMessageBoardMessageHttpResponse(
-				Long messageBoardMessageId,
-				MessageBoardMessage messageBoardMessage)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(
-				messageBoardMessage.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PATCH);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}");
-
-			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public MessageBoardMessage putMessageBoardMessage(
-				Long messageBoardMessageId,
-				MessageBoardMessage messageBoardMessage)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putMessageBoardMessageHttpResponse(
-					messageBoardMessageId, messageBoardMessage);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return MessageBoardMessageSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse putMessageBoardMessageHttpResponse(
-				Long messageBoardMessageId,
-				MessageBoardMessage messageBoardMessage)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(
-				messageBoardMessage.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}");
-
-			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public void putMessageBoardMessageBatch(
-				String callbackURL, Object object)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putMessageBoardMessageBatchHttpResponse(callbackURL, object);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-		}
-
-		public HttpInvoker.HttpResponse putMessageBoardMessageBatchHttpResponse(
-				String callbackURL, Object object)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(object.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			if (callbackURL != null) {
-				httpInvoker.parameter(
-					"callbackURL", String.valueOf(callbackURL));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/batch");
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public void putMessageBoardMessageMarkAsAnswer(
-				Long messageBoardMessageId)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putMessageBoardMessageMarkAsAnswerHttpResponse(
-					messageBoardMessageId);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return;
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				putMessageBoardMessageMarkAsAnswerHttpResponse(
-					Long messageBoardMessageId)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body("[]", "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/mark-as-answer");
-
-			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}
@@ -1269,18 +743,21 @@ public interface MessageBoardMessageResource {
 
 			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public Rating getMessageBoardMessageMyRating(Long messageBoardMessageId)
+		public void deleteSiteMessageBoardMessageByExternalReferenceCode(
+				Long siteId, String externalReferenceCode)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				getMessageBoardMessageMyRatingHttpResponse(
-					messageBoardMessageId);
+				deleteSiteMessageBoardMessageByExternalReferenceCodeHttpResponse(
+					siteId, externalReferenceCode);
 
 			String content = httpResponse.getContent();
 
@@ -1330,7 +807,7 @@ public interface MessageBoardMessageResource {
 			}
 
 			try {
-				return RatingSerDes.toDTO(content);
+				return;
 			}
 			catch (Exception e) {
 				_logger.log(
@@ -1342,8 +819,115 @@ public interface MessageBoardMessageResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				getMessageBoardMessageMyRatingHttpResponse(
-					Long messageBoardMessageId)
+				deleteSiteMessageBoardMessageByExternalReferenceCodeHttpResponse(
+					Long siteId, String externalReferenceCode)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.DELETE);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/sites/{siteId}/message-board-messages/by-external-reference-code/{externalReferenceCode}");
+
+			httpInvoker.path("siteId", siteId);
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public MessageBoardMessage getMessageBoardMessage(
+				Long messageBoardMessageId)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				getMessageBoardMessageHttpResponse(messageBoardMessageId);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return MessageBoardMessageSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse getMessageBoardMessageHttpResponse(
+				Long messageBoardMessageId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1370,775 +954,14 @@ public interface MessageBoardMessageResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/my-rating");
+						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}");
 
 			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Rating postMessageBoardMessageMyRating(
-				Long messageBoardMessageId, Rating rating)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				postMessageBoardMessageMyRatingHttpResponse(
-					messageBoardMessageId, rating);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return RatingSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				postMessageBoardMessageMyRatingHttpResponse(
-					Long messageBoardMessageId, Rating rating)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(rating.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/my-rating");
-
-			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Rating putMessageBoardMessageMyRating(
-				Long messageBoardMessageId, Rating rating)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putMessageBoardMessageMyRatingHttpResponse(
-					messageBoardMessageId, rating);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return RatingSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				putMessageBoardMessageMyRatingHttpResponse(
-					Long messageBoardMessageId, Rating rating)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(rating.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/my-rating");
-
-			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Page<Permission> getMessageBoardMessagePermissionsPage(
-				Long messageBoardMessageId, String roleNames)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				getMessageBoardMessagePermissionsPageHttpResponse(
-					messageBoardMessageId, roleNames);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return Page.of(content, Permission::toDTO);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				getMessageBoardMessagePermissionsPageHttpResponse(
-					Long messageBoardMessageId, String roleNames)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			if (roleNames != null) {
-				httpInvoker.parameter("roleNames", String.valueOf(roleNames));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/permissions");
-
-			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Page<Permission> putMessageBoardMessagePermissionsPage(
-				Long messageBoardMessageId, Permission[] permissions)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putMessageBoardMessagePermissionsPageHttpResponse(
-					messageBoardMessageId, permissions);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return Page.of(content, Permission::toDTO);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				putMessageBoardMessagePermissionsPageHttpResponse(
-					Long messageBoardMessageId, Permission[] permissions)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			List<String> values = new ArrayList<>();
-
-			for (Permission permissionValue : permissions) {
-				values.add(String.valueOf(permissionValue));
-			}
-
-			httpInvoker.body(values.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/permissions");
-
-			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public void putMessageBoardMessageSubscribe(Long messageBoardMessageId)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putMessageBoardMessageSubscribeHttpResponse(
-					messageBoardMessageId);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return;
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				putMessageBoardMessageSubscribeHttpResponse(
-					Long messageBoardMessageId)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body("[]", "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/subscribe");
-
-			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public void putMessageBoardMessageUnmarkAsAnswer(
-				Long messageBoardMessageId)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putMessageBoardMessageUnmarkAsAnswerHttpResponse(
-					messageBoardMessageId);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return;
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				putMessageBoardMessageUnmarkAsAnswerHttpResponse(
-					Long messageBoardMessageId)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body("[]", "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/unmark-as-answer");
-
-			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public void putMessageBoardMessageUnsubscribe(
-				Long messageBoardMessageId)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putMessageBoardMessageUnsubscribeHttpResponse(
-					messageBoardMessageId);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return;
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				putMessageBoardMessageUnsubscribeHttpResponse(
-					Long messageBoardMessageId)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body("[]", "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/unsubscribe");
-
-			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}
@@ -2275,20 +1098,20 @@ public interface MessageBoardMessageResource {
 			httpInvoker.path(
 				"parentMessageBoardMessageId", parentMessageBoardMessageId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public MessageBoardMessage postMessageBoardMessageMessageBoardMessage(
-				Long parentMessageBoardMessageId,
-				MessageBoardMessage messageBoardMessage)
+		public Rating getMessageBoardMessageMyRating(Long messageBoardMessageId)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postMessageBoardMessageMessageBoardMessageHttpResponse(
-					parentMessageBoardMessageId, messageBoardMessage);
+				getMessageBoardMessageMyRatingHttpResponse(
+					messageBoardMessageId);
 
 			String content = httpResponse.getContent();
 
@@ -2338,7 +1161,7 @@ public interface MessageBoardMessageResource {
 			}
 
 			try {
-				return MessageBoardMessageSerDes.toDTO(content);
+				return RatingSerDes.toDTO(content);
 			}
 			catch (Exception e) {
 				_logger.log(
@@ -2350,15 +1173,11 @@ public interface MessageBoardMessageResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				postMessageBoardMessageMessageBoardMessageHttpResponse(
-					Long parentMessageBoardMessageId,
-					MessageBoardMessage messageBoardMessage)
+				getMessageBoardMessageMyRatingHttpResponse(
+					Long messageBoardMessageId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(
-				messageBoardMessage.toString(), "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(
@@ -2377,18 +1196,131 @@ public interface MessageBoardMessageResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-messages/{parentMessageBoardMessageId}/message-board-messages");
+						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/my-rating");
+
+			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public Page<Permission> getMessageBoardMessagePermissionsPage(
+				Long messageBoardMessageId, String roleNames)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				getMessageBoardMessagePermissionsPageHttpResponse(
+					messageBoardMessageId, roleNames);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return Page.of(content, Permission::toDTO);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				getMessageBoardMessagePermissionsPageHttpResponse(
+					Long messageBoardMessageId, String roleNames)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			if (roleNames != null) {
+				httpInvoker.parameter("roleNames", String.valueOf(roleNames));
+			}
 
 			httpInvoker.path(
-				"parentMessageBoardMessageId", parentMessageBoardMessageId);
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/permissions");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -2518,148 +1450,22 @@ public interface MessageBoardMessageResource {
 
 			httpInvoker.path("messageBoardThreadId", messageBoardThreadId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void postMessageBoardThreadMessageBoardMessagesPageExportBatch(
-				Long messageBoardThreadId, String search, String filterString,
-				String sortString, String callbackURL, String contentType,
-				String fieldNames)
+		public MessageBoardMessage
+				getSiteMessageBoardMessageByExternalReferenceCode(
+					Long siteId, String externalReferenceCode)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postMessageBoardThreadMessageBoardMessagesPageExportBatchHttpResponse(
-					messageBoardThreadId, search, filterString, sortString,
-					callbackURL, contentType, fieldNames);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				postMessageBoardThreadMessageBoardMessagesPageExportBatchHttpResponse(
-					Long messageBoardThreadId, String search,
-					String filterString, String sortString, String callbackURL,
-					String contentType, String fieldNames)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body("[]", "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
-
-			if (search != null) {
-				httpInvoker.parameter("search", String.valueOf(search));
-			}
-
-			if (filterString != null) {
-				httpInvoker.parameter("filter", filterString);
-			}
-
-			if (sortString != null) {
-				httpInvoker.parameter("sort", sortString);
-			}
-
-			if (callbackURL != null) {
-				httpInvoker.parameter(
-					"callbackURL", String.valueOf(callbackURL));
-			}
-
-			if (contentType != null) {
-				httpInvoker.parameter(
-					"contentType", String.valueOf(contentType));
-			}
-
-			if (fieldNames != null) {
-				httpInvoker.parameter("fieldNames", String.valueOf(fieldNames));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-threads/{messageBoardThreadId}/message-board-messages/export-batch");
-
-			httpInvoker.path("messageBoardThreadId", messageBoardThreadId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public MessageBoardMessage postMessageBoardThreadMessageBoardMessage(
-				Long messageBoardThreadId,
-				MessageBoardMessage messageBoardMessage)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				postMessageBoardThreadMessageBoardMessageHttpResponse(
-					messageBoardThreadId, messageBoardMessage);
+				getSiteMessageBoardMessageByExternalReferenceCodeHttpResponse(
+					siteId, externalReferenceCode);
 
 			String content = httpResponse.getContent();
 
@@ -2721,15 +1527,11 @@ public interface MessageBoardMessageResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				postMessageBoardThreadMessageBoardMessageHttpResponse(
-					Long messageBoardThreadId,
-					MessageBoardMessage messageBoardMessage)
+				getSiteMessageBoardMessageByExternalReferenceCodeHttpResponse(
+					Long siteId, String externalReferenceCode)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(
-				messageBoardMessage.toString(), "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(
@@ -2748,28 +1550,31 @@ public interface MessageBoardMessageResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-threads/{messageBoardThreadId}/message-board-messages");
+						"/o/headless-delivery/v1.0/sites/{siteId}/message-board-messages/by-external-reference-code/{externalReferenceCode}");
 
-			httpInvoker.path("messageBoardThreadId", messageBoardThreadId);
+			httpInvoker.path("siteId", siteId);
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void postMessageBoardThreadMessageBoardMessageBatch(
-				Long messageBoardThreadId, String callbackURL, Object object)
+		public MessageBoardMessage getSiteMessageBoardMessageByFriendlyUrlPath(
+				Long siteId, String friendlyUrlPath)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postMessageBoardThreadMessageBoardMessageBatchHttpResponse(
-					messageBoardThreadId, callbackURL, object);
+				getSiteMessageBoardMessageByFriendlyUrlPathHttpResponse(
+					siteId, friendlyUrlPath);
 
 			String content = httpResponse.getContent();
 
@@ -2817,17 +1622,25 @@ public interface MessageBoardMessageResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 			}
+
+			try {
+				return MessageBoardMessageSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
 		}
 
 		public HttpInvoker.HttpResponse
-				postMessageBoardThreadMessageBoardMessageBatchHttpResponse(
-					Long messageBoardThreadId, String callbackURL,
-					Object object)
+				getSiteMessageBoardMessageByFriendlyUrlPathHttpResponse(
+					Long siteId, String friendlyUrlPath)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(object.toString(), "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(
@@ -2846,22 +1659,132 @@ public interface MessageBoardMessageResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
 
-			if (callbackURL != null) {
-				httpInvoker.parameter(
-					"callbackURL", String.valueOf(callbackURL));
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/sites/{siteId}/message-board-messages/by-friendly-url-path/{friendlyUrlPath}");
+
+			httpInvoker.path("siteId", siteId);
+			httpInvoker.path("friendlyUrlPath", friendlyUrlPath);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public Page<Permission> getSiteMessageBoardMessagePermissionsPage(
+				Long siteId, String roleNames)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				getSiteMessageBoardMessagePermissionsPageHttpResponse(
+					siteId, roleNames);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return Page.of(content, Permission::toDTO);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				getSiteMessageBoardMessagePermissionsPageHttpResponse(
+					Long siteId, String roleNames)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			if (roleNames != null) {
+				httpInvoker.parameter("roleNames", String.valueOf(roleNames));
 			}
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/message-board-threads/{messageBoardThreadId}/message-board-messages/batch");
+						"/o/headless-delivery/v1.0/sites/{siteId}/message-board-messages/permissions");
 
-			httpInvoker.path("messageBoardThreadId", messageBoardThreadId);
+			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -2994,8 +1917,811 @@ public interface MessageBoardMessageResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public Page<MessageBoardMessage>
+				getSiteUserMessageBoardMessagesActivityPage(
+					Long siteId, Long userId, Pagination pagination)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				getSiteUserMessageBoardMessagesActivityPageHttpResponse(
+					siteId, userId, pagination);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return Page.of(content, MessageBoardMessageSerDes::toDTO);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				getSiteUserMessageBoardMessagesActivityPageHttpResponse(
+					Long siteId, Long userId, Pagination pagination)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			if (pagination != null) {
+				httpInvoker.parameter(
+					"page", String.valueOf(pagination.getPage()));
+				httpInvoker.parameter(
+					"pageSize", String.valueOf(pagination.getPageSize()));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/sites/{siteId}/{userId}/message-board-messages/activity");
+
+			httpInvoker.path("siteId", siteId);
+			httpInvoker.path("userId", userId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public MessageBoardMessage patchMessageBoardMessage(
+				Long messageBoardMessageId,
+				MessageBoardMessage messageBoardMessage)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				patchMessageBoardMessageHttpResponse(
+					messageBoardMessageId, messageBoardMessage);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return MessageBoardMessageSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse patchMessageBoardMessageHttpResponse(
+				Long messageBoardMessageId,
+				MessageBoardMessage messageBoardMessage)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(
+				messageBoardMessage.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PATCH);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}");
+
+			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public MessageBoardMessage postMessageBoardMessageMessageBoardMessage(
+				Long parentMessageBoardMessageId,
+				MessageBoardMessage messageBoardMessage)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postMessageBoardMessageMessageBoardMessageHttpResponse(
+					parentMessageBoardMessageId, messageBoardMessage);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return MessageBoardMessageSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postMessageBoardMessageMessageBoardMessageHttpResponse(
+					Long parentMessageBoardMessageId,
+					MessageBoardMessage messageBoardMessage)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(
+				messageBoardMessage.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/message-board-messages/{parentMessageBoardMessageId}/message-board-messages");
+
+			httpInvoker.path(
+				"parentMessageBoardMessageId", parentMessageBoardMessageId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public Rating postMessageBoardMessageMyRating(
+				Long messageBoardMessageId, Rating rating)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postMessageBoardMessageMyRatingHttpResponse(
+					messageBoardMessageId, rating);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return RatingSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postMessageBoardMessageMyRatingHttpResponse(
+					Long messageBoardMessageId, Rating rating)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(rating.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/my-rating");
+
+			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public MessageBoardMessage postMessageBoardThreadMessageBoardMessage(
+				Long messageBoardThreadId,
+				MessageBoardMessage messageBoardMessage)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postMessageBoardThreadMessageBoardMessageHttpResponse(
+					messageBoardThreadId, messageBoardMessage);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return MessageBoardMessageSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postMessageBoardThreadMessageBoardMessageHttpResponse(
+					Long messageBoardThreadId,
+					MessageBoardMessage messageBoardMessage)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(
+				messageBoardMessage.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/message-board-threads/{messageBoardThreadId}/message-board-messages");
+
+			httpInvoker.path("messageBoardThreadId", messageBoardThreadId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public void postMessageBoardThreadMessageBoardMessageBatch(
+				Long messageBoardThreadId, String callbackURL, Object object)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postMessageBoardThreadMessageBoardMessageBatchHttpResponse(
+					messageBoardThreadId, callbackURL, object);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postMessageBoardThreadMessageBoardMessageBatchHttpResponse(
+					Long messageBoardThreadId, String callbackURL,
+					Object object)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(object.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (callbackURL != null) {
+				httpInvoker.parameter(
+					"callbackURL", String.valueOf(callbackURL));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/message-board-threads/{messageBoardThreadId}/message-board-messages/batch");
+
+			httpInvoker.path("messageBoardThreadId", messageBoardThreadId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public void postMessageBoardThreadMessageBoardMessagesPageExportBatch(
+				Long messageBoardThreadId, String search, String filterString,
+				String sortString, String callbackURL, String contentType,
+				String fieldNames)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postMessageBoardThreadMessageBoardMessagesPageExportBatchHttpResponse(
+					messageBoardThreadId, search, filterString, sortString,
+					callbackURL, contentType, fieldNames);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postMessageBoardThreadMessageBoardMessagesPageExportBatchHttpResponse(
+					Long messageBoardThreadId, String search,
+					String filterString, String sortString, String callbackURL,
+					String contentType, String fieldNames)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body("[]", "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (search != null) {
+				httpInvoker.parameter("search", String.valueOf(search));
+			}
+
+			if (filterString != null) {
+				httpInvoker.parameter("filter", filterString);
+			}
+
+			if (sortString != null) {
+				httpInvoker.parameter("sort", sortString);
+			}
+
+			if (callbackURL != null) {
+				httpInvoker.parameter(
+					"callbackURL", String.valueOf(callbackURL));
+			}
+
+			if (contentType != null) {
+				httpInvoker.parameter(
+					"contentType", String.valueOf(contentType));
+			}
+
+			if (fieldNames != null) {
+				httpInvoker.parameter("fieldNames", String.valueOf(fieldNames));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/message-board-threads/{messageBoardThreadId}/message-board-messages/export-batch");
+
+			httpInvoker.path("messageBoardThreadId", messageBoardThreadId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -3122,19 +2848,233 @@ public interface MessageBoardMessageResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void deleteSiteMessageBoardMessageByExternalReferenceCode(
-				Long siteId, String externalReferenceCode)
+		public MessageBoardMessage putMessageBoardMessage(
+				Long messageBoardMessageId,
+				MessageBoardMessage messageBoardMessage)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteSiteMessageBoardMessageByExternalReferenceCodeHttpResponse(
-					siteId, externalReferenceCode);
+				putMessageBoardMessageHttpResponse(
+					messageBoardMessageId, messageBoardMessage);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return MessageBoardMessageSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse putMessageBoardMessageHttpResponse(
+				Long messageBoardMessageId,
+				MessageBoardMessage messageBoardMessage)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(
+				messageBoardMessage.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}");
+
+			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public void putMessageBoardMessageBatch(
+				String callbackURL, Object object)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				putMessageBoardMessageBatchHttpResponse(callbackURL, object);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+		}
+
+		public HttpInvoker.HttpResponse putMessageBoardMessageBatchHttpResponse(
+				String callbackURL, Object object)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(object.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
+
+			if (callbackURL != null) {
+				httpInvoker.parameter(
+					"callbackURL", String.valueOf(callbackURL));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/message-board-messages/batch");
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public void putMessageBoardMessageMarkAsAnswer(
+				Long messageBoardMessageId)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				putMessageBoardMessageMarkAsAnswerHttpResponse(
+					messageBoardMessageId);
 
 			String content = httpResponse.getContent();
 
@@ -3196,11 +3136,13 @@ public interface MessageBoardMessageResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				deleteSiteMessageBoardMessageByExternalReferenceCodeHttpResponse(
-					Long siteId, String externalReferenceCode)
+				putMessageBoardMessageMarkAsAnswerHttpResponse(
+					Long messageBoardMessageId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body("[]", "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(
@@ -3219,30 +3161,30 @@ public interface MessageBoardMessageResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.DELETE);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/message-board-messages/by-external-reference-code/{externalReferenceCode}");
+						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/mark-as-answer");
 
-			httpInvoker.path("siteId", siteId);
-			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public MessageBoardMessage
-				getSiteMessageBoardMessageByExternalReferenceCode(
-					Long siteId, String externalReferenceCode)
+		public Rating putMessageBoardMessageMyRating(
+				Long messageBoardMessageId, Rating rating)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				getSiteMessageBoardMessageByExternalReferenceCodeHttpResponse(
-					siteId, externalReferenceCode);
+				putMessageBoardMessageMyRatingHttpResponse(
+					messageBoardMessageId, rating);
 
 			String content = httpResponse.getContent();
 
@@ -3292,7 +3234,7 @@ public interface MessageBoardMessageResource {
 			}
 
 			try {
-				return MessageBoardMessageSerDes.toDTO(content);
+				return RatingSerDes.toDTO(content);
 			}
 			catch (Exception e) {
 				_logger.log(
@@ -3304,11 +3246,13 @@ public interface MessageBoardMessageResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				getSiteMessageBoardMessageByExternalReferenceCodeHttpResponse(
-					Long siteId, String externalReferenceCode)
+				putMessageBoardMessageMyRatingHttpResponse(
+					Long messageBoardMessageId, Rating rating)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(rating.toString(), "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(
@@ -3327,18 +3271,464 @@ public interface MessageBoardMessageResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/message-board-messages/by-external-reference-code/{externalReferenceCode}");
+						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/my-rating");
 
-			httpInvoker.path("siteId", siteId);
-			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public Page<Permission> putMessageBoardMessagePermissionsPage(
+				Long messageBoardMessageId, Permission[] permissions)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				putMessageBoardMessagePermissionsPageHttpResponse(
+					messageBoardMessageId, permissions);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return Page.of(content, Permission::toDTO);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				putMessageBoardMessagePermissionsPageHttpResponse(
+					Long messageBoardMessageId, Permission[] permissions)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			List<String> values = new ArrayList<>();
+
+			for (Permission permissionValue : permissions) {
+				values.add(String.valueOf(permissionValue));
+			}
+
+			httpInvoker.body(values.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/permissions");
+
+			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public void putMessageBoardMessageSubscribe(Long messageBoardMessageId)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				putMessageBoardMessageSubscribeHttpResponse(
+					messageBoardMessageId);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return;
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				putMessageBoardMessageSubscribeHttpResponse(
+					Long messageBoardMessageId)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body("[]", "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/subscribe");
+
+			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public void putMessageBoardMessageUnmarkAsAnswer(
+				Long messageBoardMessageId)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				putMessageBoardMessageUnmarkAsAnswerHttpResponse(
+					messageBoardMessageId);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return;
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				putMessageBoardMessageUnmarkAsAnswerHttpResponse(
+					Long messageBoardMessageId)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body("[]", "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/unmark-as-answer");
+
+			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public void putMessageBoardMessageUnsubscribe(
+				Long messageBoardMessageId)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				putMessageBoardMessageUnsubscribeHttpResponse(
+					messageBoardMessageId);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return;
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				putMessageBoardMessageUnsubscribeHttpResponse(
+					Long messageBoardMessageId)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body("[]", "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/message-board-messages/{messageBoardMessageId}/unsubscribe");
+
+			httpInvoker.path("messageBoardMessageId", messageBoardMessageId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -3450,225 +3840,10 @@ public interface MessageBoardMessageResource {
 			httpInvoker.path("siteId", siteId);
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public MessageBoardMessage getSiteMessageBoardMessageByFriendlyUrlPath(
-				Long siteId, String friendlyUrlPath)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				getSiteMessageBoardMessageByFriendlyUrlPathHttpResponse(
-					siteId, friendlyUrlPath);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return MessageBoardMessageSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				getSiteMessageBoardMessageByFriendlyUrlPathHttpResponse(
-					Long siteId, String friendlyUrlPath)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/message-board-messages/by-friendly-url-path/{friendlyUrlPath}");
-
-			httpInvoker.path("siteId", siteId);
-			httpInvoker.path("friendlyUrlPath", friendlyUrlPath);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Page<Permission> getSiteMessageBoardMessagePermissionsPage(
-				Long siteId, String roleNames)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				getSiteMessageBoardMessagePermissionsPageHttpResponse(
-					siteId, roleNames);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return Page.of(content, Permission::toDTO);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				getSiteMessageBoardMessagePermissionsPageHttpResponse(
-					Long siteId, String roleNames)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			if (roleNames != null) {
-				httpInvoker.parameter("roleNames", String.valueOf(roleNames));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/message-board-messages/permissions");
-
-			httpInvoker.path("siteId", siteId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}
@@ -3781,123 +3956,10 @@ public interface MessageBoardMessageResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Page<MessageBoardMessage>
-				getSiteUserMessageBoardMessagesActivityPage(
-					Long siteId, Long userId, Pagination pagination)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				getSiteUserMessageBoardMessagesActivityPageHttpResponse(
-					siteId, userId, pagination);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return Page.of(content, MessageBoardMessageSerDes::toDTO);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				getSiteUserMessageBoardMessagesActivityPageHttpResponse(
-					Long siteId, Long userId, Pagination pagination)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			if (pagination != null) {
-				httpInvoker.parameter(
-					"page", String.valueOf(pagination.getPage()));
-				httpInvoker.parameter(
-					"pageSize", String.valueOf(pagination.getPageSize()));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/{userId}/message-board-messages/activity");
-
-			httpInvoker.path("siteId", siteId);
-			httpInvoker.path("userId", userId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}

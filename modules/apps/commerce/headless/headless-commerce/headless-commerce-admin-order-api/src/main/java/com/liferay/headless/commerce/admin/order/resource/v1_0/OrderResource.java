@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.order.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.order.dto.v1_0.Order;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,13 +46,31 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface OrderResource {
 
-	public Page<Order> getOrdersPage(
-			String search, Filter filter, Pagination pagination, Sort[] sorts)
+	public Response deleteOrder(Long id) throws Exception;
+
+	public Response deleteOrderBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public Response postOrdersPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
-			String contentType, String fieldNames)
+	public Response deleteOrderByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Order getOrder(Long id) throws Exception;
+
+	public Order getOrderByExternalReferenceCode(String externalReferenceCode)
+		throws Exception;
+
+	public Page<Order> getOrdersPage(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Order patchOrder(Long id, Order order) throws Exception;
+
+	public Order patchOrderByExternalReferenceCode(
+			String externalReferenceCode, Order order)
 		throws Exception;
 
 	public Order postOrder(Order order) throws Exception;
@@ -62,25 +78,16 @@ public interface OrderResource {
 	public Response postOrderBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public Response deleteOrderByExternalReferenceCode(
-			String externalReferenceCode)
+	public Response postOrdersPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
-	public Order getOrderByExternalReferenceCode(String externalReferenceCode)
-		throws Exception;
-
-	public Order patchOrderByExternalReferenceCode(
+	public Order putOrderByExternalReferenceCode(
 			String externalReferenceCode, Order order)
 		throws Exception;
-
-	public Response deleteOrder(Long id) throws Exception;
-
-	public Response deleteOrderBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public Order getOrder(Long id) throws Exception;
-
-	public Order patchOrder(Long id, Order order) throws Exception;
 
 	public default void setContextAcceptLanguage(
 		AcceptLanguage contextAcceptLanguage) {
@@ -104,7 +111,8 @@ public interface OrderResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -129,19 +137,23 @@ public interface OrderResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

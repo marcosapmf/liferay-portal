@@ -163,7 +163,6 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 						LayoutTable.INSTANCE.type.in(
 							new String[] {
 								LayoutConstants.TYPE_ASSET_DISPLAY,
-								LayoutConstants.TYPE_COLLECTION,
 								LayoutConstants.TYPE_CONTENT,
 								LayoutConstants.TYPE_UTILITY
 							})
@@ -345,10 +344,11 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 		throws PortalException {
 
 		for (com.liferay.portal.lock.model.Lock lock :
-				_lockLocalService.getLocks(
-					companyId, userId, _CLASS_NAME_LAYOUT)) {
+				_lockLocalService.getLocks(companyId, _CLASS_NAME_LAYOUT)) {
 
-			_lockLocalService.unlock(_CLASS_NAME_LAYOUT, lock.getKey());
+			if (lock.getUserId() == userId) {
+				_lockLocalService.unlock(_CLASS_NAME_LAYOUT, lock.getKey());
+			}
 		}
 	}
 
@@ -470,9 +470,6 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 	private LockedLayoutType _getLockedLayoutType(long classPK, String type) {
 		if (Objects.equals(type, LayoutConstants.TYPE_ASSET_DISPLAY)) {
 			return LockedLayoutType.DISPLAY_PAGE_TEMPLATE;
-		}
-		else if (Objects.equals(type, LayoutConstants.TYPE_COLLECTION)) {
-			return LockedLayoutType.COLLECTION_PAGE;
 		}
 		else if (Objects.equals(type, LayoutConstants.TYPE_UTILITY)) {
 			return LockedLayoutType.UTILITY_PAGE;

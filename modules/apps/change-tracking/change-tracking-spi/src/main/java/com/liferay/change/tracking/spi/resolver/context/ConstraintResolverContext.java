@@ -64,4 +64,6 @@ public interface ConstraintResolverContext<T extends CTModel<T>> {
 	 */
 	public boolean isTargetCTModel(CTModel<?> ctModel);
 
+	public void mergeSourceCTModelIntoTargetCTModel();
+
 }

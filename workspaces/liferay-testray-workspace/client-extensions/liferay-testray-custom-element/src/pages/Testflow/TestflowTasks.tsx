@@ -6,7 +6,13 @@
 import ClayIcon from '@clayui/icon';
 import {useAtom} from 'jotai';
 import {Dispatch, useContext, useState} from 'react';
-import {Link, useNavigate, useOutletContext, useParams} from 'react-router-dom';
+import {
+	Link,
+	useNavigate,
+	useOutletContext,
+	useParams,
+	useSearchParams,
+} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
 import Avatar from '~/components/Avatar';
 import AssignToMe from '~/components/Avatar/AssignToMe';
@@ -60,6 +66,13 @@ const ShortcutIcon = () => (
 	<ClayIcon className="ml-2" fontSize={12} symbol="shortcut" />
 );
 
+const allowedFilters = [
+	'issues',
+	'noIssues',
+	'testrayComponentIds',
+	'testrayTeamIds',
+];
+
 const TestFlowTasks = () => {
 	const [, setTaskSidebarRefresh] = useAtom(taskSidebarRefresh);
 	const {
@@ -71,6 +84,26 @@ const TestFlowTasks = () => {
 	const {updateItemFromList} = useMutate();
 	const [isLoading, setIsLoading] = useState(false);
 	const navigate = useNavigate();
+	const [searchParams, _setSearchParams] = useSearchParams();
+	const filterString = searchParams.get('filter');
+
+	let filter = '';
+
+	if (filterString) {
+		const filterJSONObject = JSON.parse(filterString);
+
+		filter = `?filter=${encodeURIComponent(
+			JSON.stringify(
+				Object.keys(filterJSONObject)
+					.filter((key) => allowedFilters.includes(key))
+					.reduce((object: any, key) => {
+						object[key] = filterJSONObject[key];
+
+						return object;
+					}, {})
+			)
+		)}&filterSchema=subtaskCaseResults`;
+	}
 
 	const [{myUserAccount}] = useContext(TestrayContext);
 
@@ -132,7 +165,7 @@ const TestFlowTasks = () => {
 	) => {
 		setIsLoading(true);
 
-		const {childTestraySubtasks, parentTestraySubtask} =
+		const testraySubtasks =
 			await testraySubtaskImpl.mergedToSubtask(subtasks);
 
 		updateItemFromList(
@@ -155,15 +188,15 @@ const TestFlowTasks = () => {
 
 		Liferay.Util.openToast({
 			message: i18n.sub('x-successfully-merged-with-x-view-x', [
-				childTestraySubtasks[0].name,
-				parentTestraySubtask.name,
-				parentTestraySubtask.name,
+				testraySubtasks?.items[1].name,
+				testraySubtasks?.items[0].name,
+				testraySubtasks?.items[0].name,
 			]),
 			onClick: ({event}) => {
 				const {target} = event;
 
 				if (target?.id === 'testray-link') {
-					navigate(`subtasks/${parentTestraySubtask.id}`);
+					navigate(`subtasks/${testraySubtasks?.items[0].id}`);
 				}
 			},
 		});
@@ -343,11 +376,6 @@ const TestFlowTasks = () => {
 								value: i18n.translate('score'),
 							},
 							{
-								clickable: true,
-								key: 'caseResultAmount',
-								value: i18n.translate('tests'),
-							},
-							{
 								key: 'error',
 								render: (errors: string) =>
 									errors && (
@@ -414,7 +442,7 @@ const TestFlowTasks = () => {
 								value: i18n.translate('assignee'),
 							},
 						],
-						navigateTo: ({id}) => `subtasks/${id}`,
+						navigateTo: ({id}) => `subtasks/${id}${filter}`,
 						rowSelectable: true,
 						rowWrap: true,
 					}}

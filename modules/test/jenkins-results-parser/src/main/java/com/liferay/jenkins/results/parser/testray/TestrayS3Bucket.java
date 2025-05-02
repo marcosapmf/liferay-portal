@@ -14,6 +14,7 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+import com.liferay.jenkins.results.parser.ParallelExecutor;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +28,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -251,6 +255,56 @@ public class TestrayS3Bucket {
 		}
 	}
 
+	public void downloadTestrayS3Objects(File baseDir, List<String> keys)
+		throws TimeoutException {
+
+		List<Callable<File>> callables = new ArrayList<>();
+
+		for (final String key : keys) {
+			Callable<File> callable = new Callable<File>() {
+
+				@Override
+				public File call() {
+					File file = new File(
+						baseDir, key.replaceAll("\\.gz\\s*$", ""));
+
+					if (file.exists()) {
+						return null;
+					}
+
+					TestrayS3Object testrayS3Object = getTestrayS3Object(key);
+
+					if ((testrayS3Object == null) ||
+						!testrayS3Object.exists()) {
+
+						return null;
+					}
+
+					try {
+						testrayS3Object.downloadTo(file);
+
+						return file;
+					}
+					catch (Exception exception) {
+						System.out.println(
+							"Unable to download: " +
+								testrayS3Object.getURLString());
+					}
+
+					return null;
+				}
+
+			};
+
+			callables.add(callable);
+		}
+
+		ParallelExecutor<File> parallelExecutor = new ParallelExecutor<>(
+			callables, _threadPoolExecutor, "downloadTestrayS3Objects");
+
+		parallelExecutor.execute();
+	}
+
 	public String getName() {
 		return _name;
 	}
@@ -273,18 +327,16 @@ public class TestrayS3Bucket {
 	}
 
 	public List<TestrayS3Object> getTestrayS3Objects() {
-		List<TestrayS3Object> testrayS3Objects = new ArrayList<>();
+		return _getTestrayS3Objects(new Storage.BlobListOption[0]);
+	}
 
-		Storage storage = _getStorage();
+	public List<TestrayS3Object> getTestrayS3Objects(String directoryPrefix) {
+		Storage.BlobListOption[] blobListOptions = {
+			Storage.BlobListOption.prefix(directoryPrefix),
+			Storage.BlobListOption.currentDirectory()
+		};
 
-		Page<Blob> blobPage = storage.list(getName());
-
-		for (Blob blob : blobPage.iterateAll()) {
-			testrayS3Objects.add(
-				TestrayS3ObjectFactory.newTestrayS3Object(this, blob));
-		}
-
-		return testrayS3Objects;
+		return _getTestrayS3Objects(blobListOptions);
 	}
 
 	public URL getURL() {
@@ -317,11 +369,30 @@ public class TestrayS3Bucket {
 		return storageOptions.getService();
 	}
 
+	private List<TestrayS3Object> _getTestrayS3Objects(
+		Storage.BlobListOption[] blobListOptions) {
+
+		List<TestrayS3Object> testrayS3Objects = new ArrayList<>();
+
+		Storage storage = _getStorage();
+
+		Page<Blob> blobPage = storage.list(getName(), blobListOptions);
+
+		for (Blob blob : blobPage.iterateAll()) {
+			testrayS3Objects.add(
+				TestrayS3ObjectFactory.newTestrayS3Object(this, blob));
+		}
+
+		return testrayS3Objects;
+	}
+
 	private static final Pattern _fileNamePattern = Pattern.compile(
 		".*\\.(?!gz)(?<fileExtension>([^\\.]+))(?<gzipFileExtension>\\.gz)?");
 	private static Boolean _hasGoogleApplicationCredentials;
 	private static final Map<String, TestrayS3Bucket> _testrayS3Buckets =
 		new HashMap<>();
+	private static final ThreadPoolExecutor _threadPoolExecutor =
+		JenkinsResultsParserUtil.getNewThreadPoolExecutor(16, true);
 
 	private final String _name;
 

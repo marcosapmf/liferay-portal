@@ -198,6 +198,7 @@ interface ObjectDefinition {
 	defaultLanguageId: Liferay.Language.Locale;
 	enableCategorization: boolean;
 	enableComments: boolean;
+	enableFriendlyURLCustomization: boolean;
 	enableIndexSearch: boolean;
 	enableLocalization: boolean;
 	enableObjectEntryDraft: boolean;
@@ -299,6 +300,7 @@ type ObjectFieldBusinessTypeName =
 	| 'Aggregation'
 	| 'Attachment'
 	| 'AutoIncrement'
+	| 'Boolean'
 	| 'Date'
 	| 'DateTime'
 	| 'Decimal'
@@ -312,8 +314,7 @@ type ObjectFieldBusinessTypeName =
 	| 'PrecisionDecimal'
 	| 'Relationship'
 	| 'RichText'
-	| 'Text'
-	| 'Workflow Status';
+	| 'Text';
 
 type ObjectFieldDateRangeFilterSettings = {
 	[key: string]: string;
@@ -505,16 +506,17 @@ type TFilterOperators = {
 	picklistOperators: LabelValueObject[];
 };
 
-interface ViewObjectDefinitionsModals {
+interface ShowObjectDefinitionsModals {
 	addObjectDefinition: boolean;
 	addObjectField: boolean;
 	addObjectFolder: boolean;
-	bindToRootObjectDefinition: boolean;
 	deleteObjectDefinition: boolean;
 	deleteObjectFolder: boolean;
 	editObjectFolder: boolean;
 	importModal: boolean;
 	moveObjectDefinition: boolean;
+	objectDefinitionOnRootModelDeletionNotAllowed: boolean;
 	objectFieldDeletionNotAllowed: boolean;
-	unbindFromRootObjectDefinition: boolean;
 }
+
+type SubmitError = string | null;

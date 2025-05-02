@@ -5,25 +5,12 @@
 
 package com.liferay.layout.content.page.editor.web.internal.display.context;
 
-import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
-import com.liferay.asset.kernel.model.AssetEntry;
-import com.liferay.asset.kernel.model.AssetRendererFactory;
-import com.liferay.asset.kernel.model.ClassType;
-import com.liferay.asset.kernel.model.ClassTypeReader;
-import com.liferay.asset.list.constants.AssetListEntryTypeConstants;
-import com.liferay.asset.list.model.AssetListEntry;
-import com.liferay.asset.list.service.AssetListEntryLocalService;
 import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
-import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
-import com.liferay.info.collection.provider.InfoCollectionProvider;
-import com.liferay.info.collection.provider.SingleFormVariationInfoCollectionProvider;
 import com.liferay.info.item.InfoItemServiceRegistry;
-import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorReturnType;
 import com.liferay.info.search.InfoSearchClassMapperRegistry;
 import com.liferay.item.selector.ItemSelector;
-import com.liferay.item.selector.criteria.InfoListItemSelectorReturnType;
 import com.liferay.layout.content.page.editor.sidebar.panel.ContentPageEditorSidebarPanel;
 import com.liferay.layout.content.page.editor.web.internal.configuration.PageEditorConfiguration;
 import com.liferay.layout.content.page.editor.web.internal.constants.ContentPageEditorActionKeys;
@@ -33,39 +20,33 @@ import com.liferay.layout.content.page.editor.web.internal.manager.FragmentEntry
 import com.liferay.layout.content.page.editor.web.internal.segments.SegmentsExperienceUtil;
 import com.liferay.layout.manager.LayoutLockManager;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
-import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRel;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelLocalService;
 import com.liferay.learn.LearnMessage;
 import com.liferay.learn.LearnMessageUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
-import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -81,11 +62,8 @@ import com.liferay.segments.service.SegmentsExperimentRelLocalService;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -100,13 +78,11 @@ public class ContentPageLayoutEditorDisplayContext
 	extends ContentPageEditorDisplayContext {
 
 	public ContentPageLayoutEditorDisplayContext(
-		AssetListEntryLocalService assetListEntryLocalService,
 		List<ContentPageEditorSidebarPanel> contentPageEditorSidebarPanels,
 		ContentManager contentManager,
 		FragmentCollectionManager fragmentCollectionManager,
 		FragmentEntryLinkManager fragmentEntryLinkManager,
 		FragmentEntryLinkLocalService fragmentEntryLinkLocalService,
-		FragmentEntryLocalService fragmentEntryLocalService,
 		FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
 		GroupLocalService groupLocalService,
 		HttpServletRequest httpServletRequest,
@@ -124,8 +100,9 @@ public class ContentPageLayoutEditorDisplayContext
 			layoutPageTemplateStructureRelLocalService,
 		LayoutPermission layoutPermission,
 		PageEditorConfiguration pageEditorConfiguration, Portal portal,
-		PortletRequest portletRequest, PortletURLFactory portletURLFactory,
-		RenderResponse renderResponse,
+		PortletRequest portletRequest,
+		PortletResourcePermission portletResourcePermission,
+		PortletURLFactory portletURLFactory, RenderResponse renderResponse,
 		SegmentsConfigurationProvider segmentsConfigurationProvider,
 		SegmentsExperienceManager segmentsExperienceManager,
 		SegmentsExperienceLocalService segmentsExperienceLocalService,
@@ -133,27 +110,24 @@ public class ContentPageLayoutEditorDisplayContext
 		SegmentsEntryService segmentsEntryService, Staging staging,
 		StagingGroupHelper stagingGroupHelper,
 		StyleBookEntryLocalService styleBookEntryLocalService,
-		UserLocalService userLocalService,
 		WorkflowDefinitionLinkLocalService workflowDefinitionLinkLocalService) {
 
 		super(
 			contentPageEditorSidebarPanels, contentManager,
 			fragmentCollectionManager, fragmentEntryLinkManager,
-			fragmentEntryLinkLocalService, fragmentEntryLocalService,
-			frontendTokenDefinitionRegistry, httpServletRequest,
-			infoItemServiceRegistry, infoSearchClassMapperRegistry,
-			itemSelector, jsonFactory, language, layoutLocalService,
-			layoutLockManager, layoutPageTemplateEntryLocalService,
-			layoutPageTemplateEntryService, layoutPermission,
-			layoutSetLocalService, pageEditorConfiguration, portal,
-			portletRequest, portletURLFactory, renderResponse,
-			segmentsConfigurationProvider, segmentsExperienceManager,
-			segmentsExperienceLocalService, segmentsExperimentRelLocalService,
-			segmentsEntryService, staging, stagingGroupHelper,
-			styleBookEntryLocalService, userLocalService,
+			fragmentEntryLinkLocalService, frontendTokenDefinitionRegistry,
+			httpServletRequest, infoItemServiceRegistry,
+			infoSearchClassMapperRegistry, itemSelector, jsonFactory, language,
+			layoutLocalService, layoutLockManager,
+			layoutPageTemplateEntryLocalService, layoutPageTemplateEntryService,
+			layoutPermission, layoutSetLocalService, pageEditorConfiguration,
+			portal, portletRequest, portletResourcePermission,
+			portletURLFactory, renderResponse, segmentsConfigurationProvider,
+			segmentsExperienceManager, segmentsExperienceLocalService,
+			segmentsExperimentRelLocalService, segmentsEntryService, staging,
+			stagingGroupHelper, styleBookEntryLocalService,
 			workflowDefinitionLinkLocalService);
 
-		_assetListEntryLocalService = assetListEntryLocalService;
 		_groupLocalService = groupLocalService;
 		_layoutPageTemplateStructureLocalService =
 			layoutPageTemplateStructureLocalService;
@@ -199,14 +173,6 @@ public class ContentPageLayoutEditorDisplayContext
 				"/layout_content_page_editor/delete_segments_experience"));
 		configContext.put("editSegmentsEntryURL", _getEditSegmentsEntryURL());
 		configContext.put("plid", themeDisplay.getPlid());
-
-		Layout layout = themeDisplay.getLayout();
-
-		if (Objects.equals(layout.getType(), LayoutConstants.TYPE_COLLECTION)) {
-			configContext.put(
-				"selectedMappingTypes", _getSelectedMappingTypes());
-		}
-
 		configContext.put(
 			"selectedSegmentsEntryId", String.valueOf(_getSegmentsEntryId()));
 		configContext.put(
@@ -220,10 +186,15 @@ public class ContentPageLayoutEditorDisplayContext
 			SegmentsExperienceUtil.getAvailableSegmentsExperiences(
 				httpServletRequest));
 		stateContext.put("layoutDataList", _getLayoutDataList());
+
+		SegmentsExperience segmentsExperience =
+			segmentsExperienceLocalService.fetchSegmentsExperience(
+				getSegmentsExperienceId());
+
 		stateContext.put(
 			"segmentsExperimentStatus",
 			SegmentsExperienceUtil.getSegmentsExperimentStatus(
-				themeDisplay, getSegmentsExperienceId()));
+				themeDisplay, segmentsExperience.getSegmentsExperienceKey()));
 
 		Map<String, Object> permissionsContext =
 			(Map<String, Object>)stateContext.get("permissions");
@@ -265,98 +236,10 @@ public class ContentPageLayoutEditorDisplayContext
 			_segmentsExperienceId = super.getSegmentsExperienceId();
 		}
 
+		_segmentsExperienceId = getDraftSegmentsExperienceId(
+			themeDisplay.getPlid(), _segmentsExperienceId);
+
 		return _segmentsExperienceId;
-	}
-
-	private AssetListEntry _getAssetListEntry(String collectionPK) {
-		return _assetListEntryLocalService.fetchAssetListEntry(
-			GetterUtil.getLong(collectionPK));
-	}
-
-	private String _getAssetListEntryItemTypeLabel(
-		AssetListEntry assetListEntry) {
-
-		if (Objects.equals(
-				assetListEntry.getAssetEntryType(),
-				AssetEntry.class.getName())) {
-
-			return language.get(httpServletRequest, "multiple-item-types");
-		}
-
-		String assetEntryTypeLabel = ResourceActionsUtil.getModelResource(
-			themeDisplay.getLocale(), assetListEntry.getAssetEntryType());
-
-		long classTypeId = GetterUtil.getLong(
-			assetListEntry.getAssetEntrySubtype(), -1);
-
-		if (classTypeId >= 0) {
-			AssetRendererFactory<?> assetRendererFactory =
-				AssetRendererFactoryRegistryUtil.
-					getAssetRendererFactoryByClassName(
-						assetListEntry.getAssetEntryType());
-
-			if ((assetRendererFactory != null) &&
-				assetRendererFactory.isSupportsClassTypes()) {
-
-				ClassTypeReader classTypeReader =
-					assetRendererFactory.getClassTypeReader();
-
-				try {
-					ClassType classType = classTypeReader.getClassType(
-						classTypeId, themeDisplay.getLocale());
-
-					assetEntryTypeLabel =
-						assetEntryTypeLabel + " - " + classType.getName();
-				}
-				catch (PortalException portalException) {
-					if (_log.isDebugEnabled()) {
-						_log.debug(portalException);
-					}
-				}
-			}
-		}
-
-		return assetEntryTypeLabel;
-	}
-
-	private String _getAssetListEntryItemTypeURL(AssetListEntry assetListEntry)
-		throws Exception {
-
-		PortletURL portletURL = PortletProviderUtil.getPortletURL(
-			portletRequest, AssetListEntry.class.getName(),
-			PortletProvider.Action.EDIT);
-
-		if (portletURL == null) {
-			return StringPool.BLANK;
-		}
-
-		portletURL.setParameter("redirect", themeDisplay.getURLCurrent());
-		portletURL.setParameter("backURL", themeDisplay.getURLCurrent());
-		portletURL.setParameter(
-			"assetListEntryId",
-			String.valueOf(assetListEntry.getAssetListEntryId()));
-
-		return portletURL.toString();
-	}
-
-	private JSONArray _getAssetListEntryLinkedCollectionJSONArray(
-		AssetListEntry assetListEntry) {
-
-		return JSONUtil.put(
-			JSONUtil.put(
-				"classNameId",
-				portal.getClassNameId(AssetListEntry.class.getName())
-			).put(
-				"classPK", String.valueOf(assetListEntry.getAssetListEntryId())
-			).put(
-				"itemSubtype", assetListEntry.getAssetEntrySubtype()
-			).put(
-				"itemType", assetListEntry.getAssetEntryType()
-			).put(
-				"title", assetListEntry.getTitle()
-			).put(
-				"type", InfoListItemSelectorReturnType.class.getName()
-			));
 	}
 
 	private String _getEditSegmentsEntryURL() throws Exception {
@@ -390,94 +273,18 @@ public class ContentPageLayoutEditorDisplayContext
 		return _editSegmentsEntryURL;
 	}
 
-	private InfoCollectionProvider<?> _getInfoCollectionProvider(
-		String collectionPK) {
-
-		for (InfoCollectionProvider<?> infoCollectionProvider :
-				(List<InfoCollectionProvider<?>>)
-					(List<?>)infoItemServiceRegistry.getAllInfoItemServices(
-						InfoCollectionProvider.class)) {
-
-			if (Objects.equals(infoCollectionProvider.getKey(), collectionPK)) {
-				return infoCollectionProvider;
-			}
-		}
-
-		return null;
-	}
-
-	private String _getInfoCollectionProviderItemTypeLabel(
-		InfoCollectionProvider<?> infoCollectionProvider) {
-
-		String className = infoCollectionProvider.getCollectionItemClassName();
-
-		if (Objects.equals(className, AssetEntry.class.getName())) {
-			return language.get(httpServletRequest, "multiple-item-types");
-		}
-
-		if (Validator.isNotNull(className)) {
-			return ResourceActionsUtil.getModelResource(
-				themeDisplay.getLocale(), className);
-		}
-
-		return StringPool.BLANK;
-	}
-
-	private JSONArray _getInfoCollectionProviderLinkedCollectionJSONArray(
-		InfoCollectionProvider<?> infoCollectionProvider) {
-
-		return JSONUtil.put(
-			JSONUtil.put(
-				"itemSubtype",
-				() -> {
-					if (infoCollectionProvider instanceof
-							SingleFormVariationInfoCollectionProvider) {
-
-						SingleFormVariationInfoCollectionProvider<?>
-							singleFormVariationInfoCollectionProvider =
-								(SingleFormVariationInfoCollectionProvider<?>)
-									infoCollectionProvider;
-
-						return singleFormVariationInfoCollectionProvider.
-							getFormVariationKey();
-					}
-
-					return null;
-				}
-			).put(
-				"itemType", infoCollectionProvider.getCollectionItemClassName()
-			).put(
-				"key", infoCollectionProvider.getKey()
-			).put(
-				"title",
-				infoCollectionProvider.getLabel(LocaleUtil.getDefault())
-			).put(
-				"type", InfoListProviderItemSelectorReturnType.class.getName()
-			));
-	}
-
 	private List<Map<String, Object>> _getLayoutDataList() throws Exception {
 		LayoutPageTemplateStructure layoutPageTemplateStructure =
 			_layoutPageTemplateStructureLocalService.
 				fetchLayoutPageTemplateStructure(
 					themeDisplay.getScopeGroupId(), themeDisplay.getPlid());
 
-		if (layoutPageTemplateStructure == null) {
-			return Collections.emptyList();
-		}
-
-		List<Map<String, Object>> layoutDataList = new ArrayList<>();
-
-		List<LayoutPageTemplateStructureRel> layoutPageTemplateStructureRels =
+		return TransformUtil.transform(
 			_layoutPageTemplateStructureRelLocalService.
 				getLayoutPageTemplateStructureRels(
 					layoutPageTemplateStructure.
-						getLayoutPageTemplateStructureId());
-
-		for (LayoutPageTemplateStructureRel layoutPageTemplateStructureRel :
-				layoutPageTemplateStructureRels) {
-
-			layoutDataList.add(
+						getLayoutPageTemplateStructureId()),
+			layoutPageTemplateStructureRel ->
 				HashMapBuilder.<String, Object>put(
 					"layoutData",
 					JSONFactoryUtil.createJSONObject(
@@ -486,9 +293,6 @@ public class ContentPageLayoutEditorDisplayContext
 					"segmentsExperienceId",
 					layoutPageTemplateStructureRel.getSegmentsExperienceId()
 				).build());
-		}
-
-		return layoutDataList;
 	}
 
 	private long _getSegmentsEntryId() {
@@ -503,116 +307,8 @@ public class ContentPageLayoutEditorDisplayContext
 		return _segmentsEntryId;
 	}
 
-	private Map<String, Object> _getSelectedMappingTypes() throws Exception {
-		Layout layout = themeDisplay.getLayout();
-
-		if (!Objects.equals(
-				layout.getType(), LayoutConstants.TYPE_COLLECTION)) {
-
-			return Collections.emptyMap();
-		}
-
-		String collectionPK = layout.getTypeSettingsProperty("collectionPK");
-		String collectionType = layout.getTypeSettingsProperty(
-			"collectionType");
-
-		if (Validator.isNull(collectionPK) ||
-			Validator.isNull(collectionType)) {
-
-			return Collections.emptyMap();
-		}
-
-		String itemTypeLabel = StringPool.BLANK;
-		JSONArray linkedCollectionJSONArray = JSONFactoryUtil.createJSONArray();
-		String subtypeLabel = StringPool.BLANK;
-		String typeLabel = StringPool.BLANK;
-		String subtypeURL = StringPool.BLANK;
-
-		if (Objects.equals(
-				collectionType,
-				InfoListProviderItemSelectorReturnType.class.getName())) {
-
-			InfoCollectionProvider<?> infoCollectionProvider =
-				_getInfoCollectionProvider(collectionPK);
-
-			if (infoCollectionProvider != null) {
-				itemTypeLabel = _getInfoCollectionProviderItemTypeLabel(
-					infoCollectionProvider);
-				linkedCollectionJSONArray =
-					_getInfoCollectionProviderLinkedCollectionJSONArray(
-						infoCollectionProvider);
-				subtypeLabel = infoCollectionProvider.getLabel(
-					themeDisplay.getLocale());
-			}
-
-			typeLabel = language.get(httpServletRequest, "collection-provider");
-		}
-		else if (Objects.equals(
-					collectionType,
-					InfoListItemSelectorReturnType.class.getName())) {
-
-			AssetListEntry assetListEntry = _getAssetListEntry(collectionPK);
-
-			if (assetListEntry != null) {
-				itemTypeLabel = _getAssetListEntryItemTypeLabel(assetListEntry);
-				linkedCollectionJSONArray =
-					_getAssetListEntryLinkedCollectionJSONArray(assetListEntry);
-				subtypeLabel = assetListEntry.getTitle();
-				subtypeURL = _getAssetListEntryItemTypeURL(assetListEntry);
-			}
-
-			if (assetListEntry.getType() ==
-					AssetListEntryTypeConstants.TYPE_DYNAMIC) {
-
-				typeLabel = language.get(
-					httpServletRequest, "dynamic-collection");
-			}
-			else {
-				typeLabel = language.get(
-					httpServletRequest, "manual-collection");
-			}
-		}
-
-		return HashMapBuilder.<String, Object>put(
-			"itemType",
-			HashMapBuilder.<String, Object>put(
-				"groupItemTypeTitle",
-				language.get(httpServletRequest, "item-type")
-			).put(
-				"label", itemTypeLabel
-			).build()
-		).put(
-			"linkedCollection", linkedCollectionJSONArray
-		).put(
-			"mappingDescription",
-			language.get(
-				httpServletRequest,
-				"this-page-is-associated-to-the-following-collection")
-		).put(
-			"subtype",
-			HashMapBuilder.<String, Object>put(
-				"groupSubtypeTitle", language.get(httpServletRequest, "name")
-			).put(
-				"label", subtypeLabel
-			).put(
-				"url", subtypeURL
-			).build()
-		).put(
-			"type",
-			HashMapBuilder.<String, Object>put(
-				"groupTypeTitle", language.get(httpServletRequest, "type")
-			).put(
-				"label", typeLabel
-			).build()
-		).build();
-	}
-
 	private boolean _hasEditSegmentsEntryPermission() throws Exception {
-		if (Validator.isNull(_getEditSegmentsEntryURL())) {
-			return false;
-		}
-
-		return true;
+		return Validator.isNotNull(_getEditSegmentsEntryURL());
 	}
 
 	private Boolean _isLockedSegmentsExperience(long segmentsExperienceId)
@@ -664,8 +360,9 @@ public class ContentPageLayoutEditorDisplayContext
 		if (segmentsExperience != null) {
 			List<SegmentsExperimentRel> segmentsExperimentRels =
 				_segmentsExperimentRelLocalService.
-					getSegmentsExperimentRelsBySegmentsExperienceId(
-						segmentsExperience.getSegmentsExperienceId());
+					getSegmentsExperimentRelsBySegmentsExperienceKey(
+						segmentsExperience.getSegmentsExperienceKey(),
+						themeDisplay.getPlid());
 
 			if (segmentsExperimentRels.isEmpty()) {
 				return false;
@@ -688,7 +385,6 @@ public class ContentPageLayoutEditorDisplayContext
 	private static final Log _log = LogFactoryUtil.getLog(
 		ContentPageLayoutEditorDisplayContext.class);
 
-	private final AssetListEntryLocalService _assetListEntryLocalService;
 	private String _editSegmentsEntryURL;
 	private final GroupLocalService _groupLocalService;
 	private final LayoutPageTemplateStructureLocalService

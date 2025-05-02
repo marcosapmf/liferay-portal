@@ -1,0 +1,2773 @@
+{
+	"configuration": {
+		"className": "com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition",
+		"parameters": {
+			"containsHeaders": "true",
+			"createStrategy": "UPSERT",
+			"onErrorFail": "false",
+			"updateStrategy": "UPDATE"
+		},
+		"taskItemDelegateName": "DEFAULT"
+	},
+	"items": [
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableLocalization": true,
+			"enableObjectEntryHistory": false,
+			"externalReferenceCode": "P2S3_ASSESSMENT",
+			"label": {
+				"en_US": "P2S3 Assessment"
+			},
+			"modifiable": true,
+			"name": "P2S3Assessment",
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "DESCRIPTION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Description"
+					},
+					"localized": true,
+					"name": "description",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "DURATION_MINUTES",
+					"indexed": false,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Duration (Minutes)"
+					},
+					"localized": false,
+					"name": "durationMinutes",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"objectFieldSettings": [
+						{
+							"name": "uniqueValues",
+							"value": true
+						}
+					],
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": true
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "URL",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "URL"
+					},
+					"localized": true,
+					"name": "url",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"objectRelationships": [
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_ASSESSMENT_TO_P2S3_LEARNING_PATHS",
+					"label": {
+						"en_US": "P2S3 Assessment to P2S3 Learning Paths"
+					},
+					"name": "p2s3AssessmentToP2S3LearningPaths",
+					"objectDefinitionExternalReferenceCode1": "P2S3_ASSESSMENT",
+					"objectDefinitionExternalReferenceCode2": "P2S3_LEARNING_PATH",
+					"type": "oneToMany"
+				}
+			],
+			"pluralLabel": {
+				"en_US": "P2S3 Assessments"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3assessments",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "name"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableLocalization": true,
+			"enableObjectEntryHistory": false,
+			"externalReferenceCode": "P2S3_BADGE",
+			"label": {
+				"en_US": "P2S3 Badge"
+			},
+			"modifiable": true,
+			"name": "P2S3Badge",
+			"objectFields": [
+				{
+					"DBType": "Long",
+					"businessType": "Attachment",
+					"externalReferenceCode": "IMAGE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Image"
+					},
+					"localized": false,
+					"name": "image",
+					"objectFieldSettings": [
+						{
+							"name": "acceptedFileExtensions",
+							"value": "jpeg, jpg, pdf, png"
+						},
+						{
+							"name": "fileSource",
+							"value": "documentsAndMedia"
+						},
+						{
+							"name": "maximumFileSize",
+							"value": 100
+						}
+					],
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Long",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"objectFieldSettings": [
+						{
+							"name": "uniqueValues",
+							"value": true
+						}
+					],
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": true
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "YEAR",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Year"
+					},
+					"localized": false,
+					"name": "year",
+					"readOnly": "false",
+					"required": true,
+					"type": "Integer"
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"pluralLabel": {
+				"en_US": "P2S3 Badges"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3badges",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "name"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableLocalization": true,
+			"enableObjectEntryHistory": false,
+			"externalReferenceCode": "P2S3_CERTIFICATION",
+			"label": {
+				"en_US": "P2S3 Certification"
+			},
+			"modifiable": true,
+			"name": "P2S3Certification",
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "DESCRIPTION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Description"
+					},
+					"localized": true,
+					"name": "description",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"objectFieldSettings": [
+						{
+							"name": "uniqueValues",
+							"value": true
+						}
+					],
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": true
+				},
+				{
+					"DBType": "String",
+					"businessType": "MultiselectPicklist",
+					"externalReferenceCode": "PERSONA",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Persona"
+					},
+					"listTypeDefinitionExternalReferenceCode": "P2S3_PERSONAS",
+					"localized": false,
+					"name": "persona",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"objectRelationships": [
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_CERTIFICATION_TO_P2S3_ASSESSMENTS",
+					"label": {
+						"en_US": "P2S3 Certification to P2S3 Assessments"
+					},
+					"name": "p2s3CertificationToP2S3Assessments",
+					"objectDefinitionExternalReferenceCode1": "P2S3_CERTIFICATION",
+					"objectDefinitionExternalReferenceCode2": "P2S3_ASSESSMENT",
+					"type": "oneToMany"
+				}
+			],
+			"pluralLabel": {
+				"en_US": "P2S3 Certifications"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3certifications",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "name"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableComments": true,
+			"enableLocalization": true,
+			"enableObjectEntryDraft": true,
+			"externalReferenceCode": "P2S3_COURSE",
+			"label": {
+				"en_US": "P2S3 Course"
+			},
+			"modifiable": true,
+			"name": "P2S3Course",
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "DESCRIPTION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Description"
+					},
+					"localized": true,
+					"name": "description",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Picklist",
+					"externalReferenceCode": "EXPERTISE_LEVEL",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Expertise Level"
+					},
+					"listTypeDefinitionExternalReferenceCode": "P2S3_EXPERTISE_LEVELS",
+					"localized": false,
+					"name": "expertiseLevel",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Long",
+					"businessType": "Attachment",
+					"externalReferenceCode": "IMAGE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Image"
+					},
+					"localized": false,
+					"name": "image",
+					"objectFieldSettings": [
+						{
+							"name": "acceptedFileExtensions",
+							"value": "jpeg, jpg, pdf, png"
+						},
+						{
+							"name": "fileSource",
+							"value": "documentsAndMedia"
+						},
+						{
+							"name": "maximumFileSize",
+							"value": 100
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Long",
+					"unique": false
+				},
+				{
+					"DBType": "Clob",
+					"businessType": "RichText",
+					"externalReferenceCode": "INTRODUCTION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Introduction"
+					},
+					"localized": true,
+					"name": "introduction",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "MultiselectPicklist",
+					"externalReferenceCode": "PERSONA",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Persona"
+					},
+					"listTypeDefinitionExternalReferenceCode": "P2S3_PERSONAS",
+					"localized": false,
+					"name": "persona",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "POSITION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Position"
+					},
+					"localized": false,
+					"name": "position",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"objectRelationships": [
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_COURSE_TO_P2S3_ENROLLMENTS",
+					"label": {
+						"en_US": "P2S3 Course to P2S3 Enrollments"
+					},
+					"name": "p2s3CourseToP2S3Enrollments",
+					"objectDefinitionExternalReferenceCode1": "P2S3_COURSE",
+					"objectDefinitionExternalReferenceCode2": "P2S3_ENROLLMENT",
+					"type": "oneToMany"
+				},
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_COURSE_TO_P2S3_MODULES",
+					"label": {
+						"en_US": "P2S3 Course to P2S3 Modules"
+					},
+					"name": "p2s3CourseToP2S3Modules",
+					"objectDefinitionExternalReferenceCode1": "P2S3_COURSE",
+					"objectDefinitionExternalReferenceCode2": "P2S3_MODULE",
+					"type": "oneToMany"
+				},
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_COURSE_TO_P2S3_LEARNING_PATH_STEP",
+					"label": {
+						"en_US": "P2S3 Course to P2S3 Learning Path Step"
+					},
+					"name": "p2s3CourseToP2S3LPSteps",
+					"objectDefinitionExternalReferenceCode1": "P2S3_COURSE",
+					"objectDefinitionExternalReferenceCode2": "P2S3_LEARNING_PATH_STEP",
+					"type": "oneToMany"
+				}
+			],
+			"pluralLabel": {
+				"en_US": "P2S3 Courses"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3courses",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "title"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableObjectEntryDraft": false,
+			"externalReferenceCode": "P2S3_ENROLLMENT",
+			"label": {
+				"en_US": "P2S3 Enrollment"
+			},
+			"modifiable": true,
+			"name": "P2S3Enrollment",
+			"objectFields": [
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"externalReferenceCode": "ACTIVE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Active"
+					},
+					"localized": false,
+					"name": "active",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Boolean",
+					"unique": false
+				},
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "COMPLETED_ASSET_IDS",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Completed Asset Ids"
+					},
+					"localized": false,
+					"name": "completedAssetIds",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "COMPLETED_STEP_IDS",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Completed Step Ids"
+					},
+					"localized": false,
+					"name": "completedStepIds",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"pluralLabel": {
+				"en_US": "P2S3 Enrollments"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3enrollments",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			}
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableCategorization": false,
+			"enableLocalization": false,
+			"enableObjectEntryDraft": false,
+			"externalReferenceCode": "P2S3_EXAM_RESULT",
+			"label": {
+				"en_US": "P2S3 Exam Result"
+			},
+			"modifiable": true,
+			"name": "P2S3ExamResult",
+			"objectFields": [
+				{
+					"DBType": "DateTime",
+					"businessType": "DateTime",
+					"externalReferenceCode": "DATE",
+					"indexed": false,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Date"
+					},
+					"localized": false,
+					"name": "date",
+					"objectFieldSettings": [
+						{
+							"name": "timeStorage",
+							"value": "convertToUTC"
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "DateTime",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "EMAIL",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "E-mail"
+					},
+					"localized": false,
+					"name": "email",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "EXAM_NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Exam Name"
+					},
+					"localized": false,
+					"name": "examName",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "FIRST_NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "First Name"
+					},
+					"localized": false,
+					"name": "firstName",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "LAST_NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Last Name"
+					},
+					"localized": false,
+					"name": "lastName",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Picklist",
+					"externalReferenceCode": "RESULT",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Result"
+					},
+					"listTypeDefinitionExternalReferenceCode": "P2S3_RESULTS",
+					"localized": false,
+					"name": "result",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Double",
+					"businessType": "Decimal",
+					"externalReferenceCode": "SCORE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "",
+					"label": {
+						"en_US": "Score"
+					},
+					"localized": false,
+					"name": "score",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Double",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TEST_NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Test Name"
+					},
+					"localized": false,
+					"name": "testName",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"pluralLabel": {
+				"en_US": "P2S3 Exam Results"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3examresults",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			}
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableCategorization": false,
+			"enableLocalization": false,
+			"enableObjectEntryDraft": false,
+			"externalReferenceCode": "P2S3_EXAM_RESULTS_SYNCHRONIZATION",
+			"label": {
+				"en_US": "P2S3 Exam Results Synchronization"
+			},
+			"modifiable": true,
+			"name": "P2S3ExamResultsSynchronization",
+			"objectActions": [
+				{
+					"active": true,
+					"label": {
+						"en_US": "Synchronize"
+					},
+					"name": "synchronize",
+					"objectActionExecutorKey": "function#liferay-learn-etc-spring-boot-object-action-exam-results-synchronization",
+					"objectActionTriggerKey": "onAfterAdd",
+					"parameters": {
+					}
+				}
+			],
+			"objectFields": [
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "EXAM_RESULT_AMOUNT",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Exam Result Amount"
+					},
+					"localized": false,
+					"name": "examResultAmount",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"system": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "Long",
+					"businessType": "LongInteger",
+					"externalReferenceCode": "EXECUTION_TIME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Execution Time"
+					},
+					"localized": false,
+					"name": "executionTime",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Long",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Picklist",
+					"externalReferenceCode": "SYNCHRONIZATION_STATUS",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Synchronization Status"
+					},
+					"listTypeDefinitionExternalReferenceCode": "P2S3_SYNCHRONIZATION_STATUS",
+					"localized": false,
+					"name": "synchronizationStatus",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"pluralLabel": {
+				"en_US": "P2S3 Exam Results Synchronizations"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3examresultssynchronizations",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			}
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableLocalization": true,
+			"enableObjectEntryDraft": false,
+			"externalReferenceCode": "P2S3_EXTERNAL_MEDIA",
+			"label": {
+				"en_US": "P2S3 External Media"
+			},
+			"modifiable": true,
+			"name": "P2S3ExternalMedia",
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "DESCRIPTION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Description"
+					},
+					"localized": true,
+					"name": "description",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "DURATION_MINUTES",
+					"indexed": false,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Duration (Minutes)"
+					},
+					"localized": false,
+					"name": "durationMinutes",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "URL",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "URL"
+					},
+					"localized": true,
+					"name": "url",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"objectRelationships": [
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_EXTERNAL_MEDIA_TO_P2S3_LEARNING_PATH_STEP",
+					"label": {
+						"en_US": "P2S3 External Medias to P2S3 Learning Path Steps"
+					},
+					"name": "p2S3ExtMediaToP2s3LPSteps",
+					"objectDefinitionExternalReferenceCode1": "P2S3_EXTERNAL_MEDIA",
+					"objectDefinitionExternalReferenceCode2": "P2S3_LEARNING_PATH_STEP",
+					"type": "oneToMany"
+				}
+			],
+			"pluralLabel": {
+				"en_US": "P2S3 External Medias"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3externalmedias",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "name"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableLocalization": true,
+			"enableObjectEntryHistory": false,
+			"externalReferenceCode": "P2S3_FAQ_QUESTION",
+			"label": {
+				"en_US": "P2S3 FAQ Question"
+			},
+			"modifiable": true,
+			"name": "P2S3FAQQuestion",
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "RichText",
+					"externalReferenceCode": "ANSWER",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Answer"
+					},
+					"localized": true,
+					"name": "answer",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "POSITION",
+					"indexed": false,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Position"
+					},
+					"localized": false,
+					"name": "position",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"objectLayouts": [
+				{
+					"defaultObjectLayout": true,
+					"name": {
+						"en_US": "FAQ Question"
+					},
+					"objectDefinitionExternalReferenceCode": "P2S3_FAQ_QUESTION",
+					"objectLayoutTabs": [
+						{
+							"name": {
+								"en_US": "Question"
+							},
+							"objectLayoutBoxes": [
+								{
+									"collapsable": false,
+									"name": {
+										"en_US": "Main"
+									},
+									"objectLayoutRows": [
+										{
+											"objectLayoutColumns": [
+												{
+													"objectFieldName": "title",
+													"priority": 0,
+													"size": 12
+												}
+											],
+											"priority": 0
+										},
+										{
+											"objectLayoutColumns": [
+												{
+													"objectFieldName": "answer",
+													"priority": 0,
+													"size": 12
+												}
+											],
+											"priority": 0
+										},
+										{
+											"objectLayoutColumns": [
+												{
+													"objectFieldName": "position",
+													"priority": 0,
+													"size": 4
+												}
+											],
+											"priority": 0
+										}
+									],
+									"priority": 0,
+									"type": "regular"
+								}
+							],
+							"priority": 0
+						}
+					]
+				}
+			],
+			"pluralLabel": {
+				"en_US": "P2S3 FAQ Questions"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3faqquestions",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "title"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableComments": false,
+			"enableLocalization": true,
+			"enableObjectEntryDraft": false,
+			"externalReferenceCode": "P2S3_FAQ_TOPIC",
+			"label": {
+				"en_US": "P2S3 FAQ Topic"
+			},
+			"modifiable": true,
+			"name": "P2S3FAQTopic",
+			"objectFields": [
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "POSITION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Position"
+					},
+					"localized": false,
+					"name": "position",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"objectFieldSettings": [
+						{
+							"name": "uniqueValues",
+							"value": true
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": true
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"objectLayouts": [
+				{
+					"defaultObjectLayout": true,
+					"name": {
+						"en_US": "P2S3 FAQ Topic"
+					},
+					"objectDefinitionExternalReferenceCode": "P2S3_FAQ_TOPIC",
+					"objectLayoutTabs": [
+						{
+							"name": {
+								"en_US": "Topic"
+							},
+							"objectLayoutBoxes": [
+								{
+									"collapsable": false,
+									"name": {
+										"en_US": "Main"
+									},
+									"objectLayoutRows": [
+										{
+											"objectLayoutColumns": [
+												{
+													"objectFieldName": "title",
+													"priority": 0,
+													"size": 12
+												}
+											],
+											"priority": 0
+										},
+										{
+											"objectLayoutColumns": [
+												{
+													"objectFieldName": "position",
+													"priority": 0,
+													"size": 4
+												}
+											],
+											"priority": 0
+										}
+									],
+									"priority": 0,
+									"type": "regular"
+								}
+							],
+							"priority": 0
+						},
+						{
+							"name": {
+								"en_US": "Questions"
+							},
+							"objectRelationshipExternalReferenceCode": "P2S3_TOPIC_TO_P2S3_QUESTIONS",
+							"priority": 0
+						}
+					]
+				}
+			],
+			"objectRelationships": [
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_TOPIC_TO_P2S3_QUESTIONS",
+					"label": {
+						"en_US": "Topic"
+					},
+					"name": "p2s3TopicToP2S3Questions",
+					"objectDefinitionExternalReferenceCode1": "P2S3_FAQ_TOPIC",
+					"objectDefinitionExternalReferenceCode2": "P2S3_FAQ_QUESTION",
+					"type": "oneToMany"
+				}
+			],
+			"panelCategoryKey": "site_administration.content",
+			"parameterRequired": false,
+			"pluralLabel": {
+				"en_US": "P2S3 FAQ Topics"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3faqtopics",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"system": false,
+			"titleObjectFieldName": "title"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableComments": true,
+			"enableLocalization": true,
+			"enableObjectEntryDraft": true,
+			"externalReferenceCode": "P2S3_KNOWLEDGE_ARTICLE",
+			"label": {
+				"en_US": "P2S3 Knowledge Article"
+			},
+			"modifiable": true,
+			"name": "P2S3KnowledgeArticle",
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "RichText",
+					"externalReferenceCode": "CONTENT",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Content"
+					},
+					"localized": true,
+					"name": "content",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Picklist",
+					"externalReferenceCode": "KNOWLEDGE_ARTICLE_TYPE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Knowledge Article Type"
+					},
+					"listTypeDefinitionExternalReferenceCode": "P2S3_KNOWLEDGE_ARTICLE_TYPES",
+					"localized": false,
+					"name": "knowledgeArticleType",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"externalReferenceCode": "LEGACY",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Legacy"
+					},
+					"localized": false,
+					"name": "legacy",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Boolean",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"externalReferenceCode": "SHOW_DISCLAIMER_MESSAGE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Show Disclaimer Message"
+					},
+					"localized": false,
+					"name": "showDisclaimerMessage",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Boolean",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TICKET_NUMBER",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Ticket Number"
+					},
+					"localized": false,
+					"name": "ticketNumber",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "URL",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "URL"
+					},
+					"localized": false,
+					"name": "url",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"pluralLabel": {
+				"en_US": "P2S3 Knowledge Articles"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3knowledgearticles",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "name"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableComments": true,
+			"enableLocalization": true,
+			"enableObjectEntryDraft": true,
+			"externalReferenceCode": "P2S3_LEARNING_PATH",
+			"label": {
+				"en_US": "P2S3 Learning Path"
+			},
+			"modifiable": true,
+			"name": "P2S3LearningPath",
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "RichText",
+					"externalReferenceCode": "CONTENT",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Content"
+					},
+					"localized": true,
+					"name": "content",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "DESCRIPTION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Description"
+					},
+					"localized": true,
+					"name": "description",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Picklist",
+					"externalReferenceCode": "EXPERTISE_LEVEL",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Expertise Level"
+					},
+					"listTypeDefinitionExternalReferenceCode": "P2S3_EXPERTISE_LEVELS",
+					"localized": false,
+					"name": "expertiseLevel",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Long",
+					"businessType": "Attachment",
+					"externalReferenceCode": "IMAGE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Image"
+					},
+					"localized": false,
+					"name": "image",
+					"objectFieldSettings": [
+						{
+							"name": "acceptedFileExtensions",
+							"value": "jpeg, jpg, pdf, png"
+						},
+						{
+							"name": "fileSource",
+							"value": "documentsAndMedia"
+						},
+						{
+							"name": "maximumFileSize",
+							"value": 100
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Long",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "MultiselectPicklist",
+					"externalReferenceCode": "PERSONA",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Persona"
+					},
+					"listTypeDefinitionExternalReferenceCode": "P2S3_PERSONAS",
+					"localized": false,
+					"name": "persona",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"objectRelationships": [
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_LEARNING_PATH_TO_P2S3_ENROLLMENTS",
+					"label": {
+						"en_US": "P2S3 Learning Path to P2S3 Learning Path Steps"
+					},
+					"name": "p2s3LearningPathToP2S3Enrollments",
+					"objectDefinitionExternalReferenceCode1": "P2S3_LEARNING_PATH",
+					"objectDefinitionExternalReferenceCode2": "P2S3_ENROLLMENT",
+					"type": "oneToMany"
+				},
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_LEARNING_PATH_TO_P2S3_LEARNING_PATH_STEPS",
+					"label": {
+						"en_US": "P2S3 Learning Path to P2S3 Learning Path Steps"
+					},
+					"name": "p2s3LearningPathToP2S3LearningPathSteps",
+					"objectDefinitionExternalReferenceCode1": "P2S3_LEARNING_PATH",
+					"objectDefinitionExternalReferenceCode2": "P2S3_LEARNING_PATH_STEP",
+					"type": "oneToMany"
+				}
+			],
+			"pluralLabel": {
+				"en_US": "P2S3 Learning Paths"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3learningpaths",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "name"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableLocalization": true,
+			"enableObjectEntryDraft": true,
+			"externalReferenceCode": "P2S3_LEARNING_PATH_STEP",
+			"label": {
+				"en_US": "P2S3 Learning Path Step"
+			},
+			"modifiable": true,
+			"name": "P2S3LearningPathStep",
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "DESCRIPTION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Description"
+					},
+					"localized": true,
+					"name": "description",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "POSITION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Position"
+					},
+					"localized": false,
+					"name": "position",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Picklist",
+					"externalReferenceCode": "STEP_TYPE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Step Type"
+					},
+					"listTypeDefinitionExternalReferenceCode": "P2S3_STEP_TYPES",
+					"localized": false,
+					"name": "stepType",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"pluralLabel": {
+				"en_US": "P2S3 Learning Path Steps"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3learningpathsteps",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "name"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableComments": true,
+			"enableLocalization": true,
+			"enableObjectEntryDraft": true,
+			"externalReferenceCode": "P2S3_LESSON",
+			"label": {
+				"en_US": "P2S3 Lesson"
+			},
+			"modifiable": true,
+			"name": "P2S3Lesson",
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "RichText",
+					"externalReferenceCode": "CONTENT",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Content"
+					},
+					"localized": true,
+					"name": "content",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "DESCRIPTION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Description"
+					},
+					"localized": true,
+					"name": "description",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "DURATION_MINUTES",
+					"indexed": false,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Duration (Minutes)"
+					},
+					"localized": false,
+					"name": "durationMinutes",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "Long",
+					"businessType": "Attachment",
+					"externalReferenceCode": "MEDIA",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Media"
+					},
+					"localized": false,
+					"name": "media",
+					"objectFieldSettings": [
+						{
+							"name": "acceptedFileExtensions",
+							"value": "avi, mkv, mov, mp4, mpeg, mpg, wmv"
+						},
+						{
+							"name": "fileSource",
+							"value": "documentsAndMedia"
+						},
+						{
+							"name": "maximumFileSize",
+							"value": 100
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Long",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "POSITION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Position"
+					},
+					"localized": false,
+					"name": "position",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"pluralLabel": {
+				"en_US": "P2S3 Lessons"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3lessons",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "title"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableComments": false,
+			"enableLocalization": true,
+			"enableObjectEntryDraft": true,
+			"externalReferenceCode": "P2S3_MODULE",
+			"label": {
+				"en_US": "P2S3 Module"
+			},
+			"modifiable": true,
+			"name": "P2S3Module",
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "DESCRIPTION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Description"
+					},
+					"localized": true,
+					"name": "description",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "Clob",
+					"businessType": "RichText",
+					"externalReferenceCode": "INTRODUCTION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Introduction"
+					},
+					"localized": true,
+					"name": "introduction",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "POSITION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Position"
+					},
+					"localized": false,
+					"name": "position",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TITLE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"objectRelationships": [
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_MODULE_TO_P2S3_LESSONS",
+					"label": {
+						"en_US": "P2S3 Module to P2S3 Lessons"
+					},
+					"name": "p2s3ModuleToP2S3Lessons",
+					"objectDefinitionExternalReferenceCode1": "P2S3_MODULE",
+					"objectDefinitionExternalReferenceCode2": "P2S3_LESSON",
+					"type": "oneToMany"
+				},
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_MODULE_TO_P2S3_QUIZZES",
+					"label": {
+						"en_US": "P2S3 Module to P2S3 Quizzes"
+					},
+					"name": "p2s3ModuleToP2S3Quizzes",
+					"objectDefinitionExternalReferenceCode1": "P2S3_MODULE",
+					"objectDefinitionExternalReferenceCode2": "P2S3_QUIZ",
+					"type": "oneToMany"
+				}
+			],
+			"pluralLabel": {
+				"en_US": "P2S3 Modules"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/p2s3modules",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "title"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableLocalization": true,
+			"externalReferenceCode": "P2S3_QUIZ",
+			"label": {
+				"en_US": "P2S3 Quiz"
+			},
+			"modifiable": true,
+			"name": "P2S3Quiz",
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "DESCRIPTION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Description"
+					},
+					"localized": true,
+					"name": "description",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "DURATION_MINUTES",
+					"indexed": false,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Duration (Minutes)"
+					},
+					"localized": false,
+					"name": "durationMinutes",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"externalReferenceCode": "KNOWLEDGE_CHECK",
+					"indexed": true,
+					"label": {
+						"en_US": "Knowledge Check"
+					},
+					"localized": false,
+					"name": "knowledgeCheck",
+					"readOnly": "false",
+					"type": "Boolean"
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "PASSING_SCORE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Passing Score"
+					},
+					"localized": false,
+					"name": "passingScore",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "POSITION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Position "
+					},
+					"localized": false,
+					"name": "position",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "TITLE",
+					"indexed": false,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Title"
+					},
+					"localized": true,
+					"name": "title",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"objectRelationships": [
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_QUIZ_TO_P2S3_BADGES",
+					"label": {
+						"en_US": "P2S3 Quiz to P2S3 Badges"
+					},
+					"name": "p2s3QuizToP2S3Badges",
+					"objectDefinitionExternalReferenceCode1": "P2S3_QUIZ",
+					"objectDefinitionExternalReferenceCode2": "P2S3_BADGE",
+					"type": "oneToMany"
+				},
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_QUIZ_TO_P2S3_QUIZ_QUESTIONS",
+					"label": {
+						"en_US": "P2S3 Quiz to P2S3 Quiz Questions"
+					},
+					"name": "p2s3QuizToP2S3QuizQuestions",
+					"objectDefinitionExternalReferenceCode1": "P2S3_QUIZ",
+					"objectDefinitionExternalReferenceCode2": "P2S3_QUIZ_QUESTION",
+					"type": "oneToMany"
+				},
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_QUIZ_TO_P2S3_QUIZ_RESULTS",
+					"label": {
+						"en_US": "P2S3 Quiz to P2S3 Quiz Results"
+					},
+					"name": "p2s3QuizToP2S3QuizResults",
+					"objectDefinitionExternalReferenceCode1": "P2S3_QUIZ",
+					"objectDefinitionExternalReferenceCode2": "P2S3_QUIZ_RESULT",
+					"type": "oneToMany"
+				}
+			],
+			"pluralLabel": {
+				"en_US": "P2S3 Quizzes"
+			},
+			"restContextPath": "/o/c/p2s3quizzes",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "name"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableLocalization": true,
+			"externalReferenceCode": "P2S3_QUIZ_ANSWER",
+			"label": {
+				"en_US": "P2S3 Quiz Answer"
+			},
+			"modifiable": true,
+			"name": "P2S3QuizAnswer",
+			"objectFields": [
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "ANSWER",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Answer"
+					},
+					"localized": true,
+					"name": "answer",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "POSITION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Position"
+					},
+					"localized": false,
+					"name": "position",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "SCORE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Score"
+					},
+					"localized": false,
+					"name": "score",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"pluralLabel": {
+				"en_US": "P2S3 Quiz Answers"
+			},
+			"restContextPath": "/o/c/p2s3quizanswers",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "name"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableLocalization": true,
+			"externalReferenceCode": "P2S3_QUIZ_QUESTION",
+			"label": {
+				"en_US": "P2S3 Quiz Question"
+			},
+			"modifiable": true,
+			"name": "P2S3QuizQuestion",
+			"objectFields": [
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "NAME",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "POSITION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Position"
+					},
+					"localized": false,
+					"name": "position",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "QUESTION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Question"
+					},
+					"localized": true,
+					"name": "question",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": false
+						}
+					],
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Clob",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Picklist",
+					"externalReferenceCode": "QUESTION_TYPE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Question Type"
+					},
+					"listTypeDefinitionExternalReferenceCode": "P2S3_QUIZ_QUESTION_TYPES",
+					"localized": false,
+					"name": "questionType",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "TOTAL_SCORE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Total Score"
+					},
+					"localized": false,
+					"name": "totalScore",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"objectRelationships": [
+				{
+					"deletionType": "disassociate",
+					"externalReferenceCode": "P2S3_QUIZ_QUESTION_TO_P2S3_QUIZ_ANSWERS",
+					"label": {
+						"en_US": "P2S3 Quiz Question to P2S3 Quiz Answers"
+					},
+					"name": "p2s3QuizQuestionToP2S3QuizAnswers",
+					"objectDefinitionExternalReferenceCode1": "P2S3_QUIZ_QUESTION",
+					"objectDefinitionExternalReferenceCode2": "P2S3_QUIZ_ANSWER",
+					"type": "oneToMany"
+				}
+			],
+			"pluralLabel": {
+				"en_US": "P2S3 Quiz Questions"
+			},
+			"restContextPath": "/o/c/p2s3quizquestions",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"titleObjectFieldName": "name"
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableCategorization": false,
+			"externalReferenceCode": "P2S3_QUIZ_RESULT",
+			"label": {
+				"en_US": "P2S3 Quiz Result"
+			},
+			"name": "P2S3QuizResult",
+			"objectFields": [
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"externalReferenceCode": "PASSED",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Passed"
+					},
+					"localized": false,
+					"name": "passed",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"type": "Boolean",
+					"unique": false
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
+					"externalReferenceCode": "PASSING_SCORE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Passing Score"
+					},
+					"localized": false,
+					"name": "passingScore",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Integer",
+					"unique": false
+				},
+				{
+					"DBType": "BigDecimal",
+					"businessType": "PrecisionDecimal",
+					"externalReferenceCode": "RESULT",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Result"
+					},
+					"localized": false,
+					"name": "result",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "BigDecimal",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"pluralLabel": {
+				"en_US": "P2S3 Quiz Results"
+			},
+			"portlet": false,
+			"restContextPath": "/o/c/p2s3quizresults",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			}
+		},
+		{
+			"active": true,
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"externalReferenceCode": "P2S3_USER_BADGE",
+			"label": {
+				"en_US": "P2S3 User Badge"
+			},
+			"modifiable": true,
+			"name": "P2S3UserBadge",
+			"objectFields": [
+				{
+					"DBType": "Long",
+					"businessType": "LongInteger",
+					"externalReferenceCode": "BADGE_ID",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Badge Id"
+					},
+					"localized": false,
+					"name": "badgeId",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Long",
+					"unique": false
+				},
+				{
+					"DBType": "Long",
+					"businessType": "LongInteger",
+					"externalReferenceCode": "QUIZ_ID",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Quiz Id"
+					},
+					"localized": false,
+					"name": "quizId",
+					"readOnly": "false",
+					"required": true,
+					"state": false,
+					"type": "Long",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "P2S3_LEARNING_MANAGEMENT_SYSTEM",
+			"pluralLabel": {
+				"en_US": "P2S3 User Badges"
+			},
+			"restContextPath": "/o/c/p2s3userbadges",
+			"scope": "site",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			}
+		}
+	]
+}

@@ -23,7 +23,6 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.math.BigDecimal;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.core.Response;
@@ -57,8 +56,9 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 		throws Exception {
 
 		CommerceTierPriceEntry commerceTierPriceEntry =
-			_commerceTierPriceEntryService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceTierPriceEntryService.
+				fetchCommerceTierPriceEntryByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceTierPriceEntry == null) {
 			throw new NoSuchTierPriceEntryException(
@@ -80,8 +80,9 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 		throws Exception {
 
 		CommercePriceEntry commercePriceEntry =
-			_commercePriceEntryService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceEntryService.
+				fetchCommercePriceEntryByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceEntry == null) {
 			throw new NoSuchPriceEntryException(
@@ -94,12 +95,12 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 				commercePriceEntry.getCommercePriceEntryId(),
 				pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commerceTierPriceEntryService.getCommerceTierPriceEntriesCount(
 				commercePriceEntry.getCommercePriceEntryId());
 
 		return Page.of(
-			_toTierPrices(commerceTierPriceEntries), pagination, totalItems);
+			_toTierPrices(commerceTierPriceEntries), pagination, totalCount);
 	}
 
 	@Override
@@ -119,11 +120,11 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 			_commerceTierPriceEntryService.getCommerceTierPriceEntries(
 				id, pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commerceTierPriceEntryService.getCommerceTierPriceEntriesCount(id);
 
 		return Page.of(
-			_toTierPrices(commerceTierPriceEntries), pagination, totalItems);
+			_toTierPrices(commerceTierPriceEntries), pagination, totalCount);
 	}
 
 	@Override
@@ -137,8 +138,9 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 		throws Exception {
 
 		CommerceTierPriceEntry commerceTierPriceEntry =
-			_commerceTierPriceEntryService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceTierPriceEntryService.
+				fetchCommerceTierPriceEntryByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceTierPriceEntry == null) {
 			throw new NoSuchTierPriceEntryException(
@@ -169,8 +171,9 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 		throws Exception {
 
 		CommerceTierPriceEntry commerceTierPriceEntry =
-			_commerceTierPriceEntryService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceTierPriceEntryService.
+				fetchCommerceTierPriceEntryByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceTierPriceEntry == null) {
 			throw new NoSuchTierPriceEntryException(
@@ -191,8 +194,9 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 		throws Exception {
 
 		CommercePriceEntry commercePriceEntry =
-			_commercePriceEntryService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceEntryService.
+				fetchCommercePriceEntryByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceEntry == null) {
 			throw new NoSuchPriceEntryException(
@@ -236,17 +240,10 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 			List<CommerceTierPriceEntry> commerceTierPriceEntries)
 		throws Exception {
 
-		List<TierPrice> tierPrices = new ArrayList<>();
-
-		for (CommerceTierPriceEntry commerceTierPriceEntry :
-				commerceTierPriceEntries) {
-
-			tierPrices.add(
-				_toTierPrice(
-					commerceTierPriceEntry.getCommerceTierPriceEntryId()));
-		}
-
-		return tierPrices;
+		return transform(
+			commerceTierPriceEntries,
+			commerceTierPriceEntry -> _toTierPrice(
+				commerceTierPriceEntry.getCommerceTierPriceEntryId()));
 	}
 
 	private CommerceTierPriceEntry _updateCommerceTierPriceEntry(

@@ -1,14 +1,16 @@
 {
 	"dependencies": {
-		"@clayui/autocomplete": "3.118.0",
-		"@clayui/form": "3.116.0",
-		"@clayui/icon": "3.111.0",
+		"@clayui/autocomplete": "3.135.0",
+		"@clayui/form": "3.132.0",
+		"@clayui/icon": "3.128.0",
+		"@liferay/frontend-data-set-web": "*",
 		"@liferay/frontend-js-react-web": "*",
 		"@liferay/frontend-js-state-web": "*",
 		"classnames": "2.3.1",
 		"commerce-frontend-js": "*",
+		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
-		"react": "16.12.0"
+		"react": "18.2.0"
 	},
 	"main": "js/index.js",
 	"name": "@liferay/commerce-product-definitions-web",
@@ -17,5 +19,5 @@
 		"checkFormat": "node-scripts format --check",
 		"format": "node-scripts format"
 	},
-	"version": "7.0.139"
+	"version": "7.0.154"
 }

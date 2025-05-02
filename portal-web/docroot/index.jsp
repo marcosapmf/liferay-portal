@@ -64,7 +64,8 @@ response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
 		<meta content="1; url=<%= HtmlUtil.escapeAttribute(redirect) %>" http-equiv="refresh" />
 	</head>
 
-	<body onload="javascript:location.replace('<%= HtmlUtil.escapeJS(redirect) %>')">
-
-	</body>
+	<liferay-ui:csp>
+		<body onload="window.location.replace('<%= HtmlUtil.escapeJS(redirect) %>');">
+		</body>
+	</liferay-ui:csp>
 </html>

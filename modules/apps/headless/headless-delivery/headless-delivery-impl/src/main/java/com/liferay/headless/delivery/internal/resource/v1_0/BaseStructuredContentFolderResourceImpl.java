@@ -18,8 +18,6 @@ import com.liferay.portal.kernel.model.Resource;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -28,6 +26,7 @@ import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -46,12 +45,14 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.permission.ModelPermissionsUtil;
 import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -83,7 +84,314 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BaseStructuredContentFolderResourceImpl
 	implements EntityModelResource, StructuredContentFolderResource,
-			   VulcanBatchEngineTaskItemDelegate<StructuredContentFolder> {
+			   VulcanBatchEngineTaskItemDelegate<StructuredContentFolder>,
+			   VulcanCRUDItemDelegate<StructuredContentFolder> {
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes the asset library's structured content folder by external reference code."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "assetLibraryId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path(
+		"/asset-libraries/{assetLibraryId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void
+			deleteAssetLibraryStructuredContentFolderByExternalReferenceCode(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("assetLibraryId")
+				Long assetLibraryId,
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("externalReferenceCode")
+				String externalReferenceCode)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path(
+		"/sites/{siteId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteSiteStructuredContentFolderByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folders/{structuredContentFolderId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes the structured content folder and returns a 204 if the operation succeeds."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "structuredContentFolderId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/structured-content-folders/{structuredContentFolderId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteStructuredContentFolder(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("structuredContentFolderId")
+			Long structuredContentFolderId)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folders/batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/structured-content-folders/batch")
+	@javax.ws.rs.Produces("application/json")
+	@Override
+	public Response deleteStructuredContentFolderBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			Object object)
+		throws Exception {
+
+		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineImportTaskResource.deleteImportTask(
+				StructuredContentFolder.class.getName(), callbackURL, object)
+		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the asset library's structured content folder by external reference code."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "assetLibraryId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/asset-libraries/{assetLibraryId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public StructuredContentFolder
+			getAssetLibraryStructuredContentFolderByExternalReferenceCode(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("assetLibraryId")
+				Long assetLibraryId,
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("externalReferenceCode")
+				String externalReferenceCode)
+		throws Exception {
+
+		return new StructuredContentFolder();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-content-folders/permissions'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "assetLibraryId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "roleNames"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/asset-libraries/{assetLibraryId}/structured-content-folders/permissions"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<Permission>
+			getAssetLibraryStructuredContentFolderPermissionsPage(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("assetLibraryId")
+				Long assetLibraryId,
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.ws.rs.QueryParam("roleNames")
+				String roleNames)
+		throws Exception {
+
+		String portletName = getPermissionCheckerPortletName(assetLibraryId);
+
+		PermissionServiceUtil.checkPermission(
+			assetLibraryId, portletName, assetLibraryId);
+
+		return toPermissionPage(
+			HashMapBuilder.put(
+				"get",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"getAssetLibraryStructuredContentFolderPermissionsPage",
+					portletName, assetLibraryId)
+			).put(
+				"replace",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"putAssetLibraryStructuredContentFolderPermissionsPage",
+					portletName, assetLibraryId)
+			).build(),
+			assetLibraryId, portletName, roleNames);
+	}
 
 	/**
 	 * Invoke this method with the command line:
@@ -166,9 +474,11 @@ public abstract class BaseStructuredContentFolderResourceImpl
 				@javax.ws.rs.core.Context
 					com.liferay.portal.vulcan.aggregation.Aggregation
 						aggregation,
-				@javax.ws.rs.core.Context Filter filter,
+				@javax.ws.rs.core.Context
+					com.liferay.portal.kernel.search.filter.Filter filter,
 				@javax.ws.rs.core.Context Pagination pagination,
-				@javax.ws.rs.core.Context Sort[] sorts)
+				@javax.ws.rs.core.Context
+					com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -177,37 +487,29 @@ public abstract class BaseStructuredContentFolderResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-content-folders/export-batch'  -u 'test@liferay.com:test'
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "assetLibraryId"
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "filter"
+				name = "fields"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "search"
+				name = "nestedFields"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "sort"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "contentType"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fieldNames"
+				name = "restrictFields"
 			)
 		}
 	)
@@ -218,52 +520,477 @@ public abstract class BaseStructuredContentFolderResourceImpl
 			)
 		}
 	)
-	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.GET
 	@javax.ws.rs.Path(
-		"/asset-libraries/{assetLibraryId}/structured-content-folders/export-batch"
+		"/sites/{siteId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}"
 	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/json")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Response postAssetLibraryStructuredContentFoldersPageExportBatch(
+	public StructuredContentFolder
+			getSiteStructuredContentFolderByExternalReferenceCode(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("siteId")
+				Long siteId,
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("externalReferenceCode")
+				String externalReferenceCode)
+		throws Exception {
+
+		return new StructuredContentFolder();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders/permissions'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "roleNames"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/sites/{siteId}/structured-content-folders/permissions")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<Permission> getSiteStructuredContentFolderPermissionsPage(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("assetLibraryId")
-			Long assetLibraryId,
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("roleNames")
+			String roleNames)
+		throws Exception {
+
+		String portletName = getPermissionCheckerPortletName(siteId);
+
+		PermissionServiceUtil.checkPermission(siteId, portletName, siteId);
+
+		return toPermissionPage(
+			HashMapBuilder.put(
+				"get",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"getSiteStructuredContentFolderPermissionsPage",
+					portletName, siteId)
+			).put(
+				"replace",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"putSiteStructuredContentFolderPermissionsPage",
+					portletName, siteId)
+			).build(),
+			siteId, portletName, roleNames);
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the site's structured content folders. Results can be paginated, filtered, searched, flattened, and sorted."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "aggregationTerms"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "filter"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "flatten"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/sites/{siteId}/structured-content-folders")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<StructuredContentFolder> getSiteStructuredContentFoldersPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("flatten")
+			Boolean flatten,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.DefaultValue("JSON")
-			@javax.ws.rs.QueryParam("contentType")
-			String contentType,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("fieldNames")
-			String fieldNames)
+			@javax.ws.rs.core.Context
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context Pagination pagination,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
-		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
-		vulcanBatchEngineExportTaskResource.setGroupLocalService(
-			groupLocalService);
+		return Page.of(Collections.emptyList());
+	}
 
-		Response.ResponseBuilder responseBuilder = Response.accepted();
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folders/{structuredContentFolderId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the structured content folder."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "structuredContentFolderId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/structured-content-folders/{structuredContentFolderId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public StructuredContentFolder getStructuredContentFolder(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("structuredContentFolderId")
+			Long structuredContentFolderId)
+		throws Exception {
 
-		return responseBuilder.entity(
-			vulcanBatchEngineExportTaskResource.postExportTask(
-				StructuredContentFolder.class.getName(), callbackURL,
-				contentType, fieldNames)
-		).build();
+		return new StructuredContentFolder();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folder/{structuredContentFolderId}/permissions'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "structuredContentFolderId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "roleNames"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/structured-content-folder/{structuredContentFolderId}/permissions"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<Permission> getStructuredContentFolderPermissionsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("structuredContentFolderId")
+			Long structuredContentFolderId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("roleNames")
+			String roleNames)
+		throws Exception {
+
+		String resourceName = getPermissionCheckerResourceName(
+			structuredContentFolderId);
+		Long resourceId = getPermissionCheckerResourceId(
+			structuredContentFolderId);
+
+		PermissionServiceUtil.checkPermission(
+			getPermissionCheckerGroupId(structuredContentFolderId),
+			resourceName, resourceId);
+
+		return toPermissionPage(
+			HashMapBuilder.put(
+				"get",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"getStructuredContentFolderPermissionsPage", resourceName,
+					resourceId)
+			).put(
+				"replace",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"putStructuredContentFolderPermissionsPage", resourceName,
+					resourceId)
+			).build(),
+			resourceId, resourceName, roleNames);
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folders/{parentStructuredContentFolderId}/structured-content-folders'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the parent structured content folder's subfolders. Results can be paginated, filtered, searched, and sorted."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "parentStructuredContentFolderId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "aggregationTerms"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "filter"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "restrictFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/structured-content-folders/{parentStructuredContentFolderId}/structured-content-folders"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<StructuredContentFolder>
+			getStructuredContentFolderStructuredContentFoldersPage(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("parentStructuredContentFolderId")
+				Long parentStructuredContentFolderId,
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.ws.rs.QueryParam("search")
+				String search,
+				@javax.ws.rs.core.Context
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
+				@javax.ws.rs.core.Context
+					com.liferay.portal.kernel.search.filter.Filter filter,
+				@javax.ws.rs.core.Context Pagination pagination,
+				@javax.ws.rs.core.Context
+					com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folders/{structuredContentFolderId}' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentStructuredContentFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Updates only the fields received in the request body, leaving any other fields untouched."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "structuredContentFolderId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.PATCH
+	@javax.ws.rs.Path("/structured-content-folders/{structuredContentFolderId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public StructuredContentFolder patchStructuredContentFolder(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("structuredContentFolderId")
+			Long structuredContentFolderId,
+			StructuredContentFolder structuredContentFolder)
+		throws Exception {
+
+		StructuredContentFolder existingStructuredContentFolder =
+			getStructuredContentFolder(structuredContentFolderId);
+
+		if (structuredContentFolder.getCustomFields() != null) {
+			existingStructuredContentFolder.setCustomFields(
+				structuredContentFolder.getCustomFields());
+		}
+
+		if (structuredContentFolder.getDescription() != null) {
+			existingStructuredContentFolder.setDescription(
+				structuredContentFolder.getDescription());
+		}
+
+		if (structuredContentFolder.getExternalReferenceCode() != null) {
+			existingStructuredContentFolder.setExternalReferenceCode(
+				structuredContentFolder.getExternalReferenceCode());
+		}
+
+		if (structuredContentFolder.getName() != null) {
+			existingStructuredContentFolder.setName(
+				structuredContentFolder.getName());
+		}
+
+		if (structuredContentFolder.getParentStructuredContentFolderId() !=
+				null) {
+
+			existingStructuredContentFolder.setParentStructuredContentFolderId(
+				structuredContentFolder.getParentStructuredContentFolderId());
+		}
+
+		if (structuredContentFolder.getViewableBy() != null) {
+			existingStructuredContentFolder.setViewableBy(
+				structuredContentFolder.getViewableBy());
+		}
+
+		preparePatch(structuredContentFolder, existingStructuredContentFolder);
+
+		return putStructuredContentFolder(
+			structuredContentFolderId, existingStructuredContentFolder);
 	}
 
 	/**
@@ -366,398 +1093,13 @@ public abstract class BaseStructuredContentFolderResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Deletes the asset library's structured content folder by external reference code."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "assetLibraryId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path(
-		"/asset-libraries/{assetLibraryId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void
-			deleteAssetLibraryStructuredContentFolderByExternalReferenceCode(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("assetLibraryId")
-				Long assetLibraryId,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("externalReferenceCode")
-				String externalReferenceCode)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the asset library's structured content folder by external reference code."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "assetLibraryId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/asset-libraries/{assetLibraryId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public StructuredContentFolder
-			getAssetLibraryStructuredContentFolderByExternalReferenceCode(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("assetLibraryId")
-				Long assetLibraryId,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("externalReferenceCode")
-				String externalReferenceCode)
-		throws Exception {
-
-		return new StructuredContentFolder();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentStructuredContentFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Updates the asset library's structured content folder with the given external reference code, or creates it if it not exists."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "assetLibraryId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/asset-libraries/{assetLibraryId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
-	@Override
-	public StructuredContentFolder
-			putAssetLibraryStructuredContentFolderByExternalReferenceCode(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("assetLibraryId")
-				Long assetLibraryId,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("externalReferenceCode")
-				String externalReferenceCode,
-				StructuredContentFolder structuredContentFolder)
-		throws Exception {
-
-		return new StructuredContentFolder();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-content-folders/permissions'  -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-content-folders/export-batch'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "assetLibraryId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "roleNames"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/asset-libraries/{assetLibraryId}/structured-content-folders/permissions"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<Permission>
-			getAssetLibraryStructuredContentFolderPermissionsPage(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("assetLibraryId")
-				Long assetLibraryId,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.ws.rs.QueryParam("roleNames")
-				String roleNames)
-		throws Exception {
-
-		String portletName = getPermissionCheckerPortletName(assetLibraryId);
-
-		PermissionServiceUtil.checkPermission(
-			assetLibraryId, portletName, assetLibraryId);
-
-		return toPermissionPage(
-			HashMapBuilder.put(
-				"get",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"getAssetLibraryStructuredContentFolderPermissionsPage",
-					portletName, assetLibraryId)
-			).put(
-				"replace",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"putAssetLibraryStructuredContentFolderPermissionsPage",
-					portletName, assetLibraryId)
-			).build(),
-			assetLibraryId, portletName, roleNames);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-content-folders/permissions'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "assetLibraryId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/asset-libraries/{assetLibraryId}/structured-content-folders/permissions"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
-	@Override
-	public Page<Permission>
-			putAssetLibraryStructuredContentFolderPermissionsPage(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("assetLibraryId")
-				Long assetLibraryId,
-				Permission[] permissions)
-		throws Exception {
-
-		String portletName = getPermissionCheckerPortletName(assetLibraryId);
-
-		PermissionServiceUtil.checkPermission(
-			assetLibraryId, portletName, assetLibraryId);
-
-		resourcePermissionLocalService.updateResourcePermissions(
-			contextCompany.getCompanyId(), assetLibraryId, portletName,
-			String.valueOf(assetLibraryId),
-			ModelPermissionsUtil.toModelPermissions(
-				contextCompany.getCompanyId(), permissions, assetLibraryId,
-				portletName, resourceActionLocalService,
-				resourcePermissionLocalService, roleLocalService));
-
-		return toPermissionPage(
-			HashMapBuilder.put(
-				"get",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"getAssetLibraryStructuredContentFolderPermissionsPage",
-					portletName, assetLibraryId)
-			).put(
-				"replace",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"putAssetLibraryStructuredContentFolderPermissionsPage",
-					portletName, assetLibraryId)
-			).build(),
-			assetLibraryId, portletName, null);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the site's structured content folders. Results can be paginated, filtered, searched, flattened, and sorted."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "aggregationTerms"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "filter"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "flatten"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "search"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "sort"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/sites/{siteId}/structured-content-folders")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<StructuredContentFolder> getSiteStructuredContentFoldersPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("flatten")
-			Boolean flatten,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("search")
-			String search,
-			@javax.ws.rs.core.Context
-				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders/export-batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
@@ -793,20 +1135,24 @@ public abstract class BaseStructuredContentFolderResourceImpl
 		}
 	)
 	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/sites/{siteId}/structured-content-folders/export-batch")
+	@javax.ws.rs.Path(
+		"/asset-libraries/{assetLibraryId}/structured-content-folders/export-batch"
+	)
 	@javax.ws.rs.POST
 	@javax.ws.rs.Produces("application/json")
 	@Override
-	public Response postSiteStructuredContentFoldersPageExportBatch(
+	public Response postAssetLibraryStructuredContentFoldersPageExportBatch(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
+			@javax.ws.rs.PathParam("assetLibraryId")
+			Long assetLibraryId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -937,7 +1283,7 @@ public abstract class BaseStructuredContentFolderResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders/export-batch'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -946,8 +1292,28 @@ public abstract class BaseStructuredContentFolderResourceImpl
 				name = "siteId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "filter"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "contentType"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fieldNames"
 			)
 		}
 	)
@@ -958,50 +1324,67 @@ public abstract class BaseStructuredContentFolderResourceImpl
 			)
 		}
 	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path(
-		"/sites/{siteId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.Path("/sites/{siteId}/structured-content-folders/export-batch")
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces("application/json")
 	@Override
-	public void deleteSiteStructuredContentFolderByExternalReferenceCode(
+	public Response postSiteStructuredContentFoldersPageExportBatch(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
 			@javax.ws.rs.PathParam("siteId")
 			Long siteId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
+			@javax.ws.rs.QueryParam("search")
+			String search,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.DefaultValue("JSON")
+			@javax.ws.rs.QueryParam("contentType")
+			String contentType,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("fieldNames")
+			String fieldNames)
 		throws Exception {
+
+		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setGroupLocalService(
+			groupLocalService);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineExportTaskResource.postExportTask(
+				StructuredContentFolder.class.getName(), callbackURL,
+				contentType, fieldNames)
+		).build();
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folders/{parentStructuredContentFolderId}/structured-content-folders' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentStructuredContentFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Creates a new structured content folder in an existing folder."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
+				name = "parentStructuredContentFolderId"
 			)
 		}
 	)
@@ -1012,25 +1395,168 @@ public abstract class BaseStructuredContentFolderResourceImpl
 			)
 		}
 	)
-	@javax.ws.rs.GET
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
 	@javax.ws.rs.Path(
-		"/sites/{siteId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}"
+		"/structured-content-folders/{parentStructuredContentFolderId}/structured-content-folders"
 	)
+	@javax.ws.rs.POST
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public StructuredContentFolder
-			getSiteStructuredContentFolderByExternalReferenceCode(
+			postStructuredContentFolderStructuredContentFolder(
 				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("siteId")
-				Long siteId,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("externalReferenceCode")
-				String externalReferenceCode)
+				@javax.ws.rs.PathParam("parentStructuredContentFolderId")
+				Long parentStructuredContentFolderId,
+				StructuredContentFolder structuredContentFolder)
 		throws Exception {
 
 		return new StructuredContentFolder();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentStructuredContentFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Updates the asset library's structured content folder with the given external reference code, or creates it if it not exists."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "assetLibraryId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path(
+		"/asset-libraries/{assetLibraryId}/structured-content-folders/by-external-reference-code/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public StructuredContentFolder
+			putAssetLibraryStructuredContentFolderByExternalReferenceCode(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("assetLibraryId")
+				Long assetLibraryId,
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("externalReferenceCode")
+				String externalReferenceCode,
+				StructuredContentFolder structuredContentFolder)
+		throws Exception {
+
+		return new StructuredContentFolder();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-content-folders/permissions'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "assetLibraryId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path(
+		"/asset-libraries/{assetLibraryId}/structured-content-folders/permissions"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public Page<Permission>
+			putAssetLibraryStructuredContentFolderPermissionsPage(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("assetLibraryId")
+				Long assetLibraryId,
+				Permission[] permissions)
+		throws Exception {
+
+		String portletName = getPermissionCheckerPortletName(assetLibraryId);
+
+		PermissionServiceUtil.checkPermission(
+			assetLibraryId, portletName, assetLibraryId);
+
+		ModelPermissions modelPermissions =
+			ModelPermissionsUtil.toModelPermissions(
+				contextCompany.getCompanyId(), permissions, assetLibraryId,
+				portletName, resourceActionLocalService,
+				resourcePermissionLocalService, roleLocalService);
+
+		Collection<String> roleNames = modelPermissions.getRoleNames();
+
+		for (ResourcePermission resourcePermission :
+				resourcePermissionLocalService.getResourcePermissions(
+					contextCompany.getCompanyId(), portletName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(assetLibraryId))) {
+
+			com.liferay.portal.kernel.model.Role role =
+				roleLocalService.fetchRole(resourcePermission.getRoleId());
+
+			if ((role == null) || roleNames.contains(role.getName())) {
+				continue;
+			}
+
+			for (ResourceAction resourceAction :
+					resourceActionLocalService.getResourceActions(
+						portletName)) {
+
+				resourcePermissionLocalService.removeResourcePermission(
+					contextCompany.getCompanyId(), portletName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(assetLibraryId), role.getRoleId(),
+					resourceAction.getActionId());
+			}
+		}
+
+		resourcePermissionLocalService.updateResourcePermissions(
+			contextCompany.getCompanyId(), assetLibraryId, portletName,
+			String.valueOf(assetLibraryId), modelPermissions);
+
+		return toPermissionPage(
+			HashMapBuilder.put(
+				"get",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"getAssetLibraryStructuredContentFolderPermissionsPage",
+					portletName, assetLibraryId)
+			).put(
+				"replace",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"putAssetLibraryStructuredContentFolderPermissionsPage",
+					portletName, assetLibraryId)
+			).build(),
+			assetLibraryId, portletName, null);
 	}
 
 	/**
@@ -1083,77 +1609,6 @@ public abstract class BaseStructuredContentFolderResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders/permissions'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "roleNames"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/sites/{siteId}/structured-content-folders/permissions")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<Permission> getSiteStructuredContentFolderPermissionsPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("siteId")
-			Long siteId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("roleNames")
-			String roleNames)
-		throws Exception {
-
-		String portletName = getPermissionCheckerPortletName(siteId);
-
-		PermissionServiceUtil.checkPermission(siteId, portletName, siteId);
-
-		return toPermissionPage(
-			HashMapBuilder.put(
-				"get",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"getSiteStructuredContentFolderPermissionsPage",
-					portletName, siteId)
-			).put(
-				"replace",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"putSiteStructuredContentFolderPermissionsPage",
-					portletName, siteId)
-			).build(),
-			siteId, portletName, roleNames);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders/permissions'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -1188,13 +1643,41 @@ public abstract class BaseStructuredContentFolderResourceImpl
 
 		PermissionServiceUtil.checkPermission(siteId, portletName, siteId);
 
-		resourcePermissionLocalService.updateResourcePermissions(
-			contextCompany.getCompanyId(), siteId, portletName,
-			String.valueOf(siteId),
+		ModelPermissions modelPermissions =
 			ModelPermissionsUtil.toModelPermissions(
 				contextCompany.getCompanyId(), permissions, siteId, portletName,
 				resourceActionLocalService, resourcePermissionLocalService,
-				roleLocalService));
+				roleLocalService);
+
+		Collection<String> roleNames = modelPermissions.getRoleNames();
+
+		for (ResourcePermission resourcePermission :
+				resourcePermissionLocalService.getResourcePermissions(
+					contextCompany.getCompanyId(), portletName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(siteId))) {
+
+			com.liferay.portal.kernel.model.Role role =
+				roleLocalService.fetchRole(resourcePermission.getRoleId());
+
+			if ((role == null) || roleNames.contains(role.getName())) {
+				continue;
+			}
+
+			for (ResourceAction resourceAction :
+					resourceActionLocalService.getResourceActions(
+						portletName)) {
+
+				resourcePermissionLocalService.removeResourcePermission(
+					contextCompany.getCompanyId(), portletName,
+					ResourceConstants.SCOPE_INDIVIDUAL, String.valueOf(siteId),
+					role.getRoleId(), resourceAction.getActionId());
+			}
+		}
+
+		resourcePermissionLocalService.updateResourcePermissions(
+			contextCompany.getCompanyId(), siteId, portletName,
+			String.valueOf(siteId), modelPermissions);
 
 		return toPermissionPage(
 			HashMapBuilder.put(
@@ -1211,488 +1694,6 @@ public abstract class BaseStructuredContentFolderResourceImpl
 					portletName, siteId)
 			).build(),
 			siteId, portletName, null);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folder/{structuredContentFolderId}/permissions'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "structuredContentFolderId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "roleNames"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/structured-content-folder/{structuredContentFolderId}/permissions"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<Permission> getStructuredContentFolderPermissionsPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("structuredContentFolderId")
-			Long structuredContentFolderId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("roleNames")
-			String roleNames)
-		throws Exception {
-
-		String resourceName = getPermissionCheckerResourceName(
-			structuredContentFolderId);
-		Long resourceId = getPermissionCheckerResourceId(
-			structuredContentFolderId);
-
-		PermissionServiceUtil.checkPermission(
-			getPermissionCheckerGroupId(structuredContentFolderId),
-			resourceName, resourceId);
-
-		return toPermissionPage(
-			HashMapBuilder.put(
-				"get",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"getStructuredContentFolderPermissionsPage", resourceName,
-					resourceId)
-			).put(
-				"replace",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"putStructuredContentFolderPermissionsPage", resourceName,
-					resourceId)
-			).build(),
-			resourceId, resourceName, roleNames);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folder/{structuredContentFolderId}/permissions'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "structuredContentFolderId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/structured-content-folder/{structuredContentFolderId}/permissions"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
-	@Override
-	public Page<Permission> putStructuredContentFolderPermissionsPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("structuredContentFolderId")
-			Long structuredContentFolderId,
-			Permission[] permissions)
-		throws Exception {
-
-		String resourceName = getPermissionCheckerResourceName(
-			structuredContentFolderId);
-		Long resourceId = getPermissionCheckerResourceId(
-			structuredContentFolderId);
-
-		PermissionServiceUtil.checkPermission(
-			getPermissionCheckerGroupId(structuredContentFolderId),
-			resourceName, resourceId);
-
-		resourcePermissionLocalService.updateResourcePermissions(
-			contextCompany.getCompanyId(),
-			getPermissionCheckerGroupId(structuredContentFolderId),
-			resourceName, String.valueOf(resourceId),
-			ModelPermissionsUtil.toModelPermissions(
-				contextCompany.getCompanyId(), permissions, resourceId,
-				resourceName, resourceActionLocalService,
-				resourcePermissionLocalService, roleLocalService));
-
-		return toPermissionPage(
-			HashMapBuilder.put(
-				"get",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"getStructuredContentFolderPermissionsPage", resourceName,
-					resourceId)
-			).put(
-				"replace",
-				addAction(
-					ActionKeys.PERMISSIONS,
-					"putStructuredContentFolderPermissionsPage", resourceName,
-					resourceId)
-			).build(),
-			resourceId, resourceName, null);
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folders/{parentStructuredContentFolderId}/structured-content-folders'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the parent structured content folder's subfolders. Results can be paginated, filtered, searched, and sorted."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "parentStructuredContentFolderId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "aggregationTerms"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "filter"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "search"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "sort"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
-		"/structured-content-folders/{parentStructuredContentFolderId}/structured-content-folders"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<StructuredContentFolder>
-			getStructuredContentFolderStructuredContentFoldersPage(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("parentStructuredContentFolderId")
-				Long parentStructuredContentFolderId,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.ws.rs.QueryParam("search")
-				String search,
-				@javax.ws.rs.core.Context
-					com.liferay.portal.vulcan.aggregation.Aggregation
-						aggregation,
-				@javax.ws.rs.core.Context Filter filter,
-				@javax.ws.rs.core.Context Pagination pagination,
-				@javax.ws.rs.core.Context Sort[] sorts)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folders/{parentStructuredContentFolderId}/structured-content-folders' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentStructuredContentFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Creates a new structured content folder in an existing folder."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "parentStructuredContentFolderId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/structured-content-folders/{parentStructuredContentFolderId}/structured-content-folders"
-	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public StructuredContentFolder
-			postStructuredContentFolderStructuredContentFolder(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("parentStructuredContentFolderId")
-				Long parentStructuredContentFolderId,
-				StructuredContentFolder structuredContentFolder)
-		throws Exception {
-
-		return new StructuredContentFolder();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folders/{structuredContentFolderId}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Deletes the structured content folder and returns a 204 if the operation succeeds."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "structuredContentFolderId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/structured-content-folders/{structuredContentFolderId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteStructuredContentFolder(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("structuredContentFolderId")
-			Long structuredContentFolderId)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folders/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/structured-content-folders/batch")
-	@javax.ws.rs.Produces("application/json")
-	@Override
-	public Response deleteStructuredContentFolderBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			Object object)
-		throws Exception {
-
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.deleteImportTask(
-				StructuredContentFolder.class.getName(), callbackURL, object)
-		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folders/{structuredContentFolderId}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves the structured content folder."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "structuredContentFolderId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "nestedFields"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "restrictFields"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/structured-content-folders/{structuredContentFolderId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public StructuredContentFolder getStructuredContentFolder(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("structuredContentFolderId")
-			Long structuredContentFolderId)
-		throws Exception {
-
-		return new StructuredContentFolder();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folders/{structuredContentFolderId}' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "parentStructuredContentFolderId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Updates only the fields received in the request body, leaving any other fields untouched."
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "structuredContentFolderId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "StructuredContentFolder"
-			)
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.PATCH
-	@javax.ws.rs.Path("/structured-content-folders/{structuredContentFolderId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public StructuredContentFolder patchStructuredContentFolder(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("structuredContentFolderId")
-			Long structuredContentFolderId,
-			StructuredContentFolder structuredContentFolder)
-		throws Exception {
-
-		StructuredContentFolder existingStructuredContentFolder =
-			getStructuredContentFolder(structuredContentFolderId);
-
-		existingStructuredContentFolder.setCustomFields(
-			structuredContentFolder.getCustomFields());
-
-		if (structuredContentFolder.getDescription() != null) {
-			existingStructuredContentFolder.setDescription(
-				structuredContentFolder.getDescription());
-		}
-
-		if (structuredContentFolder.getExternalReferenceCode() != null) {
-			existingStructuredContentFolder.setExternalReferenceCode(
-				structuredContentFolder.getExternalReferenceCode());
-		}
-
-		if (structuredContentFolder.getName() != null) {
-			existingStructuredContentFolder.setName(
-				structuredContentFolder.getName());
-		}
-
-		if (structuredContentFolder.getParentStructuredContentFolderId() !=
-				null) {
-
-			existingStructuredContentFolder.setParentStructuredContentFolderId(
-				structuredContentFolder.getParentStructuredContentFolderId());
-		}
-
-		if (structuredContentFolder.getViewableBy() != null) {
-			existingStructuredContentFolder.setViewableBy(
-				structuredContentFolder.getViewableBy());
-		}
-
-		preparePatch(structuredContentFolder, existingStructuredContentFolder);
-
-		return putStructuredContentFolder(
-			structuredContentFolderId, existingStructuredContentFolder);
 	}
 
 	/**
@@ -1780,6 +1781,105 @@ public abstract class BaseStructuredContentFolderResourceImpl
 			vulcanBatchEngineImportTaskResource.putImportTask(
 				StructuredContentFolder.class.getName(), callbackURL, object)
 		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-delivery/v1.0/structured-content-folder/{structuredContentFolderId}/permissions'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "structuredContentFolderId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "StructuredContentFolder"
+			)
+		}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path(
+		"/structured-content-folder/{structuredContentFolderId}/permissions"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public Page<Permission> putStructuredContentFolderPermissionsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("structuredContentFolderId")
+			Long structuredContentFolderId,
+			Permission[] permissions)
+		throws Exception {
+
+		String resourceName = getPermissionCheckerResourceName(
+			structuredContentFolderId);
+		Long resourceId = getPermissionCheckerResourceId(
+			structuredContentFolderId);
+
+		PermissionServiceUtil.checkPermission(
+			getPermissionCheckerGroupId(structuredContentFolderId),
+			resourceName, resourceId);
+
+		ModelPermissions modelPermissions =
+			ModelPermissionsUtil.toModelPermissions(
+				contextCompany.getCompanyId(), permissions, resourceId,
+				resourceName, resourceActionLocalService,
+				resourcePermissionLocalService, roleLocalService);
+
+		Collection<String> roleNames = modelPermissions.getRoleNames();
+
+		for (ResourcePermission resourcePermission :
+				resourcePermissionLocalService.getResourcePermissions(
+					contextCompany.getCompanyId(), resourceName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(resourceId))) {
+
+			com.liferay.portal.kernel.model.Role role =
+				roleLocalService.fetchRole(resourcePermission.getRoleId());
+
+			if ((role == null) || roleNames.contains(role.getName())) {
+				continue;
+			}
+
+			for (ResourceAction resourceAction :
+					resourceActionLocalService.getResourceActions(
+						resourceName)) {
+
+				resourcePermissionLocalService.removeResourcePermission(
+					contextCompany.getCompanyId(), resourceName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(resourceId), role.getRoleId(),
+					resourceAction.getActionId());
+			}
+		}
+
+		resourcePermissionLocalService.updateResourcePermissions(
+			contextCompany.getCompanyId(),
+			getPermissionCheckerGroupId(structuredContentFolderId),
+			resourceName, String.valueOf(resourceId), modelPermissions);
+
+		return toPermissionPage(
+			HashMapBuilder.put(
+				"get",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"getStructuredContentFolderPermissionsPage", resourceName,
+					resourceId)
+			).put(
+				"replace",
+				addAction(
+					ActionKeys.PERMISSIONS,
+					"putStructuredContentFolderPermissionsPage", resourceName,
+					resourceId)
+			).build(),
+			resourceId, resourceName, null);
 	}
 
 	/**
@@ -1888,17 +1988,6 @@ public abstract class BaseStructuredContentFolderResourceImpl
 			String updateStrategy = (String)parameters.getOrDefault(
 				"updateStrategy", "UPDATE");
 
-			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
-				structuredContentFolderUnsafeFunction =
-					structuredContentFolder ->
-						putSiteStructuredContentFolderByExternalReferenceCode(
-							structuredContentFolder.getSiteId() != null ?
-								structuredContentFolder.getSiteId() :
-									(Long)parameters.get("siteId"),
-							structuredContentFolder.getExternalReferenceCode(),
-							structuredContentFolder);
-			}
-
 			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
 				structuredContentFolderUnsafeFunction =
 					structuredContentFolder -> {
@@ -1948,6 +2037,17 @@ public abstract class BaseStructuredContentFolderResourceImpl
 						return persistedStructuredContentFolder;
 					};
 			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				structuredContentFolderUnsafeFunction =
+					structuredContentFolder ->
+						putSiteStructuredContentFolderByExternalReferenceCode(
+							structuredContentFolder.getSiteId() != null ?
+								structuredContentFolder.getSiteId() :
+									(Long)parameters.get("siteId"),
+							structuredContentFolder.getExternalReferenceCode(),
+							structuredContentFolder);
+			}
 		}
 
 		if (structuredContentFolderUnsafeFunction == null) {
@@ -1982,10 +2082,33 @@ public abstract class BaseStructuredContentFolderResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (StructuredContentFolder structuredContentFolder :
-				structuredContentFolders) {
+		UnsafeFunction
+			<StructuredContentFolder, StructuredContentFolder, Exception>
+				structuredContentFolderUnsafeFunction =
+					structuredContentFolder -> {
+						deleteStructuredContentFolder(
+							structuredContentFolder.getId());
 
-			deleteStructuredContentFolder(structuredContentFolder.getId());
+						return structuredContentFolder;
+					};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				structuredContentFolders,
+				structuredContentFolderUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				structuredContentFolders,
+				structuredContentFolderUnsafeFunction::apply);
+		}
+		else {
+			for (StructuredContentFolder structuredContentFolder :
+					structuredContentFolders) {
+
+				structuredContentFolderUnsafeFunction.apply(
+					structuredContentFolder);
+			}
 		}
 	}
 
@@ -2022,7 +2145,9 @@ public abstract class BaseStructuredContentFolderResourceImpl
 
 	@Override
 	public Page<StructuredContentFolder> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -2143,6 +2268,11 @@ public abstract class BaseStructuredContentFolderResourceImpl
 		return null;
 	}
 
+	@Override
+	public StructuredContentFolder getItem(Long id) throws Exception {
+		return getStructuredContentFolder(id);
+	}
+
 	protected String getPermissionCheckerActionsResourceName(Object id)
 		throws Exception {
 
@@ -2195,6 +2325,9 @@ public abstract class BaseStructuredContentFolderResourceImpl
 				resourceName, null));
 	}
 
+	/**
+	 * @see com.liferay.portal.vulcan.permission.PermissionUtil#getPermissions(long, List, long, String, String[])
+	 */
 	private Collection<Permission> _getPermissions(
 			long companyId, List<ResourceAction> resourceActions,
 			long resourceId, String resourceName, String[] roleNames)
@@ -2348,7 +2481,8 @@ public abstract class BaseStructuredContentFolderResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -2358,7 +2492,8 @@ public abstract class BaseStructuredContentFolderResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -2393,6 +2528,10 @@ public abstract class BaseStructuredContentFolderResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "headless-delivery";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -2410,7 +2549,7 @@ public abstract class BaseStructuredContentFolderResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -2435,7 +2574,7 @@ public abstract class BaseStructuredContentFolderResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -2453,13 +2592,13 @@ public abstract class BaseStructuredContentFolderResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -2470,7 +2609,7 @@ public abstract class BaseStructuredContentFolderResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -2603,7 +2742,8 @@ public abstract class BaseStructuredContentFolderResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

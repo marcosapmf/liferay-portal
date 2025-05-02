@@ -30,55 +30,35 @@ import java.util.Set;
 public class UserBagImpl implements UserBag {
 
 	public UserBagImpl(
-		long userId, long[] userGroupIds, Collection<Organization> userOrgs,
-		Collection<Long> userOrgGroups, Collection<UserGroup> userUserGroups,
-		long[] userUserGroupGroupIds, Collection<Role> userRoles) {
+		long userId, long[] userGroupIds, Collection<Organization> userOrgIds,
+		Collection<Long> userOrgGroupIds,
+		Collection<UserGroup> userUserGroupIds, long[] userUserGroupGroupIds,
+		Collection<Role> userRoleIds) {
 
 		_userId = userId;
-
-		_userGroupIds = userGroupIds;
-
-		Arrays.sort(_userGroupIds);
-
-		_userOrgGroupIds = ArrayUtil.toLongArray(userOrgGroups);
-
-		Arrays.sort(_userOrgGroupIds);
-
-		_userOrgIds = _toSortedLongArray(userOrgs);
-		_userRoleIds = _toSortedLongArray(userRoles);
-
-		_userUserGroupGroupIds = userUserGroupGroupIds;
-
-		Arrays.sort(_userUserGroupGroupIds);
-
-		_userUserGroupIds = _toSortedLongArray(userUserGroups);
+		_userGroupIds = _toSortedLongArray(userGroupIds);
+		_userOrgIds = _toSortedLongArray(userOrgIds);
+		_userOrgGroupIds = _toSortedLongArray(
+			ArrayUtil.toLongArray(userOrgGroupIds));
+		_userUserGroupIds = _toSortedLongArray(userUserGroupIds);
+		_userUserGroupGroupIds = _toSortedLongArray(userUserGroupGroupIds);
+		_userRoleIds = _toSortedLongArray(userRoleIds);
 	}
 
 	public UserBagImpl(
-		long userId, long[] userGroupIds, Collection<Organization> userOrgs,
-		Collection<Long> userOrgGroups, Collection<UserGroup> userUserGroups,
-		long[] userUserGroupGroupIds, long[] userRoleIds) {
+		long userId, long[] userGroupIds, Collection<Organization> userOrgIds,
+		Collection<Long> userOrgGroupIds,
+		Collection<UserGroup> userUserGroupIds, long[] userUserGroupGroupIds,
+		long[] userRoleIds) {
 
 		_userId = userId;
-		_userGroupIds = userGroupIds;
-
-		Arrays.sort(userGroupIds);
-
-		_userOrgIds = _toSortedLongArray(userOrgs);
-
-		_userOrgGroupIds = ArrayUtil.toLongArray(userOrgGroups);
-
-		Arrays.sort(_userOrgGroupIds);
-
-		_userUserGroupIds = _toSortedLongArray(userUserGroups);
-
-		_userUserGroupGroupIds = userUserGroupGroupIds;
-
-		Arrays.sort(_userUserGroupGroupIds);
-
-		_userRoleIds = userRoleIds;
-
-		Arrays.sort(_userRoleIds);
+		_userGroupIds = _toSortedLongArray(userGroupIds);
+		_userOrgIds = _toSortedLongArray(userOrgIds);
+		_userOrgGroupIds = _toSortedLongArray(
+			ArrayUtil.toLongArray(userOrgGroupIds));
+		_userUserGroupIds = _toSortedLongArray(userUserGroupIds);
+		_userUserGroupGroupIds = _toSortedLongArray(userUserGroupGroupIds);
+		_userRoleIds = _toSortedLongArray(userRoleIds);
 	}
 
 	@Override
@@ -192,6 +172,16 @@ public class UserBagImpl implements UserBag {
 		Arrays.sort(array);
 
 		return array;
+	}
+
+	private long[] _toSortedLongArray(long[] ids) {
+		if (ids.length == 0) {
+			return _EMPTY;
+		}
+
+		Arrays.sort(ids);
+
+		return ids;
 	}
 
 	private static final long[] _EMPTY = {};

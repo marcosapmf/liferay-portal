@@ -359,9 +359,9 @@ public class LayoutPermissionImpl implements LayoutPermission {
 		}
 
 		if (PropsValues.PERMISSIONS_VIEW_DYNAMIC_INHERITANCE &&
-			!actionId.equals(ActionKeys.VIEW)) {
+			actionId.equals(ActionKeys.VIEW)) {
 
-			// Check upward recursively to see if any pages above grant the
+			// Check upward recursively to see if any pages above forbid the
 			// action
 
 			long layoutGroupId = layout.getGroupId();
@@ -378,8 +378,8 @@ public class LayoutPermissionImpl implements LayoutPermission {
 				Layout parentLayout = LayoutLocalServiceUtil.getLayout(
 					layoutGroupId, layout.isPrivateLayout(), parentLayoutId);
 
-				if (contains(permissionChecker, parentLayout, actionId)) {
-					return true;
+				if (!contains(permissionChecker, parentLayout, actionId)) {
+					return false;
 				}
 
 				parentLayoutId = parentLayout.getParentLayoutId();

@@ -7,10 +7,8 @@ import '@testing-library/jest-dom/extend-expect';
 import {render} from '@testing-library/react';
 import React from 'react';
 
-import {
-	ImportResults,
-	checkAccessibility,
-} from '../../../src/main/resources/META-INF/resources/js/index';
+import ImportResults from '../../../src/main/resources/META-INF/resources/js/components/import/ImportResults';
+import checkAccessibility from '../../__lib__/checkAccessibility';
 
 const SUCCESS_RESULT = {
 	success: [
@@ -54,7 +52,6 @@ describe('ImportResults', () => {
 		);
 
 		expect(getByText('fragment 1')).toBeInTheDocument();
-
 		expect(getByText('x-item-was-imported')).toBeInTheDocument();
 		expect(getByRole('button').classList.contains('collapsed')).toBe(false);
 
@@ -70,7 +67,6 @@ describe('ImportResults', () => {
 		);
 
 		expect(getByText('fragment 1')).toBeInTheDocument();
-
 		expect(getByText('x-item-was-imported')).toBeInTheDocument();
 		expect(getByRole('button').classList.contains('collapsed')).toBe(true);
 	});
@@ -91,7 +87,6 @@ describe('ImportResults', () => {
 			getByText('x-items-were-imported-with-warnings')
 		).toBeInTheDocument();
 		expect(getByText('x-item-could-not-be-imported')).toBeInTheDocument();
-
 		expect(getByText('This is a warning message')).toBeInTheDocument();
 		expect(
 			getByText('This is another warning message')

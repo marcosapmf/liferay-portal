@@ -51,6 +51,7 @@ import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONDeserializer;
@@ -191,29 +192,26 @@ public class PageFragmentInstanceDefinitionMapper {
 			return Collections.emptyList();
 		}
 
-		List<FragmentField> fragmentFields = new ArrayList<>();
-
 		Set<String> backgroundImageIds = jsonObject.keySet();
 
-		for (String backgroundImageId : backgroundImageIds) {
-			JSONObject imageJSONObject = jsonObject.getJSONObject(
-				backgroundImageId);
+		return TransformUtil.transform(
+			backgroundImageIds,
+			backgroundImageId -> {
+				JSONObject imageJSONObject = jsonObject.getJSONObject(
+					backgroundImageId);
 
-			Map<String, String> localizedValues =
-				LocalizedValueUtil.toLocalizedValues(imageJSONObject);
+				Map<String, String> localizedValues =
+					LocalizedValueUtil.toLocalizedValues(imageJSONObject);
 
-			fragmentFields.add(
-				new FragmentField() {
+				return new FragmentField() {
 					{
 						setId(() -> backgroundImageId);
 						setValue(
 							() -> _toFragmentFieldBackgroundImage(
 								imageJSONObject, localizedValues, saveMapping));
 					}
-				});
-		}
-
-		return fragmentFields;
+				};
+			});
 	}
 
 	private Map<String, Object> _getFragmentConfig(
@@ -264,7 +262,15 @@ public class PageFragmentInstanceDefinitionMapper {
 						if (excludedFragmentConfigurationFieldNames.contains(
 								key)) {
 
-							put(key, jsonObject.get(key));
+							Object value = jsonObject.get(key);
+
+							if ((value instanceof JSONObject) &&
+								JSONUtil.isEmpty((JSONObject)value)) {
+
+								continue;
+							}
+
+							put(key, value);
 
 							continue;
 						}
@@ -285,17 +291,26 @@ public class PageFragmentInstanceDefinitionMapper {
 							if (valueJSONObject.has("color")) {
 								value = valueJSONObject.getString("color");
 							}
+							else {
+								JSONDeserializer<Map<String, Object>>
+									jsonDeserializer =
+										_jsonFactory.createJSONDeserializer();
+
+								value = jsonDeserializer.deserialize(
+									value.toString());
+							}
 						}
 
-						if (value instanceof JSONArray ||
-							value instanceof JSONObject) {
+						if (value instanceof JSONArray) {
+							List<String> values = new ArrayList<>();
 
-							JSONDeserializer<Map<String, Object>>
-								jsonDeserializer =
-									_jsonFactory.createJSONDeserializer();
+							JSONArray jsonArray = (JSONArray)value;
 
-							value = jsonDeserializer.deserialize(
-								value.toString());
+							for (int i = 0; i < jsonArray.length(); i++) {
+								values.add(jsonArray.getString(i));
+							}
+
+							value = values.toArray(new String[0]);
 						}
 
 						put(key, value);
@@ -400,18 +415,13 @@ public class PageFragmentInstanceDefinitionMapper {
 		Map<String, String> editableTypes, JSONObject jsonObject,
 		boolean saveInlineContent, boolean saveMapping) {
 
-		List<FragmentField> fragmentFields = new ArrayList<>();
-
 		Set<String> textIds = jsonObject.keySet();
 
-		for (String textId : textIds) {
-			fragmentFields.add(
-				_toFragmentField(
-					editableTypes, jsonObject, saveInlineContent, saveMapping,
-					textId));
-		}
-
-		return fragmentFields;
+		return TransformUtil.transform(
+			textIds,
+			textId -> _toFragmentField(
+				editableTypes, jsonObject, saveInlineContent, saveMapping,
+				textId));
 	}
 
 	private WidgetInstance[] _getWidgetInstances(
@@ -1108,12 +1118,12 @@ public class PageFragmentInstanceDefinitionMapper {
 											configJSONObject.getJSONObject(
 												"href");
 
-										if (hrefJSONObject != null) {
-											return JSONUtil.toStringMap(
-												hrefJSONObject);
+										if (hrefJSONObject == null) {
+											return null;
 										}
 
-										return null;
+										return JSONUtil.toStringMap(
+											hrefJSONObject);
 									});
 							}
 						};

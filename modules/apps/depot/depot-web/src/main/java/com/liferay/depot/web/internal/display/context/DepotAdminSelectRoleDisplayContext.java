@@ -352,13 +352,8 @@ public class DepotAdminSelectRoleDisplayContext {
 				userId = _user.getUserId();
 			}
 
-			if (SiteMembershipPolicyUtil.isRoleAllowed(
-					userId, groupId, role.getRoleId())) {
-
-				return true;
-			}
-
-			return false;
+			return SiteMembershipPolicyUtil.isRoleAllowed(
+				userId, groupId, role.getRoleId());
 		}
 
 		/**
@@ -383,7 +378,9 @@ public class DepotAdminSelectRoleDisplayContext {
 							role.getName()) &&
 						!Objects.equals(
 							DepotRolesConstants.ASSET_LIBRARY_MEMBER,
-							role.getName()));
+							role.getName()) &&
+						!Objects.equals(
+							DepotRolesConstants.CMS_CONSUMER, role.getName()));
 			}
 
 			if (!GroupPermissionUtil.contains(
@@ -407,6 +404,8 @@ public class DepotAdminSelectRoleDisplayContext {
 					!Objects.equals(
 						DepotRolesConstants.ASSET_LIBRARY_OWNER,
 						role.getName()) &&
+					!Objects.equals(
+						DepotRolesConstants.CMS_CONSUMER, role.getName()) &&
 					RolePermissionUtil.contains(
 						permissionChecker, _group.getGroupId(),
 						role.getRoleId(), ActionKeys.ASSIGN_MEMBERS));

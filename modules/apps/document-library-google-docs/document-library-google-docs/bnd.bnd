@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Document Library Google Docs
 Bundle-SymbolicName: com.liferay.document.library.google.docs
-Bundle-Version: 6.0.43
+Bundle-Version: 6.0.48
 Import-Package:\
 	!com.sun.org.apache.xml.internal.utils,\
 	!com.sun.org.apache.xpath.internal,\
@@ -22,5 +22,14 @@ Import-Package:\
 	\
 	!org.zeroturnaround.javarebel,\
 	\
+	jakarta.el;resolution:=optional,\
+	\
+	jakarta.servlet;resolution:=optional,\
+	jakarta.servlet.http;resolution:=optional,\
+	jakarta.servlet.jsp;resolution:=optional,\
+	jakarta.servlet.jsp.el;resolution:=optional,\
+	jakarta.servlet.jsp.tagext;resolution:=optional,\
+	\
 	*
 Web-ContextPath: /document-library-google-docs
+-noee: true

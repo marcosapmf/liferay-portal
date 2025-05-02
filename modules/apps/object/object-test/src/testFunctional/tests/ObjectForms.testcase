@@ -3,7 +3,6 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Forms";
 	property testray.main.component.name = "Object";
 
 	setUp {
@@ -120,7 +119,7 @@ definition {
 			fieldName = "Text",
 			fieldValue = "Entry Test");
 
-		PortletEntry.submitForWorkflow();
+		PortletEntry.save();
 
 		Navigator.openURL();
 
@@ -183,7 +182,7 @@ definition {
 			content = "By building a vibrant business, making technology useful, and investing in communities, we make it possible for people to reach their full potential to serve others.",
 			fieldLabel = "Rich Text");
 
-		PortletEntry.submitForWorkflow();
+		PortletEntry.save();
 
 		Navigator.openURL();
 
@@ -240,7 +239,7 @@ definition {
 
 		FormViewBuilder.editClobText(fieldLong = "By building a vibrant business, making technology useful, and investing in communities, we make it possible for people to reach their full potential to serve others.");
 
-		PortletEntry.submitForWorkflow();
+		PortletEntry.save();
 
 		Navigator.openURL();
 
@@ -297,7 +296,7 @@ definition {
 			fieldName = "Text",
 			fieldValue = "By building a vibrant business, making technology useful, and investing in communities, we make it possible for people to reach their full potential to serve others.");
 
-		PortletEntry.submitForWorkflow();
+		PortletEntry.save();
 
 		Navigator.openURL();
 
@@ -613,8 +612,8 @@ definition {
 				fieldValue = "Entry test");
 
 			AssertClick(
-				locator1 = "Button#SUBMIT_FOR_WORKFLOW",
-				value1 = "Submit for Workflow");
+				locator1 = "Button#SAVE",
+				value1 = "Save");
 
 			Alert.viewSuccessMessage();
 		}

@@ -19,11 +19,13 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.facet.display.context.AssetTagsSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
 import com.liferay.portal.search.web.internal.tag.facet.configuration.TagFacetPortletInstanceConfiguration;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
 import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayContextComparatorFactoryUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import javax.portlet.RenderRequest;
@@ -73,14 +75,10 @@ public class AssetTagsSearchFacetDisplayContextBuilder {
 	}
 
 	public long getDisplayStyleGroupId() {
-		long displayStyleGroupId =
-			_tagFacetPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = _themeDisplay.getScopeGroupId();
-		}
-
-		return displayStyleGroupId;
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			_tagFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			_themeDisplay);
 	}
 
 	public void setDisplayStyle(String displayStyle) {
@@ -97,6 +95,10 @@ public class AssetTagsSearchFacetDisplayContextBuilder {
 
 	public void setFrequencyThreshold(int frequencyThreshold) {
 		_frequencyThreshold = frequencyThreshold;
+	}
+
+	public void setLocale(Locale locale) {
+		_locale = locale;
 	}
 
 	public void setMaxTerms(int maxTerms) {
@@ -148,6 +150,7 @@ public class AssetTagsSearchFacetDisplayContextBuilder {
 		bucketDisplayContext.setFrequency(frequency);
 
 		bucketDisplayContext.setFrequencyVisible(_frequenciesVisible);
+		bucketDisplayContext.setLocale(_locale);
 
 		int popularity = (int)getPopularity(
 			frequency, minCount, maxCount, multiplier);
@@ -205,11 +208,7 @@ public class AssetTagsSearchFacetDisplayContextBuilder {
 	}
 
 	protected boolean isNothingSelected() {
-		if (_selectedTags.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return _selectedTags.isEmpty();
 	}
 
 	protected boolean isRenderNothing() {
@@ -223,11 +222,7 @@ public class AssetTagsSearchFacetDisplayContextBuilder {
 	}
 
 	protected boolean isSelected(String value) {
-		if (_selectedTags.contains(value)) {
-			return true;
-		}
-
-		return false;
+		return _selectedTags.contains(value);
 	}
 
 	private List<BucketDisplayContext> _buildBucketDisplayContexts() {
@@ -339,6 +334,7 @@ public class AssetTagsSearchFacetDisplayContextBuilder {
 	private Facet _facet;
 	private boolean _frequenciesVisible;
 	private int _frequencyThreshold;
+	private Locale _locale;
 	private int _maxTerms;
 	private String _order;
 	private String _paginationStartParameterName;

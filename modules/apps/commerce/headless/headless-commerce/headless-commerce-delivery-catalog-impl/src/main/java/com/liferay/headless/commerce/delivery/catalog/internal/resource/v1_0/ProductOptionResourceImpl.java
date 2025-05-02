@@ -26,7 +26,6 @@ import com.liferay.portal.vulcan.fields.NestedFieldId;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
@@ -86,31 +85,24 @@ public class ProductOptionResourceImpl extends BaseProductOptionResourceImpl {
 				cpDefinition.getCPDefinitionId(), pagination.getStartPosition(),
 				pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_cpDefinitionOptionRelLocalService.getCPDefinitionOptionRelsCount(
 				cpDefinition.getCPDefinitionId());
 
 		return Page.of(
-			_toProductOptions(cpDefinitionOptionRels), pagination, totalItems);
+			_toProductOptions(cpDefinitionOptionRels), pagination, totalCount);
 	}
 
 	private List<ProductOption> _toProductOptions(
 			List<CPDefinitionOptionRel> cpDefinitionOptionRels)
 		throws Exception {
 
-		List<ProductOption> productOptions = new ArrayList<>();
-
-		for (CPDefinitionOptionRel cpDefinitionOptionRel :
-				cpDefinitionOptionRels) {
-
-			productOptions.add(
-				_productOptionDTOConverter.toDTO(
-					new DefaultDTOConverterContext(
-						cpDefinitionOptionRel.getCPDefinitionOptionRelId(),
-						contextAcceptLanguage.getPreferredLocale())));
-		}
-
-		return productOptions;
+		return transform(
+			cpDefinitionOptionRels,
+			cpDefinitionOptionRel -> _productOptionDTOConverter.toDTO(
+				new DefaultDTOConverterContext(
+					cpDefinitionOptionRel.getCPDefinitionOptionRelId(),
+					contextAcceptLanguage.getPreferredLocale())));
 	}
 
 	@Reference

@@ -66,9 +66,14 @@ function Item({
 							aria-label={Liferay.Language.get('delete')}
 							borderless
 							className="c-ml-2"
+							disabled={!onInputSetItemDelete}
 							displayType="secondary"
 							monospaced
-							onClick={onInputSetItemDelete(index)}
+							onClick={
+								onInputSetItemDelete
+									? onInputSetItemDelete(index)
+									: undefined
+							}
 							small
 						>
 							<ClayIcon symbol="trash" />

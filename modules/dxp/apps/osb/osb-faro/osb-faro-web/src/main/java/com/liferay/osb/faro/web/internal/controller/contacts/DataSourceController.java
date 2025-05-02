@@ -168,6 +168,10 @@ public class DataSourceController extends BaseFaroController {
 			_tokenManager.clearToken(token);
 		}
 
+		faroProject.setDataSourceConnected(true);
+
+		faroProject = faroProjectLocalService.updateFaroProject(faroProject);
+
 		TokenCredentials tokenCredentials =
 			(TokenCredentials)dataSource.getCredentials();
 
@@ -368,6 +372,22 @@ public class DataSourceController extends BaseFaroController {
 		}
 
 		contactsEngineClient.disconnectDataSource(faroProject, id);
+	}
+
+	@Path("/disconnect-all")
+	@POST
+	@RolesAllowed(RoleConstants.SITE_ADMINISTRATOR)
+	public void disconnectAll(@PathParam("groupId") long groupId)
+		throws Exception {
+
+		FaroProject faroProject =
+			faroProjectLocalService.getFaroProjectByGroupId(groupId);
+
+		contactsEngineClient.disconnectDataSources(faroProject);
+
+		faroProject.setDataSourceConnected(false);
+
+		faroProjectLocalService.updateFaroProject(faroProject);
 	}
 
 	@GET
@@ -694,8 +714,6 @@ public class DataSourceController extends BaseFaroController {
 			@QueryParam("count") int count)
 		throws Exception {
 
-		List<FieldValuesDisplay> fieldValuesDisplays = new ArrayList<>();
-
 		List<DataSourceField> dataSourceFields = null;
 
 		FaroProject faroProject =
@@ -735,18 +753,18 @@ public class DataSourceController extends BaseFaroController {
 				faroProject, id, context, count);
 		}
 
-		for (DataSourceField dataSourceField : dataSourceFields) {
-			if (Validator.isNull(fieldName) ||
-				StringUtil.equals(dataSourceField.getName(), fieldName)) {
+		return TransformUtil.transform(
+			dataSourceFields,
+			dataSourceField -> {
+				if (Validator.isNotNull(fieldName) &&
+					!StringUtil.equals(dataSourceField.getName(), fieldName)) {
 
-				fieldValuesDisplays.add(
-					new FieldValuesDisplay(
-						dataSourceField.getName(),
-						dataSourceField.getValues()));
-			}
-		}
+					return null;
+				}
 
-		return fieldValuesDisplays;
+				return new FieldValuesDisplay(
+					dataSourceField.getName(), dataSourceField.getValues());
+			});
 	}
 
 	@GET

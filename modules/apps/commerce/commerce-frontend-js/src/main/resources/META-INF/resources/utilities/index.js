@@ -112,7 +112,7 @@ export function getLabelFromItem(item, itemsLabel, secondaryItemsLabel) {
 		.join(' - ');
 }
 
-export function formatActionUrl(url, item) {
+export function formatActionUrl(url, item, queryParams = {}) {
 	let regex = new RegExp('{(.*?)}', 'mg');
 
 	let replacedUrl = url.replace(regex, (matched) =>
@@ -130,6 +130,18 @@ export function formatActionUrl(url, item) {
 			matched.substring(3, matched.length - 3).split('.')
 		)
 	);
+
+	const queryParamsIterable = Object.entries(queryParams);
+
+	if (queryParamsIterable.length) {
+		replacedUrl = new URL(replacedUrl);
+
+		queryParamsIterable.forEach(([key, value]) => {
+			replacedUrl.searchParams.set(key, value);
+		});
+
+		replacedUrl = replacedUrl.toString();
+	}
 
 	return replacedUrl;
 }

@@ -165,6 +165,11 @@ public class AssetListAssetEntryProviderTest {
 				3, _getAssetEntry(journalArticle1),
 				_getAssetEntry(journalArticle2),
 				_getAssetEntry(journalArticle3));
+			_assertAssetListEntryResultsPagination(
+				assetListEntry, segmentsEntryIds,
+				_getAssetEntry(journalArticle1),
+				_getAssetEntry(journalArticle2),
+				_getAssetEntry(journalArticle3));
 		}
 	}
 
@@ -412,6 +417,16 @@ public class AssetListAssetEntryProviderTest {
 					infoPage.getPageItems(),
 					assetEntry ->
 						assetEntry.getEntryId() == assetEntry3.getEntryId()));
+
+			_assertAssetListEntryResultsPagination(
+				assetListEntry,
+				new long[] {
+					segmentsEntry1.getSegmentsEntryId(),
+					segmentsEntry2.getSegmentsEntryId()
+				},
+				_getAssetEntry(journalArticle1),
+				_getAssetEntry(journalArticle2),
+				_getAssetEntry(journalArticle3));
 		}
 	}
 
@@ -1240,6 +1255,66 @@ public class AssetListAssetEntryProviderTest {
 	}
 
 	@Test
+	public void testGetManualAssetEntriesFromDifferentGroups()
+		throws Exception {
+
+		Group group1 = GroupTestUtil.addGroup();
+		Group group2 = GroupTestUtil.addGroup();
+
+		try {
+			JournalArticle journalArticle1 = JournalTestUtil.addArticle(
+				_group.getGroupId(),
+				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				_serviceContext);
+
+			AssetEntry assetEntry1 = _getAssetEntry(journalArticle1);
+
+			JournalArticle journalArticle2 = JournalTestUtil.addArticle(
+				group1.getGroupId(),
+				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				_serviceContext);
+
+			AssetEntry assetEntry2 = _getAssetEntry(journalArticle2);
+
+			JournalArticle journalArticle3 = JournalTestUtil.addArticle(
+				group2.getGroupId(),
+				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				_serviceContext);
+
+			AssetEntry assetEntry3 = _getAssetEntry(journalArticle3);
+
+			AssetListEntry assetListEntry =
+				_assetListEntryLocalService.addAssetListEntry(
+					RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+					_group.getGroupId(), RandomTestUtil.randomString(),
+					AssetListEntryTypeConstants.TYPE_MANUAL, _serviceContext);
+
+			_assetListEntryLocalService.addAssetEntrySelections(
+				assetListEntry.getAssetListEntryId(),
+				new long[] {
+					assetEntry1.getEntryId(), assetEntry2.getEntryId(),
+					assetEntry3.getEntryId()
+				},
+				SegmentsEntryConstants.ID_DEFAULT, _serviceContext);
+
+			_assertAssetListEntryResults(
+				_assetListAssetEntryProvider.getAssetEntriesInfoPage(
+					assetListEntry,
+					new long[] {SegmentsEntryConstants.ID_DEFAULT}, null, null,
+					StringPool.BLANK,
+					String.valueOf(TestPropsValues.getUserId()),
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+				3, _getAssetEntry(journalArticle1),
+				_getAssetEntry(journalArticle2),
+				_getAssetEntry(journalArticle3));
+		}
+		finally {
+			GroupTestUtil.deleteGroup(group1);
+			GroupTestUtil.deleteGroup(group2);
+		}
+	}
+
+	@Test
 	public void testGetManualAssetEntriesMatchingAllAssetCategories()
 		throws Exception {
 
@@ -1784,6 +1859,33 @@ public class AssetListAssetEntryProviderTest {
 
 		List<AssetEntry> assetEntries =
 			(List<AssetEntry>)infoPage.getPageItems();
+
+		for (AssetEntry expectedAssetEntry : expectedAssetEntries) {
+			Assert.assertTrue(assetEntries.contains(expectedAssetEntry));
+		}
+	}
+
+	private void _assertAssetListEntryResultsPagination(
+		AssetListEntry assetListEntry, long[] segmentsEntryIds,
+		AssetEntry... expectedAssetEntries) {
+
+		InfoPage<AssetEntry> infoPage =
+			_assetListAssetEntryProvider.getAssetEntriesInfoPage(
+				assetListEntry, segmentsEntryIds, null, null, StringPool.BLANK,
+				StringPool.BLANK, 0, 2);
+
+		List<AssetEntry> assetEntries =
+			(List<AssetEntry>)infoPage.getPageItems();
+
+		infoPage = _assetListAssetEntryProvider.getAssetEntriesInfoPage(
+			assetListEntry, segmentsEntryIds, null, null, StringPool.BLANK,
+			StringPool.BLANK, 2, 4);
+
+		assetEntries.addAll(infoPage.getPageItems());
+
+		Assert.assertEquals(
+			assetEntries.toString(), expectedAssetEntries.length,
+			assetEntries.size());
 
 		for (AssetEntry expectedAssetEntry : expectedAssetEntries) {
 			Assert.assertTrue(assetEntries.contains(expectedAssetEntry));

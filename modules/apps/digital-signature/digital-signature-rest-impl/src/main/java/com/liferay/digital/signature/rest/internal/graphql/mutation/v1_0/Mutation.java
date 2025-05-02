@@ -12,7 +12,6 @@ import com.liferay.digital.signature.rest.resource.v1_0.DSEnvelopeResource;
 import com.liferay.digital.signature.rest.resource.v1_0.DSRecipientViewDefinitionResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -60,6 +59,33 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public DSEnvelope createSiteDSEnvelope(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("dsEnvelope") DSEnvelope dsEnvelope)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_dsEnvelopeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			dsEnvelopeResource -> dsEnvelopeResource.postSiteDSEnvelope(
+				Long.valueOf(siteKey), dsEnvelope));
+	}
+
+	@GraphQLField
+	public Response createSiteDSEnvelopeBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_dsEnvelopeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			dsEnvelopeResource -> dsEnvelopeResource.postSiteDSEnvelopeBatch(
+				Long.valueOf(siteKey), callbackURL, object));
+	}
+
+	@GraphQLField
 	public Response createSiteDSEnvelopesPageExportBatch(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("fromDate") String fromDate,
@@ -78,34 +104,6 @@ public class Mutation {
 				dsEnvelopeResource.postSiteDSEnvelopesPageExportBatch(
 					Long.valueOf(siteKey), fromDate, keywords, order, status,
 					callbackURL, contentType, fieldNames));
-	}
-
-	@GraphQLField
-	public DSEnvelope createSiteDSEnvelope(
-			@GraphQLName("siteKey") @NotEmpty String siteKey,
-			@GraphQLName("dsEnvelope") DSEnvelope dsEnvelope)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_dsEnvelopeResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			dsEnvelopeResource -> dsEnvelopeResource.postSiteDSEnvelope(
-				Long.valueOf(siteKey), dsEnvelope));
-	}
-
-	@GraphQLField
-	public Response createSiteDSEnvelopeBatch(
-			@GraphQLName("siteKey") @NotEmpty String siteKey,
-			@GraphQLName("dsEnvelope") DSEnvelope dsEnvelope,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_dsEnvelopeResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			dsEnvelopeResource -> dsEnvelopeResource.postSiteDSEnvelopeBatch(
-				Long.valueOf(siteKey), dsEnvelope, callbackURL, object));
 	}
 
 	@GraphQLField
@@ -213,7 +211,8 @@ public class Mutation {
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

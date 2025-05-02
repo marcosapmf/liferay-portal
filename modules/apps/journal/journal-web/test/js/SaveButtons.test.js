@@ -72,6 +72,19 @@ describe('SaveButtons', () => {
 		expect(screen.getByText('save article')).toBeInTheDocument();
 	});
 
+	it('submit for workflow with permissions when publishing for the first time', () => {
+		renderComponent({
+			...DEFAULT_PROPS,
+			articleId: '2611',
+			showPublishModal: true,
+			workflowEnabled: true,
+		});
+
+		expect(
+			screen.getByText('submit-for-workflow-with-permissions')
+		).toBeInTheDocument();
+	});
+
 	it('Do not open modal for all buttons when there is an articleId', () => {
 		renderComponent({
 			...DEFAULT_PROPS,
@@ -162,29 +175,6 @@ describe('SaveButtons', () => {
 		expect(
 			screen.getByText(
 				'set-the-date-and-time-for-publishing-the-web-content-and-confirm-the-visibility-before-scheduling'
-			)
-		).toBeInTheDocument();
-	});
-
-	it('Show an alert appears when the title is empty', () => {
-		global.Liferay.component = jest
-			.fn()
-			.mockReturnValue({getValue: () => null});
-
-		renderComponent({
-			...DEFAULT_PROPS,
-			articleId: null,
-		});
-
-		userEvent.click(
-			screen.getByText('publish-with-permissions', {
-				selector: '.dropdown-item',
-			})
-		);
-
-		expect(
-			screen.getByText(
-				'please-enter-a-valid-title-for-the-default-language-x'
 			)
 		).toBeInTheDocument();
 	});

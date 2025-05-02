@@ -5,8 +5,6 @@
 
 package com.liferay.portal.workflow.metrics.rest.resource.v1_0;
 
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,8 +46,21 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface SLAResource {
 
+	public void deleteSLA(Long slaId) throws Exception;
+
+	public Response deleteSLABatch(String callbackURL, Object object)
+		throws Exception;
+
 	public Page<SLA> getProcessSLAsPage(
 			Long processId, Integer status, Pagination pagination)
+		throws Exception;
+
+	public SLA getSLA(Long slaId) throws Exception;
+
+	public SLA postProcessSLA(Long processId, SLA sla) throws Exception;
+
+	public Response postProcessSLABatch(
+			Long processId, String callbackURL, Object object)
 		throws Exception;
 
 	public Response postProcessSLAsPageExportBatch(
@@ -57,24 +68,9 @@ public interface SLAResource {
 			String contentType, String fieldNames)
 		throws Exception;
 
-	public SLA postProcessSLA(Long processId, SLA sla) throws Exception;
-
-	public Response postProcessSLABatch(
-			Long processId, SLA sla, String callbackURL, Object object)
-		throws Exception;
-
-	public void deleteSLA(Long slaId) throws Exception;
-
-	public Response deleteSLABatch(
-			Long slaId, String callbackURL, Object object)
-		throws Exception;
-
-	public SLA getSLA(Long slaId) throws Exception;
-
 	public SLA putSLA(Long slaId, SLA sla) throws Exception;
 
-	public Response putSLABatch(
-			Long slaId, SLA sla, String callbackURL, Object object)
+	public Response putSLABatch(String callbackURL, Object object)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -99,7 +95,8 @@ public interface SLAResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -124,19 +121,23 @@ public interface SLAResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

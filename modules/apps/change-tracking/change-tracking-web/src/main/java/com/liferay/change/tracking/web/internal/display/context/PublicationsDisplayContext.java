@@ -284,7 +284,7 @@ public class PublicationsDisplayContext {
 			"sharePublicationLink",
 			() -> _publicationHelper.getShareURL(ctCollectionId, _renderRequest)
 		).put(
-			"showShareLinkTab", FeatureFlagManagerUtil.isEnabled("LPS-187436")
+			"showShareLinkTab", true
 		).put(
 			"spritemap", _themeDisplay.getPathThemeSpritemap()
 		).put(
@@ -439,6 +439,19 @@ public class PublicationsDisplayContext {
 				"password-policies", "permissions",
 				_language.get(_httpServletRequest, "permissions"), "get",
 				"permissions", "modal-permissions"),
+			new FDSActionDropdownItem(
+				PortletURLBuilder.createActionURL(
+					_renderResponse
+				).setActionName(
+					"/change_tracking/reactivate_ct_collection"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"ctCollectionId", "{id}"
+				).buildString(),
+				"reset", "reactivate",
+				_language.get(_httpServletRequest, "reactivate"), "post",
+				"reactivate", null),
 			new FDSActionDropdownItem(
 				null, "times-circle", "delete",
 				_language.get(_httpServletRequest, "delete"), null, "delete",

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {format} from 'date-fns';
-import {delegate, openConfirmModal, unescapeHTML} from 'frontend-js-web';
+import {openConfirmModal} from 'frontend-js-components-web';
+import {delegate, unescapeHTML} from 'frontend-js-web';
 
 const TPL_TAG_FORM =
 	'<div class="c-mb-4 row {key}" >' +
@@ -43,9 +43,13 @@ export function reportParameters({namespace, parameters}) {
 		'.remove-existing-report'
 	);
 
-	const existingReportElement = document.querySelector('.existing-report');
+	const templateReportFileNameElement = document.querySelector(
+		'.lfr-reports__template-report-file-name'
+	);
 
-	const templateReportElement = document.querySelector('.template-report');
+	const templateReportInputElement = document.querySelector(
+		'.lfr-reports__template-report-input'
+	);
 
 	const cancelUpdateReportElement = document.querySelector(
 		'.cancel-update-template-report'
@@ -275,7 +279,16 @@ export function reportParameters({namespace, parameters}) {
 		parameterDate.setMonth(parameterDateMonth.value);
 		parameterDate.setYear(parameterDateYear.value);
 
-		return format(parameterDate, 'yyyy-MM-dd');
+		const intl = new Intl.DateTimeFormat(
+			Liferay.ThemeDisplay.getBCP47LanguageId(),
+			{
+				day: '2-digit',
+				month: '2-digit',
+				year: 'numeric',
+			}
+		);
+
+		return intl.format(parameterDate);
 	}
 
 	function sendErrorMessage(message) {
@@ -309,14 +322,14 @@ export function reportParameters({namespace, parameters}) {
 	addParameterElement.addEventListener('click', addParameter);
 
 	removeReportElement.addEventListener('click', () => {
-		existingReportElement.style.display = 'none';
-		templateReportElement.style.display = 'block';
+		templateReportFileNameElement.style.display = 'none';
+		templateReportInputElement.style.display = 'block';
 		cancelUpdateReportElement.style.display = 'block';
 	});
 
 	cancelUpdateReportElement.addEventListener('click', () => {
-		existingReportElement.style.display = 'block';
-		templateReportElement.style.display = 'none';
+		templateReportFileNameElement.style.display = 'block';
+		templateReportInputElement.style.display = 'none';
 		cancelUpdateReportElement.style.display = 'none';
 	});
 

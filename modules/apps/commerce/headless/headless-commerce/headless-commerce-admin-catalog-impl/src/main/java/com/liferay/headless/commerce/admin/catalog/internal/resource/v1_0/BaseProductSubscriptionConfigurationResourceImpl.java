@@ -10,7 +10,6 @@ import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductSubscrip
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -21,6 +20,7 @@ import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.util.Collection;
 import java.util.List;
@@ -83,6 +83,41 @@ public abstract class BaseProductSubscriptionConfigurationResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/{id}/subscriptionConfiguration'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "id"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "ProductSubscriptionConfiguration"
+			)
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/products/{id}/subscriptionConfiguration")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public ProductSubscriptionConfiguration
+			getProductIdSubscriptionConfiguration(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("id")
+				Long id)
+		throws Exception {
+
+		return new ProductSubscriptionConfiguration();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/{externalReferenceCode}/subscriptionConfiguration' -d $'{"deliverySubscriptionEnable": ___, "deliverySubscriptionLength": ___, "deliverySubscriptionNumberOfLength": ___, "deliverySubscriptionType": ___, "deliverySubscriptionTypeSettings": ___, "enable": ___, "length": ___, "numberOfLength": ___, "subscriptionType": ___, "subscriptionTypeSettings": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -120,41 +155,6 @@ public abstract class BaseProductSubscriptionConfigurationResourceImpl
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
 		return responseBuilder.build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/{id}/subscriptionConfiguration'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "id"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "ProductSubscriptionConfiguration"
-			)
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/products/{id}/subscriptionConfiguration")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public ProductSubscriptionConfiguration
-			getProductIdSubscriptionConfiguration(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("id")
-				Long id)
-		throws Exception {
-
-		return new ProductSubscriptionConfiguration();
 	}
 
 	/**
@@ -217,7 +217,8 @@ public abstract class BaseProductSubscriptionConfigurationResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -227,7 +228,8 @@ public abstract class BaseProductSubscriptionConfigurationResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -260,6 +262,10 @@ public abstract class BaseProductSubscriptionConfigurationResourceImpl
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider) {
 		this.sortParserProvider = sortParserProvider;
+	}
+
+	protected String getApplicationPath() {
+		return "headless-commerce-admin-catalog";
 	}
 
 	protected Map<String, String> addAction(
@@ -377,7 +383,8 @@ public abstract class BaseProductSubscriptionConfigurationResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

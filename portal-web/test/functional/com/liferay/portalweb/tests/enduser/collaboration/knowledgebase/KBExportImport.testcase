@@ -71,7 +71,6 @@ definition {
 	}
 
 	@priority = 5
-	@refactorneeded
 	test DeleteImportedArticles {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -103,7 +102,9 @@ definition {
 
 		KBArticle.selectAllCP();
 
-		KBArticle.deleteCP();
+		KBArticle.deleteCP(
+			itemsNumber = 2,
+			moveToRecycleBin = "multipleArticles");
 	}
 
 	@priority = 4
@@ -191,16 +192,17 @@ definition {
 
 		KBArticle.viewChildArticleCP(
 			kbChildArticleContent = "Using tabs is a good way to keep your portlet’s UI clean and organized.",
-			kbChildArticleTitle = "Knowledge Base Article Parent Title 2 Child 2");
+			kbChildArticleTitle = "Knowledge Base Article Parent Title 2 Child 2",
+			pageTreePanel = "true");
 
 		KBArticle.viewSourceURLCP(
-			kbArticleSourceURL = "https://github.com/liferay/liferay-docs/blob/master/develop/tutorials/articles/liferayui-taglibs/knowledge-base-article-parent-title-2-child-2.markdown",
+			kbArticleSourceURL = "https://github.com/liferay/liferay-docs/blob/master/develop/tutorials/articles/liferayui-taglibs/knowledge-base-article-parent-title-2-child-2.md",
 			kbChildArticleTitle = "Knowledge Base Article Parent Title 2 Child 2");
 
 		Navigator.gotoPage(pageName = "Knowledge Base Display Page");
 
 		KBArticle.viewSourceURLPG(
-			kbArticleSourceURL = "https://github.com/liferay/liferay-docs/blob/master/develop/tutorials/articles/adt/intro.markdown",
+			kbArticleSourceURL = "https://github.com/liferay/liferay-docs/blob/master/develop/tutorials/articles/adt/intro.md",
 			kbArticleTitle = "Knowledge Base Article Parent Title 1 Child 1");
 	}
 

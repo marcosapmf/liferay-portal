@@ -14,7 +14,9 @@ import com.liferay.headless.delivery.internal.resource.v1_0.ContentElementResour
 import com.liferay.headless.delivery.internal.resource.v1_0.ContentSetElementResourceImpl;
 import com.liferay.headless.delivery.internal.resource.v1_0.ContentStructureResourceImpl;
 import com.liferay.headless.delivery.internal.resource.v1_0.ContentTemplateResourceImpl;
+import com.liferay.headless.delivery.internal.resource.v1_0.DocumentDataDefinitionTypeResourceImpl;
 import com.liferay.headless.delivery.internal.resource.v1_0.DocumentFolderResourceImpl;
+import com.liferay.headless.delivery.internal.resource.v1_0.DocumentMetadataSetResourceImpl;
 import com.liferay.headless.delivery.internal.resource.v1_0.DocumentResourceImpl;
 import com.liferay.headless.delivery.internal.resource.v1_0.DocumentShortcutResourceImpl;
 import com.liferay.headless.delivery.internal.resource.v1_0.KnowledgeBaseArticleResourceImpl;
@@ -39,7 +41,9 @@ import com.liferay.headless.delivery.resource.v1_0.ContentElementResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentSetElementResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentStructureResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentTemplateResource;
+import com.liferay.headless.delivery.resource.v1_0.DocumentDataDefinitionTypeResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentFolderResource;
+import com.liferay.headless.delivery.resource.v1_0.DocumentMetadataSetResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentShortcutResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseArticleResource;
@@ -96,8 +100,12 @@ public class ServletDataImpl implements ServletData {
 			_contentTemplateResourceComponentServiceObjects);
 		Mutation.setDocumentResourceComponentServiceObjects(
 			_documentResourceComponentServiceObjects);
+		Mutation.setDocumentDataDefinitionTypeResourceComponentServiceObjects(
+			_documentDataDefinitionTypeResourceComponentServiceObjects);
 		Mutation.setDocumentFolderResourceComponentServiceObjects(
 			_documentFolderResourceComponentServiceObjects);
+		Mutation.setDocumentMetadataSetResourceComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects);
 		Mutation.setDocumentShortcutResourceComponentServiceObjects(
 			_documentShortcutResourceComponentServiceObjects);
 		Mutation.setKnowledgeBaseArticleResourceComponentServiceObjects(
@@ -147,8 +155,12 @@ public class ServletDataImpl implements ServletData {
 			_contentTemplateResourceComponentServiceObjects);
 		Query.setDocumentResourceComponentServiceObjects(
 			_documentResourceComponentServiceObjects);
+		Query.setDocumentDataDefinitionTypeResourceComponentServiceObjects(
+			_documentDataDefinitionTypeResourceComponentServiceObjects);
 		Query.setDocumentFolderResourceComponentServiceObjects(
 			_documentFolderResourceComponentServiceObjects);
+		Query.setDocumentMetadataSetResourceComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects);
 		Query.setDocumentShortcutResourceComponentServiceObjects(
 			_documentShortcutResourceComponentServiceObjects);
 		Query.setKnowledgeBaseArticleResourceComponentServiceObjects(
@@ -228,43 +240,24 @@ public class ServletDataImpl implements ServletData {
 							BlogPostingResourceImpl.class,
 							"deleteBlogPostingBatch"));
 					put(
-						"mutation#patchBlogPosting",
-						new ObjectValuePair<>(
-							BlogPostingResourceImpl.class, "patchBlogPosting"));
-					put(
-						"mutation#updateBlogPosting",
-						new ObjectValuePair<>(
-							BlogPostingResourceImpl.class, "putBlogPosting"));
-					put(
-						"mutation#updateBlogPostingBatch",
-						new ObjectValuePair<>(
-							BlogPostingResourceImpl.class,
-							"putBlogPostingBatch"));
-					put(
 						"mutation#deleteBlogPostingMyRating",
 						new ObjectValuePair<>(
 							BlogPostingResourceImpl.class,
 							"deleteBlogPostingMyRating"));
 					put(
+						"mutation#deleteSiteBlogPostingByExternalReferenceCode",
+						new ObjectValuePair<>(
+							BlogPostingResourceImpl.class,
+							"deleteSiteBlogPostingByExternalReferenceCode"));
+					put(
+						"mutation#patchBlogPosting",
+						new ObjectValuePair<>(
+							BlogPostingResourceImpl.class, "patchBlogPosting"));
+					put(
 						"mutation#createBlogPostingMyRating",
 						new ObjectValuePair<>(
 							BlogPostingResourceImpl.class,
 							"postBlogPostingMyRating"));
-					put(
-						"mutation#updateBlogPostingMyRating",
-						new ObjectValuePair<>(
-							BlogPostingResourceImpl.class,
-							"putBlogPostingMyRating"));
-					put(
-						"mutation#updateBlogPostingPermissionsPage",
-						new ObjectValuePair<>(
-							BlogPostingResourceImpl.class,
-							"putBlogPostingPermissionsPage"));
-					put(
-						"mutation#createSiteBlogPostingsPageExportBatch",
-						new ObjectValuePair<>(
-							BlogPostingResourceImpl.class,
-							"postSiteBlogPostingsPageExportBatch"));
 					put(
 						"mutation#createSiteBlogPosting",
 						new ObjectValuePair<>(
@@ -276,10 +269,29 @@ public class ServletDataImpl implements ServletData {
 							BlogPostingResourceImpl.class,
 							"postSiteBlogPostingBatch"));
 					put(
-						"mutation#deleteSiteBlogPostingByExternalReferenceCode",
+						"mutation#createSiteBlogPostingsPageExportBatch",
 						new ObjectValuePair<>(
 							BlogPostingResourceImpl.class,
-							"deleteSiteBlogPostingByExternalReferenceCode"));
+							"postSiteBlogPostingsPageExportBatch"));
+					put(
+						"mutation#updateBlogPosting",
+						new ObjectValuePair<>(
+							BlogPostingResourceImpl.class, "putBlogPosting"));
+					put(
+						"mutation#updateBlogPostingBatch",
+						new ObjectValuePair<>(
+							BlogPostingResourceImpl.class,
+							"putBlogPostingBatch"));
+					put(
+						"mutation#updateBlogPostingMyRating",
+						new ObjectValuePair<>(
+							BlogPostingResourceImpl.class,
+							"putBlogPostingMyRating"));
+					put(
+						"mutation#updateBlogPostingPermissionsPage",
+						new ObjectValuePair<>(
+							BlogPostingResourceImpl.class,
+							"putBlogPostingPermissionsPage"));
 					put(
 						"mutation#updateSiteBlogPostingByExternalReferenceCode",
 						new ObjectValuePair<>(
@@ -311,10 +323,10 @@ public class ServletDataImpl implements ServletData {
 							BlogPostingImageResourceImpl.class,
 							"deleteBlogPostingImageBatch"));
 					put(
-						"mutation#createSiteBlogPostingImagesPageExportBatch",
+						"mutation#deleteSiteBlogPostingImageByExternalReferenceCode",
 						new ObjectValuePair<>(
 							BlogPostingImageResourceImpl.class,
-							"postSiteBlogPostingImagesPageExportBatch"));
+							"deleteSiteBlogPostingImageByExternalReferenceCode"));
 					put(
 						"mutation#createSiteBlogPostingImage",
 						new ObjectValuePair<>(
@@ -326,10 +338,38 @@ public class ServletDataImpl implements ServletData {
 							BlogPostingImageResourceImpl.class,
 							"postSiteBlogPostingImageBatch"));
 					put(
-						"mutation#createBlogPostingCommentsPageExportBatch",
+						"mutation#createSiteBlogPostingImagesPageExportBatch",
+						new ObjectValuePair<>(
+							BlogPostingImageResourceImpl.class,
+							"postSiteBlogPostingImagesPageExportBatch"));
+					put(
+						"mutation#deleteComment",
+						new ObjectValuePair<>(
+							CommentResourceImpl.class, "deleteComment"));
+					put(
+						"mutation#deleteCommentBatch",
+						new ObjectValuePair<>(
+							CommentResourceImpl.class, "deleteCommentBatch"));
+					put(
+						"mutation#deleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode",
 						new ObjectValuePair<>(
 							CommentResourceImpl.class,
-							"postBlogPostingCommentsPageExportBatch"));
+							"deleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode"));
+					put(
+						"mutation#deleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CommentResourceImpl.class,
+							"deleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode"));
+					put(
+						"mutation#deleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CommentResourceImpl.class,
+							"deleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode"));
+					put(
+						"mutation#deleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CommentResourceImpl.class,
+							"deleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode"));
 					put(
 						"mutation#createBlogPostingComment",
 						new ObjectValuePair<>(
@@ -341,30 +381,14 @@ public class ServletDataImpl implements ServletData {
 							CommentResourceImpl.class,
 							"postBlogPostingCommentBatch"));
 					put(
-						"mutation#deleteComment",
+						"mutation#createBlogPostingCommentsPageExportBatch",
 						new ObjectValuePair<>(
-							CommentResourceImpl.class, "deleteComment"));
-					put(
-						"mutation#deleteCommentBatch",
-						new ObjectValuePair<>(
-							CommentResourceImpl.class, "deleteCommentBatch"));
-					put(
-						"mutation#updateComment",
-						new ObjectValuePair<>(
-							CommentResourceImpl.class, "putComment"));
-					put(
-						"mutation#updateCommentBatch",
-						new ObjectValuePair<>(
-							CommentResourceImpl.class, "putCommentBatch"));
+							CommentResourceImpl.class,
+							"postBlogPostingCommentsPageExportBatch"));
 					put(
 						"mutation#createCommentComment",
 						new ObjectValuePair<>(
 							CommentResourceImpl.class, "postCommentComment"));
-					put(
-						"mutation#createDocumentCommentsPageExportBatch",
-						new ObjectValuePair<>(
-							CommentResourceImpl.class,
-							"postDocumentCommentsPageExportBatch"));
 					put(
 						"mutation#createDocumentComment",
 						new ObjectValuePair<>(
@@ -375,50 +399,10 @@ public class ServletDataImpl implements ServletData {
 							CommentResourceImpl.class,
 							"postDocumentCommentBatch"));
 					put(
-						"mutation#deleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode",
+						"mutation#createDocumentCommentsPageExportBatch",
 						new ObjectValuePair<>(
 							CommentResourceImpl.class,
-							"deleteSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode"));
-					put(
-						"mutation#updateSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode",
-						new ObjectValuePair<>(
-							CommentResourceImpl.class,
-							"putSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode"));
-					put(
-						"mutation#deleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode",
-						new ObjectValuePair<>(
-							CommentResourceImpl.class,
-							"deleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode"));
-					put(
-						"mutation#updateSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode",
-						new ObjectValuePair<>(
-							CommentResourceImpl.class,
-							"putSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode"));
-					put(
-						"mutation#deleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode",
-						new ObjectValuePair<>(
-							CommentResourceImpl.class,
-							"deleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode"));
-					put(
-						"mutation#updateSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode",
-						new ObjectValuePair<>(
-							CommentResourceImpl.class,
-							"putSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode"));
-					put(
-						"mutation#deleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode",
-						new ObjectValuePair<>(
-							CommentResourceImpl.class,
-							"deleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode"));
-					put(
-						"mutation#updateSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode",
-						new ObjectValuePair<>(
-							CommentResourceImpl.class,
-							"putSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode"));
-					put(
-						"mutation#createStructuredContentCommentsPageExportBatch",
-						new ObjectValuePair<>(
-							CommentResourceImpl.class,
-							"postStructuredContentCommentsPageExportBatch"));
+							"postDocumentCommentsPageExportBatch"));
 					put(
 						"mutation#createStructuredContentComment",
 						new ObjectValuePair<>(
@@ -429,6 +413,39 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							CommentResourceImpl.class,
 							"postStructuredContentCommentBatch"));
+					put(
+						"mutation#createStructuredContentCommentsPageExportBatch",
+						new ObjectValuePair<>(
+							CommentResourceImpl.class,
+							"postStructuredContentCommentsPageExportBatch"));
+					put(
+						"mutation#updateComment",
+						new ObjectValuePair<>(
+							CommentResourceImpl.class, "putComment"));
+					put(
+						"mutation#updateCommentBatch",
+						new ObjectValuePair<>(
+							CommentResourceImpl.class, "putCommentBatch"));
+					put(
+						"mutation#updateSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CommentResourceImpl.class,
+							"putSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode"));
+					put(
+						"mutation#updateSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CommentResourceImpl.class,
+							"putSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode"));
+					put(
+						"mutation#updateSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CommentResourceImpl.class,
+							"putSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode"));
+					put(
+						"mutation#updateSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CommentResourceImpl.class,
+							"putSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode"));
 					put(
 						"mutation#createAssetLibraryContentElementsPageExportBatch",
 						new ObjectValuePair<>(
@@ -445,6 +462,11 @@ public class ServletDataImpl implements ServletData {
 							ContentStructureResourceImpl.class,
 							"postAssetLibraryContentStructuresPageExportBatch"));
 					put(
+						"mutation#createSiteContentStructuresPageExportBatch",
+						new ObjectValuePair<>(
+							ContentStructureResourceImpl.class,
+							"postSiteContentStructuresPageExportBatch"));
+					put(
 						"mutation#updateAssetLibraryContentStructurePermissionsPage",
 						new ObjectValuePair<>(
 							ContentStructureResourceImpl.class,
@@ -454,11 +476,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							ContentStructureResourceImpl.class,
 							"putContentStructurePermissionsPage"));
-					put(
-						"mutation#createSiteContentStructuresPageExportBatch",
-						new ObjectValuePair<>(
-							ContentStructureResourceImpl.class,
-							"postSiteContentStructuresPageExportBatch"));
 					put(
 						"mutation#updateSiteContentStructurePermissionsPage",
 						new ObjectValuePair<>(
@@ -475,10 +492,32 @@ public class ServletDataImpl implements ServletData {
 							ContentTemplateResourceImpl.class,
 							"postSiteContentTemplatesPageExportBatch"));
 					put(
-						"mutation#createAssetLibraryDocumentsPageExportBatch",
+						"mutation#deleteAssetLibraryDocumentByExternalReferenceCode",
 						new ObjectValuePair<>(
 							DocumentResourceImpl.class,
-							"postAssetLibraryDocumentsPageExportBatch"));
+							"deleteAssetLibraryDocumentByExternalReferenceCode"));
+					put(
+						"mutation#deleteDocument",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class, "deleteDocument"));
+					put(
+						"mutation#deleteDocumentBatch",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class, "deleteDocumentBatch"));
+					put(
+						"mutation#deleteDocumentMyRating",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class,
+							"deleteDocumentMyRating"));
+					put(
+						"mutation#deleteSiteDocumentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class,
+							"deleteSiteDocumentByExternalReferenceCode"));
+					put(
+						"mutation#patchDocument",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class, "patchDocument"));
 					put(
 						"mutation#createAssetLibraryDocument",
 						new ObjectValuePair<>(
@@ -490,25 +529,10 @@ public class ServletDataImpl implements ServletData {
 							DocumentResourceImpl.class,
 							"postAssetLibraryDocumentBatch"));
 					put(
-						"mutation#deleteAssetLibraryDocumentByExternalReferenceCode",
+						"mutation#createAssetLibraryDocumentsPageExportBatch",
 						new ObjectValuePair<>(
 							DocumentResourceImpl.class,
-							"deleteAssetLibraryDocumentByExternalReferenceCode"));
-					put(
-						"mutation#updateAssetLibraryDocumentByExternalReferenceCode",
-						new ObjectValuePair<>(
-							DocumentResourceImpl.class,
-							"putAssetLibraryDocumentByExternalReferenceCode"));
-					put(
-						"mutation#updateAssetLibraryDocumentPermissionsPage",
-						new ObjectValuePair<>(
-							DocumentResourceImpl.class,
-							"putAssetLibraryDocumentPermissionsPage"));
-					put(
-						"mutation#createDocumentFolderDocumentsPageExportBatch",
-						new ObjectValuePair<>(
-							DocumentResourceImpl.class,
-							"postDocumentFolderDocumentsPageExportBatch"));
+							"postAssetLibraryDocumentsPageExportBatch"));
 					put(
 						"mutation#createDocumentFolderDocument",
 						new ObjectValuePair<>(
@@ -520,49 +544,15 @@ public class ServletDataImpl implements ServletData {
 							DocumentResourceImpl.class,
 							"postDocumentFolderDocumentBatch"));
 					put(
-						"mutation#deleteDocument",
-						new ObjectValuePair<>(
-							DocumentResourceImpl.class, "deleteDocument"));
-					put(
-						"mutation#deleteDocumentBatch",
-						new ObjectValuePair<>(
-							DocumentResourceImpl.class, "deleteDocumentBatch"));
-					put(
-						"mutation#patchDocument",
-						new ObjectValuePair<>(
-							DocumentResourceImpl.class, "patchDocument"));
-					put(
-						"mutation#updateDocument",
-						new ObjectValuePair<>(
-							DocumentResourceImpl.class, "putDocument"));
-					put(
-						"mutation#updateDocumentBatch",
-						new ObjectValuePair<>(
-							DocumentResourceImpl.class, "putDocumentBatch"));
-					put(
-						"mutation#deleteDocumentMyRating",
+						"mutation#createDocumentFolderDocumentsPageExportBatch",
 						new ObjectValuePair<>(
 							DocumentResourceImpl.class,
-							"deleteDocumentMyRating"));
+							"postDocumentFolderDocumentsPageExportBatch"));
 					put(
 						"mutation#createDocumentMyRating",
 						new ObjectValuePair<>(
 							DocumentResourceImpl.class,
 							"postDocumentMyRating"));
-					put(
-						"mutation#updateDocumentMyRating",
-						new ObjectValuePair<>(
-							DocumentResourceImpl.class, "putDocumentMyRating"));
-					put(
-						"mutation#updateDocumentPermissionsPage",
-						new ObjectValuePair<>(
-							DocumentResourceImpl.class,
-							"putDocumentPermissionsPage"));
-					put(
-						"mutation#createSiteDocumentsPageExportBatch",
-						new ObjectValuePair<>(
-							DocumentResourceImpl.class,
-							"postSiteDocumentsPageExportBatch"));
 					put(
 						"mutation#createSiteDocument",
 						new ObjectValuePair<>(
@@ -573,10 +563,37 @@ public class ServletDataImpl implements ServletData {
 							DocumentResourceImpl.class,
 							"postSiteDocumentBatch"));
 					put(
-						"mutation#deleteSiteDocumentByExternalReferenceCode",
+						"mutation#createSiteDocumentsPageExportBatch",
 						new ObjectValuePair<>(
 							DocumentResourceImpl.class,
-							"deleteSiteDocumentByExternalReferenceCode"));
+							"postSiteDocumentsPageExportBatch"));
+					put(
+						"mutation#updateAssetLibraryDocumentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class,
+							"putAssetLibraryDocumentByExternalReferenceCode"));
+					put(
+						"mutation#updateAssetLibraryDocumentPermissionsPage",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class,
+							"putAssetLibraryDocumentPermissionsPage"));
+					put(
+						"mutation#updateDocument",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class, "putDocument"));
+					put(
+						"mutation#updateDocumentBatch",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class, "putDocumentBatch"));
+					put(
+						"mutation#updateDocumentMyRating",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class, "putDocumentMyRating"));
+					put(
+						"mutation#updateDocumentPermissionsPage",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class,
+							"putDocumentPermissionsPage"));
 					put(
 						"mutation#updateSiteDocumentByExternalReferenceCode",
 						new ObjectValuePair<>(
@@ -588,25 +605,45 @@ public class ServletDataImpl implements ServletData {
 							DocumentResourceImpl.class,
 							"putSiteDocumentPermissionsPage"));
 					put(
-						"mutation#createAssetLibraryDocumentFoldersPageExportBatch",
+						"mutation#deleteDocumentDataDefinitionType",
 						new ObjectValuePair<>(
-							DocumentFolderResourceImpl.class,
-							"postAssetLibraryDocumentFoldersPageExportBatch"));
+							DocumentDataDefinitionTypeResourceImpl.class,
+							"deleteDocumentDataDefinitionType"));
 					put(
-						"mutation#createAssetLibraryDocumentFolder",
+						"mutation#deleteDocumentDataDefinitionTypeBatch",
 						new ObjectValuePair<>(
-							DocumentFolderResourceImpl.class,
-							"postAssetLibraryDocumentFolder"));
+							DocumentDataDefinitionTypeResourceImpl.class,
+							"deleteDocumentDataDefinitionTypeBatch"));
 					put(
-						"mutation#createAssetLibraryDocumentFolderBatch",
+						"mutation#createAssetLibraryDocumentDataDefinitionType",
 						new ObjectValuePair<>(
-							DocumentFolderResourceImpl.class,
-							"postAssetLibraryDocumentFolderBatch"));
+							DocumentDataDefinitionTypeResourceImpl.class,
+							"postAssetLibraryDocumentDataDefinitionType"));
 					put(
-						"mutation#updateAssetLibraryDocumentFolderPermissionsPage",
+						"mutation#createAssetLibraryDocumentDataDefinitionTypeBatch",
 						new ObjectValuePair<>(
-							DocumentFolderResourceImpl.class,
-							"putAssetLibraryDocumentFolderPermissionsPage"));
+							DocumentDataDefinitionTypeResourceImpl.class,
+							"postAssetLibraryDocumentDataDefinitionTypeBatch"));
+					put(
+						"mutation#createAssetLibraryDocumentDataDefinitionTypesPageExportBatch",
+						new ObjectValuePair<>(
+							DocumentDataDefinitionTypeResourceImpl.class,
+							"postAssetLibraryDocumentDataDefinitionTypesPageExportBatch"));
+					put(
+						"mutation#createSiteDocumentDataDefinitionType",
+						new ObjectValuePair<>(
+							DocumentDataDefinitionTypeResourceImpl.class,
+							"postSiteDocumentDataDefinitionType"));
+					put(
+						"mutation#createSiteDocumentDataDefinitionTypeBatch",
+						new ObjectValuePair<>(
+							DocumentDataDefinitionTypeResourceImpl.class,
+							"postSiteDocumentDataDefinitionTypeBatch"));
+					put(
+						"mutation#createSiteDocumentDataDefinitionTypesPageExportBatch",
+						new ObjectValuePair<>(
+							DocumentDataDefinitionTypeResourceImpl.class,
+							"postSiteDocumentDataDefinitionTypesPageExportBatch"));
 					put(
 						"mutation#deleteDocumentFolder",
 						new ObjectValuePair<>(
@@ -618,10 +655,65 @@ public class ServletDataImpl implements ServletData {
 							DocumentFolderResourceImpl.class,
 							"deleteDocumentFolderBatch"));
 					put(
+						"mutation#deleteDocumentFolderMyRating",
+						new ObjectValuePair<>(
+							DocumentFolderResourceImpl.class,
+							"deleteDocumentFolderMyRating"));
+					put(
+						"mutation#deleteSiteDocumentsFolderByExternalReferenceCode",
+						new ObjectValuePair<>(
+							DocumentFolderResourceImpl.class,
+							"deleteSiteDocumentsFolderByExternalReferenceCode"));
+					put(
 						"mutation#patchDocumentFolder",
 						new ObjectValuePair<>(
 							DocumentFolderResourceImpl.class,
 							"patchDocumentFolder"));
+					put(
+						"mutation#createAssetLibraryDocumentFolder",
+						new ObjectValuePair<>(
+							DocumentFolderResourceImpl.class,
+							"postAssetLibraryDocumentFolder"));
+					put(
+						"mutation#createAssetLibraryDocumentFolderBatch",
+						new ObjectValuePair<>(
+							DocumentFolderResourceImpl.class,
+							"postAssetLibraryDocumentFolderBatch"));
+					put(
+						"mutation#createAssetLibraryDocumentFoldersPageExportBatch",
+						new ObjectValuePair<>(
+							DocumentFolderResourceImpl.class,
+							"postAssetLibraryDocumentFoldersPageExportBatch"));
+					put(
+						"mutation#createDocumentFolderDocumentFolder",
+						new ObjectValuePair<>(
+							DocumentFolderResourceImpl.class,
+							"postDocumentFolderDocumentFolder"));
+					put(
+						"mutation#createDocumentFolderMyRating",
+						new ObjectValuePair<>(
+							DocumentFolderResourceImpl.class,
+							"postDocumentFolderMyRating"));
+					put(
+						"mutation#createSiteDocumentFolder",
+						new ObjectValuePair<>(
+							DocumentFolderResourceImpl.class,
+							"postSiteDocumentFolder"));
+					put(
+						"mutation#createSiteDocumentFolderBatch",
+						new ObjectValuePair<>(
+							DocumentFolderResourceImpl.class,
+							"postSiteDocumentFolderBatch"));
+					put(
+						"mutation#createSiteDocumentFoldersPageExportBatch",
+						new ObjectValuePair<>(
+							DocumentFolderResourceImpl.class,
+							"postSiteDocumentFoldersPageExportBatch"));
+					put(
+						"mutation#updateAssetLibraryDocumentFolderPermissionsPage",
+						new ObjectValuePair<>(
+							DocumentFolderResourceImpl.class,
+							"putAssetLibraryDocumentFolderPermissionsPage"));
 					put(
 						"mutation#updateDocumentFolder",
 						new ObjectValuePair<>(
@@ -632,16 +724,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							DocumentFolderResourceImpl.class,
 							"putDocumentFolderBatch"));
-					put(
-						"mutation#deleteDocumentFolderMyRating",
-						new ObjectValuePair<>(
-							DocumentFolderResourceImpl.class,
-							"deleteDocumentFolderMyRating"));
-					put(
-						"mutation#createDocumentFolderMyRating",
-						new ObjectValuePair<>(
-							DocumentFolderResourceImpl.class,
-							"postDocumentFolderMyRating"));
 					put(
 						"mutation#updateDocumentFolderMyRating",
 						new ObjectValuePair<>(
@@ -663,55 +745,75 @@ public class ServletDataImpl implements ServletData {
 							DocumentFolderResourceImpl.class,
 							"putDocumentFolderUnsubscribe"));
 					put(
-						"mutation#createDocumentFolderDocumentFolder",
-						new ObjectValuePair<>(
-							DocumentFolderResourceImpl.class,
-							"postDocumentFolderDocumentFolder"));
-					put(
-						"mutation#createSiteDocumentFoldersPageExportBatch",
-						new ObjectValuePair<>(
-							DocumentFolderResourceImpl.class,
-							"postSiteDocumentFoldersPageExportBatch"));
-					put(
-						"mutation#createSiteDocumentFolder",
-						new ObjectValuePair<>(
-							DocumentFolderResourceImpl.class,
-							"postSiteDocumentFolder"));
-					put(
-						"mutation#createSiteDocumentFolderBatch",
-						new ObjectValuePair<>(
-							DocumentFolderResourceImpl.class,
-							"postSiteDocumentFolderBatch"));
-					put(
 						"mutation#updateSiteDocumentFolderPermissionsPage",
 						new ObjectValuePair<>(
 							DocumentFolderResourceImpl.class,
 							"putSiteDocumentFolderPermissionsPage"));
-					put(
-						"mutation#deleteSiteDocumentsFolderByExternalReferenceCode",
-						new ObjectValuePair<>(
-							DocumentFolderResourceImpl.class,
-							"deleteSiteDocumentsFolderByExternalReferenceCode"));
 					put(
 						"mutation#updateSiteDocumentsFolderByExternalReferenceCode",
 						new ObjectValuePair<>(
 							DocumentFolderResourceImpl.class,
 							"putSiteDocumentsFolderByExternalReferenceCode"));
 					put(
-						"mutation#createAssetLibraryDocumentShortcutsPageExportBatch",
+						"mutation#deleteAssetLibraryDocumentMetadataSetByExternalReferenceCode",
 						new ObjectValuePair<>(
-							DocumentShortcutResourceImpl.class,
-							"postAssetLibraryDocumentShortcutsPageExportBatch"));
+							DocumentMetadataSetResourceImpl.class,
+							"deleteAssetLibraryDocumentMetadataSetByExternalReferenceCode"));
 					put(
-						"mutation#createAssetLibraryDocumentShortcut",
+						"mutation#deleteDocumentMetadataSet",
 						new ObjectValuePair<>(
-							DocumentShortcutResourceImpl.class,
-							"postAssetLibraryDocumentShortcut"));
+							DocumentMetadataSetResourceImpl.class,
+							"deleteDocumentMetadataSet"));
 					put(
-						"mutation#createAssetLibraryDocumentShortcutBatch",
+						"mutation#deleteDocumentMetadataSetBatch",
 						new ObjectValuePair<>(
-							DocumentShortcutResourceImpl.class,
-							"postAssetLibraryDocumentShortcutBatch"));
+							DocumentMetadataSetResourceImpl.class,
+							"deleteDocumentMetadataSetBatch"));
+					put(
+						"mutation#deleteSiteDocumentMetadataSetByExternalReferenceCode",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"deleteSiteDocumentMetadataSetByExternalReferenceCode"));
+					put(
+						"mutation#createAssetLibraryDocumentMetadataSet",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"postAssetLibraryDocumentMetadataSet"));
+					put(
+						"mutation#createAssetLibraryDocumentMetadataSetBatch",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"postAssetLibraryDocumentMetadataSetBatch"));
+					put(
+						"mutation#createAssetLibraryDocumentMetadataSetsPageExportBatch",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"postAssetLibraryDocumentMetadataSetsPageExportBatch"));
+					put(
+						"mutation#createSiteDocumentMetadataSet",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"postSiteDocumentMetadataSet"));
+					put(
+						"mutation#createSiteDocumentMetadataSetBatch",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"postSiteDocumentMetadataSetBatch"));
+					put(
+						"mutation#createSiteDocumentMetadataSetsPageExportBatch",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"postSiteDocumentMetadataSetsPageExportBatch"));
+					put(
+						"mutation#updateAssetLibraryDocumentMetadataSetByExternalReferenceCode",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"putAssetLibraryDocumentMetadataSetByExternalReferenceCode"));
+					put(
+						"mutation#updateSiteDocumentMetadataSetByExternalReferenceCode",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"putSiteDocumentMetadataSetByExternalReferenceCode"));
 					put(
 						"mutation#deleteDocumentShortcut",
 						new ObjectValuePair<>(
@@ -723,25 +825,30 @@ public class ServletDataImpl implements ServletData {
 							DocumentShortcutResourceImpl.class,
 							"deleteDocumentShortcutBatch"));
 					put(
+						"mutation#deleteSiteDocumentShortcutByExternalReferenceCode",
+						new ObjectValuePair<>(
+							DocumentShortcutResourceImpl.class,
+							"deleteSiteDocumentShortcutByExternalReferenceCode"));
+					put(
 						"mutation#patchDocumentShortcut",
 						new ObjectValuePair<>(
 							DocumentShortcutResourceImpl.class,
 							"patchDocumentShortcut"));
 					put(
-						"mutation#updateDocumentShortcut",
+						"mutation#createAssetLibraryDocumentShortcut",
 						new ObjectValuePair<>(
 							DocumentShortcutResourceImpl.class,
-							"putDocumentShortcut"));
+							"postAssetLibraryDocumentShortcut"));
 					put(
-						"mutation#updateDocumentShortcutBatch",
+						"mutation#createAssetLibraryDocumentShortcutBatch",
 						new ObjectValuePair<>(
 							DocumentShortcutResourceImpl.class,
-							"putDocumentShortcutBatch"));
+							"postAssetLibraryDocumentShortcutBatch"));
 					put(
-						"mutation#createSiteDocumentShortcutsPageExportBatch",
+						"mutation#createAssetLibraryDocumentShortcutsPageExportBatch",
 						new ObjectValuePair<>(
 							DocumentShortcutResourceImpl.class,
-							"postSiteDocumentShortcutsPageExportBatch"));
+							"postAssetLibraryDocumentShortcutsPageExportBatch"));
 					put(
 						"mutation#createSiteDocumentShortcut",
 						new ObjectValuePair<>(
@@ -753,6 +860,26 @@ public class ServletDataImpl implements ServletData {
 							DocumentShortcutResourceImpl.class,
 							"postSiteDocumentShortcutBatch"));
 					put(
+						"mutation#createSiteDocumentShortcutsPageExportBatch",
+						new ObjectValuePair<>(
+							DocumentShortcutResourceImpl.class,
+							"postSiteDocumentShortcutsPageExportBatch"));
+					put(
+						"mutation#updateDocumentShortcut",
+						new ObjectValuePair<>(
+							DocumentShortcutResourceImpl.class,
+							"putDocumentShortcut"));
+					put(
+						"mutation#updateDocumentShortcutBatch",
+						new ObjectValuePair<>(
+							DocumentShortcutResourceImpl.class,
+							"putDocumentShortcutBatch"));
+					put(
+						"mutation#updateSiteDocumentShortcutByExternalReferenceCode",
+						new ObjectValuePair<>(
+							DocumentShortcutResourceImpl.class,
+							"putSiteDocumentShortcutByExternalReferenceCode"));
+					put(
 						"mutation#deleteKnowledgeBaseArticle",
 						new ObjectValuePair<>(
 							KnowledgeBaseArticleResourceImpl.class,
@@ -763,10 +890,60 @@ public class ServletDataImpl implements ServletData {
 							KnowledgeBaseArticleResourceImpl.class,
 							"deleteKnowledgeBaseArticleBatch"));
 					put(
+						"mutation#deleteKnowledgeBaseArticleMyRating",
+						new ObjectValuePair<>(
+							KnowledgeBaseArticleResourceImpl.class,
+							"deleteKnowledgeBaseArticleMyRating"));
+					put(
+						"mutation#deleteSiteKnowledgeBaseArticleByExternalReferenceCode",
+						new ObjectValuePair<>(
+							KnowledgeBaseArticleResourceImpl.class,
+							"deleteSiteKnowledgeBaseArticleByExternalReferenceCode"));
+					put(
 						"mutation#patchKnowledgeBaseArticle",
 						new ObjectValuePair<>(
 							KnowledgeBaseArticleResourceImpl.class,
 							"patchKnowledgeBaseArticle"));
+					put(
+						"mutation#createKnowledgeBaseArticleKnowledgeBaseArticle",
+						new ObjectValuePair<>(
+							KnowledgeBaseArticleResourceImpl.class,
+							"postKnowledgeBaseArticleKnowledgeBaseArticle"));
+					put(
+						"mutation#createKnowledgeBaseArticleMyRating",
+						new ObjectValuePair<>(
+							KnowledgeBaseArticleResourceImpl.class,
+							"postKnowledgeBaseArticleMyRating"));
+					put(
+						"mutation#createKnowledgeBaseFolderKnowledgeBaseArticle",
+						new ObjectValuePair<>(
+							KnowledgeBaseArticleResourceImpl.class,
+							"postKnowledgeBaseFolderKnowledgeBaseArticle"));
+					put(
+						"mutation#createKnowledgeBaseFolderKnowledgeBaseArticleBatch",
+						new ObjectValuePair<>(
+							KnowledgeBaseArticleResourceImpl.class,
+							"postKnowledgeBaseFolderKnowledgeBaseArticleBatch"));
+					put(
+						"mutation#createKnowledgeBaseFolderKnowledgeBaseArticlesPageExportBatch",
+						new ObjectValuePair<>(
+							KnowledgeBaseArticleResourceImpl.class,
+							"postKnowledgeBaseFolderKnowledgeBaseArticlesPageExportBatch"));
+					put(
+						"mutation#createSiteKnowledgeBaseArticle",
+						new ObjectValuePair<>(
+							KnowledgeBaseArticleResourceImpl.class,
+							"postSiteKnowledgeBaseArticle"));
+					put(
+						"mutation#createSiteKnowledgeBaseArticleBatch",
+						new ObjectValuePair<>(
+							KnowledgeBaseArticleResourceImpl.class,
+							"postSiteKnowledgeBaseArticleBatch"));
+					put(
+						"mutation#createSiteKnowledgeBaseArticlesPageExportBatch",
+						new ObjectValuePair<>(
+							KnowledgeBaseArticleResourceImpl.class,
+							"postSiteKnowledgeBaseArticlesPageExportBatch"));
 					put(
 						"mutation#updateKnowledgeBaseArticle",
 						new ObjectValuePair<>(
@@ -777,16 +954,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							KnowledgeBaseArticleResourceImpl.class,
 							"putKnowledgeBaseArticleBatch"));
-					put(
-						"mutation#deleteKnowledgeBaseArticleMyRating",
-						new ObjectValuePair<>(
-							KnowledgeBaseArticleResourceImpl.class,
-							"deleteKnowledgeBaseArticleMyRating"));
-					put(
-						"mutation#createKnowledgeBaseArticleMyRating",
-						new ObjectValuePair<>(
-							KnowledgeBaseArticleResourceImpl.class,
-							"postKnowledgeBaseArticleMyRating"));
 					put(
 						"mutation#updateKnowledgeBaseArticleMyRating",
 						new ObjectValuePair<>(
@@ -808,46 +975,6 @@ public class ServletDataImpl implements ServletData {
 							KnowledgeBaseArticleResourceImpl.class,
 							"putKnowledgeBaseArticleUnsubscribe"));
 					put(
-						"mutation#createKnowledgeBaseArticleKnowledgeBaseArticle",
-						new ObjectValuePair<>(
-							KnowledgeBaseArticleResourceImpl.class,
-							"postKnowledgeBaseArticleKnowledgeBaseArticle"));
-					put(
-						"mutation#createKnowledgeBaseFolderKnowledgeBaseArticlesPageExportBatch",
-						new ObjectValuePair<>(
-							KnowledgeBaseArticleResourceImpl.class,
-							"postKnowledgeBaseFolderKnowledgeBaseArticlesPageExportBatch"));
-					put(
-						"mutation#createKnowledgeBaseFolderKnowledgeBaseArticle",
-						new ObjectValuePair<>(
-							KnowledgeBaseArticleResourceImpl.class,
-							"postKnowledgeBaseFolderKnowledgeBaseArticle"));
-					put(
-						"mutation#createKnowledgeBaseFolderKnowledgeBaseArticleBatch",
-						new ObjectValuePair<>(
-							KnowledgeBaseArticleResourceImpl.class,
-							"postKnowledgeBaseFolderKnowledgeBaseArticleBatch"));
-					put(
-						"mutation#createSiteKnowledgeBaseArticlesPageExportBatch",
-						new ObjectValuePair<>(
-							KnowledgeBaseArticleResourceImpl.class,
-							"postSiteKnowledgeBaseArticlesPageExportBatch"));
-					put(
-						"mutation#createSiteKnowledgeBaseArticle",
-						new ObjectValuePair<>(
-							KnowledgeBaseArticleResourceImpl.class,
-							"postSiteKnowledgeBaseArticle"));
-					put(
-						"mutation#createSiteKnowledgeBaseArticleBatch",
-						new ObjectValuePair<>(
-							KnowledgeBaseArticleResourceImpl.class,
-							"postSiteKnowledgeBaseArticleBatch"));
-					put(
-						"mutation#deleteSiteKnowledgeBaseArticleByExternalReferenceCode",
-						new ObjectValuePair<>(
-							KnowledgeBaseArticleResourceImpl.class,
-							"deleteSiteKnowledgeBaseArticleByExternalReferenceCode"));
-					put(
 						"mutation#updateSiteKnowledgeBaseArticleByExternalReferenceCode",
 						new ObjectValuePair<>(
 							KnowledgeBaseArticleResourceImpl.class,
@@ -868,21 +995,6 @@ public class ServletDataImpl implements ServletData {
 							KnowledgeBaseArticleResourceImpl.class,
 							"putSiteKnowledgeBaseArticleUnsubscribe"));
 					put(
-						"mutation#createKnowledgeBaseArticleKnowledgeBaseAttachmentsPageExportBatch",
-						new ObjectValuePair<>(
-							KnowledgeBaseAttachmentResourceImpl.class,
-							"postKnowledgeBaseArticleKnowledgeBaseAttachmentsPageExportBatch"));
-					put(
-						"mutation#createKnowledgeBaseArticleKnowledgeBaseAttachment",
-						new ObjectValuePair<>(
-							KnowledgeBaseAttachmentResourceImpl.class,
-							"postKnowledgeBaseArticleKnowledgeBaseAttachment"));
-					put(
-						"mutation#createKnowledgeBaseArticleKnowledgeBaseAttachmentBatch",
-						new ObjectValuePair<>(
-							KnowledgeBaseAttachmentResourceImpl.class,
-							"postKnowledgeBaseArticleKnowledgeBaseAttachmentBatch"));
-					put(
 						"mutation#deleteKnowledgeBaseAttachment",
 						new ObjectValuePair<>(
 							KnowledgeBaseAttachmentResourceImpl.class,
@@ -898,6 +1010,21 @@ public class ServletDataImpl implements ServletData {
 							KnowledgeBaseAttachmentResourceImpl.class,
 							"deleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode"));
 					put(
+						"mutation#createKnowledgeBaseArticleKnowledgeBaseAttachment",
+						new ObjectValuePair<>(
+							KnowledgeBaseAttachmentResourceImpl.class,
+							"postKnowledgeBaseArticleKnowledgeBaseAttachment"));
+					put(
+						"mutation#createKnowledgeBaseArticleKnowledgeBaseAttachmentBatch",
+						new ObjectValuePair<>(
+							KnowledgeBaseAttachmentResourceImpl.class,
+							"postKnowledgeBaseArticleKnowledgeBaseAttachmentBatch"));
+					put(
+						"mutation#createKnowledgeBaseArticleKnowledgeBaseAttachmentsPageExportBatch",
+						new ObjectValuePair<>(
+							KnowledgeBaseAttachmentResourceImpl.class,
+							"postKnowledgeBaseArticleKnowledgeBaseAttachmentsPageExportBatch"));
+					put(
 						"mutation#deleteKnowledgeBaseFolder",
 						new ObjectValuePair<>(
 							KnowledgeBaseFolderResourceImpl.class,
@@ -908,10 +1035,35 @@ public class ServletDataImpl implements ServletData {
 							KnowledgeBaseFolderResourceImpl.class,
 							"deleteKnowledgeBaseFolderBatch"));
 					put(
+						"mutation#deleteSiteKnowledgeBaseFolderByExternalReferenceCode",
+						new ObjectValuePair<>(
+							KnowledgeBaseFolderResourceImpl.class,
+							"deleteSiteKnowledgeBaseFolderByExternalReferenceCode"));
+					put(
 						"mutation#patchKnowledgeBaseFolder",
 						new ObjectValuePair<>(
 							KnowledgeBaseFolderResourceImpl.class,
 							"patchKnowledgeBaseFolder"));
+					put(
+						"mutation#createKnowledgeBaseFolderKnowledgeBaseFolder",
+						new ObjectValuePair<>(
+							KnowledgeBaseFolderResourceImpl.class,
+							"postKnowledgeBaseFolderKnowledgeBaseFolder"));
+					put(
+						"mutation#createSiteKnowledgeBaseFolder",
+						new ObjectValuePair<>(
+							KnowledgeBaseFolderResourceImpl.class,
+							"postSiteKnowledgeBaseFolder"));
+					put(
+						"mutation#createSiteKnowledgeBaseFolderBatch",
+						new ObjectValuePair<>(
+							KnowledgeBaseFolderResourceImpl.class,
+							"postSiteKnowledgeBaseFolderBatch"));
+					put(
+						"mutation#createSiteKnowledgeBaseFoldersPageExportBatch",
+						new ObjectValuePair<>(
+							KnowledgeBaseFolderResourceImpl.class,
+							"postSiteKnowledgeBaseFoldersPageExportBatch"));
 					put(
 						"mutation#updateKnowledgeBaseFolder",
 						new ObjectValuePair<>(
@@ -927,31 +1079,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							KnowledgeBaseFolderResourceImpl.class,
 							"putKnowledgeBaseFolderPermissionsPage"));
-					put(
-						"mutation#createKnowledgeBaseFolderKnowledgeBaseFolder",
-						new ObjectValuePair<>(
-							KnowledgeBaseFolderResourceImpl.class,
-							"postKnowledgeBaseFolderKnowledgeBaseFolder"));
-					put(
-						"mutation#createSiteKnowledgeBaseFoldersPageExportBatch",
-						new ObjectValuePair<>(
-							KnowledgeBaseFolderResourceImpl.class,
-							"postSiteKnowledgeBaseFoldersPageExportBatch"));
-					put(
-						"mutation#createSiteKnowledgeBaseFolder",
-						new ObjectValuePair<>(
-							KnowledgeBaseFolderResourceImpl.class,
-							"postSiteKnowledgeBaseFolder"));
-					put(
-						"mutation#createSiteKnowledgeBaseFolderBatch",
-						new ObjectValuePair<>(
-							KnowledgeBaseFolderResourceImpl.class,
-							"postSiteKnowledgeBaseFolderBatch"));
-					put(
-						"mutation#deleteSiteKnowledgeBaseFolderByExternalReferenceCode",
-						new ObjectValuePair<>(
-							KnowledgeBaseFolderResourceImpl.class,
-							"deleteSiteKnowledgeBaseFolderByExternalReferenceCode"));
 					put(
 						"mutation#updateSiteKnowledgeBaseFolderByExternalReferenceCode",
 						new ObjectValuePair<>(
@@ -983,10 +1110,10 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardAttachmentResourceImpl.class,
 							"deleteMessageBoardAttachmentBatch"));
 					put(
-						"mutation#createMessageBoardMessageMessageBoardAttachmentsPageExportBatch",
+						"mutation#deleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode",
 						new ObjectValuePair<>(
 							MessageBoardAttachmentResourceImpl.class,
-							"postMessageBoardMessageMessageBoardAttachmentsPageExportBatch"));
+							"deleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode"));
 					put(
 						"mutation#createMessageBoardMessageMessageBoardAttachment",
 						new ObjectValuePair<>(
@@ -998,10 +1125,10 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardAttachmentResourceImpl.class,
 							"postMessageBoardMessageMessageBoardAttachmentBatch"));
 					put(
-						"mutation#createMessageBoardThreadMessageBoardAttachmentsPageExportBatch",
+						"mutation#createMessageBoardMessageMessageBoardAttachmentsPageExportBatch",
 						new ObjectValuePair<>(
 							MessageBoardAttachmentResourceImpl.class,
-							"postMessageBoardThreadMessageBoardAttachmentsPageExportBatch"));
+							"postMessageBoardMessageMessageBoardAttachmentsPageExportBatch"));
 					put(
 						"mutation#createMessageBoardThreadMessageBoardAttachment",
 						new ObjectValuePair<>(
@@ -1013,10 +1140,10 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardAttachmentResourceImpl.class,
 							"postMessageBoardThreadMessageBoardAttachmentBatch"));
 					put(
-						"mutation#deleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode",
+						"mutation#createMessageBoardThreadMessageBoardAttachmentsPageExportBatch",
 						new ObjectValuePair<>(
 							MessageBoardAttachmentResourceImpl.class,
-							"deleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode"));
+							"postMessageBoardThreadMessageBoardAttachmentsPageExportBatch"));
 					put(
 						"mutation#deleteMessageBoardMessage",
 						new ObjectValuePair<>(
@@ -1028,10 +1155,50 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardMessageResourceImpl.class,
 							"deleteMessageBoardMessageBatch"));
 					put(
+						"mutation#deleteMessageBoardMessageMyRating",
+						new ObjectValuePair<>(
+							MessageBoardMessageResourceImpl.class,
+							"deleteMessageBoardMessageMyRating"));
+					put(
+						"mutation#deleteSiteMessageBoardMessageByExternalReferenceCode",
+						new ObjectValuePair<>(
+							MessageBoardMessageResourceImpl.class,
+							"deleteSiteMessageBoardMessageByExternalReferenceCode"));
+					put(
 						"mutation#patchMessageBoardMessage",
 						new ObjectValuePair<>(
 							MessageBoardMessageResourceImpl.class,
 							"patchMessageBoardMessage"));
+					put(
+						"mutation#createMessageBoardMessageMessageBoardMessage",
+						new ObjectValuePair<>(
+							MessageBoardMessageResourceImpl.class,
+							"postMessageBoardMessageMessageBoardMessage"));
+					put(
+						"mutation#createMessageBoardMessageMyRating",
+						new ObjectValuePair<>(
+							MessageBoardMessageResourceImpl.class,
+							"postMessageBoardMessageMyRating"));
+					put(
+						"mutation#createMessageBoardThreadMessageBoardMessage",
+						new ObjectValuePair<>(
+							MessageBoardMessageResourceImpl.class,
+							"postMessageBoardThreadMessageBoardMessage"));
+					put(
+						"mutation#createMessageBoardThreadMessageBoardMessageBatch",
+						new ObjectValuePair<>(
+							MessageBoardMessageResourceImpl.class,
+							"postMessageBoardThreadMessageBoardMessageBatch"));
+					put(
+						"mutation#createMessageBoardThreadMessageBoardMessagesPageExportBatch",
+						new ObjectValuePair<>(
+							MessageBoardMessageResourceImpl.class,
+							"postMessageBoardThreadMessageBoardMessagesPageExportBatch"));
+					put(
+						"mutation#createSiteMessageBoardMessagesPageExportBatch",
+						new ObjectValuePair<>(
+							MessageBoardMessageResourceImpl.class,
+							"postSiteMessageBoardMessagesPageExportBatch"));
 					put(
 						"mutation#updateMessageBoardMessage",
 						new ObjectValuePair<>(
@@ -1047,16 +1214,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							MessageBoardMessageResourceImpl.class,
 							"putMessageBoardMessageMarkAsAnswer"));
-					put(
-						"mutation#deleteMessageBoardMessageMyRating",
-						new ObjectValuePair<>(
-							MessageBoardMessageResourceImpl.class,
-							"deleteMessageBoardMessageMyRating"));
-					put(
-						"mutation#createMessageBoardMessageMyRating",
-						new ObjectValuePair<>(
-							MessageBoardMessageResourceImpl.class,
-							"postMessageBoardMessageMyRating"));
 					put(
 						"mutation#updateMessageBoardMessageMyRating",
 						new ObjectValuePair<>(
@@ -1083,36 +1240,6 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardMessageResourceImpl.class,
 							"putMessageBoardMessageUnsubscribe"));
 					put(
-						"mutation#createMessageBoardMessageMessageBoardMessage",
-						new ObjectValuePair<>(
-							MessageBoardMessageResourceImpl.class,
-							"postMessageBoardMessageMessageBoardMessage"));
-					put(
-						"mutation#createMessageBoardThreadMessageBoardMessagesPageExportBatch",
-						new ObjectValuePair<>(
-							MessageBoardMessageResourceImpl.class,
-							"postMessageBoardThreadMessageBoardMessagesPageExportBatch"));
-					put(
-						"mutation#createMessageBoardThreadMessageBoardMessage",
-						new ObjectValuePair<>(
-							MessageBoardMessageResourceImpl.class,
-							"postMessageBoardThreadMessageBoardMessage"));
-					put(
-						"mutation#createMessageBoardThreadMessageBoardMessageBatch",
-						new ObjectValuePair<>(
-							MessageBoardMessageResourceImpl.class,
-							"postMessageBoardThreadMessageBoardMessageBatch"));
-					put(
-						"mutation#createSiteMessageBoardMessagesPageExportBatch",
-						new ObjectValuePair<>(
-							MessageBoardMessageResourceImpl.class,
-							"postSiteMessageBoardMessagesPageExportBatch"));
-					put(
-						"mutation#deleteSiteMessageBoardMessageByExternalReferenceCode",
-						new ObjectValuePair<>(
-							MessageBoardMessageResourceImpl.class,
-							"deleteSiteMessageBoardMessageByExternalReferenceCode"));
-					put(
 						"mutation#updateSiteMessageBoardMessageByExternalReferenceCode",
 						new ObjectValuePair<>(
 							MessageBoardMessageResourceImpl.class,
@@ -1137,6 +1264,26 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							MessageBoardSectionResourceImpl.class,
 							"patchMessageBoardSection"));
+					put(
+						"mutation#createMessageBoardSectionMessageBoardSection",
+						new ObjectValuePair<>(
+							MessageBoardSectionResourceImpl.class,
+							"postMessageBoardSectionMessageBoardSection"));
+					put(
+						"mutation#createSiteMessageBoardSection",
+						new ObjectValuePair<>(
+							MessageBoardSectionResourceImpl.class,
+							"postSiteMessageBoardSection"));
+					put(
+						"mutation#createSiteMessageBoardSectionBatch",
+						new ObjectValuePair<>(
+							MessageBoardSectionResourceImpl.class,
+							"postSiteMessageBoardSectionBatch"));
+					put(
+						"mutation#createSiteMessageBoardSectionsPageExportBatch",
+						new ObjectValuePair<>(
+							MessageBoardSectionResourceImpl.class,
+							"postSiteMessageBoardSectionsPageExportBatch"));
 					put(
 						"mutation#updateMessageBoardSection",
 						new ObjectValuePair<>(
@@ -1163,45 +1310,10 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardSectionResourceImpl.class,
 							"putMessageBoardSectionUnsubscribe"));
 					put(
-						"mutation#createMessageBoardSectionMessageBoardSection",
-						new ObjectValuePair<>(
-							MessageBoardSectionResourceImpl.class,
-							"postMessageBoardSectionMessageBoardSection"));
-					put(
-						"mutation#createSiteMessageBoardSectionsPageExportBatch",
-						new ObjectValuePair<>(
-							MessageBoardSectionResourceImpl.class,
-							"postSiteMessageBoardSectionsPageExportBatch"));
-					put(
-						"mutation#createSiteMessageBoardSection",
-						new ObjectValuePair<>(
-							MessageBoardSectionResourceImpl.class,
-							"postSiteMessageBoardSection"));
-					put(
-						"mutation#createSiteMessageBoardSectionBatch",
-						new ObjectValuePair<>(
-							MessageBoardSectionResourceImpl.class,
-							"postSiteMessageBoardSectionBatch"));
-					put(
 						"mutation#updateSiteMessageBoardSectionPermissionsPage",
 						new ObjectValuePair<>(
 							MessageBoardSectionResourceImpl.class,
 							"putSiteMessageBoardSectionPermissionsPage"));
-					put(
-						"mutation#createMessageBoardSectionMessageBoardThreadsPageExportBatch",
-						new ObjectValuePair<>(
-							MessageBoardThreadResourceImpl.class,
-							"postMessageBoardSectionMessageBoardThreadsPageExportBatch"));
-					put(
-						"mutation#createMessageBoardSectionMessageBoardThread",
-						new ObjectValuePair<>(
-							MessageBoardThreadResourceImpl.class,
-							"postMessageBoardSectionMessageBoardThread"));
-					put(
-						"mutation#createMessageBoardSectionMessageBoardThreadBatch",
-						new ObjectValuePair<>(
-							MessageBoardThreadResourceImpl.class,
-							"postMessageBoardSectionMessageBoardThreadBatch"));
 					put(
 						"mutation#deleteMessageBoardThread",
 						new ObjectValuePair<>(
@@ -1213,10 +1325,50 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardThreadResourceImpl.class,
 							"deleteMessageBoardThreadBatch"));
 					put(
+						"mutation#deleteMessageBoardThreadMyRating",
+						new ObjectValuePair<>(
+							MessageBoardThreadResourceImpl.class,
+							"deleteMessageBoardThreadMyRating"));
+					put(
 						"mutation#patchMessageBoardThread",
 						new ObjectValuePair<>(
 							MessageBoardThreadResourceImpl.class,
 							"patchMessageBoardThread"));
+					put(
+						"mutation#createMessageBoardSectionMessageBoardThread",
+						new ObjectValuePair<>(
+							MessageBoardThreadResourceImpl.class,
+							"postMessageBoardSectionMessageBoardThread"));
+					put(
+						"mutation#createMessageBoardSectionMessageBoardThreadBatch",
+						new ObjectValuePair<>(
+							MessageBoardThreadResourceImpl.class,
+							"postMessageBoardSectionMessageBoardThreadBatch"));
+					put(
+						"mutation#createMessageBoardSectionMessageBoardThreadsPageExportBatch",
+						new ObjectValuePair<>(
+							MessageBoardThreadResourceImpl.class,
+							"postMessageBoardSectionMessageBoardThreadsPageExportBatch"));
+					put(
+						"mutation#createMessageBoardThreadMyRating",
+						new ObjectValuePair<>(
+							MessageBoardThreadResourceImpl.class,
+							"postMessageBoardThreadMyRating"));
+					put(
+						"mutation#createSiteMessageBoardThread",
+						new ObjectValuePair<>(
+							MessageBoardThreadResourceImpl.class,
+							"postSiteMessageBoardThread"));
+					put(
+						"mutation#createSiteMessageBoardThreadBatch",
+						new ObjectValuePair<>(
+							MessageBoardThreadResourceImpl.class,
+							"postSiteMessageBoardThreadBatch"));
+					put(
+						"mutation#createSiteMessageBoardThreadsPageExportBatch",
+						new ObjectValuePair<>(
+							MessageBoardThreadResourceImpl.class,
+							"postSiteMessageBoardThreadsPageExportBatch"));
 					put(
 						"mutation#updateMessageBoardThread",
 						new ObjectValuePair<>(
@@ -1227,16 +1379,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							MessageBoardThreadResourceImpl.class,
 							"putMessageBoardThreadBatch"));
-					put(
-						"mutation#deleteMessageBoardThreadMyRating",
-						new ObjectValuePair<>(
-							MessageBoardThreadResourceImpl.class,
-							"deleteMessageBoardThreadMyRating"));
-					put(
-						"mutation#createMessageBoardThreadMyRating",
-						new ObjectValuePair<>(
-							MessageBoardThreadResourceImpl.class,
-							"postMessageBoardThreadMyRating"));
 					put(
 						"mutation#updateMessageBoardThreadMyRating",
 						new ObjectValuePair<>(
@@ -1258,21 +1400,6 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardThreadResourceImpl.class,
 							"putMessageBoardThreadUnsubscribe"));
 					put(
-						"mutation#createSiteMessageBoardThreadsPageExportBatch",
-						new ObjectValuePair<>(
-							MessageBoardThreadResourceImpl.class,
-							"postSiteMessageBoardThreadsPageExportBatch"));
-					put(
-						"mutation#createSiteMessageBoardThread",
-						new ObjectValuePair<>(
-							MessageBoardThreadResourceImpl.class,
-							"postSiteMessageBoardThread"));
-					put(
-						"mutation#createSiteMessageBoardThreadBatch",
-						new ObjectValuePair<>(
-							MessageBoardThreadResourceImpl.class,
-							"postSiteMessageBoardThreadBatch"));
-					put(
 						"mutation#updateSiteMessageBoardThreadPermissionsPage",
 						new ObjectValuePair<>(
 							MessageBoardThreadResourceImpl.class,
@@ -1287,6 +1414,26 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							NavigationMenuResourceImpl.class,
 							"deleteNavigationMenuBatch"));
+					put(
+						"mutation#deleteSiteNavigationMenuByExternalReferenceCode",
+						new ObjectValuePair<>(
+							NavigationMenuResourceImpl.class,
+							"deleteSiteNavigationMenuByExternalReferenceCode"));
+					put(
+						"mutation#createSiteNavigationMenu",
+						new ObjectValuePair<>(
+							NavigationMenuResourceImpl.class,
+							"postSiteNavigationMenu"));
+					put(
+						"mutation#createSiteNavigationMenuBatch",
+						new ObjectValuePair<>(
+							NavigationMenuResourceImpl.class,
+							"postSiteNavigationMenuBatch"));
+					put(
+						"mutation#createSiteNavigationMenusPageExportBatch",
+						new ObjectValuePair<>(
+							NavigationMenuResourceImpl.class,
+							"postSiteNavigationMenusPageExportBatch"));
 					put(
 						"mutation#updateNavigationMenu",
 						new ObjectValuePair<>(
@@ -1303,30 +1450,15 @@ public class ServletDataImpl implements ServletData {
 							NavigationMenuResourceImpl.class,
 							"putNavigationMenuPermissionsPage"));
 					put(
-						"mutation#createSiteNavigationMenusPageExportBatch",
+						"mutation#updateSiteNavigationMenuByExternalReferenceCode",
 						new ObjectValuePair<>(
 							NavigationMenuResourceImpl.class,
-							"postSiteNavigationMenusPageExportBatch"));
-					put(
-						"mutation#createSiteNavigationMenu",
-						new ObjectValuePair<>(
-							NavigationMenuResourceImpl.class,
-							"postSiteNavigationMenu"));
-					put(
-						"mutation#createSiteNavigationMenuBatch",
-						new ObjectValuePair<>(
-							NavigationMenuResourceImpl.class,
-							"postSiteNavigationMenuBatch"));
+							"putSiteNavigationMenuByExternalReferenceCode"));
 					put(
 						"mutation#updateSiteNavigationMenuPermissionsPage",
 						new ObjectValuePair<>(
 							NavigationMenuResourceImpl.class,
 							"putSiteNavigationMenuPermissionsPage"));
-					put(
-						"mutation#createSiteSitePagesPageExportBatch",
-						new ObjectValuePair<>(
-							SitePageResourceImpl.class,
-							"postSiteSitePagesPageExportBatch"));
 					put(
 						"mutation#createSiteSitePage",
 						new ObjectValuePair<>(
@@ -1337,85 +1469,20 @@ public class ServletDataImpl implements ServletData {
 							SitePageResourceImpl.class,
 							"postSiteSitePageBatch"));
 					put(
-						"mutation#createAssetLibraryStructuredContentsPageExportBatch",
+						"mutation#createSiteSitePagesPageExportBatch",
 						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"postAssetLibraryStructuredContentsPageExportBatch"));
-					put(
-						"mutation#createAssetLibraryStructuredContent",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"postAssetLibraryStructuredContent"));
-					put(
-						"mutation#createAssetLibraryStructuredContentBatch",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"postAssetLibraryStructuredContentBatch"));
+							SitePageResourceImpl.class,
+							"postSiteSitePagesPageExportBatch"));
 					put(
 						"mutation#deleteAssetLibraryStructuredContentByExternalReferenceCode",
 						new ObjectValuePair<>(
 							StructuredContentResourceImpl.class,
 							"deleteAssetLibraryStructuredContentByExternalReferenceCode"));
 					put(
-						"mutation#updateAssetLibraryStructuredContentByExternalReferenceCode",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"putAssetLibraryStructuredContentByExternalReferenceCode"));
-					put(
-						"mutation#updateAssetLibraryStructuredContentPermissionsPage",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"putAssetLibraryStructuredContentPermissionsPage"));
-					put(
-						"mutation#createContentStructureStructuredContentsPageExportBatch",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"postContentStructureStructuredContentsPageExportBatch"));
-					put(
-						"mutation#createSiteStructuredContentsPageExportBatch",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"postSiteStructuredContentsPageExportBatch"));
-					put(
-						"mutation#createSiteStructuredContent",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"postSiteStructuredContent"));
-					put(
-						"mutation#createSiteStructuredContentBatch",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"postSiteStructuredContentBatch"));
-					put(
 						"mutation#deleteSiteStructuredContentByExternalReferenceCode",
 						new ObjectValuePair<>(
 							StructuredContentResourceImpl.class,
 							"deleteSiteStructuredContentByExternalReferenceCode"));
-					put(
-						"mutation#updateSiteStructuredContentByExternalReferenceCode",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"putSiteStructuredContentByExternalReferenceCode"));
-					put(
-						"mutation#updateSiteStructuredContentPermissionsPage",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"putSiteStructuredContentPermissionsPage"));
-					put(
-						"mutation#createStructuredContentFolderStructuredContentsPageExportBatch",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"postStructuredContentFolderStructuredContentsPageExportBatch"));
-					put(
-						"mutation#createStructuredContentFolderStructuredContent",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"postStructuredContentFolderStructuredContent"));
-					put(
-						"mutation#createStructuredContentFolderStructuredContentBatch",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"postStructuredContentFolderStructuredContentBatch"));
 					put(
 						"mutation#deleteStructuredContent",
 						new ObjectValuePair<>(
@@ -1427,10 +1494,90 @@ public class ServletDataImpl implements ServletData {
 							StructuredContentResourceImpl.class,
 							"deleteStructuredContentBatch"));
 					put(
+						"mutation#deleteStructuredContentMyRating",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"deleteStructuredContentMyRating"));
+					put(
 						"mutation#patchStructuredContent",
 						new ObjectValuePair<>(
 							StructuredContentResourceImpl.class,
 							"patchStructuredContent"));
+					put(
+						"mutation#createAssetLibraryStructuredContent",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"postAssetLibraryStructuredContent"));
+					put(
+						"mutation#createAssetLibraryStructuredContentBatch",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"postAssetLibraryStructuredContentBatch"));
+					put(
+						"mutation#createAssetLibraryStructuredContentsPageExportBatch",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"postAssetLibraryStructuredContentsPageExportBatch"));
+					put(
+						"mutation#createContentStructureStructuredContentsPageExportBatch",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"postContentStructureStructuredContentsPageExportBatch"));
+					put(
+						"mutation#createSiteStructuredContent",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"postSiteStructuredContent"));
+					put(
+						"mutation#createSiteStructuredContentBatch",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"postSiteStructuredContentBatch"));
+					put(
+						"mutation#createSiteStructuredContentsPageExportBatch",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"postSiteStructuredContentsPageExportBatch"));
+					put(
+						"mutation#createStructuredContentFolderStructuredContent",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"postStructuredContentFolderStructuredContent"));
+					put(
+						"mutation#createStructuredContentFolderStructuredContentBatch",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"postStructuredContentFolderStructuredContentBatch"));
+					put(
+						"mutation#createStructuredContentFolderStructuredContentsPageExportBatch",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"postStructuredContentFolderStructuredContentsPageExportBatch"));
+					put(
+						"mutation#createStructuredContentMyRating",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"postStructuredContentMyRating"));
+					put(
+						"mutation#updateAssetLibraryStructuredContentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"putAssetLibraryStructuredContentByExternalReferenceCode"));
+					put(
+						"mutation#updateAssetLibraryStructuredContentPermissionsPage",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"putAssetLibraryStructuredContentPermissionsPage"));
+					put(
+						"mutation#updateSiteStructuredContentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"putSiteStructuredContentByExternalReferenceCode"));
+					put(
+						"mutation#updateSiteStructuredContentPermissionsPage",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"putSiteStructuredContentPermissionsPage"));
 					put(
 						"mutation#updateStructuredContent",
 						new ObjectValuePair<>(
@@ -1441,16 +1588,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							StructuredContentResourceImpl.class,
 							"putStructuredContentBatch"));
-					put(
-						"mutation#deleteStructuredContentMyRating",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"deleteStructuredContentMyRating"));
-					put(
-						"mutation#createStructuredContentMyRating",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"postStructuredContentMyRating"));
 					put(
 						"mutation#updateStructuredContentMyRating",
 						new ObjectValuePair<>(
@@ -1472,75 +1609,15 @@ public class ServletDataImpl implements ServletData {
 							StructuredContentResourceImpl.class,
 							"putStructuredContentUnsubscribe"));
 					put(
-						"mutation#createAssetLibraryStructuredContentFoldersPageExportBatch",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"postAssetLibraryStructuredContentFoldersPageExportBatch"));
-					put(
-						"mutation#createAssetLibraryStructuredContentFolder",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"postAssetLibraryStructuredContentFolder"));
-					put(
-						"mutation#createAssetLibraryStructuredContentFolderBatch",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"postAssetLibraryStructuredContentFolderBatch"));
-					put(
 						"mutation#deleteAssetLibraryStructuredContentFolderByExternalReferenceCode",
 						new ObjectValuePair<>(
 							StructuredContentFolderResourceImpl.class,
 							"deleteAssetLibraryStructuredContentFolderByExternalReferenceCode"));
 					put(
-						"mutation#updateAssetLibraryStructuredContentFolderByExternalReferenceCode",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"putAssetLibraryStructuredContentFolderByExternalReferenceCode"));
-					put(
-						"mutation#updateAssetLibraryStructuredContentFolderPermissionsPage",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"putAssetLibraryStructuredContentFolderPermissionsPage"));
-					put(
-						"mutation#createSiteStructuredContentFoldersPageExportBatch",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"postSiteStructuredContentFoldersPageExportBatch"));
-					put(
-						"mutation#createSiteStructuredContentFolder",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"postSiteStructuredContentFolder"));
-					put(
-						"mutation#createSiteStructuredContentFolderBatch",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"postSiteStructuredContentFolderBatch"));
-					put(
 						"mutation#deleteSiteStructuredContentFolderByExternalReferenceCode",
 						new ObjectValuePair<>(
 							StructuredContentFolderResourceImpl.class,
 							"deleteSiteStructuredContentFolderByExternalReferenceCode"));
-					put(
-						"mutation#updateSiteStructuredContentFolderByExternalReferenceCode",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"putSiteStructuredContentFolderByExternalReferenceCode"));
-					put(
-						"mutation#updateSiteStructuredContentFolderPermissionsPage",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"putSiteStructuredContentFolderPermissionsPage"));
-					put(
-						"mutation#updateStructuredContentFolderPermissionsPage",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"putStructuredContentFolderPermissionsPage"));
-					put(
-						"mutation#createStructuredContentFolderStructuredContentFolder",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"postStructuredContentFolderStructuredContentFolder"));
 					put(
 						"mutation#deleteStructuredContentFolder",
 						new ObjectValuePair<>(
@@ -1557,6 +1634,61 @@ public class ServletDataImpl implements ServletData {
 							StructuredContentFolderResourceImpl.class,
 							"patchStructuredContentFolder"));
 					put(
+						"mutation#createAssetLibraryStructuredContentFolder",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"postAssetLibraryStructuredContentFolder"));
+					put(
+						"mutation#createAssetLibraryStructuredContentFolderBatch",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"postAssetLibraryStructuredContentFolderBatch"));
+					put(
+						"mutation#createAssetLibraryStructuredContentFoldersPageExportBatch",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"postAssetLibraryStructuredContentFoldersPageExportBatch"));
+					put(
+						"mutation#createSiteStructuredContentFolder",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"postSiteStructuredContentFolder"));
+					put(
+						"mutation#createSiteStructuredContentFolderBatch",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"postSiteStructuredContentFolderBatch"));
+					put(
+						"mutation#createSiteStructuredContentFoldersPageExportBatch",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"postSiteStructuredContentFoldersPageExportBatch"));
+					put(
+						"mutation#createStructuredContentFolderStructuredContentFolder",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"postStructuredContentFolderStructuredContentFolder"));
+					put(
+						"mutation#updateAssetLibraryStructuredContentFolderByExternalReferenceCode",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"putAssetLibraryStructuredContentFolderByExternalReferenceCode"));
+					put(
+						"mutation#updateAssetLibraryStructuredContentFolderPermissionsPage",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"putAssetLibraryStructuredContentFolderPermissionsPage"));
+					put(
+						"mutation#updateSiteStructuredContentFolderByExternalReferenceCode",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"putSiteStructuredContentFolderByExternalReferenceCode"));
+					put(
+						"mutation#updateSiteStructuredContentFolderPermissionsPage",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"putSiteStructuredContentFolderPermissionsPage"));
+					put(
 						"mutation#updateStructuredContentFolder",
 						new ObjectValuePair<>(
 							StructuredContentFolderResourceImpl.class,
@@ -1566,6 +1698,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							StructuredContentFolderResourceImpl.class,
 							"putStructuredContentFolderBatch"));
+					put(
+						"mutation#updateStructuredContentFolderPermissionsPage",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"putStructuredContentFolderPermissionsPage"));
 					put(
 						"mutation#updateStructuredContentFolderSubscribe",
 						new ObjectValuePair<>(
@@ -1577,10 +1714,18 @@ public class ServletDataImpl implements ServletData {
 							StructuredContentFolderResourceImpl.class,
 							"putStructuredContentFolderUnsubscribe"));
 					put(
-						"mutation#createSiteWikiNodesPageExportBatch",
+						"mutation#deleteSiteWikiNodeByExternalReferenceCode",
 						new ObjectValuePair<>(
 							WikiNodeResourceImpl.class,
-							"postSiteWikiNodesPageExportBatch"));
+							"deleteSiteWikiNodeByExternalReferenceCode"));
+					put(
+						"mutation#deleteWikiNode",
+						new ObjectValuePair<>(
+							WikiNodeResourceImpl.class, "deleteWikiNode"));
+					put(
+						"mutation#deleteWikiNodeBatch",
+						new ObjectValuePair<>(
+							WikiNodeResourceImpl.class, "deleteWikiNodeBatch"));
 					put(
 						"mutation#createSiteWikiNode",
 						new ObjectValuePair<>(
@@ -1591,10 +1736,10 @@ public class ServletDataImpl implements ServletData {
 							WikiNodeResourceImpl.class,
 							"postSiteWikiNodeBatch"));
 					put(
-						"mutation#deleteSiteWikiNodeByExternalReferenceCode",
+						"mutation#createSiteWikiNodesPageExportBatch",
 						new ObjectValuePair<>(
 							WikiNodeResourceImpl.class,
-							"deleteSiteWikiNodeByExternalReferenceCode"));
+							"postSiteWikiNodesPageExportBatch"));
 					put(
 						"mutation#updateSiteWikiNodeByExternalReferenceCode",
 						new ObjectValuePair<>(
@@ -1605,14 +1750,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WikiNodeResourceImpl.class,
 							"putSiteWikiNodePermissionsPage"));
-					put(
-						"mutation#deleteWikiNode",
-						new ObjectValuePair<>(
-							WikiNodeResourceImpl.class, "deleteWikiNode"));
-					put(
-						"mutation#deleteWikiNodeBatch",
-						new ObjectValuePair<>(
-							WikiNodeResourceImpl.class, "deleteWikiNodeBatch"));
 					put(
 						"mutation#updateWikiNode",
 						new ObjectValuePair<>(
@@ -1642,15 +1779,13 @@ public class ServletDataImpl implements ServletData {
 							WikiPageResourceImpl.class,
 							"deleteSiteWikiPageByExternalReferenceCode"));
 					put(
-						"mutation#updateSiteWikiPageByExternalReferenceCode",
+						"mutation#deleteWikiPage",
 						new ObjectValuePair<>(
-							WikiPageResourceImpl.class,
-							"putSiteWikiPageByExternalReferenceCode"));
+							WikiPageResourceImpl.class, "deleteWikiPage"));
 					put(
-						"mutation#createWikiNodeWikiPagesPageExportBatch",
+						"mutation#deleteWikiPageBatch",
 						new ObjectValuePair<>(
-							WikiPageResourceImpl.class,
-							"postWikiNodeWikiPagesPageExportBatch"));
+							WikiPageResourceImpl.class, "deleteWikiPageBatch"));
 					put(
 						"mutation#createWikiNodeWikiPage",
 						new ObjectValuePair<>(
@@ -1662,18 +1797,20 @@ public class ServletDataImpl implements ServletData {
 							WikiPageResourceImpl.class,
 							"postWikiNodeWikiPageBatch"));
 					put(
+						"mutation#createWikiNodeWikiPagesPageExportBatch",
+						new ObjectValuePair<>(
+							WikiPageResourceImpl.class,
+							"postWikiNodeWikiPagesPageExportBatch"));
+					put(
 						"mutation#createWikiPageWikiPage",
 						new ObjectValuePair<>(
 							WikiPageResourceImpl.class,
 							"postWikiPageWikiPage"));
 					put(
-						"mutation#deleteWikiPage",
+						"mutation#updateSiteWikiPageByExternalReferenceCode",
 						new ObjectValuePair<>(
-							WikiPageResourceImpl.class, "deleteWikiPage"));
-					put(
-						"mutation#deleteWikiPageBatch",
-						new ObjectValuePair<>(
-							WikiPageResourceImpl.class, "deleteWikiPageBatch"));
+							WikiPageResourceImpl.class,
+							"putSiteWikiPageByExternalReferenceCode"));
 					put(
 						"mutation#updateWikiPage",
 						new ObjectValuePair<>(
@@ -1713,11 +1850,6 @@ public class ServletDataImpl implements ServletData {
 							WikiPageAttachmentResourceImpl.class,
 							"deleteWikiPageAttachmentBatch"));
 					put(
-						"mutation#createWikiPageWikiPageAttachmentsPageExportBatch",
-						new ObjectValuePair<>(
-							WikiPageAttachmentResourceImpl.class,
-							"postWikiPageWikiPageAttachmentsPageExportBatch"));
-					put(
 						"mutation#createWikiPageWikiPageAttachment",
 						new ObjectValuePair<>(
 							WikiPageAttachmentResourceImpl.class,
@@ -1727,6 +1859,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WikiPageAttachmentResourceImpl.class,
 							"postWikiPageWikiPageAttachmentBatch"));
+					put(
+						"mutation#createWikiPageWikiPageAttachmentsPageExportBatch",
+						new ObjectValuePair<>(
+							WikiPageAttachmentResourceImpl.class,
+							"postWikiPageWikiPageAttachmentsPageExportBatch"));
 
 					put(
 						"query#blogPosting",
@@ -1748,11 +1885,6 @@ public class ServletDataImpl implements ServletData {
 							BlogPostingResourceImpl.class,
 							"getBlogPostingRenderedContentByDisplayPageDisplayPageKey"));
 					put(
-						"query#blogPostings",
-						new ObjectValuePair<>(
-							BlogPostingResourceImpl.class,
-							"getSiteBlogPostingsPage"));
-					put(
 						"query#blogPostingByExternalReferenceCode",
 						new ObjectValuePair<>(
 							BlogPostingResourceImpl.class,
@@ -1763,10 +1895,20 @@ public class ServletDataImpl implements ServletData {
 							BlogPostingResourceImpl.class,
 							"getSiteBlogPostingPermissionsPage"));
 					put(
+						"query#blogPostings",
+						new ObjectValuePair<>(
+							BlogPostingResourceImpl.class,
+							"getSiteBlogPostingsPage"));
+					put(
 						"query#blogPostingImage",
 						new ObjectValuePair<>(
 							BlogPostingImageResourceImpl.class,
 							"getBlogPostingImage"));
+					put(
+						"query#blogPostingImageByExternalReferenceCode",
+						new ObjectValuePair<>(
+							BlogPostingImageResourceImpl.class,
+							"getSiteBlogPostingImageByExternalReferenceCode"));
 					put(
 						"query#blogPostingImages",
 						new ObjectValuePair<>(
@@ -1852,15 +1994,20 @@ public class ServletDataImpl implements ServletData {
 							ContentSetElementResourceImpl.class,
 							"getSiteContentSetByUuidContentSetElementsPage"));
 					put(
-						"query#assetLibraryContentStructures",
+						"query#contentSetProviderByKeyContentSetElements",
 						new ObjectValuePair<>(
-							ContentStructureResourceImpl.class,
-							"getAssetLibraryContentStructuresPage"));
+							ContentSetElementResourceImpl.class,
+							"getSiteContentSetProviderByKeyContentSetElementsPage"));
 					put(
 						"query#assetLibraryContentStructurePermissions",
 						new ObjectValuePair<>(
 							ContentStructureResourceImpl.class,
 							"getAssetLibraryContentStructurePermissionsPage"));
+					put(
+						"query#assetLibraryContentStructures",
+						new ObjectValuePair<>(
+							ContentStructureResourceImpl.class,
+							"getAssetLibraryContentStructuresPage"));
 					put(
 						"query#contentStructure",
 						new ObjectValuePair<>(
@@ -1872,35 +2019,30 @@ public class ServletDataImpl implements ServletData {
 							ContentStructureResourceImpl.class,
 							"getContentStructurePermissionsPage"));
 					put(
-						"query#contentStructures",
-						new ObjectValuePair<>(
-							ContentStructureResourceImpl.class,
-							"getSiteContentStructuresPage"));
-					put(
 						"query#siteContentStructurePermissions",
 						new ObjectValuePair<>(
 							ContentStructureResourceImpl.class,
 							"getSiteContentStructurePermissionsPage"));
+					put(
+						"query#contentStructures",
+						new ObjectValuePair<>(
+							ContentStructureResourceImpl.class,
+							"getSiteContentStructuresPage"));
 					put(
 						"query#assetLibraryContentTemplates",
 						new ObjectValuePair<>(
 							ContentTemplateResourceImpl.class,
 							"getAssetLibraryContentTemplatesPage"));
 					put(
-						"query#contentTemplates",
-						new ObjectValuePair<>(
-							ContentTemplateResourceImpl.class,
-							"getSiteContentTemplatesPage"));
-					put(
 						"query#contentTemplate",
 						new ObjectValuePair<>(
 							ContentTemplateResourceImpl.class,
 							"getSiteContentTemplate"));
 					put(
-						"query#assetLibraryDocuments",
+						"query#contentTemplates",
 						new ObjectValuePair<>(
-							DocumentResourceImpl.class,
-							"getAssetLibraryDocumentsPage"));
+							ContentTemplateResourceImpl.class,
+							"getSiteContentTemplatesPage"));
 					put(
 						"query#assetLibraryDocumentByExternalReferenceCode",
 						new ObjectValuePair<>(
@@ -1912,19 +2054,24 @@ public class ServletDataImpl implements ServletData {
 							DocumentResourceImpl.class,
 							"getAssetLibraryDocumentPermissionsPage"));
 					put(
+						"query#assetLibraryDocuments",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class,
+							"getAssetLibraryDocumentsPage"));
+					put(
 						"query#assetLibraryDocumentsRatedByMe",
 						new ObjectValuePair<>(
 							DocumentResourceImpl.class,
 							"getAssetLibraryDocumentsRatedByMePage"));
 					put(
+						"query#document",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class, "getDocument"));
+					put(
 						"query#documentFolderDocuments",
 						new ObjectValuePair<>(
 							DocumentResourceImpl.class,
 							"getDocumentFolderDocumentsPage"));
-					put(
-						"query#document",
-						new ObjectValuePair<>(
-							DocumentResourceImpl.class, "getDocument"));
 					put(
 						"query#documentMyRating",
 						new ObjectValuePair<>(
@@ -1940,11 +2087,6 @@ public class ServletDataImpl implements ServletData {
 							DocumentResourceImpl.class,
 							"getDocumentRenderedContentByDisplayPageDisplayPageKey"));
 					put(
-						"query#documents",
-						new ObjectValuePair<>(
-							DocumentResourceImpl.class,
-							"getSiteDocumentsPage"));
-					put(
 						"query#documentByExternalReferenceCode",
 						new ObjectValuePair<>(
 							DocumentResourceImpl.class,
@@ -1955,20 +2097,40 @@ public class ServletDataImpl implements ServletData {
 							DocumentResourceImpl.class,
 							"getSiteDocumentPermissionsPage"));
 					put(
+						"query#documents",
+						new ObjectValuePair<>(
+							DocumentResourceImpl.class,
+							"getSiteDocumentsPage"));
+					put(
 						"query#documentsRatedByMe",
 						new ObjectValuePair<>(
 							DocumentResourceImpl.class,
 							"getSiteDocumentsRatedByMePage"));
 					put(
-						"query#assetLibraryDocumentFolders",
+						"query#assetLibraryDocumentDataDefinitionTypes",
 						new ObjectValuePair<>(
-							DocumentFolderResourceImpl.class,
-							"getAssetLibraryDocumentFoldersPage"));
+							DocumentDataDefinitionTypeResourceImpl.class,
+							"getAssetLibraryDocumentDataDefinitionTypesPage"));
+					put(
+						"query#documentDataDefinitionType",
+						new ObjectValuePair<>(
+							DocumentDataDefinitionTypeResourceImpl.class,
+							"getDocumentDataDefinitionType"));
+					put(
+						"query#documentDataDefinitionTypes",
+						new ObjectValuePair<>(
+							DocumentDataDefinitionTypeResourceImpl.class,
+							"getSiteDocumentDataDefinitionTypesPage"));
 					put(
 						"query#assetLibraryDocumentFolderPermissions",
 						new ObjectValuePair<>(
 							DocumentFolderResourceImpl.class,
 							"getAssetLibraryDocumentFolderPermissionsPage"));
+					put(
+						"query#assetLibraryDocumentFolders",
+						new ObjectValuePair<>(
+							DocumentFolderResourceImpl.class,
+							"getAssetLibraryDocumentFoldersPage"));
 					put(
 						"query#assetLibraryDocumentFoldersRatedByMe",
 						new ObjectValuePair<>(
@@ -1980,6 +2142,11 @@ public class ServletDataImpl implements ServletData {
 							DocumentFolderResourceImpl.class,
 							"getDocumentFolder"));
 					put(
+						"query#documentFolderDocumentFolders",
+						new ObjectValuePair<>(
+							DocumentFolderResourceImpl.class,
+							"getDocumentFolderDocumentFoldersPage"));
+					put(
 						"query#documentFolderMyRating",
 						new ObjectValuePair<>(
 							DocumentFolderResourceImpl.class,
@@ -1990,20 +2157,15 @@ public class ServletDataImpl implements ServletData {
 							DocumentFolderResourceImpl.class,
 							"getDocumentFolderPermissionsPage"));
 					put(
-						"query#documentFolderDocumentFolders",
+						"query#siteDocumentFolderPermissions",
 						new ObjectValuePair<>(
 							DocumentFolderResourceImpl.class,
-							"getDocumentFolderDocumentFoldersPage"));
+							"getSiteDocumentFolderPermissionsPage"));
 					put(
 						"query#documentFolders",
 						new ObjectValuePair<>(
 							DocumentFolderResourceImpl.class,
 							"getSiteDocumentFoldersPage"));
-					put(
-						"query#siteDocumentFolderPermissions",
-						new ObjectValuePair<>(
-							DocumentFolderResourceImpl.class,
-							"getSiteDocumentFolderPermissionsPage"));
 					put(
 						"query#documentFoldersRatedByMe",
 						new ObjectValuePair<>(
@@ -2015,6 +2177,31 @@ public class ServletDataImpl implements ServletData {
 							DocumentFolderResourceImpl.class,
 							"getSiteDocumentsFolderByExternalReferenceCode"));
 					put(
+						"query#assetLibraryDocumentMetadataSetByExternalReferenceCode",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"getAssetLibraryDocumentMetadataSetByExternalReferenceCode"));
+					put(
+						"query#assetLibraryDocumentMetadataSets",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"getAssetLibraryDocumentMetadataSetsPage"));
+					put(
+						"query#documentMetadataSet",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"getDocumentMetadataSet"));
+					put(
+						"query#documentMetadataSetByExternalReferenceCode",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"getSiteDocumentMetadataSetByExternalReferenceCode"));
+					put(
+						"query#documentMetadataSets",
+						new ObjectValuePair<>(
+							DocumentMetadataSetResourceImpl.class,
+							"getSiteDocumentMetadataSetsPage"));
+					put(
 						"query#assetLibraryDocumentShortcuts",
 						new ObjectValuePair<>(
 							DocumentShortcutResourceImpl.class,
@@ -2024,6 +2211,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							DocumentShortcutResourceImpl.class,
 							"getDocumentShortcut"));
+					put(
+						"query#documentShortcutByExternalReferenceCode",
+						new ObjectValuePair<>(
+							DocumentShortcutResourceImpl.class,
+							"getSiteDocumentShortcutByExternalReferenceCode"));
 					put(
 						"query#documentShortcuts",
 						new ObjectValuePair<>(
@@ -2035,6 +2227,11 @@ public class ServletDataImpl implements ServletData {
 							KnowledgeBaseArticleResourceImpl.class,
 							"getKnowledgeBaseArticle"));
 					put(
+						"query#knowledgeBaseArticleKnowledgeBaseArticles",
+						new ObjectValuePair<>(
+							KnowledgeBaseArticleResourceImpl.class,
+							"getKnowledgeBaseArticleKnowledgeBaseArticlesPage"));
+					put(
 						"query#knowledgeBaseArticleMyRating",
 						new ObjectValuePair<>(
 							KnowledgeBaseArticleResourceImpl.class,
@@ -2045,20 +2242,10 @@ public class ServletDataImpl implements ServletData {
 							KnowledgeBaseArticleResourceImpl.class,
 							"getKnowledgeBaseArticlePermissionsPage"));
 					put(
-						"query#knowledgeBaseArticleKnowledgeBaseArticles",
-						new ObjectValuePair<>(
-							KnowledgeBaseArticleResourceImpl.class,
-							"getKnowledgeBaseArticleKnowledgeBaseArticlesPage"));
-					put(
 						"query#knowledgeBaseFolderKnowledgeBaseArticles",
 						new ObjectValuePair<>(
 							KnowledgeBaseArticleResourceImpl.class,
 							"getKnowledgeBaseFolderKnowledgeBaseArticlesPage"));
-					put(
-						"query#knowledgeBaseArticles",
-						new ObjectValuePair<>(
-							KnowledgeBaseArticleResourceImpl.class,
-							"getSiteKnowledgeBaseArticlesPage"));
 					put(
 						"query#knowledgeBaseArticleByExternalReferenceCode",
 						new ObjectValuePair<>(
@@ -2069,6 +2256,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							KnowledgeBaseArticleResourceImpl.class,
 							"getSiteKnowledgeBaseArticlePermissionsPage"));
+					put(
+						"query#knowledgeBaseArticles",
+						new ObjectValuePair<>(
+							KnowledgeBaseArticleResourceImpl.class,
+							"getSiteKnowledgeBaseArticlesPage"));
 					put(
 						"query#knowledgeBaseArticleKnowledgeBaseAttachments",
 						new ObjectValuePair<>(
@@ -2090,20 +2282,15 @@ public class ServletDataImpl implements ServletData {
 							KnowledgeBaseFolderResourceImpl.class,
 							"getKnowledgeBaseFolder"));
 					put(
-						"query#knowledgeBaseFolderPermissions",
-						new ObjectValuePair<>(
-							KnowledgeBaseFolderResourceImpl.class,
-							"getKnowledgeBaseFolderPermissionsPage"));
-					put(
 						"query#knowledgeBaseFolderKnowledgeBaseFolders",
 						new ObjectValuePair<>(
 							KnowledgeBaseFolderResourceImpl.class,
 							"getKnowledgeBaseFolderKnowledgeBaseFoldersPage"));
 					put(
-						"query#knowledgeBaseFolders",
+						"query#knowledgeBaseFolderPermissions",
 						new ObjectValuePair<>(
 							KnowledgeBaseFolderResourceImpl.class,
-							"getSiteKnowledgeBaseFoldersPage"));
+							"getKnowledgeBaseFolderPermissionsPage"));
 					put(
 						"query#knowledgeBaseFolderByExternalReferenceCode",
 						new ObjectValuePair<>(
@@ -2114,6 +2301,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							KnowledgeBaseFolderResourceImpl.class,
 							"getSiteKnowledgeBaseFolderPermissionsPage"));
+					put(
+						"query#knowledgeBaseFolders",
+						new ObjectValuePair<>(
+							KnowledgeBaseFolderResourceImpl.class,
+							"getSiteKnowledgeBaseFoldersPage"));
 					put(
 						"query#assetLibraryLanguages",
 						new ObjectValuePair<>(
@@ -2150,6 +2342,11 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardMessageResourceImpl.class,
 							"getMessageBoardMessage"));
 					put(
+						"query#messageBoardMessageMessageBoardMessages",
+						new ObjectValuePair<>(
+							MessageBoardMessageResourceImpl.class,
+							"getMessageBoardMessageMessageBoardMessagesPage"));
+					put(
 						"query#messageBoardMessageMyRating",
 						new ObjectValuePair<>(
 							MessageBoardMessageResourceImpl.class,
@@ -2160,20 +2357,10 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardMessageResourceImpl.class,
 							"getMessageBoardMessagePermissionsPage"));
 					put(
-						"query#messageBoardMessageMessageBoardMessages",
-						new ObjectValuePair<>(
-							MessageBoardMessageResourceImpl.class,
-							"getMessageBoardMessageMessageBoardMessagesPage"));
-					put(
 						"query#messageBoardThreadMessageBoardMessages",
 						new ObjectValuePair<>(
 							MessageBoardMessageResourceImpl.class,
 							"getMessageBoardThreadMessageBoardMessagesPage"));
-					put(
-						"query#messageBoardMessages",
-						new ObjectValuePair<>(
-							MessageBoardMessageResourceImpl.class,
-							"getSiteMessageBoardMessagesPage"));
 					put(
 						"query#messageBoardMessageByExternalReferenceCode",
 						new ObjectValuePair<>(
@@ -2190,6 +2377,11 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardMessageResourceImpl.class,
 							"getSiteMessageBoardMessagePermissionsPage"));
 					put(
+						"query#messageBoardMessages",
+						new ObjectValuePair<>(
+							MessageBoardMessageResourceImpl.class,
+							"getSiteMessageBoardMessagesPage"));
+					put(
 						"query#userMessageBoardMessagesActivity",
 						new ObjectValuePair<>(
 							MessageBoardMessageResourceImpl.class,
@@ -2200,40 +2392,35 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardSectionResourceImpl.class,
 							"getMessageBoardSection"));
 					put(
-						"query#messageBoardSectionPermissions",
-						new ObjectValuePair<>(
-							MessageBoardSectionResourceImpl.class,
-							"getMessageBoardSectionPermissionsPage"));
-					put(
 						"query#messageBoardSectionMessageBoardSections",
 						new ObjectValuePair<>(
 							MessageBoardSectionResourceImpl.class,
 							"getMessageBoardSectionMessageBoardSectionsPage"));
+					put(
+						"query#messageBoardSectionPermissions",
+						new ObjectValuePair<>(
+							MessageBoardSectionResourceImpl.class,
+							"getMessageBoardSectionPermissionsPage"));
 					put(
 						"query#messageBoardSectionByFriendlyUrlPath",
 						new ObjectValuePair<>(
 							MessageBoardSectionResourceImpl.class,
 							"getSiteMessageBoardSectionByFriendlyUrlPath"));
 					put(
-						"query#messageBoardSections",
-						new ObjectValuePair<>(
-							MessageBoardSectionResourceImpl.class,
-							"getSiteMessageBoardSectionsPage"));
-					put(
 						"query#siteMessageBoardSectionPermissions",
 						new ObjectValuePair<>(
 							MessageBoardSectionResourceImpl.class,
 							"getSiteMessageBoardSectionPermissionsPage"));
 					put(
+						"query#messageBoardSections",
+						new ObjectValuePair<>(
+							MessageBoardSectionResourceImpl.class,
+							"getSiteMessageBoardSectionsPage"));
+					put(
 						"query#messageBoardSectionMessageBoardThreads",
 						new ObjectValuePair<>(
 							MessageBoardThreadResourceImpl.class,
 							"getMessageBoardSectionMessageBoardThreadsPage"));
-					put(
-						"query#messageBoardThreadsRanked",
-						new ObjectValuePair<>(
-							MessageBoardThreadResourceImpl.class,
-							"getMessageBoardThreadsRankedPage"));
 					put(
 						"query#messageBoardThread",
 						new ObjectValuePair<>(
@@ -2250,10 +2437,10 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardThreadResourceImpl.class,
 							"getMessageBoardThreadPermissionsPage"));
 					put(
-						"query#messageBoardThreads",
+						"query#messageBoardThreadsRanked",
 						new ObjectValuePair<>(
 							MessageBoardThreadResourceImpl.class,
-							"getSiteMessageBoardThreadsPage"));
+							"getMessageBoardThreadsRankedPage"));
 					put(
 						"query#messageBoardThreadByFriendlyUrlPath",
 						new ObjectValuePair<>(
@@ -2265,6 +2452,11 @@ public class ServletDataImpl implements ServletData {
 							MessageBoardThreadResourceImpl.class,
 							"getSiteMessageBoardThreadPermissionsPage"));
 					put(
+						"query#messageBoardThreads",
+						new ObjectValuePair<>(
+							MessageBoardThreadResourceImpl.class,
+							"getSiteMessageBoardThreadsPage"));
+					put(
 						"query#navigationMenu",
 						new ObjectValuePair<>(
 							NavigationMenuResourceImpl.class,
@@ -2275,29 +2467,24 @@ public class ServletDataImpl implements ServletData {
 							NavigationMenuResourceImpl.class,
 							"getNavigationMenuPermissionsPage"));
 					put(
-						"query#navigationMenus",
+						"query#navigationMenuByExternalReferenceCode",
 						new ObjectValuePair<>(
 							NavigationMenuResourceImpl.class,
-							"getSiteNavigationMenusPage"));
+							"getSiteNavigationMenuByExternalReferenceCode"));
 					put(
 						"query#siteNavigationMenuPermissions",
 						new ObjectValuePair<>(
 							NavigationMenuResourceImpl.class,
 							"getSiteNavigationMenuPermissionsPage"));
 					put(
-						"query#sitePages",
+						"query#navigationMenus",
 						new ObjectValuePair<>(
-							SitePageResourceImpl.class,
-							"getSiteSitePagesPage"));
+							NavigationMenuResourceImpl.class,
+							"getSiteNavigationMenusPage"));
 					put(
 						"query#sitePage",
 						new ObjectValuePair<>(
 							SitePageResourceImpl.class, "getSiteSitePage"));
-					put(
-						"query#sitePagesExperiences",
-						new ObjectValuePair<>(
-							SitePageResourceImpl.class,
-							"getSiteSitePagesExperiencesPage"));
 					put(
 						"query#sitePageExperienceExperienceKey",
 						new ObjectValuePair<>(
@@ -2314,10 +2501,15 @@ public class ServletDataImpl implements ServletData {
 							SitePageResourceImpl.class,
 							"getSiteSitePageRenderedPage"));
 					put(
-						"query#assetLibraryStructuredContents",
+						"query#sitePagesExperiences",
 						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"getAssetLibraryStructuredContentsPage"));
+							SitePageResourceImpl.class,
+							"getSiteSitePagesExperiencesPage"));
+					put(
+						"query#sitePages",
+						new ObjectValuePair<>(
+							SitePageResourceImpl.class,
+							"getSiteSitePagesPage"));
 					put(
 						"query#assetLibraryStructuredContentByExternalReferenceCode",
 						new ObjectValuePair<>(
@@ -2329,15 +2521,15 @@ public class ServletDataImpl implements ServletData {
 							StructuredContentResourceImpl.class,
 							"getAssetLibraryStructuredContentPermissionsPage"));
 					put(
+						"query#assetLibraryStructuredContents",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"getAssetLibraryStructuredContentsPage"));
+					put(
 						"query#contentStructureStructuredContents",
 						new ObjectValuePair<>(
 							StructuredContentResourceImpl.class,
 							"getContentStructureStructuredContentsPage"));
-					put(
-						"query#structuredContents",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"getSiteStructuredContentsPage"));
 					put(
 						"query#structuredContentByExternalReferenceCode",
 						new ObjectValuePair<>(
@@ -2359,15 +2551,20 @@ public class ServletDataImpl implements ServletData {
 							StructuredContentResourceImpl.class,
 							"getSiteStructuredContentPermissionsPage"));
 					put(
-						"query#structuredContentFolderStructuredContents",
+						"query#structuredContents",
 						new ObjectValuePair<>(
 							StructuredContentResourceImpl.class,
-							"getStructuredContentFolderStructuredContentsPage"));
+							"getSiteStructuredContentsPage"));
 					put(
 						"query#structuredContent",
 						new ObjectValuePair<>(
 							StructuredContentResourceImpl.class,
 							"getStructuredContent"));
+					put(
+						"query#structuredContentFolderStructuredContents",
+						new ObjectValuePair<>(
+							StructuredContentResourceImpl.class,
+							"getStructuredContentFolderStructuredContentsPage"));
 					put(
 						"query#structuredContentMyRating",
 						new ObjectValuePair<>(
@@ -2389,11 +2586,6 @@ public class ServletDataImpl implements ServletData {
 							StructuredContentResourceImpl.class,
 							"getStructuredContentRenderedContentContentTemplate"));
 					put(
-						"query#assetLibraryStructuredContentFolders",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"getAssetLibraryStructuredContentFoldersPage"));
-					put(
 						"query#assetLibraryStructuredContentFolderByExternalReferenceCode",
 						new ObjectValuePair<>(
 							StructuredContentFolderResourceImpl.class,
@@ -2404,10 +2596,10 @@ public class ServletDataImpl implements ServletData {
 							StructuredContentFolderResourceImpl.class,
 							"getAssetLibraryStructuredContentFolderPermissionsPage"));
 					put(
-						"query#structuredContentFolders",
+						"query#assetLibraryStructuredContentFolders",
 						new ObjectValuePair<>(
 							StructuredContentFolderResourceImpl.class,
-							"getSiteStructuredContentFoldersPage"));
+							"getAssetLibraryStructuredContentFoldersPage"));
 					put(
 						"query#structuredContentFolderByExternalReferenceCode",
 						new ObjectValuePair<>(
@@ -2419,6 +2611,16 @@ public class ServletDataImpl implements ServletData {
 							StructuredContentFolderResourceImpl.class,
 							"getSiteStructuredContentFolderPermissionsPage"));
 					put(
+						"query#structuredContentFolders",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"getSiteStructuredContentFoldersPage"));
+					put(
+						"query#structuredContentFolder",
+						new ObjectValuePair<>(
+							StructuredContentFolderResourceImpl.class,
+							"getStructuredContentFolder"));
+					put(
 						"query#structuredContentFolderPermissions",
 						new ObjectValuePair<>(
 							StructuredContentFolderResourceImpl.class,
@@ -2429,16 +2631,6 @@ public class ServletDataImpl implements ServletData {
 							StructuredContentFolderResourceImpl.class,
 							"getStructuredContentFolderStructuredContentFoldersPage"));
 					put(
-						"query#structuredContentFolder",
-						new ObjectValuePair<>(
-							StructuredContentFolderResourceImpl.class,
-							"getStructuredContentFolder"));
-					put(
-						"query#wikiNodes",
-						new ObjectValuePair<>(
-							WikiNodeResourceImpl.class,
-							"getSiteWikiNodesPage"));
-					put(
 						"query#wikiNodeByExternalReferenceCode",
 						new ObjectValuePair<>(
 							WikiNodeResourceImpl.class,
@@ -2448,6 +2640,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WikiNodeResourceImpl.class,
 							"getSiteWikiNodePermissionsPage"));
+					put(
+						"query#wikiNodes",
+						new ObjectValuePair<>(
+							WikiNodeResourceImpl.class,
+							"getSiteWikiNodesPage"));
 					put(
 						"query#wikiNode",
 						new ObjectValuePair<>(
@@ -2468,11 +2665,6 @@ public class ServletDataImpl implements ServletData {
 							WikiPageResourceImpl.class,
 							"getWikiNodeWikiPagesPage"));
 					put(
-						"query#wikiPageWikiPages",
-						new ObjectValuePair<>(
-							WikiPageResourceImpl.class,
-							"getWikiPageWikiPagesPage"));
-					put(
 						"query#wikiPage",
 						new ObjectValuePair<>(
 							WikiPageResourceImpl.class, "getWikiPage"));
@@ -2481,6 +2673,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WikiPageResourceImpl.class,
 							"getWikiPagePermissionsPage"));
+					put(
+						"query#wikiPageWikiPages",
+						new ObjectValuePair<>(
+							WikiPageResourceImpl.class,
+							"getWikiPageWikiPagesPage"));
 					put(
 						"query#wikiPageByExternalReferenceCodeWikiPageExternalReferenceCodeWikiPageAttachmentByExternalReferenceCode",
 						new ObjectValuePair<>(
@@ -2635,11 +2832,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							MessageBoardAttachmentResourceImpl.class,
 							"getMessageBoardThreadMessageBoardAttachmentsPage"));
-					put(
-						"query#NavigationMenu.permissions",
-						new ObjectValuePair<>(
-							NavigationMenuResourceImpl.class,
-							"getNavigationMenuPermissionsPage"));
 					put(
 						"query#MessageBoardSection.permissions",
 						new ObjectValuePair<>(
@@ -2826,8 +3018,16 @@ public class ServletDataImpl implements ServletData {
 		_documentResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<DocumentDataDefinitionTypeResource>
+		_documentDataDefinitionTypeResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<DocumentFolderResource>
 		_documentFolderResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<DocumentMetadataSetResource>
+		_documentMetadataSetResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<DocumentShortcutResource>

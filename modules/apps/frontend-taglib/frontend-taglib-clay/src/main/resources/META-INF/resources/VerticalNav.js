@@ -5,6 +5,7 @@
 
 import {VerticalNav as ClayVerticalNav} from '@clayui/core';
 import ClayIcon from '@clayui/icon';
+import {FeatureIndicator} from 'frontend-js-components-web';
 import React from 'react';
 
 export default function VerticalNav({
@@ -48,13 +49,19 @@ export default function VerticalNav({
 					{item.icons?.map((icon) => {
 						return (
 							<ClayIcon
-								className="c-ml-1 text-muted"
+								className="c-ml-2 c-mr-2 text-muted"
 								key={icon.symbol}
 								symbol={icon.symbol}
 								title={icon.title}
 							/>
 						);
 					})}
+
+					{item.deprecated ? (
+						<span className="inline-item inline-item-after">
+							<FeatureIndicator type="deprecated" />
+						</span>
+					) : null}
 				</ClayVerticalNav.Item>
 			)}
 		</ClayVerticalNav>

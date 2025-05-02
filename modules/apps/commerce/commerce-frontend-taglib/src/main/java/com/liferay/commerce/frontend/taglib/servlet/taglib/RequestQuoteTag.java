@@ -13,10 +13,10 @@ import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
+import com.liferay.commerce.frontend.helper.ProductHelper;
 import com.liferay.commerce.frontend.model.PriceModel;
 import com.liferay.commerce.frontend.model.ProductSettingsModel;
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
-import com.liferay.commerce.frontend.util.ProductHelper;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.catalog.CPSku;
 import com.liferay.commerce.product.constants.CommerceChannelConstants;
@@ -28,6 +28,7 @@ import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -62,12 +63,13 @@ public class RequestQuoteTag extends IncludeTag {
 				(CommerceContext)httpServletRequest.getAttribute(
 					CommerceWebKeys.COMMERCE_CONTEXT);
 
-			_commerceChannelId = commerceContext.getCommerceChannelId();
+			if ((commerceContext == null) ||
+				(commerceContext.getCommerceChannelId() == 0)) {
 
-			if (_commerceChannelId == 0) {
 				return SKIP_BODY;
 			}
 
+			_commerceChannelId = commerceContext.getCommerceChannelId();
 			_commerceAccountId = CommerceUtil.getCommerceAccountId(
 				commerceContext);
 
@@ -284,7 +286,7 @@ public class RequestQuoteTag extends IncludeTag {
 
 		long plid = PortalUtil.getPlidFromPortletId(groupId, portletId);
 
-		if (plid > 0) {
+		if ((plid > 0) || FeatureFlagManagerUtil.isEnabled("LPD-20379")) {
 			return PortletURLFactoryUtil.create(
 				httpServletRequest, portletId, plid,
 				PortletRequest.ACTION_PHASE);
@@ -306,7 +308,7 @@ public class RequestQuoteTag extends IncludeTag {
 
 		ProductSettingsModel productSettingsModel =
 			_productHelper.getProductSettingsModel(
-				_cpCatalogEntry.getCPDefinitionId());
+				_cpCatalogEntry.getCPDefinitionId(), commerceContext);
 
 		return _productHelper.getPriceModel(
 			cpInstanceId, StringPool.BLANK,

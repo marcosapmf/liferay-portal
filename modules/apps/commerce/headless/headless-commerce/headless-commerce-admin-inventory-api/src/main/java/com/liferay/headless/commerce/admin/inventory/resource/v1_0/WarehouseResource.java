@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.inventory.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.Warehouse;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,13 +46,30 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface WarehouseResource {
 
-	public Page<Warehouse> getWarehousesPage(
-			String search, Filter filter, Pagination pagination, Sort[] sorts)
+	public void deleteWarehouseByExternalReferenceCode(
+			String externalReferenceCode)
 		throws Exception;
 
-	public Response postWarehousesPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
-			String contentType, String fieldNames)
+	public void deleteWarehouseId(Long id) throws Exception;
+
+	public Warehouse getWarehouseByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Warehouse getWarehouseId(Long id) throws Exception;
+
+	public Page<Warehouse> getWarehousesPage(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Response patchWarehouseByExternalReferenceCode(
+			String externalReferenceCode, Warehouse warehouse)
+		throws Exception;
+
+	public Response patchWarehouseId(Long id, Warehouse warehouse)
 		throws Exception;
 
 	public Warehouse postWarehouse(Warehouse warehouse) throws Exception;
@@ -62,23 +77,15 @@ public interface WarehouseResource {
 	public Response postWarehouseBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteWarehouseByExternalReferenceCode(
-			String externalReferenceCode)
+	public Response postWarehousesPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
-	public Warehouse getWarehouseByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public Response patchWarehouseByExternalReferenceCode(
+	public Warehouse putWarehouseByExternalReferenceCode(
 			String externalReferenceCode, Warehouse warehouse)
-		throws Exception;
-
-	public void deleteWarehouseId(Long id) throws Exception;
-
-	public Warehouse getWarehouseId(Long id) throws Exception;
-
-	public Response patchWarehouseId(Long id, Warehouse warehouse)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -103,7 +110,8 @@ public interface WarehouseResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -128,19 +136,23 @@ public interface WarehouseResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

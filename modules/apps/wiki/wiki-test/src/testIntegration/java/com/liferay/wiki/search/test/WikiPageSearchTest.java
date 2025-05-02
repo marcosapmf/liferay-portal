@@ -105,7 +105,7 @@ public class WikiPageSearchTest extends BaseSearchTestCase {
 	protected void addAttachment(ClassedModel classedModel) throws Exception {
 		WikiPage page = (WikiPage)classedModel;
 
-		WikiTestUtil.addWikiAttachment(
+		WikiTestUtil.addPageAttachment(
 			TestPropsValues.getUserId(), page.getNodeId(), page.getTitle(),
 			WikiPageSearchTest.class);
 	}
@@ -265,11 +265,7 @@ public class WikiPageSearchTest extends BaseSearchTestCase {
 
 			String vendor = searchEngine.getVendor();
 
-			if (vendor.equals("Lucene")) {
-				return true;
-			}
-
-			return false;
+			return vendor.equals("Lucene");
 		}
 
 		private final BaseModel<?> _parentBaseModel;

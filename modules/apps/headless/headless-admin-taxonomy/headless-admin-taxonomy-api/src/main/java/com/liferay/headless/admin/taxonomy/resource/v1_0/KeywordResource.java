@@ -6,8 +6,6 @@
 package com.liferay.headless.admin.taxonomy.resource.v1_0;
 
 import com.liferay.headless.admin.taxonomy.dto.v1_0.Keyword;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,15 +46,64 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface KeywordResource {
 
+	public void deleteAssetLibraryKeywordByExternalReferenceCode(
+			Long assetLibraryId, String externalReferenceCode)
+		throws Exception;
+
+	public void deleteKeyword(Long keywordId) throws Exception;
+
+	public Response deleteKeywordBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteSiteKeywordByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public Keyword getAssetLibraryKeywordByExternalReferenceCode(
+			Long assetLibraryId, String externalReferenceCode)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getAssetLibraryKeywordPermissionsPage(
+				Long assetLibraryId, String roleNames)
+		throws Exception;
+
 	public Page<Keyword> getAssetLibraryKeywordsPage(
 			Long assetLibraryId, String search,
 			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
-	public Response postAssetLibraryKeywordsPageExportBatch(
-			Long assetLibraryId, String search, Filter filter, Sort[] sorts,
-			String callbackURL, String contentType, String fieldNames)
+	public Keyword getKeyword(Long keywordId) throws Exception;
+
+	public Page<Keyword> getKeywordsPage(
+			String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Page<Keyword> getKeywordsRankedPage(
+			String search, Long siteId, Pagination pagination)
+		throws Exception;
+
+	public Keyword getSiteKeywordByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getSiteKeywordPermissionsPage(Long siteId, String roleNames)
+		throws Exception;
+
+	public Page<Keyword> getSiteKeywordsPage(
+			Long siteId, String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
 	public Keyword postAssetLibraryKeyword(Long assetLibraryId, Keyword keyword)
@@ -66,9 +113,41 @@ public interface KeywordResource {
 			Long assetLibraryId, String callbackURL, Object object)
 		throws Exception;
 
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getAssetLibraryKeywordPermissionsPage(
-				Long assetLibraryId, String roleNames)
+	public Response postAssetLibraryKeywordsPageExportBatch(
+			Long assetLibraryId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
+		throws Exception;
+
+	public Keyword postKeyword(Keyword keyword) throws Exception;
+
+	public Response postKeywordBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public Response postKeywordsPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
+		throws Exception;
+
+	public Keyword postSiteKeyword(Long siteId, Keyword keyword)
+		throws Exception;
+
+	public Response postSiteKeywordBatch(
+			Long siteId, String callbackURL, Object object)
+		throws Exception;
+
+	public Response postSiteKeywordsPageExportBatch(
+			Long siteId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
+		throws Exception;
+
+	public Keyword putAssetLibraryKeywordByExternalReferenceCode(
+			Long assetLibraryId, String externalReferenceCode, Keyword keyword)
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
@@ -76,17 +155,6 @@ public interface KeywordResource {
 				Long assetLibraryId,
 				com.liferay.portal.vulcan.permission.Permission[] permissions)
 		throws Exception;
-
-	public Page<Keyword> getKeywordsRankedPage(
-			String search, Long siteId, Pagination pagination)
-		throws Exception;
-
-	public void deleteKeyword(Long keywordId) throws Exception;
-
-	public Response deleteKeywordBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public Keyword getKeyword(Long keywordId) throws Exception;
 
 	public Keyword putKeyword(Long keywordId, Keyword keyword) throws Exception;
 
@@ -97,26 +165,8 @@ public interface KeywordResource {
 
 	public void putKeywordUnsubscribe(Long keywordId) throws Exception;
 
-	public Page<Keyword> getSiteKeywordsPage(
-			Long siteId, String search,
-			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public Response postSiteKeywordsPageExportBatch(
-			Long siteId, String search, Filter filter, Sort[] sorts,
-			String callbackURL, String contentType, String fieldNames)
-		throws Exception;
-
-	public Keyword postSiteKeyword(Long siteId, Keyword keyword)
-		throws Exception;
-
-	public Response postSiteKeywordBatch(
-			Long siteId, String callbackURL, Object object)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getSiteKeywordPermissionsPage(Long siteId, String roleNames)
+	public Keyword putSiteKeywordByExternalReferenceCode(
+			Long siteId, String externalReferenceCode, Keyword keyword)
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
@@ -147,7 +197,8 @@ public interface KeywordResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -172,19 +223,23 @@ public interface KeywordResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

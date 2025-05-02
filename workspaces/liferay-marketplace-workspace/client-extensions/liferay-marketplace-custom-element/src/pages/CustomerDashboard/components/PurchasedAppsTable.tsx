@@ -9,15 +9,14 @@ import {ClayTooltipProvider} from '@clayui/tooltip';
 import {useNavigate} from 'react-router-dom';
 
 import {DashboardEmptyTable} from '../../../components/DashboardTable/DashboardEmptyTable';
-import OrderStatus, {
-	Statuses as OrderStatuses,
-} from '../../../components/OrderStatus';
+import OrderStatus from '../../../components/OrderStatus';
 import Table from '../../../components/Table/Table';
-import {useMarketplaceContext} from '../../../context/MarketplaceContext';
 import {Analytics} from '../../../core/Analytics';
-import {OrderType} from '../../../enums/OrderType';
+import MarketplaceDeliveryOrder from '../../../entity/DeliveryOrder';
+import {OrderTypes, orderTypeLabel} from '../../../enums/Order';
+import {ProductImageFallbackCategories} from '../../../enums/Product';
 import i18n from '../../../i18n';
-import {safeJSONParse} from '../../../utils/util';
+import {getProductImageFallback} from '../../../utils/productUtils';
 
 type AppsTableProps = {
 	items: Order[];
@@ -25,7 +24,6 @@ type AppsTableProps = {
 
 const AppsTable: React.FC<AppsTableProps> = ({items}) => {
 	const navigate = useNavigate();
-	const {properties} = useMarketplaceContext();
 
 	if (!items?.length) {
 		return (
@@ -50,7 +48,12 @@ const AppsTable: React.FC<AppsTableProps> = ({items}) => {
 							<img
 								alt="App Image"
 								className="order-details-publisher-table-icon"
-								src={thumbnail}
+								src={
+									thumbnail ||
+									getProductImageFallback(
+										ProductImageFallbackCategories.PRODUCT_IMAGE
+									)
+								}
 							/>
 
 							<span className="font-weight-semi-bold ml-2">
@@ -84,20 +87,13 @@ const AppsTable: React.FC<AppsTableProps> = ({items}) => {
 					},
 					title: i18n.translate('purchased-by'),
 				},
-
-				{
-					key: 'type',
-					render: (type) => (
-						<div className="dashboard-table-row-type">{type}</div>
-					),
-					title: i18n.translate('license-type'),
-				},
 				{
 					key: 'orderTypeExternalReferenceCode',
-					render: (orderTypeExternalReferenceCode) =>
-						orderTypeExternalReferenceCode === OrderType.DXP
-							? 'DXP'
-							: 'Cloud',
+					render: (orderTypeExternalReferenceCode) => {
+						return orderTypeLabel[
+							orderTypeExternalReferenceCode as OrderTypes
+						];
+					},
 					title: i18n.translate('app-type'),
 				},
 				{
@@ -116,35 +112,24 @@ const AppsTable: React.FC<AppsTableProps> = ({items}) => {
 				{
 					align: 'center',
 					key: 'status',
-					render: (
-						_,
-						{
-							account,
-							id,
-							name,
-							orderStatusInfo,
-							orderTypeExternalReferenceCode,
-							placedOrderItems,
-							virtualURL,
-						}
-					) => {
-						const orderStatusIsNotCompleted =
-							orderStatusInfo?.label !== OrderStatuses.COMPLETED;
+					render: (_, placedOrder) => {
+						const {account, id, name, virtualURL} = placedOrder;
 
-						const orderOptions = safeJSONParse<
-							Array<{key: string; value: string[]}>
-						>(placedOrderItems?.[0]?.options, []);
+						const marketplaceDeliveryOrder =
+							new MarketplaceDeliveryOrder(placedOrder);
 
-						const isFreeApp =
-							placedOrderItems?.[0]?.price?.price === 0 &&
-							!orderOptions.some(({value}) =>
-								value.includes('trial')
-							);
+						const isDownloadable =
+							marketplaceDeliveryOrder.isDownloadable;
+
+						const isFreeApp = marketplaceDeliveryOrder.isFreeApp;
 
 						const metadata = {
 							account,
 							productName: name,
 						};
+
+						const isOrderStatusCompleted =
+							marketplaceDeliveryOrder.isOrderStatusCompleted;
 
 						return (
 							<div onClick={(event) => event.stopPropagation()}>
@@ -158,94 +143,85 @@ const AppsTable: React.FC<AppsTableProps> = ({items}) => {
 										/>
 									}
 								>
-									<ClayDropDown.ItemList>
-										{orderTypeExternalReferenceCode ===
-											OrderType.DXP &&
-											!isFreeApp && (
-												<>
-													<ClayTooltipProvider>
-														<ClayDropDown.Item
-															data-tooltip-align="left"
-															disabled={
-																orderStatusIsNotCompleted
-															}
-															onClick={() =>
-																navigate(
-																	`order/${id}/create-license`
-																)
-															}
-															title={
-																orderStatusIsNotCompleted
-																	? i18n.translate(
-																			'the-order-must-be-completed-before-licensing-this-app.'
-																		)
-																	: undefined
-															}
-														>
-															{i18n.translate(
-																'create-license-key'
-															)}
-														</ClayDropDown.Item>
-													</ClayTooltipProvider>
+									<ClayDropDown.Item
+										onClick={() => {
+											navigate(`order/${id}`);
+										}}
+									>
+										{i18n.translate('view-details')}
+									</ClayDropDown.Item>
 
+									<ClayDropDown.ItemList>
+										{isDownloadable && !isFreeApp && (
+											<>
+												<ClayTooltipProvider>
 													<ClayDropDown.Item
-														disabled={isFreeApp}
-														onClick={() => {
+														data-tooltip-align="left"
+														disabled={
+															!isOrderStatusCompleted
+														}
+														onClick={() =>
 															navigate(
-																`order/${id}/licenses`
-															);
-														}}
+																`order/${id}/create-license`
+															)
+														}
+														title={
+															!isOrderStatusCompleted
+																? i18n.translate(
+																		'the-order-must-be-completed-before-licensing-this-app.'
+																	)
+																: undefined
+														}
 													>
 														{i18n.translate(
-															'manage-license-keys'
+															'create-license-key'
 														)}
 													</ClayDropDown.Item>
-												</>
-											)}
+												</ClayTooltipProvider>
 
-										{orderTypeExternalReferenceCode ===
-											OrderType.CLOUD && (
+												<ClayDropDown.Item
+													disabled={isFreeApp}
+													onClick={() => {
+														navigate(
+															`order/${id}/licenses`
+														);
+													}}
+												>
+													{i18n.translate(
+														'manage-license-keys'
+													)}
+												</ClayDropDown.Item>
+											</>
+										)}
+
+										{!isDownloadable && (
 											<ClayDropDown.Item
 												onClick={() => {
-													Analytics.track(
-														'ACCCESS_CONSOLE_BUTTON',
-														{
-															account,
-															productName: name,
-														}
-													);
-
-													window.open(
-														properties.cloudBaseURL
+													navigate(
+														`order/${id}/cloud-provisioning`
 													);
 												}}
 											>
 												{i18n.translate(
-													'access-console'
+													'cloud-provisioning'
 												)}
 											</ClayDropDown.Item>
 										)}
 
-										{orderTypeExternalReferenceCode ===
-											OrderType.DXP && (
+										{isDownloadable && (
 											<ClayTooltipProvider>
 												<ClayDropDown.Item
 													data-tooltip-align="left"
 													disabled={
 														isFreeApp
 															? false
-															: orderStatusIsNotCompleted
+															: !isOrderStatusCompleted
 													}
 													onClick={() => {
-														if (
-															properties.featureFlags?.includes(
-																'LPD-21582'
-															)
-														) {
-															return navigate(
-																`order/${id}/download`
-															);
-														}
+														navigate(
+															`order/${id}/download`
+														);
+
 														if (!virtualURL) {
 															Analytics.track(
 																'VIRTUAL_URL_NOT_FOUND',
@@ -265,7 +241,7 @@ const AppsTable: React.FC<AppsTableProps> = ({items}) => {
 														window.open(virtualURL);
 													}}
 													title={
-														orderStatusIsNotCompleted
+														!isOrderStatusCompleted
 															? i18n.translate(
 																	'this-order-must-be-completed-before-downloading-this-app.'
 																)

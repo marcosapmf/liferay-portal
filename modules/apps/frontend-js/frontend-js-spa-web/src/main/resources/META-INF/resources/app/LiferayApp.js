@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {buildFragment, openToast} from 'frontend-js-web';
+import {buildFragment} from 'frontend-js-web';
 
 import LiferaySurface from '../surface/Surface';
+import {openToast} from '../util/openToast';
 import {getPortletBoundaryId, getUid, resetAllPortlets} from '../util/utils';
 import App from './App';
 
@@ -112,9 +113,15 @@ class LiferayApp extends App {
 
 		this.addSurfaces(new LiferaySurface(body.id));
 
-		document.head.appendChild(
-			buildFragment(`<style type="text/css">${CSS}</style>`)
-		);
+		let styleHTML = `<style`;
+
+		if (Liferay.CSP && Liferay.CSP.nonce) {
+			styleHTML += ` nonce="${Liferay.CSP.nonce}">`;
+		}
+
+		styleHTML += ` type="text/css">${CSS}</style>`;
+
+		document.head.appendChild(buildFragment(styleHTML));
 		body.appendChild(
 			buildFragment('<div class="lfr-spa-loading-bar"></div>')
 		);
@@ -270,8 +277,7 @@ class LiferayApp extends App {
 		if (
 			this.isInPortletBlacklist(
 				event.target.closest(this.getLinkSelector())
-			) ||
-			event.detail > 1
+			)
 		) {
 			return;
 		}
@@ -374,11 +380,7 @@ class LiferayApp extends App {
 
 			Liferay.Data.layoutConfig = this.dataLayoutConfig_;
 
-			this._createNotification({
-				message,
-				title: Liferay.Language.get('error'),
-				type: 'danger',
-			});
+			openToast('error', Liferay.Language.get('error'), message);
 		}
 	}
 
@@ -444,24 +446,6 @@ class LiferayApp extends App {
 	}
 
 	/**
-	 * Creates a user notification
-	 * @param  {!Object} configuration object that's passed to `Liferay.Notification`
-	 * @return {!Promise} A promise that renders a notification when
-	 * resolved
-	 */
-
-	_createNotification(config) {
-		return new Promise((resolve) => {
-			resolve(
-				openToast({
-					type: 'warning',
-					...config,
-				})
-			);
-		});
-	}
-
-	/**
 	 * Hides the request timeout alert
 	 */
 
@@ -514,13 +498,11 @@ class LiferayApp extends App {
 
 				this._hideTimeoutAlert();
 
-				this._createNotification({
-					message: this.userNotification.message,
-					title: this.userNotification.title,
-					type: 'warning',
-				}).then((alert) => {
-					this.timeoutAlert = alert;
-				});
+				this.timeoutAlert = openToast(
+					'warn',
+					this.userNotification.title,
+					this.userNotification.message
+				);
 			}, this.userNotification.timeout);
 		}
 	}

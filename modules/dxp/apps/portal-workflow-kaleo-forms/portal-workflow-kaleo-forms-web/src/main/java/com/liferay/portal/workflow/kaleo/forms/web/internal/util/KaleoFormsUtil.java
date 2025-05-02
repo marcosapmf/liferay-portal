@@ -127,16 +127,8 @@ public class KaleoFormsUtil {
 
 		List<String> nodeNames = _getNodeNames(
 			companyId, workflowDefinitionName, workflowDefinitionVersion,
-			workflowNode -> {
-				if (Objects.equals(
-						workflowNode.getType(),
-						WorkflowNode.Type.INITIAL_STATE)) {
-
-					return true;
-				}
-
-				return false;
-			});
+			workflowNode -> Objects.equals(
+				workflowNode.getType(), WorkflowNode.Type.INITIAL_STATE));
 
 		return nodeNames.get(0);
 	}
@@ -490,15 +482,8 @@ public class KaleoFormsUtil {
 
 		return _getNodeNames(
 			companyId, workflowDefinitionName, workflowDefinitionVersion,
-			workflowNode -> {
-				if (Objects.equals(
-						workflowNode.getType(), WorkflowNode.Type.TASK)) {
-
-					return true;
-				}
-
-				return false;
-			});
+			workflowNode -> Objects.equals(
+				workflowNode.getType(), WorkflowNode.Type.TASK));
 	}
 
 	private static String _getTaskSessionKey(

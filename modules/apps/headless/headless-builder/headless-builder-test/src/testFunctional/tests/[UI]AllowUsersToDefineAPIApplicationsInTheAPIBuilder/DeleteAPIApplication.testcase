@@ -2,6 +2,7 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "API Builder";
@@ -30,7 +31,6 @@ definition {
 
 	@priority = 4
 	test CanDeleteAPIFromAPIBuilderAndAPI {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 
 		task ("And Given from dropdown menu I click Delete option") {
@@ -64,7 +64,6 @@ definition {
 
 	@priority = 4
 	test CanDeletePublishedAPIAndAssociatedEntities {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 
 		task ("Given publish an API application in API Builder") {
@@ -122,7 +121,6 @@ definition {
 
 	@priority = 4
 	test CanDeleteUnpublishedAPIAndAssociatedEntities {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 
 		task ("And Given with postAPISchema to create a Schema associate to the API application") {
@@ -176,7 +174,6 @@ definition {
 
 	@priority = 4
 	test CannotDeleteAPIWithIncorrectTitleValue {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 
 		task ("And Given from dropdown menu I click Delete option") {
@@ -205,7 +202,6 @@ definition {
 
 	@priority = 4
 	test CanSeeDeleteAPIApplicationDialog {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 
 		task ("When from dropdown menu I click Delete option") {

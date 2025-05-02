@@ -3111,6 +3111,7 @@ public class SystemEventPersistenceImpl
 
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -3120,17 +3121,19 @@ public class SystemEventPersistenceImpl
 		ctStrictColumnNames.add("userId");
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
+		ctMergeColumnNames.add("classExternalReferenceCode");
 		ctStrictColumnNames.add("classNameId");
 		ctStrictColumnNames.add("classPK");
-		ctStrictColumnNames.add("classUuid");
-		ctStrictColumnNames.add("referrerClassNameId");
-		ctStrictColumnNames.add("parentSystemEventId");
-		ctStrictColumnNames.add("systemEventSetKey");
-		ctStrictColumnNames.add("type_");
-		ctStrictColumnNames.add("extraData");
+		ctMergeColumnNames.add("classUuid");
+		ctMergeColumnNames.add("referrerClassNameId");
+		ctMergeColumnNames.add("parentSystemEventId");
+		ctMergeColumnNames.add("systemEventSetKey");
+		ctMergeColumnNames.add("type_");
+		ctMergeColumnNames.add("extraData");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK, Collections.singleton("systemEventId"));
 		_ctColumnNamesMap.put(

@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
+import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectLayout;
 import com.liferay.object.admin.rest.client.http.HttpInvoker;
 import com.liferay.object.admin.rest.client.pagination.Page;
@@ -29,10 +32,17 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -41,12 +51,18 @@ import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.net.URI;
+
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,13 +71,20 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.servlet.http.HttpServletRequest;
+
 import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -70,6 +93,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Javier Gamarra
@@ -80,12 +106,14 @@ public abstract class BaseObjectLayoutResourceTestCase {
 
 	@ClassRule
 	@Rule
-	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
-		new LiferayIntegrationTestRule();
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -99,10 +127,25 @@ public abstract class BaseObjectLayoutResourceTestCase {
 
 		_objectLayoutResource.setContextCompany(testCompany);
 
-		ObjectLayoutResource.Builder builder = ObjectLayoutResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		objectLayoutResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		objectLayoutResource = ObjectLayoutResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -116,7 +159,32 @@ public abstract class BaseObjectLayoutResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ObjectLayout objectLayout1 = randomObjectLayout();
+
+		String json = objectMapper.writeValueAsString(objectLayout1);
+
+		ObjectLayout objectLayout2 = ObjectLayoutSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(objectLayout1, objectLayout2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ObjectLayout objectLayout = randomObjectLayout();
+
+		String json1 = objectMapper.writeValueAsString(objectLayout);
+		String json2 = ObjectLayoutSerDes.toJSON(objectLayout);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -131,40 +199,6 @@ public abstract class BaseObjectLayoutResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ObjectLayout objectLayout1 = randomObjectLayout();
-
-		String json = objectMapper.writeValueAsString(objectLayout1);
-
-		ObjectLayout objectLayout2 = ObjectLayoutSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(objectLayout1, objectLayout2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ObjectLayout objectLayout = randomObjectLayout();
-
-		String json1 = objectMapper.writeValueAsString(objectLayout);
-		String json2 = ObjectLayoutSerDes.toJSON(objectLayout);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -183,6 +217,151 @@ public abstract class BaseObjectLayoutResourceTestCase {
 
 		Assert.assertEquals(
 			regex, objectLayout.getObjectDefinitionExternalReferenceCode());
+	}
+
+	@Test
+	public void testDeleteObjectLayout() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ObjectLayout objectLayout = testDeleteObjectLayout_addObjectLayout();
+
+		assertHttpResponseStatusCode(
+			204,
+			objectLayoutResource.deleteObjectLayoutHttpResponse(
+				objectLayout.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			objectLayoutResource.getObjectLayoutHttpResponse(
+				objectLayout.getId()));
+		assertHttpResponseStatusCode(
+			404, objectLayoutResource.getObjectLayoutHttpResponse(0L));
+	}
+
+	protected ObjectLayout testDeleteObjectLayout_addObjectLayout()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteObjectLayout() throws Exception {
+
+		// No namespace
+
+		ObjectLayout objectLayout1 =
+			testGraphQLDeleteObjectLayout_addObjectLayout();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteObjectLayout",
+						new HashMap<String, Object>() {
+							{
+								put("objectLayoutId", objectLayout1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteObjectLayout"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectLayout",
+					new HashMap<String, Object>() {
+						{
+							put("objectLayoutId", objectLayout1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace objectAdmin_v1_0
+
+		ObjectLayout objectLayout2 =
+			testGraphQLDeleteObjectLayout_addObjectLayout();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"deleteObjectLayout",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectLayoutId",
+										objectLayout2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+				"Object/deleteObjectLayout"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectAdmin_v1_0",
+					new GraphQLField(
+						"objectLayout",
+						new HashMap<String, Object>() {
+							{
+								put("objectLayoutId", objectLayout2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected ObjectLayout testGraphQLDeleteObjectLayout_addObjectLayout()
+		throws Exception {
+
+		return testGraphQLObjectLayout_addObjectLayout();
+	}
+
+	@Test
+	public void testDeleteObjectLayoutBatch() throws Exception {
+		ObjectLayout objectLayout1 =
+			testDeleteObjectLayoutBatch_addObjectLayout();
+
+		testDeleteObjectLayoutBatch_deleteObjectLayout(
+			"COMPLETED", null, objectLayout1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			objectLayoutResource.getObjectLayoutHttpResponse(
+				objectLayout1.getId()));
+	}
+
+	protected ObjectLayout testDeleteObjectLayoutBatch_addObjectLayout()
+		throws Exception {
+
+		return testDeleteObjectLayout_addObjectLayout();
+	}
+
+	protected void testDeleteObjectLayoutBatch_deleteObjectLayout(
+			String expectedExecuteStatus, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			objectLayoutResource.deleteObjectLayoutBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(202, httpResponse.getStatusCode());
+
+		waitForFinish(
+			expectedExecuteStatus,
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -267,13 +446,13 @@ public abstract class BaseObjectLayoutResourceTestCase {
 		String externalReferenceCode =
 			testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPage_getExternalReferenceCode();
 
-		Page<ObjectLayout> objectLayoutPage =
+		Page<ObjectLayout> objectLayoutsPage =
 			objectLayoutResource.
 				getObjectDefinitionByExternalReferenceCodeObjectLayoutsPage(
 					externalReferenceCode, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			objectLayoutPage.getTotalCount());
+			objectLayoutsPage.getTotalCount());
 
 		ObjectLayout objectLayout1 =
 			testGetObjectDefinitionByExternalReferenceCodeObjectLayoutsPage_addObjectLayout(
@@ -550,29 +729,6 @@ public abstract class BaseObjectLayoutResourceTestCase {
 	}
 
 	@Test
-	public void testPostObjectDefinitionByExternalReferenceCodeObjectLayout()
-		throws Exception {
-
-		ObjectLayout randomObjectLayout = randomObjectLayout();
-
-		ObjectLayout postObjectLayout =
-			testPostObjectDefinitionByExternalReferenceCodeObjectLayout_addObjectLayout(
-				randomObjectLayout);
-
-		assertEquals(randomObjectLayout, postObjectLayout);
-		assertValid(postObjectLayout);
-	}
-
-	protected ObjectLayout
-			testPostObjectDefinitionByExternalReferenceCodeObjectLayout_addObjectLayout(
-				ObjectLayout objectLayout)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetObjectDefinitionObjectLayoutsPage() throws Exception {
 		Long objectDefinitionId =
 			testGetObjectDefinitionObjectLayoutsPage_getObjectDefinitionId();
@@ -658,12 +814,12 @@ public abstract class BaseObjectLayoutResourceTestCase {
 		Long objectDefinitionId =
 			testGetObjectDefinitionObjectLayoutsPage_getObjectDefinitionId();
 
-		Page<ObjectLayout> objectLayoutPage =
+		Page<ObjectLayout> objectLayoutsPage =
 			objectLayoutResource.getObjectDefinitionObjectLayoutsPage(
 				objectDefinitionId, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			objectLayoutPage.getTotalCount());
+			objectLayoutsPage.getTotalCount());
 
 		ObjectLayout objectLayout1 =
 			testGetObjectDefinitionObjectLayoutsPage_addObjectLayout(
@@ -930,132 +1086,6 @@ public abstract class BaseObjectLayoutResourceTestCase {
 	}
 
 	@Test
-	public void testPostObjectDefinitionObjectLayout() throws Exception {
-		ObjectLayout randomObjectLayout = randomObjectLayout();
-
-		ObjectLayout postObjectLayout =
-			testPostObjectDefinitionObjectLayout_addObjectLayout(
-				randomObjectLayout);
-
-		assertEquals(randomObjectLayout, postObjectLayout);
-		assertValid(postObjectLayout);
-	}
-
-	protected ObjectLayout testPostObjectDefinitionObjectLayout_addObjectLayout(
-			ObjectLayout objectLayout)
-		throws Exception {
-
-		return objectLayoutResource.postObjectDefinitionObjectLayout(
-			testGetObjectDefinitionObjectLayoutsPage_getObjectDefinitionId(),
-			objectLayout);
-	}
-
-	@Test
-	public void testDeleteObjectLayout() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ObjectLayout objectLayout = testDeleteObjectLayout_addObjectLayout();
-
-		assertHttpResponseStatusCode(
-			204,
-			objectLayoutResource.deleteObjectLayoutHttpResponse(
-				objectLayout.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			objectLayoutResource.getObjectLayoutHttpResponse(
-				objectLayout.getId()));
-
-		assertHttpResponseStatusCode(
-			404, objectLayoutResource.getObjectLayoutHttpResponse(0L));
-	}
-
-	protected ObjectLayout testDeleteObjectLayout_addObjectLayout()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteObjectLayout() throws Exception {
-
-		// No namespace
-
-		ObjectLayout objectLayout1 =
-			testGraphQLDeleteObjectLayout_addObjectLayout();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteObjectLayout",
-						new HashMap<String, Object>() {
-							{
-								put("objectLayoutId", objectLayout1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteObjectLayout"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"objectLayout",
-					new HashMap<String, Object>() {
-						{
-							put("objectLayoutId", objectLayout1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace objectAdmin_v1_0
-
-		ObjectLayout objectLayout2 =
-			testGraphQLDeleteObjectLayout_addObjectLayout();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"objectAdmin_v1_0",
-						new GraphQLField(
-							"deleteObjectLayout",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"objectLayoutId",
-										objectLayout2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
-				"Object/deleteObjectLayout"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"objectAdmin_v1_0",
-					new GraphQLField(
-						"objectLayout",
-						new HashMap<String, Object>() {
-							{
-								put("objectLayoutId", objectLayout2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected ObjectLayout testGraphQLDeleteObjectLayout_addObjectLayout()
-		throws Exception {
-
-		return testGraphQLObjectLayout_addObjectLayout();
-	}
-
-	@Test
 	public void testGetObjectLayout() throws Exception {
 		ObjectLayout postObjectLayout = testGetObjectLayout_addObjectLayout();
 
@@ -1064,6 +1094,195 @@ public abstract class BaseObjectLayoutResourceTestCase {
 
 		assertEquals(postObjectLayout, getObjectLayout);
 		assertValid(getObjectLayout);
+	}
+
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		ObjectLayout postObjectLayout = testGetObjectLayout_addObjectLayout();
+
+		ObjectLayout getObjectLayout = objectLayoutResource.getObjectLayout(
+			postObjectLayout.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.object.admin.rest.dto.v1_0.ObjectLayout"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(postObjectLayout.getId());
+
+		assertEquals(
+			getObjectLayout, ObjectLayoutSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
 	}
 
 	protected ObjectLayout testGetObjectLayout_addObjectLayout()
@@ -1169,6 +1388,50 @@ public abstract class BaseObjectLayoutResourceTestCase {
 		throws Exception {
 
 		return testGraphQLObjectLayout_addObjectLayout();
+	}
+
+	@Test
+	public void testPostObjectDefinitionByExternalReferenceCodeObjectLayout()
+		throws Exception {
+
+		ObjectLayout randomObjectLayout = randomObjectLayout();
+
+		ObjectLayout postObjectLayout =
+			testPostObjectDefinitionByExternalReferenceCodeObjectLayout_addObjectLayout(
+				randomObjectLayout);
+
+		assertEquals(randomObjectLayout, postObjectLayout);
+		assertValid(postObjectLayout);
+	}
+
+	protected ObjectLayout
+			testPostObjectDefinitionByExternalReferenceCodeObjectLayout_addObjectLayout(
+				ObjectLayout objectLayout)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostObjectDefinitionObjectLayout() throws Exception {
+		ObjectLayout randomObjectLayout = randomObjectLayout();
+
+		ObjectLayout postObjectLayout =
+			testPostObjectDefinitionObjectLayout_addObjectLayout(
+				randomObjectLayout);
+
+		assertEquals(randomObjectLayout, postObjectLayout);
+		assertValid(postObjectLayout);
+	}
+
+	protected ObjectLayout testPostObjectDefinitionObjectLayout_addObjectLayout(
+			ObjectLayout objectLayout)
+		throws Exception {
+
+		return objectLayoutResource.postObjectDefinitionObjectLayout(
+			testGetObjectDefinitionObjectLayoutsPage_getObjectDefinitionId(),
+			objectLayout);
 	}
 
 	@Test
@@ -1694,13 +1957,11 @@ public abstract class BaseObjectLayoutResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1710,7 +1971,7 @@ public abstract class BaseObjectLayoutResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(objectLayout.getDateCreated()));
+				sb.append(_format.format(objectLayout.getDateCreated()));
 			}
 
 			return sb.toString();
@@ -1725,13 +1986,11 @@ public abstract class BaseObjectLayoutResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1741,7 +2000,7 @@ public abstract class BaseObjectLayoutResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(objectLayout.getDateModified()));
+				sb.append(_format.format(objectLayout.getDateModified()));
 			}
 
 			return sb.toString();
@@ -1885,7 +2144,30 @@ public abstract class BaseObjectLayoutResourceTestCase {
 		return randomObjectLayout();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ObjectLayoutResource objectLayoutResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -1895,12 +2177,12 @@ public abstract class BaseObjectLayoutResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1909,11 +2191,16 @@ public abstract class BaseObjectLayoutResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1945,6 +2232,24 @@ public abstract class BaseObjectLayoutResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1966,16 +2271,6 @@ public abstract class BaseObjectLayoutResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -2073,10 +2368,34 @@ public abstract class BaseObjectLayoutResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseObjectLayoutResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.object.admin.rest.resource.v1_0.ObjectLayoutResource
 		_objectLayoutResource;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private ScopeChecker _scopeChecker;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	@Inject
+	private VulcanCRUDItemDelegateBuilderRegistry
+		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }

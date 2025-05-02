@@ -53,10 +53,10 @@ List<String> errorMessages = (List<String>)request.getAttribute(CommerceWebKeys.
 	<aui:script>
 		Liferay.Util.openModal({
 			bodyHTML: '<%= errorMessages.get(0) %>',
+			center: true,
 			containerProps: {
 				className: 'commerce-modal',
 			},
-			center: true,
 			size: 'm',
 			status: 'warning',
 			title: '<liferay-ui:message key="warning" />',
@@ -216,31 +216,72 @@ List<String> errorMessages = (List<String>)request.getAttribute(CommerceWebKeys.
 		</div>
 	</div>
 
-	<c:if test="<%= commerceOrderContentDisplayContext.isShowPurchaseOrderNumber() %>">
-		<div class="row">
-			<div class="col-md-12">
-				<div class="commerce-panel">
-					<div class="commerce-panel__title"><liferay-ui:message key="purchase-order-number" /></div>
-					<div class="commerce-panel__content">
-						<div class="row">
-							<div class="col-md-6">
-								<dl class="commerce-list">
-									<c:choose>
-										<c:when test="<%= commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, ActionKeys.UPDATE) %>">
-											<aui:input cssClass="commerce-input" inlineField="<%= true %>" label="" name="purchaseOrderNumber" wrappedField="<%= false %>" />
-										</c:when>
-										<c:otherwise>
-											<%= HtmlUtil.escape(commerceOrder.getPurchaseOrderNumber()) %>
-										</c:otherwise>
-									</c:choose>
-								</dl>
+	<c:choose>
+		<c:when test="<%= commerceOrderContentDisplayContext.isShowPurchaseOrderNumber() %>">
+			<div class="row">
+				<div class="col-md-6">
+					<div class="commerce-panel">
+						<div class="commerce-panel__title"><liferay-ui:message key="name" /></div>
+						<div class="commerce-panel__content">
+							<dl class="commerce-list">
+								<c:choose>
+									<c:when test="<%= commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, ActionKeys.UPDATE) %>">
+										<aui:input cssClass="commerce-input" inlineField="<%= true %>" label="" name="name" wrappedField="<%= false %>" />
+									</c:when>
+									<c:otherwise>
+										<%= HtmlUtil.escape(commerceOrder.getName()) %>
+									</c:otherwise>
+								</c:choose>
+							</dl>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-md-6">
+					<div class="commerce-panel">
+						<div class="commerce-panel__title"><liferay-ui:message key="purchase-order-number" /></div>
+						<div class="commerce-panel__content">
+							<dl class="commerce-list">
+								<c:choose>
+									<c:when test="<%= commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, ActionKeys.UPDATE) %>">
+										<aui:input cssClass="commerce-input" inlineField="<%= true %>" label="" name="purchaseOrderNumber" wrappedField="<%= false %>" />
+									</c:when>
+									<c:otherwise>
+										<%= HtmlUtil.escape(commerceOrder.getPurchaseOrderNumber()) %>
+									</c:otherwise>
+								</c:choose>
+							</dl>
+						</div>
+					</div>
+				</div>
+			</div>
+		</c:when>
+		<c:otherwise>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="commerce-panel">
+						<div class="commerce-panel__title"><liferay-ui:message key="name" /></div>
+						<div class="commerce-panel__content">
+							<div class="row">
+								<div class="col-md-6">
+									<dl class="commerce-list">
+										<c:choose>
+											<c:when test="<%= commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, ActionKeys.UPDATE) %>">
+												<aui:input cssClass="commerce-input" inlineField="<%= true %>" label="" name="name" wrappedField="<%= false %>" />
+											</c:when>
+											<c:otherwise>
+												<%= HtmlUtil.escape(commerceOrder.getName()) %>
+											</c:otherwise>
+										</c:choose>
+									</dl>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
-	</c:if>
+		</c:otherwise>
+	</c:choose>
 
 	<div class="row">
 		<div class="col-md-6">
@@ -415,6 +456,7 @@ List<String> errorMessages = (List<String>)request.getAttribute(CommerceWebKeys.
 
 			<liferay-ui:icon
 				icon="print"
+				linkCssClass="dropdown-print-icon"
 				message="print"
 				target="_blank"
 				url="<%= commerceOrderContentDisplayContext.getExportCommerceOrderReportURL() %>"

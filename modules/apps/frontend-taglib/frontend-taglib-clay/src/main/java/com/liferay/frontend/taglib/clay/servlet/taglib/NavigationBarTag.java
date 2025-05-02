@@ -7,7 +7,8 @@ package com.liferay.frontend.taglib.clay.servlet.taglib;
 
 import com.liferay.frontend.taglib.clay.internal.servlet.taglib.BaseContainerTag;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -100,21 +101,11 @@ public class NavigationBarTag extends BaseContainerTag {
 		if (_navigationItems != null) {
 			JspWriter jspWriter = pageContext.getOut();
 
-			jspWriter.write("<div class=\"container-fluid");
-
-			if (!FeatureFlagManagerUtil.isEnabled("LPS-184404")) {
-				jspWriter.write(" container-fluid-max-xl");
-			}
-
-			jspWriter.write("\"><div ");
-			jspWriter.write("class=\"collapse navbar-collapse\"><div ");
-			jspWriter.write("class=\"container-fluid");
-
-			if (!FeatureFlagManagerUtil.isEnabled("LPS-184404")) {
-				jspWriter.write(" container-fluid-max-xl");
-			}
-
-			jspWriter.write("\"><ul class=\"navbar-nav\">");
+			jspWriter.write("<div class=\"container-fluid ");
+			jspWriter.write("container-fluid-max-xxxl\"><div class=\"");
+			jspWriter.write("collapse navbar-collapse\"><div class=\"");
+			jspWriter.write("container-fluid container-fluid-max-xxxl\"><ul ");
+			jspWriter.write("class=\"navbar-nav\">");
 
 			for (int i = 0; i < _navigationItems.size(); i++) {
 				NavigationItem navigationItem = _navigationItems.get(i);
@@ -138,9 +129,20 @@ public class NavigationBarTag extends BaseContainerTag {
 					jspWriter.write("\"");
 				}
 
-				jspWriter.write("><span class=\"navbar-text-truncate\">");
+				jspWriter.write("><span>");
 				jspWriter.write(
 					HtmlUtil.escape((String)navigationItem.get("label")));
+
+				if (GetterUtil.getBoolean(navigationItem.get("deprecated"))) {
+					jspWriter.write("<span class=\"badge badge-warning ml-2 ");
+					jspWriter.write("text-uppercase badge-translucent\">");
+					jspWriter.write("<span class=\"badge-item ");
+					jspWriter.write("badge-item-expand\">");
+					jspWriter.write(
+						LanguageUtil.get(getRequest(), "deprecated"));
+					jspWriter.write("</span></span>");
+				}
+
 				jspWriter.write("</span></a></li>");
 			}
 

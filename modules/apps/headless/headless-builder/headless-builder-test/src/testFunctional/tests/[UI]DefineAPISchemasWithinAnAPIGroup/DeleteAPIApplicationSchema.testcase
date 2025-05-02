@@ -2,6 +2,7 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "API Builder";
@@ -78,7 +79,6 @@ definition {
 
 	@priority = 4
 	test CannotSeeSchemaInAPIExplorerAfterDelete {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -113,7 +113,6 @@ definition {
 
 	@priority = 4
 	test CanSeeWarningMessageBeforeSchemaIsDeleted {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 

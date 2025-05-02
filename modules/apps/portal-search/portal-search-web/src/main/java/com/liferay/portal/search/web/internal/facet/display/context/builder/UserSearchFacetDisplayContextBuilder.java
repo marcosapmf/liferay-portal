@@ -21,11 +21,13 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.UserSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.user.facet.configuration.UserFacetPortletInstanceConfiguration;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
 import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayContextComparatorFactoryUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import javax.portlet.RenderRequest;
@@ -89,6 +91,10 @@ public class UserSearchFacetDisplayContextBuilder {
 		_frequencyThreshold = frequencyThreshold;
 	}
 
+	public void setLocale(Locale locale) {
+		_locale = locale;
+	}
+
 	public void setMaxTerms(int maxTerms) {
 		_maxTerms = maxTerms;
 	}
@@ -137,20 +143,17 @@ public class UserSearchFacetDisplayContextBuilder {
 
 		bucketDisplayContext.setFrequency(termCollector.getFrequency());
 		bucketDisplayContext.setFrequencyVisible(_frequenciesVisible);
+		bucketDisplayContext.setLocale(_locale);
 		bucketDisplayContext.setSelected(isSelected(String.valueOf(userId)));
 
 		return bucketDisplayContext;
 	}
 
 	protected long getDisplayStyleGroupId() {
-		long displayStyleGroupId =
-			_userFacetPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = _themeDisplay.getScopeGroupId();
-		}
-
-		return displayStyleGroupId;
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			_userFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			_themeDisplay);
 	}
 
 	protected List<BucketDisplayContext> getEmptyBucketDisplayContexts() {
@@ -185,19 +188,11 @@ public class UserSearchFacetDisplayContextBuilder {
 	}
 
 	protected boolean isNothingSelected() {
-		if (_paramValues.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return _paramValues.isEmpty();
 	}
 
 	protected boolean isSelected(String value) {
-		if (_paramValues.contains(value)) {
-			return true;
-		}
-
-		return false;
+		return _paramValues.contains(value);
 	}
 
 	private List<BucketDisplayContext> _buildBucketDisplayContexts(
@@ -253,6 +248,7 @@ public class UserSearchFacetDisplayContextBuilder {
 	private Facet _facet;
 	private boolean _frequenciesVisible;
 	private int _frequencyThreshold;
+	private Locale _locale;
 	private int _maxTerms;
 	private String _order;
 	private String _paginationStartParameterName;

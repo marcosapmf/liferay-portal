@@ -20,11 +20,13 @@ import com.liferay.calendar.internal.upgrade.v4_0_0.util.CalendarNotificationTem
 import com.liferay.calendar.internal.upgrade.v4_0_0.util.CalendarResourceTable;
 import com.liferay.calendar.internal.upgrade.v4_0_0.util.CalendarTable;
 import com.liferay.calendar.internal.upgrade.v4_2_1.CalendarBookingUpgradeProcess;
+import com.liferay.calendar.internal.upgrade.v4_3_0.CalendarNotificationTemplateResourceUpgradeProcess;
 import com.liferay.calendar.model.CalendarBooking;
 import com.liferay.comment.upgrade.DiscussionSubscriptionClassNameUpgradeProcess;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -66,11 +68,16 @@ public class CalendarServiceUpgradeStepRegistrator
 		registry.register("1.0.3", "1.0.4", new UpgradeClassNames());
 
 		registry.register(
-			"1.0.4", "1.0.5",
+			"1.0.4", "1.0.4.step-1",
 			new CalendarResourceUpgradeProcess(
 				_classNameLocalService, _companyLocalService,
-				_userLocalService),
-			new UpgradeCompanyId(), new UpgradeLastPublishDate());
+				_userLocalService));
+
+		registry.register(
+			"1.0.4.step-1", "1.0.4.step-2", new UpgradeCompanyId());
+
+		registry.register(
+			"1.0.4.step-2", "1.0.5", new UpgradeLastPublishDate());
 
 		registry.register(
 			"1.0.5", "1.0.6",
@@ -83,9 +90,12 @@ public class CalendarServiceUpgradeStepRegistrator
 		registry.register("1.0.7", "2.0.0", new SchemaUpgradeProcess());
 
 		registry.register(
-			"2.0.0", "3.0.0", new UpgradeCalendarBookingResourceBlock(),
-			new UpgradeCalendarResourceBlock(),
-			new UpgradeCalendarResourceResourceBlock());
+			"2.0.0", "2.0.1", new UpgradeCalendarBookingResourceBlock());
+
+		registry.register("2.0.1", "2.0.2", new UpgradeCalendarResourceBlock());
+
+		registry.register(
+			"2.0.2", "3.0.0", new UpgradeCalendarResourceResourceBlock());
 
 		registry.register(
 			"3.0.0", "3.0.1",
@@ -149,6 +159,11 @@ public class CalendarServiceUpgradeStepRegistrator
 		registry.register(
 			"4.2.0", "4.2.1",
 			new CalendarBookingUpgradeProcess(_userLocalService));
+
+		registry.register(
+			"4.2.1", "4.3.0",
+			new CalendarNotificationTemplateResourceUpgradeProcess(
+				_resourceLocalService));
 	}
 
 	@Reference
@@ -159,6 +174,9 @@ public class CalendarServiceUpgradeStepRegistrator
 
 	@Reference
 	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Reference
+	private ResourceLocalService _resourceLocalService;
 
 	@Reference
 	private ResourcePermissionLocalService _resourcePermissionLocalService;

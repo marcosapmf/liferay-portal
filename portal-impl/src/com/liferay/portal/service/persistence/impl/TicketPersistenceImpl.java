@@ -32,7 +32,6 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.impl.TicketImpl;
 import com.liferay.portal.model.impl.TicketModelImpl;
 
@@ -40,7 +39,6 @@ import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -79,7 +77,6 @@ public class TicketPersistenceImpl
 	private FinderPath _finderPathWithoutPaginationFindAll;
 	private FinderPath _finderPathCountAll;
 	private FinderPath _finderPathFetchByKey;
-	private FinderPath _finderPathCountByKey;
 
 	/**
 	 * Returns the ticket where key = &#63; or throws a <code>NoSuchTicketException</code> if it could not be found.
@@ -195,21 +192,6 @@ public class TicketPersistenceImpl
 					}
 				}
 				else {
-					if (list.size() > 1) {
-						Collections.sort(list, Collections.reverseOrder());
-
-						if (_log.isWarnEnabled()) {
-							if (!useFinderCache) {
-								finderArgs = new Object[] {key};
-							}
-
-							_log.warn(
-								"TicketPersistenceImpl.fetchByKey(String, boolean) with parameters (" +
-									StringUtil.merge(finderArgs) +
-										") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
-						}
-					}
-
 					Ticket ticket = list.get(0);
 
 					result = ticket;
@@ -254,59 +236,13 @@ public class TicketPersistenceImpl
 	 */
 	@Override
 	public int countByKey(String key) {
-		key = Objects.toString(key, "");
+		Ticket ticket = fetchByKey(key);
 
-		FinderPath finderPath = _finderPathCountByKey;
-
-		Object[] finderArgs = new Object[] {key};
-
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_TICKET_WHERE);
-
-			boolean bindKey = false;
-
-			if (key.isEmpty()) {
-				sb.append(_FINDER_COLUMN_KEY_KEY_3);
-			}
-			else {
-				bindKey = true;
-
-				sb.append(_FINDER_COLUMN_KEY_KEY_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindKey) {
-					queryPos.add(key);
-				}
-
-				count = (Long)query.uniqueResult();
-
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (ticket == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_KEY_KEY_2 = "ticket.key = ?";
@@ -2185,7 +2121,6 @@ public class TicketPersistenceImpl
 	protected void cacheUniqueFindersCache(TicketModelImpl ticketModelImpl) {
 		Object[] args = new Object[] {ticketModelImpl.getKey()};
 
-		FinderCacheUtil.putResult(_finderPathCountByKey, args, Long.valueOf(1));
 		FinderCacheUtil.putResult(_finderPathFetchByKey, args, ticketModelImpl);
 	}
 
@@ -2630,11 +2565,6 @@ public class TicketPersistenceImpl
 		_finderPathFetchByKey = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByKey",
 			new String[] {String.class.getName()}, new String[] {"key_"}, true);
-
-		_finderPathCountByKey = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByKey",
-			new String[] {String.class.getName()}, new String[] {"key_"},
-			false);
 
 		_finderPathWithPaginationFindByC_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_C_C",

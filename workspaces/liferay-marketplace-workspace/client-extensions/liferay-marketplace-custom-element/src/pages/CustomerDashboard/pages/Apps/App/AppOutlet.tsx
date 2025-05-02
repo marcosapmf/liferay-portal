@@ -4,24 +4,36 @@
  */
 
 import ClayIcon from '@clayui/icon';
-import {Link, Outlet, useNavigate, useParams} from 'react-router-dom';
+import {
+	Link,
+	Outlet,
+	useNavigate,
+	useOutletContext,
+	useParams,
+} from 'react-router-dom';
 
+import Navbar, {NavbarProps} from '../../../../../components/Navbar';
+import {PageRenderer} from '../../../../../components/Page';
+import {OrderTypes, OrderWorkflowStatusCode} from '../../../../../enums/Order';
 import useGetProductByOrderId from '../../../../../hooks/useGetProductByOrderId';
 import i18n from '../../../../../i18n';
+import getProductPriceModel from '../../../../GetApp/utils/getProductPriceModel';
 import OrderDetailsHeader from '../../../components/OrderDetailsHeader';
 
 import './App.scss';
-import Navbar, {NavbarProps} from '../../../../../components/Navbar';
-import {PageRenderer} from '../../../../../components/Page';
-import {useMarketplaceContext} from '../../../../../context/MarketplaceContext';
-import {ORDER_WORKFLOW_STATUS_CODE} from '../../../../../enums/Order';
-import {isTrialSKU} from '../../../../../utils/productUtils';
-import getProductPriceModel from '../../../../GetApp/utils/getProductPriceModel';
+import {ProductSpecificationKey} from '../../../../../enums/Product';
+import {safeJSONParse} from '../../../../../utils/util';
+
+type ProductAndOrderPayload = NonNullable<
+	ReturnType<typeof useGetProductByOrderId>['data']
+>;
 
 type BaseOutletProps = {
 	backTitle: string;
 	backURL?: string;
-	routes: NavbarProps['routes'] | ((data: any) => NavbarProps['routes']);
+	routes:
+		| NavbarProps['routes']
+		| ((data: ProductAndOrderPayload) => NavbarProps['routes']);
 };
 
 const BaseOutlet: React.FC<BaseOutletProps> = ({
@@ -29,86 +41,128 @@ const BaseOutlet: React.FC<BaseOutletProps> = ({
 	backURL = '..',
 	routes,
 }) => {
-	const {orderId} = useParams();
-	const {data, error, isLoading} = useGetProductByOrderId(orderId as string);
-	const product = data?.product;
-
 	const navigate = useNavigate();
+	const {orderId} = useParams();
+	const outletContext = useOutletContext();
+	const {data, error, isLoading} = useGetProductByOrderId(orderId as string);
 
 	const placedOrderItems = data?.placedOrder.placedOrderItems ?? [];
 	const productCreatorAccountName = data?.product?.catalogName || '';
 
 	return (
-		<PageRenderer error={error} isLoading={isLoading}>
-			<div className="app-details-header d-flex flex-column w-100">
-				<Link
-					className="align-items-center d-flex text-dark"
-					onClick={() => navigate('..')}
-					to={backURL}
-				>
-					<ClayIcon className="mr-2" symbol="order-arrow-left" />
+		<PageRenderer
+			className="app-details-header d-flex flex-column w-100"
+			error={error}
+			isLoading={isLoading}
+		>
+			<Link
+				className="align-items-center d-flex text-dark"
+				onClick={() => navigate('..')}
+				to={backURL}
+			>
+				<ClayIcon className="mr-2" symbol="order-arrow-left" />
 
-					<span className="h5 mt-1">{backTitle}</span>
-				</Link>
+				<span className="h5 mt-1">{backTitle}</span>
+			</Link>
 
-				<OrderDetailsHeader
-					className="d-flex flex-row justify-content-between pb-3 pt-5"
-					hasOrderDetails
-					image={placedOrderItems[0]?.thumbnail}
-					name={data?.product?.name}
-					order={data?.placedOrder}
-					productOwner={productCreatorAccountName}
-				/>
+			<OrderDetailsHeader
+				className="d-flex flex-row justify-content-between pb-3 pt-5"
+				hasOrderDetails
+				image={placedOrderItems[0]?.thumbnail}
+				name={placedOrderItems[0]?.name}
+				order={data?.placedOrder as unknown as Cart}
+				productOwner={productCreatorAccountName}
+			/>
 
-				<Navbar
-					routes={
-						typeof routes === 'function'
-							? routes({data, placedOrderItems, product})
-							: routes
-					}
-				/>
+			<Navbar
+				routes={
+					typeof routes === 'function'
+						? data
+							? routes(data as ProductAndOrderPayload)
+							: []
+						: routes
+				}
+			/>
 
-				<Outlet context={data} />
-			</div>
+			<Outlet context={{...data, ...(outletContext || {})}} />
 		</PageRenderer>
 	);
 };
 
 const AppOutlet = () => {
-	const {properties} = useMarketplaceContext();
+	const {orderId} = useParams();
+	const {data} = useGetProductByOrderId(orderId as string);
 
 	return (
 		<BaseOutlet
 			backTitle={i18n.translate('back-to-my-apps')}
-			routes={({data, placedOrderItems, product}: any) => [
-				{
-					name: i18n.translate('details'),
-					path: '',
-				},
-				{
-					name: i18n.translate('download'),
-					path: 'download',
-					visible:
-						properties.featureFlags?.includes('LPD-21582') &&
-						data?.placedOrder.workflowStatusInfo.code ===
-							ORDER_WORKFLOW_STATUS_CODE.COMPLETED &&
-						placedOrderItems.some(
-							(item: PlacedOrderItems) =>
-								item.virtualItems?.length
-						),
-				},
-				{
-					name: i18n.translate('licenses'),
-					path: 'licenses',
-					visible: !(
-						getProductPriceModel(product).isFreeApp ||
-						(placedOrderItems[0]?.price?.price === 0 &&
-							product?.skus?.some((sku: any) =>
-								isTrialSKU(sku as unknown as SKU)
-							))
-					),
-				},
-			]}
+			routes={({placedOrder, product}) => {
+				const {isPaidApp} = getProductPriceModel(product);
+
+				const isCompletedOrderWithVirtualItems =
+					placedOrder.workflowStatusInfo.code ===
+						OrderWorkflowStatusCode.COMPLETED &&
+					placedOrder.placedOrderItems.some(
+						(item: PlacedOrderItems) => item.virtualItems?.length
+					);
+
+				const tabs = [
+					{
+						name: i18n.translate('details'),
+						path: '',
+					},
+				];
+
+				if (
+					placedOrder.orderTypeExternalReferenceCode ===
+					OrderTypes.CLOUDAPP
+				) {
+					const isDownloadableCloud =
+						product?.productSpecifications.some((specification) => {
+							if (
+								specification.specificationKey ===
+								ProductSpecificationKey.APP_SETTINGS
+							) {
+								return safeJSONParse(specification.value, {
+									downloadableCloud: true,
+								});
+							}
+						});
+
+					return [
+						...tabs,
+						{
+							name: i18n.translate('download'),
+							path: 'download',
+							visible:
+								isCompletedOrderWithVirtualItems &&
+								isDownloadableCloud,
+						},
+						{
+							name: i18n.translate('app-provisioning'),
+							path: 'cloud-provisioning',
+						},
+					];
+				}
+
+				if (data?.marketplaceDeliveryOrder.isDownloadable) {
+					return [
+						...tabs,
+						{
+							name: i18n.translate('download'),
+							path: 'download',
+							visible: isCompletedOrderWithVirtualItems,
+						},
+						{
+							name: i18n.translate('licenses'),
+							path: 'licenses',
+							visible: isPaidApp,
+						},
+					];
+				}
+
+				return tabs;
+			}}
 		/>
 	);
 };

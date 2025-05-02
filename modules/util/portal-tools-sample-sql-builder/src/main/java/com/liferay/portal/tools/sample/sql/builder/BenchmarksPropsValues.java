@@ -180,6 +180,11 @@ public class BenchmarksPropsValues {
 	public static final int MAX_DL_FOLDER_DEPTH = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_DL_FOLDER_DEPTH));
 
+	public static final int MAX_FRAGMENT_ENTRY_LINK_COUNT =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.MAX_FRAGMENT_ENTRY_LINK_COUNT));
+
 	public static final int MAX_GROUP_COUNT = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_GROUP_COUNT));
 
@@ -216,6 +221,12 @@ public class BenchmarksPropsValues {
 	public static final int MAX_MB_THREAD_COUNT = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_MB_THREAD_COUNT));
 
+	public static final int MAX_OBJECT_ENTRY_COUNT = GetterUtil.getInteger(
+		PropertiesHolder._get(BenchmarksPropsKeys.MAX_OBJECT_ENTRY_COUNT));
+
+	public static final int MAX_OBJECT_ENTRY_PAGE_COUNT = GetterUtil.getInteger(
+		PropertiesHolder._get(BenchmarksPropsKeys.MAX_OBJECT_ENTRY_PAGE_COUNT));
+
 	public static final int MAX_SEGMENTS_ENTRY_COUNT = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_SEGMENTS_ENTRY_COUNT));
 
@@ -227,15 +238,6 @@ public class BenchmarksPropsValues {
 
 	public static final int MAX_USER_TO_GROUP_COUNT = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_USER_TO_GROUP_COUNT));
-
-	public static final int MAX_WIKI_NODE_COUNT = GetterUtil.getInteger(
-		PropertiesHolder._get(BenchmarksPropsKeys.MAX_WIKI_NODE_COUNT));
-
-	public static final int MAX_WIKI_PAGE_COMMENT_COUNT = GetterUtil.getInteger(
-		PropertiesHolder._get(BenchmarksPropsKeys.MAX_WIKI_PAGE_COMMENT_COUNT));
-
-	public static final int MAX_WIKI_PAGE_COUNT = GetterUtil.getInteger(
-		PropertiesHolder._get(BenchmarksPropsKeys.MAX_WIKI_PAGE_COUNT));
 
 	public static final int OPTIMIZE_BUFFER_SIZE = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.OPTIMIZE_BUFFER_SIZE));
@@ -252,8 +254,12 @@ public class BenchmarksPropsValues {
 	public static final boolean SEARCH_BAR_ENABLED = GetterUtil.getBoolean(
 		PropertiesHolder._get(BenchmarksPropsKeys.SEARCH_BAR_ENABLED));
 
-	public static final String VIRTUAL_HOST_NAME = PropertiesHolder._get(
-		BenchmarksPropsKeys.VIRTUAL_HOST_NAME);
+	public static final String VIRTUAL_HOSTNAME_ADMIN_INSTANCE =
+		PropertiesHolder._get(
+			BenchmarksPropsKeys.VIRTUAL_HOSTNAME_ADMIN_INSTANCE);
+
+	public static final String VIRTUAL_HOSTNAME_PREFIX = PropertiesHolder._get(
+		BenchmarksPropsKeys.VIRTUAL_HOSTNAME_PREFIX);
 
 	private static class PropertiesHolder {
 

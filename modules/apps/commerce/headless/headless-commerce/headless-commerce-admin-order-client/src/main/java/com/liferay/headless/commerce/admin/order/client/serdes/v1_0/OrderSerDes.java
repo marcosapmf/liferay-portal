@@ -235,6 +235,30 @@ public class OrderSerDes {
 			sb.append("\"");
 		}
 
+		if (order.getCurrencyExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"currencyExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(order.getCurrencyExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
+		if (order.getCurrencyId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"currencyId\": ");
+
+			sb.append(order.getCurrencyId());
+		}
+
 		if (order.getCustomFields() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -570,6 +594,16 @@ public class OrderSerDes {
 					order.getRequestedDeliveryDate()));
 
 			sb.append("\"");
+		}
+
+		if (order.getShippable() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"shippable\": ");
+
+			sb.append(order.getShippable());
 		}
 
 		if (order.getShippingAddress() != null) {
@@ -1451,6 +1485,22 @@ public class OrderSerDes {
 			map.put("currencyCode", String.valueOf(order.getCurrencyCode()));
 		}
 
+		if (order.getCurrencyExternalReferenceCode() == null) {
+			map.put("currencyExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"currencyExternalReferenceCode",
+				String.valueOf(order.getCurrencyExternalReferenceCode()));
+		}
+
+		if (order.getCurrencyId() == null) {
+			map.put("currencyId", null);
+		}
+		else {
+			map.put("currencyId", String.valueOf(order.getCurrencyId()));
+		}
+
 		if (order.getCustomFields() == null) {
 			map.put("customFields", null);
 		}
@@ -1661,6 +1711,13 @@ public class OrderSerDes {
 				"requestedDeliveryDate",
 				liferayToJSONDateFormat.format(
 					order.getRequestedDeliveryDate()));
+		}
+
+		if (order.getShippable() == null) {
+			map.put("shippable", null);
+		}
+		else {
+			map.put("shippable", String.valueOf(order.getShippable()));
 		}
 
 		if (order.getShippingAddress() == null) {
@@ -2335,6 +2392,14 @@ public class OrderSerDes {
 			else if (Objects.equals(jsonParserFieldName, "currencyCode")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "currencyExternalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "currencyId")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "customFields")) {
 				return true;
 			}
@@ -2432,6 +2497,9 @@ public class OrderSerDes {
 			else if (Objects.equals(
 						jsonParserFieldName, "requestedDeliveryDate")) {
 
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "shippable")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "shippingAddress")) {
@@ -2874,6 +2942,20 @@ public class OrderSerDes {
 					order.setCurrencyCode((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "currencyExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					order.setCurrencyExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "currencyId")) {
+				if (jsonParserFieldValue != null) {
+					order.setCurrencyId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "customFields")) {
 				if (jsonParserFieldValue != null) {
 					order.setCustomFields((Map<String, ?>)jsonParserFieldValue);
@@ -3049,6 +3131,11 @@ public class OrderSerDes {
 				if (jsonParserFieldValue != null) {
 					order.setRequestedDeliveryDate(
 						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "shippable")) {
+				if (jsonParserFieldValue != null) {
+					order.setShippable((Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "shippingAddress")) {
@@ -3628,6 +3715,10 @@ public class OrderSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

@@ -90,7 +90,7 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					LayoutPageTemplateConstants.
 						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-					"Page Template Collection One", StringPool.BLANK,
+					null, "Page Template Collection One", StringPool.BLANK,
 					LayoutPageTemplateCollectionTypeConstants.BASIC,
 					_serviceContext);
 
@@ -157,7 +157,7 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					LayoutPageTemplateConstants.
 						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-					"Page Template Collection One", StringPool.BLANK,
+					null, "Page Template Collection One", StringPool.BLANK,
 					LayoutPageTemplateCollectionTypeConstants.BASIC,
 					_serviceContext);
 
@@ -167,8 +167,9 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 				_serviceContext.getScopeGroupId(),
 				layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
-				"Page Template One", LayoutPageTemplateEntryTypeConstants.BASIC,
-				0, WorkflowConstants.STATUS_DRAFT, _serviceContext);
+				null, "Page Template One",
+				LayoutPageTemplateEntryTypeConstants.BASIC, 0,
+				WorkflowConstants.STATUS_DRAFT, _serviceContext);
 
 		String fileName = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "getFileName", new Class<?>[] {long[].class},
@@ -192,7 +193,7 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					LayoutPageTemplateConstants.
 						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-					"Page Template Collection One", StringPool.BLANK,
+					null, "Page Template Collection One", StringPool.BLANK,
 					LayoutPageTemplateCollectionTypeConstants.BASIC,
 					_serviceContext);
 
@@ -237,7 +238,7 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					LayoutPageTemplateConstants.
 						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-					RandomTestUtil.randomString(10), StringPool.BLANK,
+					null, RandomTestUtil.randomString(10), StringPool.BLANK,
 					LayoutPageTemplateCollectionTypeConstants.BASIC,
 					_serviceContext);
 
@@ -293,7 +294,7 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 				null, _serviceContext.getUserId(),
 				_serviceContext.getScopeGroupId(),
-				layoutPageTemplateCollectionId, name,
+				layoutPageTemplateCollectionId, null, name,
 				LayoutPageTemplateEntryTypeConstants.BASIC, 0, status,
 				_serviceContext);
 

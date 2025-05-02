@@ -55,6 +55,7 @@ export function getDDMFormField({
 		}
 		else if (fieldName === 'name') {
 			ddmFormField.fieldName = value;
+			ddmFormField.name = value;
 		}
 		else {
 			ddmFormField[fieldName] = localizable
@@ -133,12 +134,14 @@ export function getFieldSetDDMForm({
 		})),
 	}));
 
-	const {dataDefinitionKey, description, id, name} = dataDefinition;
+	const {dataDefinitionKey, description, externalReferenceCode, id, name} =
+		dataDefinition;
 
 	return {
 		ddmStructureKey: dataDefinitionKey,
 		description:
 			description[editingLanguageId] ?? description[defaultLanguageId],
+		externalReferenceCode,
 		id,
 		localizedDescription: description,
 		localizedTitle: name,

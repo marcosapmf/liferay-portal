@@ -18,7 +18,7 @@ import com.liferay.layout.page.template.admin.web.internal.configuration.LayoutP
 import com.liferay.layout.page.template.admin.web.internal.constants.LayoutPageTemplateAdminWebKeys;
 import com.liferay.layout.page.template.admin.web.internal.security.permission.resource.LayoutPageTemplateEntryPermission;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
-import com.liferay.layout.page.template.item.selector.criterion.LayoutPageTemplateCollectionItemSelectorCriterion;
+import com.liferay.layout.page.template.item.selector.LayoutPageTemplateCollectionItemSelectorCriterion;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
@@ -616,11 +616,7 @@ public class LayoutPageTemplateEntryActionDropdownItemsProvider {
 		StagingGroupHelper stagingGroupHelper =
 			StagingGroupHelperUtil.getStagingGroupHelper();
 
-		if (stagingGroupHelper.isLiveGroup(group)) {
-			return true;
-		}
-
-		return false;
+		return stagingGroupHelper.isLiveGroup(group);
 	}
 
 	private boolean _isShowDiscardDraftAction() {
@@ -628,11 +624,7 @@ public class LayoutPageTemplateEntryActionDropdownItemsProvider {
 			return false;
 		}
 
-		if (_draftLayout.isDraft()) {
-			return true;
-		}
-
-		return false;
+		return _draftLayout.isDraft();
 	}
 
 	private final Layout _draftLayout;

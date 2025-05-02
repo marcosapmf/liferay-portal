@@ -46,7 +46,7 @@ public class SampleSQLBuilderTest {
 		LogAssertionTestRule.INSTANCE;
 
 	@Test
-	public void testFreemarkerTemplateContent() throws Exception {
+	public void testFreeMarkerTemplateContent() throws Exception {
 		Class<?> clazz = getClass();
 
 		URL url = clazz.getResource(
@@ -106,7 +106,7 @@ public class SampleSQLBuilderTest {
 			BenchmarksPropsKeys.MAX_ASSET_ENTRY_TO_ASSET_CATEGORY_COUNT, "1");
 		properties.put(
 			BenchmarksPropsKeys.MAX_ASSET_ENTRY_TO_ASSET_TAG_COUNT, "1");
-		properties.put(BenchmarksPropsKeys.MAX_ASSET_TAG_COUNT, "1");
+		properties.put(BenchmarksPropsKeys.MAX_ASSET_TAG_COUNT, "2");
 		properties.put(BenchmarksPropsKeys.MAX_ASSET_VUCABULARY_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_ASSETPUBLISHER_PAGE_COUNT, "2");
 		properties.put(BenchmarksPropsKeys.MAX_BLOGS_ENTRY_COMMENT_COUNT, "1");
@@ -135,7 +135,7 @@ public class SampleSQLBuilderTest {
 			"1");
 		properties.put(BenchmarksPropsKeys.MAX_COMPANY_COUNT, "2");
 		properties.put(BenchmarksPropsKeys.MAX_COMPANY_USER_COUNT, "1");
-		properties.put(BenchmarksPropsKeys.MAX_CONTENT_LAYOUT_COUNT, "1");
+		properties.put(BenchmarksPropsKeys.MAX_CONTENT_LAYOUT_COUNT, "6");
 		properties.put(
 			BenchmarksPropsKeys.MAX_CP_DEFINITION_ATTACHMENT_TYPE_IMAGE_COUNT,
 			"1");
@@ -155,6 +155,7 @@ public class SampleSQLBuilderTest {
 		properties.put(BenchmarksPropsKeys.MAX_DL_FILE_ENTRY_SIZE, "1");
 		properties.put(BenchmarksPropsKeys.MAX_DL_FOLDER_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_DL_FOLDER_DEPTH, "1");
+		properties.put(BenchmarksPropsKeys.MAX_FRAGMENT_ENTRY_LINK_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_GROUP_COUNT, "2");
 		properties.put(BenchmarksPropsKeys.MAX_JOURNAL_ARTICLE_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_JOURNAL_ARTICLE_PAGE_COUNT, "1");
@@ -166,11 +167,10 @@ public class SampleSQLBuilderTest {
 		properties.put(BenchmarksPropsKeys.MAX_MB_CATEGORY_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_MB_MESSAGE_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_MB_THREAD_COUNT, "1");
+		properties.put(BenchmarksPropsKeys.MAX_OBJECT_ENTRY_COUNT, "1");
+		properties.put(BenchmarksPropsKeys.MAX_OBJECT_ENTRY_PAGE_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_SEGMENTS_ENTRY_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_USER_TO_GROUP_COUNT, "1");
-		properties.put(BenchmarksPropsKeys.MAX_WIKI_NODE_COUNT, "1");
-		properties.put(BenchmarksPropsKeys.MAX_WIKI_PAGE_COMMENT_COUNT, "1");
-		properties.put(BenchmarksPropsKeys.MAX_WIKI_PAGE_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.OPTIMIZE_BUFFER_SIZE, "8192");
 		properties.put(
 			BenchmarksPropsKeys.OUTPUT_CSV_FILE_NAMES,
@@ -178,14 +178,17 @@ public class SampleSQLBuilderTest {
 				"assetPublisher,blog,commerceDeliveryAPI,",
 				"commerceInventoryWarehouseItem,commerceOrder,commerceProduct,",
 				"company,cpDefinition,documentLibrary,dynamicDataList,",
-				"fragment,layout,mbCategory,mbThread,repository,user,wiki"));
+				"fragment,layout,mbCategory,mbThread,objectDefinition,",
+				"repository,user"));
 		properties.put(BenchmarksPropsKeys.OUTPUT_MERGE, "true");
 		properties.put(
 			BenchmarksPropsKeys.SCRIPT,
 			"com/liferay/portal/tools/sample/sql/builder/dependencies" +
 				"/sample.ftl");
 		properties.put(BenchmarksPropsKeys.SEARCH_BAR_ENABLED, "true");
-		properties.put(BenchmarksPropsKeys.VIRTUAL_HOST_NAME, "localhost");
+		properties.put(
+			BenchmarksPropsKeys.VIRTUAL_HOSTNAME_ADMIN_INSTANCE, "localhost");
+		properties.put(BenchmarksPropsKeys.VIRTUAL_HOSTNAME_PREFIX, "liferay");
 	}
 
 	private void _loadHypersonic(Connection connection, String fileName)

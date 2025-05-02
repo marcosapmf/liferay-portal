@@ -10,8 +10,6 @@ import com.liferay.headless.admin.content.resource.v1_0.DisplayPageTemplateResou
 import com.liferay.headless.admin.content.resource.v1_0.StructuredContentResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -63,6 +61,26 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {displayPageTemplate(displayPageTemplateKey: ___, siteKey: ___){actions, availableLanguages, creator, customFields, dateCreated, dateModified, displayPageTemplateKey, displayPageTemplateSettings, markedAsDefault, pageDefinition, siteId, title, uuid}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField(description = "Retrieves a display page template of a site")
+	public DisplayPageTemplate displayPageTemplate(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("displayPageTemplateKey") String
+				displayPageTemplateKey)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_displayPageTemplateResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			displayPageTemplateResource ->
+				displayPageTemplateResource.getSiteDisplayPageTemplate(
+					Long.valueOf(siteKey), displayPageTemplateKey));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {displayPageTemplates(page: ___, pageSize: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
@@ -83,26 +101,6 @@ public class Query {
 					Long.valueOf(siteKey), Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(
 						displayPageTemplateResource, sortsString))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {displayPageTemplate(displayPageTemplateKey: ___, siteKey: ___){actions, availableLanguages, creator, customFields, dateCreated, dateModified, displayPageTemplateKey, displayPageTemplateSettings, markedAsDefault, pageDefinition, siteId, title, uuid}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField(description = "Retrieves a display page template of a site")
-	public DisplayPageTemplate displayPageTemplate(
-			@GraphQLName("siteKey") @NotEmpty String siteKey,
-			@GraphQLName("displayPageTemplateKey") String
-				displayPageTemplateKey)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_displayPageTemplateResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			displayPageTemplateResource ->
-				displayPageTemplateResource.getSiteDisplayPageTemplate(
-					Long.valueOf(siteKey), displayPageTemplateKey));
 	}
 
 	/**
@@ -316,12 +314,15 @@ public class Query {
 	private BiFunction<Object, List<String>, Aggregation>
 		_aggregationBiFunction;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

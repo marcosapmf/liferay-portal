@@ -19,7 +19,6 @@ import com.liferay.object.test.util.TreeTestUtil;
 import com.liferay.object.tree.Edge;
 import com.liferay.object.tree.Node;
 import com.liferay.object.tree.Tree;
-import com.liferay.object.tree.TreeFactory;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
@@ -27,6 +26,7 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -48,7 +48,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 /**
  * @author Pedro Leite
  */
-@FeatureFlags("LPS-187142")
+@FeatureFlags("LPD-34594")
 @RunWith(Arquillian.class)
 public class ObjectEntryDisplayContextTest {
 
@@ -63,18 +63,25 @@ public class ObjectEntryDisplayContextTest {
 	public void testGetBackURL() throws Exception {
 		Tree objectDefinitionTree = TreeTestUtil.createObjectDefinitionTree(
 			_objectDefinitionLocalService, _objectRelationshipLocalService,
-			_treeFactory);
+			true,
+			LinkedHashMapBuilder.put(
+				"A", new String[] {"AA", "AB"}
+			).put(
+				"AA", new String[] {"AAA", "AAB"}
+			).put(
+				"AB", new String[0]
+			).put(
+				"AAA", new String[0]
+			).put(
+				"AAB", new String[0]
+			).build());
 
 		Node nodeA = objectDefinitionTree.getRootNode();
 
-		ObjectDefinition objectDefinitionA =
-			_objectDefinitionLocalService.publishCustomObjectDefinition(
-				TestPropsValues.getUserId(), nodeA.getPrimaryKey());
-
 		TreeTestUtil.createObjectEntryTree(
-			"1", _objectEntryLocalService, _objectFieldLocalService,
-			nodeA.getPrimaryKey(), _objectRelationshipLocalService,
-			_treeFactory);
+			"1", _objectDefinitionLocalService, _objectEntryLocalService,
+			_objectFieldLocalService, _objectRelationshipLocalService,
+			nodeA.getPrimaryKey());
 
 		ObjectDefinition objectDefinitionAA =
 			_objectDefinitionLocalService.getObjectDefinition(
@@ -88,7 +95,11 @@ public class ObjectEntryDisplayContextTest {
 				objectEntryAA1.getExternalReferenceCode(), objectDefinitionAA);
 
 		ObjectEntry objectEntryA1 = _objectEntryLocalService.getObjectEntry(
-			"A1", objectDefinitionA.getObjectDefinitionId());
+			"A1", nodeA.getPrimaryKey());
+
+		ObjectDefinition objectDefinitionA =
+			_objectDefinitionLocalService.getObjectDefinition(
+				nodeA.getPrimaryKey());
 
 		Assert.assertEquals(
 			PortletURLBuilder.create(
@@ -149,7 +160,7 @@ public class ObjectEntryDisplayContextTest {
 		TreeTestUtil.deleteObjectDefinitionHierarchy(
 			_objectDefinitionLocalService,
 			new String[] {"C_A", "C_AA", "C_AB", "C_AAA", "C_AAB"},
-			_objectEntryLocalService);
+			_objectEntryLocalService, _objectRelationshipLocalService);
 	}
 
 	private String _getBackURL(MockHttpServletRequest mockHttpServletRequest)
@@ -213,8 +224,5 @@ public class ObjectEntryDisplayContextTest {
 
 	@Inject
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
-
-	@Inject
-	private TreeFactory _treeFactory;
 
 }

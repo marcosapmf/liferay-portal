@@ -87,7 +87,8 @@ public class UploadServletRequestImpl
 
 			int contentLength = httpServletRequest.getContentLength();
 			long uploadServletRequestImplMaxSize =
-				UploadServletRequestConfigurationProviderUtil.getMaxSize();
+				UploadServletRequestConfigurationProviderUtil.
+					getMaxSizeWithPadding();
 			long uploadServletRequestImplSize = 0;
 
 			if ((uploadServletRequestImplMaxSize > 0) &&

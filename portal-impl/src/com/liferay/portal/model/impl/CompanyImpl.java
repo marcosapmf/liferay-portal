@@ -9,13 +9,8 @@ import com.liferay.counter.kernel.service.CounterLocalServiceUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.AutoEscape;
-import com.liferay.portal.kernel.cache.thread.local.Lifecycle;
-import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCache;
-import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCacheManager;
 import com.liferay.portal.kernel.encryptor.EncryptorUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.CompanyInfo;
@@ -133,32 +128,37 @@ public class CompanyImpl extends CompanyBaseImpl {
 	@Override
 	public Group getGroup() throws PortalException {
 		if (getCompanyId() > CompanyConstants.SYSTEM) {
-			ThreadLocalCache<Group> threadLocalCache =
-				ThreadLocalCacheManager.getThreadLocalCache(
-					Lifecycle.REQUEST, Company.class.getName());
+			if (_group == null) {
+				if (_groupId == -1) {
+					_group = GroupLocalServiceUtil.fetchCompanyGroup(
+						getCompanyId());
 
-			String cacheKey = StringUtil.toHexString(getCompanyId());
-
-			Group companyGroup = threadLocalCache.get(cacheKey);
-
-			if (companyGroup == null) {
-				companyGroup = GroupLocalServiceUtil.getCompanyGroup(
-					getCompanyId());
-
-				threadLocalCache.put(cacheKey, companyGroup);
+					if (_group != null) {
+						_groupId = _group.getGroupId();
+					}
+				}
+				else {
+					_group = GroupLocalServiceUtil.fetchGroup(_groupId);
+				}
 			}
 
-			return companyGroup;
+			return _group;
 		}
 
 		return new GroupImpl();
 	}
 
 	@Override
-	public long getGroupId() throws PortalException {
-		Group group = getGroup();
+	public long getGroupId() {
+		if (_groupId == -1) {
+			_group = GroupLocalServiceUtil.fetchCompanyGroup(getCompanyId());
 
-		return group.getGroupId();
+			if (_group != null) {
+				_groupId = _group.getGroupId();
+			}
+		}
+
+		return _groupId;
 	}
 
 	@Override
@@ -285,17 +285,9 @@ public class CompanyImpl extends CompanyBaseImpl {
 			return _virtualHostname;
 		}
 
-		VirtualHost virtualHost = null;
-
-		try {
-			virtualHost = VirtualHostLocalServiceUtil.fetchVirtualHost(
-				getCompanyId(), 0);
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
-			}
-		}
+		VirtualHost virtualHost =
+			VirtualHostLocalServiceUtil.fetchCompanyDefaultVirtualHost(
+				getCompanyId());
 
 		if (virtualHost == null) {
 			return StringPool.BLANK;
@@ -390,6 +382,11 @@ public class CompanyImpl extends CompanyBaseImpl {
 	}
 
 	@Override
+	public void setGroupId(long groupId) {
+		_groupId = groupId;
+	}
+
+	@Override
 	public void setKey(String key) {
 		CompanyInfo companyInfo = getCompanyInfo();
 
@@ -448,7 +445,7 @@ public class CompanyImpl extends CompanyBaseImpl {
 		Company company, String name, boolean defaultValue) {
 
 		String value = PrefsPropsUtil.getString(
-			company.getCompanyId(), name, PropsUtil.get(company, name));
+			company.getCompanyId(), name, PropsUtil.get(name));
 
 		if (value != null) {
 			return GetterUtil.getBoolean(value);
@@ -461,7 +458,7 @@ public class CompanyImpl extends CompanyBaseImpl {
 		Company company, String name, String defaultValue) {
 
 		String value = PrefsPropsUtil.getString(
-			company.getCompanyId(), name, PropsUtil.get(company, name));
+			company.getCompanyId(), name, PropsUtil.get(name));
 
 		if (value != null) {
 			return value;
@@ -470,12 +467,15 @@ public class CompanyImpl extends CompanyBaseImpl {
 		return defaultValue;
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(CompanyImpl.class);
-
 	private CompanyInfo _companyInfo;
 
 	@CacheField
 	private CompanySecurityBag _companySecurityBag;
+
+	private Group _group;
+
+	@CacheField(permanent = true, propagateToInterface = true)
+	private long _groupId = -1;
 
 	private Key _keyObj;
 

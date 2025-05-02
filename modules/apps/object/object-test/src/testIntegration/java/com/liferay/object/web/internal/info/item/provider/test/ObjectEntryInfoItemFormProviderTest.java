@@ -13,6 +13,8 @@ import com.liferay.info.form.InfoForm;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFormProvider;
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
@@ -202,7 +204,7 @@ public class ObjectEntryInfoItemFormProviderTest {
 				null, TestPropsValues.getUserId(),
 				parentObjectDefinition.getObjectDefinitionId(),
 				_childObjectDefinition.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
 				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
@@ -276,6 +278,30 @@ public class ObjectEntryInfoItemFormProviderTest {
 						_childObjectDefinition.getObjectDefinitionId()),
 					0),
 				_listTypeEntry2.getKey(), _listTypeEntry3.getKey());
+
+			ServiceContext serviceContext =
+				ServiceContextThreadLocal.getServiceContext();
+
+			MockHttpServletRequest mockHttpServletRequest =
+				(MockHttpServletRequest)serviceContext.getRequest();
+
+			JournalArticle journalArticle = JournalTestUtil.addArticle(
+				TestPropsValues.getGroupId(), 0);
+
+			mockHttpServletRequest.setAttribute(
+				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER,
+				_journalArticleLayoutDisplayPageProvider.
+					getLayoutDisplayPageObjectProvider(
+						new InfoItemReference(
+							JournalArticle.class.getName(),
+							journalArticle.getResourcePrimKey())));
+
+			_assertOptionInfoFieldTypes(
+				infoItemFormProvider.getInfoForm(
+					String.valueOf(
+						_childObjectDefinition.getObjectDefinitionId()),
+					0),
+				_listTypeEntry1.getKey(), _listTypeEntry2.getKey());
 		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();
@@ -295,13 +321,14 @@ public class ObjectEntryInfoItemFormProviderTest {
 		throws Exception {
 
 		return _objectDefinitionLocalService.addCustomObjectDefinition(
-			TestPropsValues.getUserId(), 0, false, true, false, false,
+			TestPropsValues.getUserId(), 0, null, false, false, true, false,
+			false, false,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			ObjectDefinitionTestUtil.getRandomName(), null, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			true, ObjectDefinitionConstants.SCOPE_SITE,
 			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
-			Arrays.asList(objectFields));
+			Collections.emptyList(), Arrays.asList(objectFields));
 	}
 
 	private void _addObjectStateTransition(
@@ -395,6 +422,12 @@ public class ObjectEntryInfoItemFormProviderTest {
 
 	@Inject
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
+
+	@Inject(
+		filter = "component.name=com.liferay.journal.web.internal.layout.display.page.JournalArticleLayoutDisplayPageProvider"
+	)
+	private LayoutDisplayPageProvider<JournalArticle>
+		_journalArticleLayoutDisplayPageProvider;
 
 	@Inject
 	private LayoutDisplayPageProviderRegistry

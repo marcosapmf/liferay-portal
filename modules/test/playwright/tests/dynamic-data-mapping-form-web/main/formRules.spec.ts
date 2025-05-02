@@ -1,0 +1,443 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2024 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import {
+	ObjectDefinitionAPI,
+	ObjectField,
+} from '@liferay/object-admin-rest-client-js';
+import {expect, mergeTests} from '@playwright/test';
+
+import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
+import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
+import {formsPagesTest} from '../../../fixtures/formsPagesTest';
+import {loginTest} from '../../../fixtures/loginTest';
+import {systemSettingsPageTest} from '../../../fixtures/systemSettingsPageTest';
+import {getRandomInt} from '../../../utils/getRandomInt';
+import getRandomString from '../../../utils/getRandomString';
+import {deleteItems} from './utils/deleteItems';
+
+const test = mergeTests(
+	dataApiHelpersTest,
+	featureFlagsTest({
+		'LPD-31212': {enabled: true},
+	}),
+	loginTest(),
+	formsPagesTest,
+	systemSettingsPageTest
+);
+
+test.afterEach(async ({formsPage, page, systemSettingsPage}) => {
+	await formsPage.goTo();
+
+	await deleteItems(formsPage);
+
+	await formsPage.dataProvidersTab.click();
+
+	await deleteItems(formsPage);
+
+	await systemSettingsPage.goToSystemSetting(
+		'Data Providers',
+		'Data Providers'
+	);
+
+	await page.getByLabel('Access Local Network').uncheck();
+
+	await page
+		.getByRole('button', {name: 'Save'})
+		.or(page.getByRole('button', {name: 'Update'}))
+		.click();
+
+	await expect(page.getByText('Success:Your request')).toBeVisible();
+});
+
+test.beforeEach(({page}) => {
+	page.setViewportSize({height: 1080, width: 1920});
+});
+
+test('Assert that multiple selection field associated with a show rule mantains its predefined value on change', async ({
+	formBuilderFieldSettingsSidePanelPage,
+	formBuilderPage,
+	formBuilderSidePanelPage,
+	page,
+	rulesBuilderPage,
+}) => {
+	await formBuilderPage.goToNew();
+
+	await expect(formBuilderPage.newFormHeading).toBeVisible();
+
+	await formBuilderPage.fillFormTitle('Form' + getRandomInt());
+
+	await formBuilderSidePanelPage.addFieldByDoubleClick('Single Selection');
+
+	await formBuilderFieldSettingsSidePanelPage.addOptions(2, 'single option ');
+
+	await formBuilderSidePanelPage.clickBackButton();
+
+	await formBuilderSidePanelPage.addFieldByDoubleClick('Multiple Selection');
+
+	await formBuilderFieldSettingsSidePanelPage.addOptions(
+		4,
+		'multiple option '
+	);
+
+	await formBuilderSidePanelPage.advancedTab.click();
+
+	await formBuilderFieldSettingsSidePanelPage.fillMultiplePredefinedValues([
+		'multiple option 0',
+		'multiple option 3',
+	]);
+
+	await page.waitForTimeout(1000);
+
+	await rulesBuilderPage.rulesTab.click();
+
+	await rulesBuilderPage.addElementsButton.click();
+
+	await rulesBuilderPage.selectConditionLeftFormField('Single Selection');
+
+	await rulesBuilderPage.selectConditionOperator('Is Equal To');
+
+	await rulesBuilderPage.selectConditionOperatorValueSource('Value');
+
+	await rulesBuilderPage.selectConditionRightFormField('single option 0');
+
+	await rulesBuilderPage.selectAction('Show');
+
+	await page.getByRole('combobox').nth(5).click();
+
+	await page.getByRole('option', {name: 'Multiple Selection'}).click();
+
+	await rulesBuilderPage.saveButton.click();
+
+	await formBuilderPage.formTab.click();
+
+	const formPreviewPagePromise = page.waitForEvent('popup');
+
+	await formBuilderPage.previewButton.click();
+
+	const formPreviewPage = await formPreviewPagePromise;
+
+	await formPreviewPage
+		.locator('label')
+		.filter({hasText: 'single option 0'})
+		.click();
+
+	const multpleOption = (optionNumber: number) =>
+		formPreviewPage.getByLabel(`multiple option ${optionNumber}`);
+
+	await expect(multpleOption(0)).toBeChecked();
+
+	await expect(multpleOption(1)).not.toBeChecked();
+
+	await expect(multpleOption(2)).not.toBeChecked();
+
+	await expect(multpleOption(3)).toBeChecked();
+
+	await formPreviewPage.getByLabel('multiple option 1').click();
+
+	await expect(multpleOption(0)).toBeChecked();
+
+	await expect(multpleOption(1)).toBeChecked();
+
+	await expect(multpleOption(2)).not.toBeChecked();
+
+	await expect(multpleOption(3)).toBeChecked();
+
+	await formPreviewPage.close();
+});
+
+test('Assert that Show action rule is not triggered when typing into an unrelated field', async ({
+	formBuilderPage,
+	formBuilderSidePanelPage,
+	page,
+	rulesBuilderPage,
+}) => {
+	await formBuilderPage.goToNew();
+
+	await expect(formBuilderPage.newFormHeading).toBeVisible();
+
+	await formBuilderPage.fillFormTitle('Form' + getRandomInt());
+
+	await formBuilderSidePanelPage.addFieldByDoubleClick('Text');
+
+	await formBuilderSidePanelPage.label.fill('Text 1');
+
+	await formBuilderSidePanelPage.clickBackButton();
+
+	await formBuilderSidePanelPage.addFieldByDoubleClick('Text');
+
+	await formBuilderSidePanelPage.label.fill('Text 2');
+
+	await formBuilderSidePanelPage.clickBackButton();
+
+	await formBuilderSidePanelPage.addFieldByDoubleClick('Date');
+
+	await formBuilderSidePanelPage.requiredFieldToggleSwitch.click();
+
+	await rulesBuilderPage.rulesTab.click();
+
+	await rulesBuilderPage.addElementsButton.click();
+
+	await rulesBuilderPage.selectConditionLeftFormField('Text 1');
+
+	await rulesBuilderPage.selectConditionOperator('Is Equal To');
+
+	await rulesBuilderPage.selectConditionOperatorValueSource('Value');
+
+	await rulesBuilderPage.conditionRightFormFieldInput.click();
+
+	await rulesBuilderPage.conditionRightFormFieldInput.fill('1');
+
+	await rulesBuilderPage.selectAction('Show');
+
+	await page.getByRole('combobox').nth(4).click();
+	await page.getByRole('option', {name: 'Date'}).click();
+
+	await rulesBuilderPage.saveButton.click();
+
+	await formBuilderPage.formTab.click();
+
+	const formPreviewPagePromise = page.waitForEvent('popup');
+
+	await formBuilderPage.previewButton.click();
+
+	const formPreviewPage = await formPreviewPagePromise;
+
+	await formPreviewPage.getByLabel('Text 2').click();
+
+	await formPreviewPage.getByLabel('Text 2').fill('1');
+
+	const dateField = formPreviewPage.getByPlaceholder('__/__/____');
+
+	await expect(dateField).toBeHidden();
+
+	await formPreviewPage.getByLabel('Text 2').fill('');
+	await formPreviewPage.getByLabel('Text 1').click();
+	await formPreviewPage.getByLabel('Text 1').fill('1');
+
+	await expect(dateField).toBeVisible();
+
+	await formPreviewPage.close();
+});
+
+test('Select from list with multiple selections allowed is auto-filled by data provider defined in rule', async ({
+	apiHelpers,
+	dataProviderPage,
+	formBuilderFieldSettingsSidePanelPage,
+	formBuilderPage,
+	formBuilderSidePanelPage,
+	formsPage,
+	page,
+	rulesBuilderPage,
+	systemSettingsPage,
+}) => {
+	test.slow();
+
+	const baseObjectField: Partial<ObjectField> = {
+		DBType: 'String',
+		businessType: 'Text',
+		indexed: true,
+		indexedAsKeyword: false,
+		indexedLanguageId: '',
+		localized: false,
+		required: false,
+		system: false,
+		type: 'String',
+	};
+
+	const objectFields = [
+		{
+			externalReferenceCode: 'CountryERC',
+			label: {en_US: 'Country'},
+			name: 'country',
+			...baseObjectField,
+		},
+		{
+			externalReferenceCode: 'CityERC',
+			label: {en_US: 'City'},
+			name: 'city',
+			...baseObjectField,
+		},
+	];
+
+	const objectDefinitionExternalReferenceCode =
+		'ObjectDefinition' + getRandomInt();
+
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition({
+			active: true,
+			enableLocalization: false,
+			externalReferenceCode: objectDefinitionExternalReferenceCode,
+			label: {
+				en_US: objectDefinitionExternalReferenceCode,
+			},
+			name: objectDefinitionExternalReferenceCode,
+			objectFields,
+			objectFolderExternalReferenceCode: 'default',
+			pluralLabel: {
+				en_US: objectDefinitionExternalReferenceCode,
+			},
+			portlet: true,
+			scope: 'company',
+			status: {code: 0},
+			titleObjectFieldName: 'country',
+		});
+
+	apiHelpers.data.push({
+		id: objectDefinition.id,
+		type: 'objectDefinition',
+	});
+
+	const applicationName = 'c/' + objectDefinition.name.toLowerCase() + 's';
+
+	await apiHelpers.objectEntry.postObjectEntry(
+		{
+			city: 'Recife',
+			country: 'Brazil',
+		},
+		applicationName
+	);
+
+	await apiHelpers.objectEntry.postObjectEntry(
+		{
+			city: 'Paris',
+			country: 'France',
+		},
+		applicationName
+	);
+
+	// configure data provider
+
+	await systemSettingsPage.goToSystemSetting(
+		'Data Providers',
+		'Data Providers'
+	);
+
+	await page.getByLabel('Access Local Network').check();
+
+	await page
+		.getByRole('button', {name: 'Save'})
+		.or(page.getByRole('button', {name: 'Update'}))
+		.click();
+
+	await expect(page.getByText('Success:Your request')).toBeVisible();
+
+	await expect(page.getByLabel('Access Local Network')).toBeChecked();
+
+	await formsPage.goTo();
+
+	await formsPage.dataProvidersTab.click();
+
+	await dataProviderPage.addNewDataProviderLink.click();
+
+	const dataProviderName = getRandomString();
+
+	await dataProviderPage.nameInputField.fill(dataProviderName);
+
+	await dataProviderPage.urlInputField.fill(
+		`${apiHelpers.baseUrl}${applicationName}/?aggregationTerms=country`
+	);
+
+	await dataProviderPage.userNameInputField.fill('test@liferay.com');
+
+	await dataProviderPage.passwordInputField.fill('test');
+
+	await dataProviderPage.timeoutInputField.fill('30000');
+
+	await dataProviderPage.outputPathInputField.fill(
+		'$.facets[0].facetValues[*].term'
+	);
+
+	await dataProviderPage.selectOutputType('List');
+
+	await dataProviderPage.outputLabel.fill('Values found');
+
+	await dataProviderPage.saveButton.click();
+
+	await expect(page.getByText('Success:Your request')).toBeVisible();
+
+	await formsPage.formsTab.click();
+
+	// create form and configure two fields
+
+	await formsPage.newFormButton.click();
+
+	await formBuilderSidePanelPage.addSingleSelectionButton.dblclick();
+
+	await formBuilderFieldSettingsSidePanelPage.addOptions(2);
+
+	await formBuilderSidePanelPage.backButton.click();
+
+	await formBuilderSidePanelPage.addSelectFromListButton.dblclick();
+
+	await formBuilderFieldSettingsSidePanelPage.selectCreateListSetting(
+		'From Autofill'
+	);
+
+	await formBuilderFieldSettingsSidePanelPage.advancedTabButton.click();
+
+	await formBuilderFieldSettingsSidePanelPage.allowMultipleSelections();
+
+	await page.waitForLoadState('networkidle');
+
+	await formBuilderSidePanelPage.backButton.click();
+
+	// configure rule
+
+	await rulesBuilderPage.rulesTab.click();
+
+	await rulesBuilderPage.addElementsButton.click();
+
+	await rulesBuilderPage.selectConditionLeftFormField('Single Selection');
+
+	await rulesBuilderPage.selectConditionOperator('Is Equal To');
+
+	await rulesBuilderPage.selectConditionOperatorValueSource('Value');
+
+	await rulesBuilderPage.selectConditionRightFormField('Option1');
+
+	await rulesBuilderPage.selectAction('Autofill');
+
+	await rulesBuilderPage.selectAutofillDataProvider(dataProviderName);
+
+	await rulesBuilderPage.selectDataProviderOutput('Select from List');
+
+	await rulesBuilderPage.saveButton.click();
+
+	// assert the presence of auto-filled options in multiple selection field only when rule condition is met
+
+	await formBuilderPage.formTab.click();
+
+	const formPreviewPagePromise = page.waitForEvent('popup');
+
+	await formBuilderPage.previewButton.click();
+
+	const formPreviewPage = await formPreviewPagePromise;
+
+	await formPreviewPage.getByLabel('Option0').check();
+
+	await formPreviewPage.getByPlaceholder('Choose Options').click();
+
+	await expect(
+		formPreviewPage.getByRole('option', {name: 'No results found'})
+	).toBeVisible();
+
+	await formPreviewPage.getByLabel('Option1').check();
+
+	await formPreviewPage.getByPlaceholder('Choose Options').click();
+
+	await expect(
+		formPreviewPage.getByRole('option', {name: 'Brazil'})
+	).toBeVisible();
+
+	await expect(
+		formPreviewPage.getByRole('option', {name: 'France'})
+	).toBeVisible();
+
+	await formPreviewPage.close();
+});

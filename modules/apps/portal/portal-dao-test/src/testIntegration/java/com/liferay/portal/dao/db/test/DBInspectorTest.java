@@ -83,7 +83,7 @@ public class DBInspectorTest {
 	}
 
 	@Test
-	public void testHasColumnNonexisting() throws Exception {
+	public void testHasColumnNonexistent() throws Exception {
 		Assert.assertTrue(
 			!_dbInspector.hasColumn(_TABLE_NAME, _COLUMN_NAME_NONEXISTING));
 	}
@@ -238,7 +238,7 @@ public class DBInspectorTest {
 	}
 
 	@Test
-	public void testHasTableNonexisting() throws Exception {
+	public void testHasTableNonexistent() throws Exception {
 		Assert.assertFalse(_dbInspector.hasTable(_TABLE_NAME_NONEXISTING));
 	}
 
@@ -279,11 +279,11 @@ public class DBInspectorTest {
 
 	private static final String _COLUMN_NAME = "id";
 
-	private static final String _COLUMN_NAME_NONEXISTING = "nonexistingColumn";
+	private static final String _COLUMN_NAME_NONEXISTING = "nonexistentColumn";
 
 	private static final String _TABLE_NAME = "DBInspectorTest";
 
-	private static final String _TABLE_NAME_NONEXISTING = "NonexistingTable";
+	private static final String _TABLE_NAME_NONEXISTING = "NonexistentTable";
 
 	private static Connection _connection;
 	private static DB _db;

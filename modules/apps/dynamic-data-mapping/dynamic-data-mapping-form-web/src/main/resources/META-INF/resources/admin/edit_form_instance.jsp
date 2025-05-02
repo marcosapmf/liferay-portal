@@ -22,6 +22,8 @@ if (!ddmFormAdminDisplayContext.isFormPublished()) {
 	disableCopyButton = true;
 }
 
+JSONObject formBuilderContextJSONObject = ddmFormAdminDisplayContext.getFormBuilderContextJSONObject();
+
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
 

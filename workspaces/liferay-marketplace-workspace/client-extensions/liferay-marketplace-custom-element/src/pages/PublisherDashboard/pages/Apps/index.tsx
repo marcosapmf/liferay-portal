@@ -12,11 +12,12 @@ import useSWR from 'swr';
 import Page from '../../../../components/Page';
 import SearchBuilder from '../../../../core/SearchBuilder';
 import {useAccount} from '../../../../hooks/data/useAccounts';
-import HeadlessCommerceAdminCatalogImpl from '../../../../services/rest/HeadlessCommerceAdminCatalog';
+import HeadlessCommerceAdminCatalog from '../../../../services/rest/HeadlessCommerceAdminCatalog';
 import PublisherAppsTable from '../../components/PublisherAppsTable';
 
 const Apps = () => {
 	const [page, setPage] = useState(1);
+	const [pageSize, setPageSize] = useState(20);
 	const {catalogId} = useOutletContext<any>();
 	const {data: supplierAccount} = useAccount();
 	const navigate = useNavigate();
@@ -27,10 +28,10 @@ const Apps = () => {
 		isLoading,
 	} = useSWR(
 		catalogId
-			? `/user-published-apps/${supplierAccount?.id}/${page}/${catalogId}`
+			? `/user-published-apps/${supplierAccount?.id}/${page}/${catalogId}/${pageSize}`
 			: null,
 		() =>
-			HeadlessCommerceAdminCatalogImpl.getProducts(
+			HeadlessCommerceAdminCatalog.getProducts(
 				new URLSearchParams({
 					'accountId': '-1',
 					'attachments.accountId': '-1',
@@ -41,8 +42,9 @@ const Apps = () => {
 						.build(),
 					'images.accountId': '-1',
 					'nestedFields':
-						'attachments,images,productChannels,productSpecifications,skus',
+						'attachments,images,productSpecifications,skus',
 					'page': page.toString(),
+					'pageSize': pageSize.toString(),
 					'skus.accountId': '-1',
 					'sort': 'createDate:desc',
 				})
@@ -67,9 +69,13 @@ const Apps = () => {
 
 			{!!publishedProductTable?.items?.length && (
 				<ClayPaginationBarWithBasicItems
-					activeDelta={publishedProductTable.pageSize}
+					activeDelta={pageSize}
 					activePage={page}
 					ellipsisBuffer={3}
+					onDeltaChange={(newDelta) => {
+						setPageSize(newDelta);
+						setPage(1);
+					}}
 					onPageChange={setPage}
 					totalItems={publishedProductTable.totalCount}
 				/>

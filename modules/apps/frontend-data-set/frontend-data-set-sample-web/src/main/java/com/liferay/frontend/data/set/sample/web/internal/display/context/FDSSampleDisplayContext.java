@@ -6,17 +6,16 @@
 package com.liferay.frontend.data.set.sample.web.internal.display.context;
 
 import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
+import com.liferay.frontend.data.set.model.FDSSortItemBuilder;
+import com.liferay.frontend.data.set.model.FDSSortItemList;
+import com.liferay.frontend.data.set.model.FDSSortItemListBuilder;
 import com.liferay.frontend.data.set.sample.web.internal.display.context.helper.FDSRequestHelper;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Arrays;
 import java.util.List;
@@ -40,15 +39,23 @@ public class FDSSampleDisplayContext {
 	}
 
 	public String getAPIURL() {
-		return "/o/c/fdssamples";
+		return "/o/c/fdssamples?sort=title:asc";
 	}
 
 	public List<DropdownItem> getBulkActionDropdownItems() {
 		return ListUtil.fromArray(
 			new FDSActionDropdownItem(
-				"#", "document", "sampleBulkAction",
+				null, null, null, true, "#", "document", "sampleBulkAction",
 				LanguageUtil.get(_fdsRequestHelper.getRequest(), "label"), null,
-				null, null));
+				"lg", null, null, null, "modal", null, null, null),
+			new FDSActionDropdownItem(
+				null, null, null, false, "#", "trash", "delete",
+				LanguageUtil.get(_fdsRequestHelper.getRequest(), "delete"),
+				null, "lg", null, null, null, "modal", null, null, null),
+			new FDSActionDropdownItem(
+				"/o/c/fdssamples/", "check", "testBulkAction",
+				LanguageUtil.get(_fdsRequestHelper.getRequest(), "test"),
+				"POST", null, null));
 	}
 
 	public CreationMenu getCreationMenu() throws Exception {
@@ -58,16 +65,7 @@ public class FDSSampleDisplayContext {
 	public List<FDSActionDropdownItem> getFDSActionDropdownItems()
 		throws Exception {
 
-		HttpServletRequest httpServletRequest = _fdsRequestHelper.getRequest();
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		Company company = themeDisplay.getCompany();
-
-		String portalURL = company.getPortalURL(
-			GroupConstants.DEFAULT_PARENT_GROUP_ID);
+		String href = "/o/c/fdssamples/{id}";
 
 		FDSActionDropdownItem sidePanel1FDSActionDropdownItem =
 			new FDSActionDropdownItem(
@@ -129,8 +127,8 @@ public class FDSSampleDisplayContext {
 				"#test-copy", "copy", "sampleMoveFolderMessage", "Sample Copy",
 				null, null, null),
 			new FDSActionDropdownItem(
-				portalURL, "truck", "asyncSuccess", "Async Success", "get",
-				null, "async"),
+				href, "truck", "asyncSuccess", "Async Success", "get", null,
+				"async"),
 			new FDSActionDropdownItem(
 				"http://localhost", "times-circle",
 				"asyncErrorConnectionRefused", "Async Connection Refused",
@@ -148,13 +146,23 @@ public class FDSSampleDisplayContext {
 				"rectangle-split", "open-side-panel-without-title",
 				"Side Panel With No Title", null, null, "sidePanel"),
 			new FDSActionDropdownItem(
-				portalURL + "/abc", "staging", "asyncErrorResourceNotFound",
+				href + "/abc", "staging", "asyncErrorResourceNotFound",
 				"Async Resource Not Found", "get", null, "async"),
 			new FDSActionDropdownItem(
 				null, "reload", "reload", "Reload Data", null, null, null),
 			new FDSActionDropdownItem(
 				null, "rectangle-split", "openSidePanel", "Open Side Panel",
 				null, null, null));
+	}
+
+	public FDSSortItemList getFDSSortItemList() {
+		return FDSSortItemListBuilder.add(
+			FDSSortItemBuilder.setDirection(
+				"asc"
+			).setKey(
+				"title"
+			).build()
+		).build();
 	}
 
 	private final FDSRequestHelper _fdsRequestHelper;

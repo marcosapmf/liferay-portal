@@ -25,9 +25,14 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.NamedThreadFactory;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PortalRunMode;
+import com.liferay.portal.workflow.kaleo.model.KaleoInstance;
+import com.liferay.portal.workflow.kaleo.model.KaleoInstanceToken;
 import com.liferay.portal.workflow.kaleo.runtime.ExecutionContext;
 import com.liferay.portal.workflow.kaleo.runtime.graph.GraphWalker;
 import com.liferay.portal.workflow.kaleo.runtime.graph.PathElement;
+import com.liferay.portal.workflow.kaleo.service.KaleoInstanceLocalService;
+import com.liferay.portal.workflow.kaleo.service.KaleoInstanceTokenLocalService;
+import com.liferay.portal.workflow.kaleo.service.KaleoLogLocalService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -71,8 +76,9 @@ public class GraphWalkerPortalExecutor {
 				_noticeableExecutorService.submit(
 					() -> {
 						try (SafeCloseable safeCloseable =
-								CompanyThreadLocal.setWithSafeCloseable(
-									companyId, ctCollectionId)) {
+								CompanyThreadLocal.
+									setCompanyIdWithSafeCloseable(
+										companyId, ctCollectionId)) {
 
 							_walk(pathElement);
 						}
@@ -92,7 +98,7 @@ public class GraphWalkerPortalExecutor {
 			_noticeableExecutorService.submit(
 				() -> {
 					try (SafeCloseable safeCloseable =
-							CompanyThreadLocal.setWithSafeCloseable(
+							CompanyThreadLocal.setCompanyIdWithSafeCloseable(
 								companyId, ctCollectionId)) {
 
 						_walk(pathElement);
@@ -130,7 +136,8 @@ public class GraphWalkerPortalExecutor {
 				public void afterExecute(
 					Runnable runnable, Throwable throwable) {
 
-					CentralizedThreadLocal.clearShortLivedThreadLocals();
+					CentralizedThreadLocal.
+						clearShortLivedCentralizedThreadLocals();
 				}
 
 			});
@@ -140,14 +147,12 @@ public class GraphWalkerPortalExecutor {
 	}
 
 	private void _walk(PathElement pathElement) {
+		ExecutionContext executionContext = pathElement.getExecutionContext();
 		String name = PrincipalThreadLocal.getName();
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 
 		try {
-			ExecutionContext executionContext =
-				pathElement.getExecutionContext();
-
 			ServiceContext serviceContext =
 				executionContext.getServiceContext();
 
@@ -184,6 +189,32 @@ public class GraphWalkerPortalExecutor {
 		}
 		catch (Throwable throwable) {
 			_log.error(throwable, throwable);
+
+			try {
+				KaleoInstanceToken executionContextKaleoInstanceToken =
+					executionContext.getKaleoInstanceToken();
+
+				KaleoInstance kaleoInstance =
+					executionContextKaleoInstanceToken.getKaleoInstance();
+
+				for (KaleoInstanceToken kaleoInstanceToken :
+						_kaleoInstanceTokenLocalService.getKaleoInstanceTokens(
+							kaleoInstance.getKaleoInstanceId())) {
+
+					_kaleoInstanceTokenLocalService.completeKaleoInstanceToken(
+						kaleoInstanceToken.getKaleoInstanceTokenId());
+				}
+
+				_kaleoInstanceLocalService.completeKaleoInstance(
+					kaleoInstance.getKaleoInstanceId());
+
+				_kaleoLogLocalService.addInstanceFailKaleoLog(
+					executionContextKaleoInstanceToken, throwable.getMessage(),
+					executionContext.getServiceContext());
+			}
+			catch (Exception exception) {
+				_log.error(exception);
+			}
 		}
 		finally {
 			PrincipalThreadLocal.setName(name);
@@ -200,6 +231,15 @@ public class GraphWalkerPortalExecutor {
 
 	@Reference
 	private GraphWalker _graphWalker;
+
+	@Reference
+	private KaleoInstanceLocalService _kaleoInstanceLocalService;
+
+	@Reference
+	private KaleoInstanceTokenLocalService _kaleoInstanceTokenLocalService;
+
+	@Reference
+	private KaleoLogLocalService _kaleoLogLocalService;
 
 	private NoticeableExecutorService _noticeableExecutorService;
 

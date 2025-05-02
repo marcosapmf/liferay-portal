@@ -14,8 +14,6 @@ import com.liferay.object.test.util.ObjectRelationshipTestUtil;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.portal.db.schema.definition.internal.test.util.ConfigurationTestUtil;
 import com.liferay.portal.db.schema.definition.internal.test.util.DatabaseTestUtil;
-import com.liferay.portal.kernel.dao.db.DBManagerUtil;
-import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.test.log.LogCapture;
@@ -35,9 +33,7 @@ import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.cm.PersistenceManager;
 
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Assume;
 
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -46,8 +42,24 @@ import org.osgi.service.cm.ConfigurationAdmin;
  */
 public abstract class BaseDBSchemaDefinitionExporterTestCase {
 
-	@AfterClass
-	public static void tearDownClass() throws Exception {
+	protected static void setUpClassBaseDBSchemaDefinitionExporterTestCase()
+		throws Exception {
+
+		folder = FileUtil.createTempFolder();
+
+		_objectDefinition1 = ObjectDefinitionTestUtil.addCustomObjectDefinition(
+			ObjectDefinitionTestUtil.getRandomName());
+		_objectDefinition2 = ObjectDefinitionTestUtil.addCustomObjectDefinition(
+			ObjectDefinitionTestUtil.getRandomName());
+
+		_objectRelationship = ObjectRelationshipTestUtil.addObjectRelationship(
+			ObjectRelationshipLocalServiceUtil.getService(), _objectDefinition1,
+			_objectDefinition2);
+	}
+
+	protected static void tearDownClassBaseDBSchemaDefinitionExporterTestCase()
+		throws Exception {
+
 		Files.deleteIfExists(ConfigurationTestUtil.getConfigurationPath(PID));
 
 		FileUtil.deltree(folder);
@@ -66,29 +78,6 @@ public abstract class BaseDBSchemaDefinitionExporterTestCase {
 			ObjectDefinitionLocalServiceUtil.deleteObjectDefinition(
 				_objectDefinition2.getObjectDefinitionId());
 		}
-	}
-
-	protected static void assumeDB() {
-		DBType dbType = DBManagerUtil.getDBType();
-
-		Assume.assumeTrue(
-			(dbType == DBType.MYSQL) || (dbType == DBType.POSTGRESQL));
-	}
-
-	protected static void setUpClassBaseDBSchemaDefinitionExporterTestCase()
-		throws Exception {
-
-		databaseType = String.valueOf(DBManagerUtil.getDBType());
-		folder = FileUtil.createTempFolder();
-
-		_objectDefinition1 = ObjectDefinitionTestUtil.addCustomObjectDefinition(
-			ObjectDefinitionTestUtil.getRandomName());
-		_objectDefinition2 = ObjectDefinitionTestUtil.addCustomObjectDefinition(
-			ObjectDefinitionTestUtil.getRandomName());
-
-		_objectRelationship = ObjectRelationshipTestUtil.addObjectRelationship(
-			ObjectRelationshipLocalServiceUtil.getService(), _objectDefinition1,
-			_objectDefinition2);
 	}
 
 	protected void assertIndexes(
@@ -133,10 +122,10 @@ public abstract class BaseDBSchemaDefinitionExporterTestCase {
 
 	protected String getReportContent() throws Exception {
 		ConfigurationTestUtil.deployConfiguration(
-			configurationAdmin, databaseType, folder.getAbsolutePath(), PID);
+			configurationAdmin, folder.getAbsolutePath(), PID);
 
 		return FileUtil.read(
-			new File(folder, "db_schema_definition_export_report.info"));
+			new File(folder, "db_schema_definition_export_report.txt"));
 	}
 
 	protected void testExportImportDBSchemaDefinition(
@@ -149,8 +138,7 @@ public abstract class BaseDBSchemaDefinitionExporterTestCase {
 				LoggerTestUtil.INFO)) {
 
 			ConfigurationTestUtil.deployConfiguration(
-				configurationAdmin, databaseType, folder.getAbsolutePath(),
-				PID);
+				configurationAdmin, folder.getAbsolutePath(), PID);
 
 			runnable.run();
 
@@ -189,7 +177,6 @@ public abstract class BaseDBSchemaDefinitionExporterTestCase {
 		"com.liferay.portal.db.schema.definition.internal.configuration." +
 			"DBSchemaDefinitionExporterConfiguration";
 
-	protected static String databaseType;
 	protected static File folder;
 
 	@Inject

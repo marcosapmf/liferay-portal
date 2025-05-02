@@ -10,10 +10,26 @@ package com.liferay.portal.search.spi.index.configuration.contributor.helper;
  */
 public interface SettingsHelper {
 
+	/**
+	 * Returns a setting value based on the setting key.
+	 *
+	 * @param key The name of the setting whose value is returned.
+	 */
 	public String get(String key);
 
+	/**
+	 * Adds one or more search engine settings from contributors.
+	 *
+	 * @param source The settings in either JSON or YAML format.
+	 */
 	public void loadFromSource(String source);
 
+	/**
+	 * Adds a single search engine setting from contributors.
+	 *
+	 * @param key The name of the setting to be added.
+	 * @param value The value of the setting to be added.
+	 */
 	public void put(String key, String value);
 
 }

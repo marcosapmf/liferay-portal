@@ -7,6 +7,7 @@ package com.liferay.commerce.order.content.web.internal.portlet.action;
 
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
+import com.liferay.commerce.frontend.helper.CommerceOrderStepTrackerHelper;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.order.content.web.internal.display.context.CommerceOrderContentDisplayContext;
@@ -30,17 +31,13 @@ import com.liferay.portal.configuration.module.configuration.ConfigurationProvid
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
-import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
-import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portlet.display.template.portlet.action.BaseConfigurationAction;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 import javax.portlet.PortletConfig;
-import javax.portlet.PortletPreferences;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -56,7 +53,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = ConfigurationAction.class
 )
 public class CommerceOrderContentConfigurationAction
-	extends DefaultConfigurationAction {
+	extends BaseConfigurationAction {
 
 	@Override
 	public String getJspPath(HttpServletRequest httpServletRequest) {
@@ -78,12 +75,15 @@ public class CommerceOrderContentConfigurationAction
 						_commerceOrderImporterTypeRegistry,
 						_commerceOrderNoteService,
 						_commerceOrderPriceCalculation, _commerceOrderService,
-						_commerceOrderStatusRegistry, _commerceOrderTypeService,
+						_commerceOrderStatusRegistry,
+						_commerceOrderStepTrackerHelper,
+						_commerceOrderTypeService,
 						_commercePaymentIntegrationRegistry,
 						_commercePaymentMethodGroupRelServiceService,
 						_commercePaymentMethodRegistry,
 						_commerceTermEntryService, _configurationProvider,
-						_dlAppLocalService, httpServletRequest, _itemSelector,
+						_dlAppLocalService, _groupLocalService,
+						httpServletRequest, _itemSelector,
 						_modelResourcePermission, _percentageFormatter,
 						_portletResourcePermission);
 
@@ -96,34 +96,6 @@ public class CommerceOrderContentConfigurationAction
 		}
 
 		super.include(portletConfig, httpServletRequest, httpServletResponse);
-	}
-
-	@Override
-	public void processAction(
-			PortletConfig portletConfig, ActionRequest actionRequest,
-			ActionResponse actionResponse)
-		throws Exception {
-
-		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
-
-		if (cmd.equals(Constants.UPDATE)) {
-			PortletPreferences portletPreferences =
-				actionRequest.getPreferences();
-
-			portletPreferences.setValue(
-				"displayStyle", getParameter(actionRequest, "displayStyle"));
-			portletPreferences.setValue(
-				"showCommerceOrderCreateTime",
-				getParameter(actionRequest, "showCommerceOrderCreateTime"));
-			portletPreferences.setValue(
-				"showCommerceOrderFullAddress",
-				getParameter(actionRequest, "showCommerceOrderFullAddress"));
-			portletPreferences.setValue(
-				"showCommerceOrderPhoneNumber",
-				getParameter(actionRequest, "showCommerceOrderPhoneNumber"));
-
-			portletPreferences.store();
-		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -158,6 +130,9 @@ public class CommerceOrderContentConfigurationAction
 	private CommerceOrderStatusRegistry _commerceOrderStatusRegistry;
 
 	@Reference
+	private CommerceOrderStepTrackerHelper _commerceOrderStepTrackerHelper;
+
+	@Reference
 	private CommerceOrderTypeService _commerceOrderTypeService;
 
 	@Reference
@@ -179,6 +154,9 @@ public class CommerceOrderContentConfigurationAction
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private ItemSelector _itemSelector;

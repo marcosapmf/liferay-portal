@@ -12,7 +12,6 @@ import com.liferay.exportimport.changeset.constants.ChangesetPortletKeys;
 import com.liferay.exportimport.configuration.ExportImportServiceConfiguration;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.controller.PortletExportController;
-import com.liferay.exportimport.internal.lar.DeletionSystemEventExporter;
 import com.liferay.exportimport.internal.lar.PermissionExporter;
 import com.liferay.exportimport.kernel.controller.ExportImportController;
 import com.liferay.exportimport.kernel.exception.ExportImportIOException;
@@ -32,6 +31,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManager;
 import com.liferay.exportimport.kernel.lifecycle.constants.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
+import com.liferay.exportimport.lar.DeletionSystemEventExporter;
 import com.liferay.exportimport.portlet.data.handler.provider.PortletDataHandlerProvider;
 import com.liferay.exportimport.portlet.preferences.processor.Capability;
 import com.liferay.exportimport.portlet.preferences.processor.ExportImportPortletPreferencesProcessor;
@@ -527,13 +527,10 @@ public class PortletExportControllerImpl implements PortletExportController {
 
 		Element element = parentElement.addElement("portlet");
 
+		element.addAttribute("display-name", portlet.getDisplayName());
 		element.addAttribute("portlet-id", portlet.getPortletId());
 		element.addAttribute("layout-id", String.valueOf(layoutId));
 		element.addAttribute("path", path);
-		element.addAttribute("portlet-data", String.valueOf(exportPortletData));
-
-		element.addAttribute(
-			"schema-version", portletDataHandler.getSchemaVersion());
 
 		StringBundler configurationOptionsSB = new StringBundler(6);
 
@@ -558,6 +555,14 @@ public class PortletExportControllerImpl implements PortletExportController {
 
 		element.addAttribute(
 			"portlet-configuration", configurationOptionsSB.toString());
+
+		element.addAttribute("portlet-data", String.valueOf(exportPortletData));
+		element.addAttribute(
+			"schema-version", portletDataHandler.getSchemaVersion());
+
+		if (portletDataContext.isValidateExistingDataHandler()) {
+			element.addAttribute("validate-existing-data-handler", "true");
+		}
 
 		try {
 			portletDataContext.addZipEntry(path, document.formattedString());
@@ -1001,6 +1006,12 @@ public class PortletExportControllerImpl implements PortletExportController {
 			Set<String> oldScopedPrimaryKeys = new HashSet<>(
 				portletDataContext.getScopedPrimaryKeys());
 
+			Map<String, String[]> parameterMap =
+				portletDataContext.getParameterMap();
+
+			boolean portletDataAll = MapUtil.getBoolean(
+				parameterMap, PortletDataHandlerKeys.PORTLET_DATA_ALL);
+
 			try {
 				portletDataContext.clearScopedPrimaryKeys();
 
@@ -1034,6 +1045,10 @@ public class PortletExportControllerImpl implements PortletExportController {
 				}
 			}
 			finally {
+				parameterMap.put(
+					PortletDataHandlerKeys.PORTLET_DATA_ALL,
+					new String[] {String.valueOf(portletDataAll)});
+
 				portletDataContext.addScopedPrimaryKeys(oldScopedPrimaryKeys);
 				portletDataContext.setExportDataRootElement(
 					exportDataRootElement);
@@ -1309,8 +1324,8 @@ public class PortletExportControllerImpl implements PortletExportController {
 	@Reference
 	private ConfigurationProvider _configurationProvider;
 
-	private final DeletionSystemEventExporter _deletionSystemEventExporter =
-		DeletionSystemEventExporter.getInstance();
+	@Reference
+	private DeletionSystemEventExporter _deletionSystemEventExporter;
 
 	@Reference
 	private ExportImportHelper _exportImportHelper;

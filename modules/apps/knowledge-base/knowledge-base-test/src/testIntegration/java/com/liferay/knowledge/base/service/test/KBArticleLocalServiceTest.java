@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.lock.Lock;
 import com.liferay.portal.kernel.lock.LockManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
+import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -255,7 +256,6 @@ public class KBArticleLocalServiceTest {
 			null, _serviceContext);
 	}
 
-	@FeatureFlags("LPS-188058")
 	@Test
 	public void testAddKBArticleDisplayDateKBArticleStatusScheduled()
 		throws Exception {
@@ -465,7 +465,6 @@ public class KBArticleLocalServiceTest {
 		}
 	}
 
-	@FeatureFlags("LPS-188058")
 	@Test
 	public void testAddKBArticleWithDisplayDateExpirationDateReviewDate()
 		throws Exception {
@@ -790,7 +789,6 @@ public class KBArticleLocalServiceTest {
 			originalKBArticleTreePath, kbArticle.buildTreePath());
 	}
 
-	@FeatureFlags("LPS-188058")
 	@Test(expected = KBArticleStatusException.class)
 	public void testCheckKBArticlesFailsWhenPublishingAndParentKBArticleIsScheduled()
 		throws Exception {
@@ -821,7 +819,6 @@ public class KBArticleLocalServiceTest {
 		_kbArticleLocalService.checkKBArticles(_group.getCompanyId());
 	}
 
-	@FeatureFlags("LPS-188058")
 	@Test
 	public void testCheckKBArticlesWhenChildKBArticleIsPublishedAfterParentKBArticleIsPublished()
 		throws Exception {
@@ -884,7 +881,6 @@ public class KBArticleLocalServiceTest {
 			WorkflowConstants.STATUS_APPROVED, parentKBArticle.getStatus());
 	}
 
-	@FeatureFlags("LPS-188058")
 	@Test
 	public void testCheckKBArticlesWhenChildKBArticleIsPublishedOnlyAfterParentKBArticleIsPublished()
 		throws Exception {
@@ -1121,6 +1117,49 @@ public class KBArticleLocalServiceTest {
 			() -> _kbArticleLocalService.expireKBArticle(
 				_user.getUserId(), kbArticle.getResourcePrimKey(),
 				_serviceContext));
+	}
+
+	@Test
+	public void testFetchKBArticleByUrlTitle() throws Exception {
+		KBFolder kbFolder = _kbFolderLocalService.addKBFolder(
+			null, _user.getUserId(), _group.getGroupId(), _kbFolderClassNameId,
+			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			StringUtil.randomString(), StringUtil.randomString(),
+			_serviceContext);
+
+		KBArticle kbArticle = _kbArticleLocalService.addKBArticle(
+			null, _user.getUserId(), _kbFolderClassNameId,
+			kbFolder.getKbFolderId(), "Article with versions",
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringUtil.randomString(), null, null, new Date(), null, null, null,
+			_serviceContext);
+
+		Assert.assertEquals(1, kbArticle.getVersion());
+
+		kbArticle = _kbArticleLocalService.updateKBArticle(
+			_user.getUserId(), kbArticle.getResourcePrimKey(),
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringUtil.randomString(), null, null, kbArticle.getDisplayDate(),
+			null, null, null, null, _serviceContext);
+
+		Assert.assertEquals(2, kbArticle.getVersion());
+
+		kbArticle = _kbArticleLocalService.fetchKBArticleByUrlTitle(
+			kbArticle.getGroupId(), kbFolder.getUrlTitle(),
+			kbArticle.getUrlTitle());
+
+		Assert.assertEquals(2, kbArticle.getVersion());
+	}
+
+	@Test
+	public void testFetchPersistedModelByResourcePrimKey() throws Exception {
+		KBArticle kBArticle = _addKbArticle();
+
+		PersistedModel persistedModel =
+			_kbArticleLocalService.fetchPersistedModel(
+				kBArticle.getResourcePrimKey());
+
+		Assert.assertNotNull(persistedModel);
 	}
 
 	@Test
@@ -1625,7 +1664,6 @@ public class KBArticleLocalServiceTest {
 			null, _serviceContext);
 	}
 
-	@FeatureFlags("LPS-188058")
 	@Test
 	public void testUpdateKBArticleDisplayDateExpiredKBArticleCanBePublished()
 		throws Exception {
@@ -1672,7 +1710,6 @@ public class KBArticleLocalServiceTest {
 			WorkflowConstants.STATUS_APPROVED, kbArticle.getStatus());
 	}
 
-	@FeatureFlags("LPS-188058")
 	@Test
 	public void testUpdateKBArticleDisplayDateOnDraftKBArticleUpdatesStatusToScheduled()
 		throws Exception {
@@ -1706,7 +1743,6 @@ public class KBArticleLocalServiceTest {
 			WorkflowConstants.STATUS_SCHEDULED, kbArticle.getStatus());
 	}
 
-	@FeatureFlags("LPS-188058")
 	@Test
 	public void testUpdateKBArticleDisplayDateUpdatesKBArticleStatusToApproved()
 		throws Exception {
@@ -1736,7 +1772,6 @@ public class KBArticleLocalServiceTest {
 			WorkflowConstants.STATUS_APPROVED, kbArticle.getStatus());
 	}
 
-	@FeatureFlags("LPS-188058")
 	@Test
 	public void testUpdateKBArticleDisplayDateUpdatesKBArticleStatusToScheduled()
 		throws Exception {

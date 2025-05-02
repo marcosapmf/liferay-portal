@@ -32,11 +32,16 @@ public interface Captcha {
 
 	public void enforceCaptcha(PortletRequest portletRequest);
 
-	public String getTaglibPath();
+	public String getName();
 
 	public boolean isEnabled(HttpServletRequest httpServletRequest);
 
 	public boolean isEnabled(PortletRequest portletRequest);
+
+	public void render(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
+		throws IOException;
 
 	public void serveImage(
 			HttpServletRequest httpServletRequest,

@@ -36,14 +36,13 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion;
+import com.liferay.marketplace.constants.MarketplaceActionKeys;
+import com.liferay.marketplace.constants.MarketplacePortletKeys;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.exception.NoSuchWorkflowDefinitionLinkException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -60,6 +59,7 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
@@ -396,26 +396,12 @@ public class CommerceChannelDisplayContext
 	public WorkflowDefinitionLink getWorkflowDefinitionLink(long typePK)
 		throws PortalException {
 
-		WorkflowDefinitionLink workflowDefinitionLink = null;
-
 		CommerceChannel commerceChannel = getCommerceChannel();
 
-		try {
-			workflowDefinitionLink =
-				_workflowDefinitionLinkLocalService.getWorkflowDefinitionLink(
-					_commerceChannelRequestHelper.getCompanyId(),
-					commerceChannel.getGroupId(), CommerceOrder.class.getName(),
-					0, typePK, true);
-		}
-		catch (NoSuchWorkflowDefinitionLinkException
-					noSuchWorkflowDefinitionLinkException) {
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchWorkflowDefinitionLinkException);
-			}
-		}
-
-		return workflowDefinitionLink;
+		return _workflowDefinitionLinkLocalService.fetchWorkflowDefinitionLink(
+			_commerceChannelRequestHelper.getCompanyId(),
+			commerceChannel.getGroupId(), CommerceOrder.class.getName(), 0,
+			typePK, true);
 	}
 
 	public boolean hasAddChannelPermission() {
@@ -438,6 +424,29 @@ public class CommerceChannelDisplayContext
 		return GroupPermissionUtil.contains(
 			PermissionThreadLocal.getPermissionChecker(),
 			commerceChannel.getSiteGroupId(), ActionKeys.ADD_LAYOUT);
+	}
+
+	public boolean hasAddPaymentMethodsPermission() throws PortalException {
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (PortletPermissionUtil.contains(
+				themeDisplay.getPermissionChecker(),
+				MarketplacePortletKeys.PAYMENT_METHODS,
+				MarketplaceActionKeys.PURCHASE_AND_INSTALL_PAID_APPS) ||
+			PortletPermissionUtil.contains(
+				themeDisplay.getPermissionChecker(),
+				MarketplacePortletKeys.PAYMENT_METHODS,
+				MarketplaceActionKeys.INSTALL_FREE_BUNDLED_APPS)) {
+
+			return true;
+		}
+
+		return PortletPermissionUtil.contains(
+			themeDisplay.getPermissionChecker(),
+			MarketplacePortletKeys.PAYMENT_METHODS,
+			MarketplaceActionKeys.VIEW_APPS);
 	}
 
 	public boolean hasManageLinkSupplierPermission() {
@@ -526,6 +535,32 @@ public class CommerceChannelDisplayContext
 		return commerceOrderCheckoutConfiguration.hideShippingPriceZero();
 	}
 
+	public boolean isMultishippingEnabled() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderCheckoutConfiguration commerceOrderCheckoutConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderCheckoutConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderCheckoutConfiguration.multishippingEnabled();
+	}
+
+	public boolean isQuickCheckoutEnabled() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderCheckoutConfiguration commerceOrderCheckoutConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderCheckoutConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderCheckoutConfiguration.quickCheckoutEnabled();
+	}
+
 	public boolean isRequestQuoteEnabled() throws PortalException {
 		CommerceOrderFieldsConfiguration commerceOrderFieldsConfiguration =
 			_getCommerceOrderFieldsConfiguration();
@@ -598,9 +633,6 @@ public class CommerceChannelDisplayContext
 
 		return _commerceOrderFieldsConfiguration;
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		CommerceChannelDisplayContext.class);
 
 	private final AccountEntryService _accountEntryService;
 	private CommerceAccountGroupServiceConfiguration

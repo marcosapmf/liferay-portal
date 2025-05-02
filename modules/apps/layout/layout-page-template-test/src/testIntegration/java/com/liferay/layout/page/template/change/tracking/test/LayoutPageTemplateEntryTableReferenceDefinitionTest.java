@@ -53,7 +53,7 @@ public class LayoutPageTemplateEntryTableReferenceDefinitionTest
 					null, TestPropsValues.getUserId(), group.getGroupId(),
 					LayoutPageTemplateConstants.
 						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-					RandomTestUtil.randomString(),
+					null, RandomTestUtil.randomString(),
 					RandomTestUtil.randomString(),
 					LayoutPageTemplateCollectionTypeConstants.BASIC,
 					ServiceContextTestUtil.getServiceContext());
@@ -64,7 +64,7 @@ public class LayoutPageTemplateEntryTableReferenceDefinitionTest
 		return _layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 			null, TestPropsValues.getUserId(), group.getGroupId(),
 			_layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(),
-			RandomTestUtil.randomString(),
+			null, RandomTestUtil.randomString(),
 			LayoutPageTemplateEntryTypeConstants.BASIC, 0,
 			WorkflowConstants.STATUS_APPROVED,
 			ServiceContextTestUtil.getServiceContext());

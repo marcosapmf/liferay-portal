@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Locator, Page} from '@playwright/test';
+import {Locator, Page, expect} from '@playwright/test';
 
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import {PORTLET_URLS} from '../../utils/portletUrls';
+import {zipFolder} from '../../utils/zip';
+import {PagesAdminPage} from '../layout-admin-web/PagesAdminPage';
 import {PageEditorPage} from '../layout-content-page-editor-web/PageEditorPage';
 
 export class MasterPagesPage {
@@ -14,12 +16,39 @@ export class MasterPagesPage {
 
 	readonly newButton: Locator;
 	readonly pageEditorPage: PageEditorPage;
+	readonly pageAdminPage: PagesAdminPage;
 
 	constructor(page: Page) {
 		this.page = page;
 
 		this.newButton = page.getByText('New', {exact: true});
+		this.pageAdminPage = new PagesAdminPage(this.page);
 		this.pageEditorPage = new PageEditorPage(this.page);
+	}
+
+	async selectClientExtension({
+		clientExtensionName,
+		layoutTitle,
+		siteUrl,
+		type,
+	}: {
+		clientExtensionName: string;
+		layoutTitle: string;
+		openConfiguration?: boolean;
+		siteUrl?: Site['friendlyUrlPath'];
+		type?: 'globalCSS' | 'globalJS' | 'themeFavicon';
+	}) {
+		await this.goto(siteUrl);
+
+		await this.gotoConfiguration(layoutTitle);
+
+		await this.pageAdminPage.selectClientExtension({
+			clientExtensionName,
+			layoutTitle,
+			openConfiguration: false,
+			siteUrl,
+			type,
+		});
 	}
 
 	async goto(siteUrl?: Site['friendlyUrlPath']) {
@@ -42,8 +71,23 @@ export class MasterPagesPage {
 		});
 	}
 
+	async clickAction(action: string, title: string) {
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {name: action}),
+			trigger: this.page
+				.locator('.card-type-asset')
+				.filter({hasText: title})
+				.getByLabel('More actions'),
+		});
+	}
+
 	async createNewMaster(name: string) {
-		await this.newButton.click();
+		await clickAndExpectToBeVisible({
+			target: this.page.getByLabel('Name'),
+			trigger: this.newButton,
+		});
+
 		await this.page.getByLabel('Name').fill(name);
 		await this.page.getByRole('button', {name: 'Save'}).click();
 
@@ -60,6 +104,79 @@ export class MasterPagesPage {
 		await this.getMasterCard(name).getByRole('link', {name}).click();
 
 		await this.page.getByText('Configure Allowed Fragments').waitFor();
+	}
+
+	async configureAllowedFragments({
+		fragmentNames,
+		mode = 'unselect',
+		prefilter,
+		selectNewFragmentsAutomatically = true,
+	}: {
+		fragmentNames: string[];
+		mode: 'select' | 'unselect';
+		prefilter?: string;
+		selectNewFragmentsAutomatically?: boolean;
+	}) {
+		await this.page
+			.getByRole('button', {name: 'Configure Allowed Fragments'})
+			.click();
+
+		const allowedFragmentsModal = this.page.getByRole('dialog', {
+			name: 'Allowed Fragments',
+		});
+
+		if (mode === 'select') {
+			await allowedFragmentsModal
+				.getByRole('treeitem', {exact: true, name: 'All Fragments'})
+				.click();
+		}
+
+		if (prefilter) {
+			await allowedFragmentsModal
+				.getByPlaceholder('Search')
+				.fill(prefilter);
+		}
+
+		for (const fragmentName of fragmentNames) {
+			await this.page
+				.getByRole('treeitem', {exact: true, name: fragmentName})
+				.click();
+		}
+
+		const checkbox = allowedFragmentsModal.getByLabel(
+			'Select New Fragments Automatically'
+		);
+
+		if ((await checkbox.isChecked()) !== selectNewFragmentsAutomatically) {
+			if (selectNewFragmentsAutomatically) {
+				await checkbox.check();
+			}
+			else {
+				await checkbox.uncheck();
+			}
+		}
+
+		await allowedFragmentsModal.getByRole('button', {name: 'Save'}).click();
+	}
+
+	async importFile(fileName: string, folderPath: string) {
+		const fileChooserPromise = this.page.waitForEvent('filechooser');
+
+		await this.page
+			.getByRole('button', {exact: true, name: 'Select File'})
+			.click();
+
+		const fileChooser = await fileChooserPromise;
+
+		await fileChooser.setFiles(await zipFolder(folderPath));
+
+		await this.page.getByText(fileName).waitFor();
+
+		await expect(
+			this.page.getByRole('button', {name: 'Replace File'})
+		).toBeVisible();
+
+		await this.page.getByRole('button', {name: 'Import'}).click();
 	}
 
 	async openMasterActionsMenu(name: string) {

@@ -5,7 +5,6 @@
 
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
-import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryOrganizationRel;
 import com.liferay.account.service.AccountEntryOrganizationRelService;
@@ -21,7 +20,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.core.Response;
@@ -32,12 +30,14 @@ import org.osgi.service.component.annotations.ServiceScope;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/account-organization.properties",
 	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
 	service = AccountOrganizationResource.class
 )
+@Deprecated
 public class AccountOrganizationResourceImpl
 	extends BaseAccountOrganizationResourceImpl {
 
@@ -47,14 +47,8 @@ public class AccountOrganizationResourceImpl
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		_accountEntryOrganizationRelService.deleteAccountEntryOrganizationRel(
 			accountEntry.getAccountEntryId(), organizationId);
@@ -84,14 +78,8 @@ public class AccountOrganizationResourceImpl
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		AccountEntryOrganizationRel accountEntryOrganizationRel =
 			_accountEntryOrganizationRelService.getAccountEntryOrganizationRel(
@@ -110,14 +98,8 @@ public class AccountOrganizationResourceImpl
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		List<AccountEntryOrganizationRel> accountEntryOrganizationRels =
 			_accountEntryOrganizationRelService.getAccountEntryOrganizationRels(
@@ -176,14 +158,8 @@ public class AccountOrganizationResourceImpl
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		AccountEntryOrganizationRel accountOrganizationRel =
 			_accountEntryOrganizationRelService.addAccountEntryOrganizationRel(
@@ -220,19 +196,13 @@ public class AccountOrganizationResourceImpl
 			List<AccountEntryOrganizationRel> accountEntryOrganizationRels)
 		throws Exception {
 
-		List<AccountOrganization> accountOrganizations = new ArrayList<>();
-
-		for (AccountEntryOrganizationRel accountEntryOrganizationRel :
-				accountEntryOrganizationRels) {
-
-			accountOrganizations.add(
+		return transform(
+			accountEntryOrganizationRels,
+			accountEntryOrganizationRel ->
 				_accountOrganizationDTOConverter.toDTO(
 					new DefaultDTOConverterContext(
 						accountEntryOrganizationRel.getPrimaryKey(),
 						contextAcceptLanguage.getPreferredLocale())));
-		}
-
-		return accountOrganizations;
 	}
 
 	@Reference

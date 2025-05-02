@@ -16,6 +16,8 @@ import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.asset.test.util.AssetTestUtil;
 import com.liferay.asset.util.AssetHelper;
+import com.liferay.blogs.model.BlogsEntry;
+import com.liferay.blogs.test.util.BlogsTestUtil;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
@@ -108,7 +110,7 @@ public class AssetTagLocalServiceTest {
 	@Test
 	public void testAddTag() throws PortalException {
 		AssetTag assetTag = _assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(), "tag",
+			null, TestPropsValues.getUserId(), _group.getGroupId(), "tag",
 			_serviceContext);
 
 		Assert.assertEquals("tag", assetTag.getName());
@@ -117,8 +119,8 @@ public class AssetTagLocalServiceTest {
 	@Test(expected = AssetTagNameException.class)
 	public void testAddTagWithEmptyName() throws Exception {
 		_assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(), StringPool.BLANK,
-			_serviceContext);
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
+			StringPool.BLANK, _serviceContext);
 	}
 
 	@Test(expected = AssetTagException.class)
@@ -127,14 +129,14 @@ public class AssetTagLocalServiceTest {
 			AssetHelper.INVALID_CHARACTERS);
 
 		_assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			stringWithInvalidCharacters, _serviceContext);
 	}
 
 	@Test
 	public void testAddTagWithMultipleWords() throws PortalException {
 		AssetTag tag = _assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(), "tag name",
+			null, TestPropsValues.getUserId(), _group.getGroupId(), "tag name",
 			_serviceContext);
 
 		Assert.assertEquals("tag name", tag.getName());
@@ -143,15 +145,15 @@ public class AssetTagLocalServiceTest {
 	@Test(expected = AssetTagNameException.class)
 	public void testAddTagWithNullName() throws Exception {
 		_assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(), null,
+			null, TestPropsValues.getUserId(), _group.getGroupId(), null,
 			_serviceContext);
 	}
 
 	@Test(expected = AssetTagNameException.class)
 	public void testAddTagWithOnlySpacesInName() throws Exception {
 		_assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(), StringPool.SPACE,
-			_serviceContext);
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
+			StringPool.SPACE, _serviceContext);
 	}
 
 	@Test
@@ -159,7 +161,7 @@ public class AssetTagLocalServiceTest {
 		throws PortalException {
 
 		_assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(), "-_^()!$",
+			null, TestPropsValues.getUserId(), _group.getGroupId(), "-_^()!$",
 			_serviceContext);
 	}
 
@@ -168,7 +170,7 @@ public class AssetTagLocalServiceTest {
 		int originalTagsCount = _assetTagLocalService.getAssetTagsCount();
 
 		_assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(), "tag",
+			null, TestPropsValues.getUserId(), _group.getGroupId(), "tag",
 			_serviceContext);
 
 		Assert.assertEquals(
@@ -178,7 +180,7 @@ public class AssetTagLocalServiceTest {
 	@Test
 	public void testAddUTF8FormattedTags() throws PortalException {
 		AssetTag assetTag = _assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(), "標籤名稱",
+			null, TestPropsValues.getUserId(), _group.getGroupId(), "標籤名稱",
 			_serviceContext);
 
 		Assert.assertEquals("標籤名稱", assetTag.getName());
@@ -207,7 +209,7 @@ public class AssetTagLocalServiceTest {
 	@Test
 	public void testDeleteTag() throws Exception {
 		AssetTag assetTag = _assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(), "Tag",
+			null, TestPropsValues.getUserId(), _group.getGroupId(), "Tag",
 			_serviceContext);
 
 		_serviceContext.setAssetTagNames(new String[] {assetTag.getName()});
@@ -276,7 +278,7 @@ public class AssetTagLocalServiceTest {
 				new String[] {"tAg1", "TAG1"});
 
 			_assetTagLocalService.addTag(
-				TestPropsValues.getUserId(), group.getGroupId(), "tAg1",
+				null, TestPropsValues.getUserId(), group.getGroupId(), "tAg1",
 				_serviceContext);
 
 			for (AssetTag assetTag : assetTags) {
@@ -302,13 +304,13 @@ public class AssetTagLocalServiceTest {
 
 		try {
 			AssetTag expectedAssetTag1 = _assetTagLocalService.addTag(
-				TestPropsValues.getUserId(), _group.getGroupId(), "tAg1",
+				null, TestPropsValues.getUserId(), _group.getGroupId(), "tAg1",
 				_serviceContext);
 			AssetTag expectedAssetTag2 = _assetTagLocalService.addTag(
-				TestPropsValues.getUserId(), group.getGroupId(), "tAg1",
+				null, TestPropsValues.getUserId(), group.getGroupId(), "tAg1",
 				_serviceContext);
 			AssetTag expectedAssetTag3 = _assetTagLocalService.addTag(
-				TestPropsValues.getUserId(), _group.getGroupId(), "TAG1",
+				null, TestPropsValues.getUserId(), _group.getGroupId(), "TAG1",
 				_serviceContext);
 
 			Assert.assertTrue(
@@ -333,10 +335,10 @@ public class AssetTagLocalServiceTest {
 	public void testGetTagSizeWithCaseInsensitive() throws Exception {
 		String[] tagNames = {"tag1", "Tag1"};
 
-		_addArticle(tagNames);
-		_addArticle(tagNames);
+		_addJournalArticle(tagNames);
+		_addJournalArticle(tagNames);
 
-		_addArticle(new String[] {"TAG1"});
+		_addJournalArticle(new String[] {"TAG1"});
 
 		long classNameId = _classNameLocalService.getClassNameId(
 			JournalArticle.class.getName());
@@ -363,12 +365,56 @@ public class AssetTagLocalServiceTest {
 
 		Arrays.sort(expectedTagNames);
 
-		_addArticle(expectedTagNames);
+		_addBlogsEntry(expectedTagNames);
+		_addJournalArticle(expectedTagNames);
 
-		_assertGetTags(expectedTagNames.length, expectedTagNames, "tag1");
-		_assertGetTags(expectedTagNames.length, expectedTagNames, "TAG1");
-		_assertGetTags(1, expectedTagNames, "TAG1", 0, 1);
-		_assertGetTags(1, expectedTagNames, "Tag1", 0, 1);
+		_assertGetTags(
+			BlogsEntry.class.getName(), expectedTagNames.length,
+			expectedTagNames, "tag1");
+		_assertGetTags(
+			BlogsEntry.class.getName(), expectedTagNames.length,
+			expectedTagNames, "TAG1");
+		_assertGetTags(
+			BlogsEntry.class.getName(), 1, expectedTagNames, "TAG1", 0, 1);
+		_assertGetTags(
+			BlogsEntry.class.getName(), 1, expectedTagNames, "Tag1", 0, 1);
+		_assertGetTags(
+			JournalArticle.class.getName(), expectedTagNames.length,
+			expectedTagNames, "tag1");
+		_assertGetTags(
+			JournalArticle.class.getName(), expectedTagNames.length,
+			expectedTagNames, "TAG1");
+		_assertGetTags(
+			JournalArticle.class.getName(), 1, expectedTagNames, "TAG1", 0, 1);
+		_assertGetTags(
+			JournalArticle.class.getName(), 1, expectedTagNames, "Tag1", 0, 1);
+	}
+
+	@Test
+	public void testGetTagsWithDifferentGroups() throws Exception {
+		Group group1 = GroupTestUtil.addGroup();
+		Group group2 = GroupTestUtil.addGroup();
+
+		long classNameId = _classNameLocalService.getClassNameId(
+			JournalArticle.class.getName());
+
+		try {
+			_assetTagLocalService.addTag(
+				null, TestPropsValues.getUserId(), group1.getGroupId(), "tag1",
+				_serviceContext);
+			_assetTagLocalService.addTag(
+				null, TestPropsValues.getUserId(), group2.getGroupId(), "tag2",
+				_serviceContext);
+
+			List<AssetTag> assetTags = _assetTagLocalService.getTags(
+				group1.getGroupId(), classNameId, null);
+
+			Assert.assertEquals(assetTags.toString(), 1, assetTags.size());
+		}
+		finally {
+			GroupTestUtil.deleteGroup(group1);
+			GroupTestUtil.deleteGroup(group2);
+		}
 	}
 
 	@Test
@@ -408,7 +454,7 @@ public class AssetTagLocalServiceTest {
 		throws PortalException {
 
 		_assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			RandomTestUtil.randomString(100), _serviceContext);
 	}
 
@@ -461,28 +507,20 @@ public class AssetTagLocalServiceTest {
 	@Test
 	public void testUpdateTagWithCaseSensitive() throws PortalException {
 		AssetTag assetTag = _assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(), "tag1",
+			null, TestPropsValues.getUserId(), _group.getGroupId(), "tag1",
 			_serviceContext);
 
 		String tagName = "updated TAG1";
 
 		AssetTag actualAssetTag = _assetTagLocalService.updateTag(
-			TestPropsValues.getUserId(), assetTag.getTagId(), tagName,
-			_serviceContext);
+			assetTag.getExternalReferenceCode(), TestPropsValues.getUserId(),
+			assetTag.getTagId(), tagName, _serviceContext);
 
 		Assert.assertEquals(tagName, actualAssetTag.getName());
 	}
 
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
-
-	private void _addArticle(String[] tagNames) throws Exception {
-		_serviceContext.setAssetTagNames(tagNames);
-
-		JournalTestUtil.addArticle(
-			_group.getGroupId(),
-			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, _serviceContext);
-	}
 
 	private List<AssetTag> _addAssetTags(String[] tagNames)
 		throws PortalException {
@@ -492,30 +530,45 @@ public class AssetTagLocalServiceTest {
 		for (String tagName : tagNames) {
 			assetTags.add(
 				_assetTagLocalService.addTag(
-					TestPropsValues.getUserId(), _group.getGroupId(), tagName,
-					_serviceContext));
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
+					tagName, _serviceContext));
 		}
 
 		return assetTags;
 	}
 
-	private void _assertGetTags(
-		long expectedLength, String[] expectedTagNames, String name) {
+	private void _addBlogsEntry(String[] tagNames) throws Exception {
+		_serviceContext.setAssetTagNames(tagNames);
 
-		_assertGetTags(
-			expectedLength, expectedTagNames, name, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS);
+		BlogsTestUtil.addEntryWithWorkflow(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(), true,
+			_serviceContext);
+	}
+
+	private void _addJournalArticle(String[] tagNames) throws Exception {
+		_serviceContext.setAssetTagNames(tagNames);
+
+		JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, _serviceContext);
 	}
 
 	private void _assertGetTags(
-		long expectedLength, String[] expectedTagNames, String name, int start,
-		int end) {
+		String className, long expectedLength, String[] expectedTagNames,
+		String name) {
+
+		_assertGetTags(
+			className, expectedLength, expectedTagNames, name,
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+	}
+
+	private void _assertGetTags(
+		String className, long expectedLength, String[] expectedTagNames,
+		String name, int start, int end) {
 
 		List<AssetTag> actualAssetTags = _assetTagLocalService.getTags(
 			_group.getGroupId(),
-			_classNameLocalService.getClassNameId(
-				JournalArticle.class.getName()),
-			name, start, end);
+			_classNameLocalService.getClassNameId(className), name, start, end);
 
 		Assert.assertEquals(
 			actualAssetTags.toString(), expectedLength, actualAssetTags.size());
@@ -533,7 +586,7 @@ public class AssetTagLocalServiceTest {
 
 		for (String tagName : tagNames) {
 			AssetTag assetTag = _assetTagLocalService.addTag(
-				TestPropsValues.getUserId(), _group.getGroupId(), tagName,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), tagName,
 				_serviceContext);
 
 			Assert.assertEquals(tagName, assetTag.getName());

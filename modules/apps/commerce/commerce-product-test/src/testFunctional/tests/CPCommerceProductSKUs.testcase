@@ -3,11 +3,14 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Product Info Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(storeFront = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -786,7 +789,7 @@ definition {
 
 			AssertTextEquals.assertText(
 				locator1 = "Message#ERROR",
-				value1 = "Close Error:There is already one SKU with the external reference code.");
+				value1 = "Close Error:Please enter a unique external reference code.");
 		}
 	}
 

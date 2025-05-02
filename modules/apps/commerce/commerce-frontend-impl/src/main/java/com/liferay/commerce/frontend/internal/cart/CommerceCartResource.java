@@ -18,6 +18,7 @@ import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.discount.CommerceDiscountValue;
 import com.liferay.commerce.exception.CommerceOrderValidatorException;
+import com.liferay.commerce.frontend.helper.ProductHelper;
 import com.liferay.commerce.frontend.internal.cart.model.Cart;
 import com.liferay.commerce.frontend.internal.cart.model.Coupon;
 import com.liferay.commerce.frontend.internal.cart.model.OrderStatusInfo;
@@ -25,7 +26,6 @@ import com.liferay.commerce.frontend.internal.cart.model.Product;
 import com.liferay.commerce.frontend.internal.cart.model.Summary;
 import com.liferay.commerce.frontend.model.PriceModel;
 import com.liferay.commerce.frontend.model.ProductSettingsModel;
-import com.liferay.commerce.frontend.util.ProductHelper;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
@@ -53,6 +53,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.math.BigDecimal;
@@ -62,8 +63,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -105,10 +104,10 @@ public class CommerceCartResource {
 					commerceOrder.getGroupId());
 
 			CommerceContext commerceContext = _commerceContextFactory.create(
-				commerceOrder.getCompanyId(), commerceChannel.getGroupId(),
-				_portal.getUserId(httpServletRequest),
+				commerceOrder.getCommerceAccountId(),
+				commerceChannel.getGroupId(), null,
 				commerceOrder.getCommerceOrderId(),
-				commerceOrder.getCommerceAccountId());
+				commerceOrder.getCompanyId());
 
 			_commerceOrderService.applyCouponCode(
 				commerceOrder.getCommerceOrderId(), couponCode,
@@ -144,10 +143,10 @@ public class CommerceCartResource {
 					commerceOrder.getGroupId());
 
 			CommerceContext commerceContext = _commerceContextFactory.create(
-				commerceOrder.getCompanyId(), commerceChannel.getGroupId(),
-				_portal.getUserId(httpServletRequest),
+				commerceOrder.getCommerceAccountId(),
+				commerceChannel.getGroupId(), null,
 				commerceOrder.getCommerceOrderId(),
-				commerceOrder.getCommerceAccountId());
+				commerceOrder.getCompanyId());
 
 			_commerceOrderService.applyCouponCode(
 				commerceOrder.getCommerceOrderId(), null, commerceContext);
@@ -182,11 +181,10 @@ public class CommerceCartResource {
 
 		try {
 			CommerceContext commerceContext = _commerceContextFactory.create(
-				_portal.getCompanyId(httpServletRequest),
+				commerceAccountId,
 				_commerceChannelLocalService.
 					getCommerceChannelGroupIdBySiteGroupId(groupId),
-				_portal.getUserId(httpServletRequest), orderId,
-				commerceAccountId);
+				null, orderId, _portal.getCompanyId(httpServletRequest));
 
 			httpServletRequest.setAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT, commerceContext);
@@ -206,10 +204,9 @@ public class CommerceCartResource {
 			}
 
 			commerceContext = _commerceContextFactory.create(
-				_portal.getCompanyId(httpServletRequest),
-				commerceOrder.getGroupId(),
-				_portal.getUserId(httpServletRequest),
-				commerceOrder.getCommerceOrderId(), commerceAccountId);
+				commerceAccountId, commerceOrder.getGroupId(), null,
+				commerceOrder.getCommerceOrderId(),
+				_portal.getCompanyId(httpServletRequest));
 
 			httpServletRequest.setAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT, commerceContext);
@@ -221,7 +218,8 @@ public class CommerceCartResource {
 				_commerceOrderItemService.addOrUpdateCommerceOrderItem(
 					commerceOrder.getCommerceOrderId(), cpInstanceId, options,
 					_commerceOrderItemQuantityFormatter.parse(
-						quantity, LocaleUtil.fromLanguageId(languageId)),
+						CommerceOrderItem.class.getName(), quantity,
+						LocaleUtil.fromLanguageId(languageId)),
 					0, BigDecimal.ZERO, unitOfMeasureKey, commerceContext,
 					serviceContext);
 
@@ -320,15 +318,15 @@ public class CommerceCartResource {
 			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		PortletURL portletURL =
+		String commerceCartPortletURL =
 			_commerceOrderHttpHelper.getCommerceCartPortletURL(
 				siteGroupId, httpServletRequest, commerceOrder);
 
-		if (portletURL != null) {
-			return portletURL.toString();
+		if (Validator.isNull(commerceCartPortletURL)) {
+			return _portal.getHomeURL(httpServletRequest);
 		}
 
-		return _portal.getHomeURL(httpServletRequest);
+		return commerceCartPortletURL;
 	}
 
 	private String[] _getErrorMessages(
@@ -448,7 +446,7 @@ public class CommerceCartResource {
 
 			ProductSettingsModel productSettingsModel =
 				_productHelper.getProductSettingsModel(
-					commerceOrderItem.getCPDefinitionId());
+					commerceOrderItem.getCPDefinitionId(), commerceContext);
 
 			BigDecimal quantity = commerceOrderItem.getQuantity();
 

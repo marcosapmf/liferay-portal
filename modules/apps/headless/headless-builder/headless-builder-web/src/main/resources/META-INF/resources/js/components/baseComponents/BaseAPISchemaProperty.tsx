@@ -11,6 +11,7 @@ import React, {Dispatch, SetStateAction, useContext, useState} from 'react';
 
 import {EditSchemaContext} from '../EditAPIApplicationContext';
 import {
+	ALLOWED_BUSINESS_TYPES,
 	ALLOWED_UNMODIFIABLE_OBJECTS,
 	BUSINESS_TYPES_TO_SYMBOLS,
 } from '../utils/constants';
@@ -46,20 +47,18 @@ export default function BaseAPISchemaProperty({
 				objectDefinition.externalReferenceCode
 			));
 
-	const localizedPropertyName =
-		objectField.label[Liferay.ThemeDisplay.getDefaultLanguageId()]!;
-
 	const handleClick = () => {
 		setSchemaUIData((previous) => {
 			if (previous.schemaProperties) {
 				previous.schemaProperties.unshift({
 					businessType: objectField.businessType,
-					name: localizedPropertyName,
+					name: objectField.name,
 					objectDefinitionName: objectDefinition.name,
 					objectFieldERC: objectField.externalReferenceCode,
 					objectFieldId: objectField.id,
 					objectFieldName: objectField.name,
-					r_apiSchemaToAPIProperties_c_apiSchemaId: apiSchemaId,
+					r_apiPropertyToAPIProperties_l_apiPropertyId: 0,
+					r_apiSchemaToAPIProperties_l_apiSchemaId: apiSchemaId,
 					type: 'treeViewItem',
 					...(objectRelationshipName && {
 						objectRelationshipNames: objectRelationshipName,
@@ -77,49 +76,63 @@ export default function BaseAPISchemaProperty({
 	};
 
 	return (
-		<ClayButton
-			aria-label={sub(
-				Liferay.Language.get('add-x-property'),
-				localizedPropertyName
-			)}
-			className="property-container"
-			displayType="unstyled"
-			onBlur={() => setFocused(false)}
-			onClick={() => !disabled && handleClick()}
-			onFocus={() => setFocused(true)}
-		>
-			<div
-				className={classNames({
-					disabled,
-					'icon-container': true,
-				})}
-			>
-				<ClayIcon
-					symbol={BUSINESS_TYPES_TO_SYMBOLS[objectField.businessType]}
-				/>
-			</div>
-
-			<div
-				className={classNames({
-					disabled,
-					'label-container': true,
-					'text-truncate': true,
-				})}
-			>
-				{objectField.label[Liferay.ThemeDisplay.getDefaultLanguageId()]}
-			</div>
-
-			{!disabled && (
-				<div
-					className={classNames({
-						'focused-parent': focused,
-						'icon-container': true,
-						'plus-icon': true,
-					})}
+		<>
+			{ALLOWED_BUSINESS_TYPES.includes(objectField.businessType) && (
+				<ClayButton
+					aria-label={sub(
+						Liferay.Language.get('add-x-property'),
+						objectField.label[
+							Liferay.ThemeDisplay.getDefaultLanguageId()
+						]!
+					)}
+					className="property-container"
+					displayType="unstyled"
+					onBlur={() => setFocused(false)}
+					onClick={() => !disabled && handleClick()}
+					onFocus={() => setFocused(true)}
 				>
-					<ClayIcon symbol="plus" />
-				</div>
+					<div
+						className={classNames({
+							disabled,
+							'icon-container': true,
+						})}
+					>
+						<ClayIcon
+							symbol={
+								BUSINESS_TYPES_TO_SYMBOLS[
+									objectField.businessType
+								]
+							}
+						/>
+					</div>
+
+					<div
+						className={classNames({
+							disabled,
+							'label-container': true,
+							'text-truncate': true,
+						})}
+					>
+						{
+							objectField.label[
+								Liferay.ThemeDisplay.getDefaultLanguageId()
+							]
+						}
+					</div>
+
+					{!disabled && (
+						<div
+							className={classNames({
+								'focused-parent': focused,
+								'icon-container': true,
+								'plus-icon': true,
+							})}
+						>
+							<ClayIcon symbol="plus" />
+						</div>
+					)}
+				</ClayButton>
 			)}
-		</ClayButton>
+		</>
 	);
 }

@@ -94,14 +94,15 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 				setAdvanceStatus(commerceOrder::getAdvanceStatus);
 				setBillingAddressExternalReferenceCode(
 					() -> {
-						CommerceAddress billingAddress =
+						CommerceAddress billingCommerceAddress =
 							commerceOrder.getBillingAddress();
 
-						if (billingAddress == null) {
+						if (billingCommerceAddress == null) {
 							return null;
 						}
 
-						return billingAddress.getExternalReferenceCode();
+						return billingCommerceAddress.
+							getExternalReferenceCode();
 					});
 				setBillingAddressId(commerceOrder::getBillingAddressId);
 				setChannelExternalReferenceCode(
@@ -121,6 +122,9 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 						return user.getEmailAddress();
 					});
 				setCurrencyCode(commerceCurrency::getCode);
+				setCurrencyExternalReferenceCode(
+					commerceCurrency::getExternalReferenceCode);
+				setCurrencyId(commerceCurrency::getCommerceCurrencyId);
 				setCustomFields(
 					() -> {
 						ExpandoBridge expandoBridge =
@@ -203,16 +207,18 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 				setPurchaseOrderNumber(commerceOrder::getPurchaseOrderNumber);
 				setRequestedDeliveryDate(
 					commerceOrder::getRequestedDeliveryDate);
+				setShippable(commerceOrder::isShippable);
 				setShippingAddressExternalReferenceCode(
 					() -> {
-						CommerceAddress shippingAddress =
+						CommerceAddress shippingCommerceAddress =
 							commerceOrder.getShippingAddress();
 
-						if (shippingAddress == null) {
+						if (shippingCommerceAddress == null) {
 							return null;
 						}
 
-						return shippingAddress.getExternalReferenceCode();
+						return shippingCommerceAddress.
+							getExternalReferenceCode();
 					});
 				setShippingAddressId(commerceOrder::getShippingAddressId);
 

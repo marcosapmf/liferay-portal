@@ -4,11 +4,14 @@ definition {
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Order Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(minium = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -143,8 +146,8 @@ definition {
 
 			CommerceOrders.openOrdersAdmin();
 
-			var customerOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 44.00')]//..//div[(@class='dnd-td')][1]");
-			var supplierOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 5.00')]//..//div[(@class='dnd-td')][1]");
+			var customerOrderId = selenium.getText("//td[contains(string(), '$ 44.00')]//..//td[1]");
+			var supplierOrderId = selenium.getText("//td[contains(string(), '$ 5.00')]//..//td[1]");
 		}
 
 		task ("When the supplier user edits the quantity of 'Simple Product' in the supplier order") {
@@ -154,7 +157,7 @@ definition {
 
 			CommerceOrders.openOrdersAdmin();
 
-			CommerceNavigator.gotoOrderEntryViaAdmin(status = "$ 5.00");
+			CommerceNavigator.gotoOrderEntryViaAdminView(status = "$ 5.00");
 
 			CommerceOrders.editOrderItemDetails(
 				orderItemQuantity = 3,
@@ -166,7 +169,7 @@ definition {
 					productName = "Simple Product",
 					productQuantity = 3,
 					productSku = "TESTSKU",
-					productTotalPrice = "5.00");
+					productTotalPrice = "$ 5.00");
 			}
 		}
 
@@ -182,14 +185,14 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "5.00",
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 		}
 
 		task ("But the quantity of 'Simple product' in the supplier order does not change with the customer order") {
@@ -202,14 +205,14 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "5.00",
 				productName = "Simple Product",
 				productQuantity = 6,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "supplier@liferay.com",
@@ -217,20 +220,20 @@ definition {
 
 			CommerceOrders.openOrdersAdmin();
 
-			CommerceNavigator.gotoOrderEntryViaAdmin(status = "$ 5.00");
+			CommerceNavigator.gotoOrderEntryViaAdminView(status = "$ 5.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "5.00",
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 		}
 
 		task ("When the supplier user creates 1 quantity of the shipment in a supplier order with 'Simple Product'") {
 			CommerceOrders.openOrdersAdmin();
 
-			CommerceNavigator.gotoOrderEntryViaAdmin(status = "$ 5.00");
+			CommerceNavigator.gotoOrderEntryViaAdminView(status = "$ 5.00");
 
 			CommerceOrders.checkoutFullWorkflow(
 				orderId = ${supplierOrderId},
@@ -1790,443 +1793,6 @@ definition {
 		}
 	}
 
-	@description = "This is a test for COMMERCE-11888. As a supplier user, I can edit the order items of an order"
-	@priority = 5
-	test CanSupplierEditOrderItems {
-		property portal.acceptance = "true";
-
-		task ("Given a Minium site with a buyer user is created") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				accountType = "Business",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("And a Supplier account with a supplier user is created") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Supplier Account",
-				accountType = "Supplier",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "supplier@liferay.com",
-				userFirstName = "Supplier",
-				userLastName = "User",
-				userRole = "Account Supplier",
-				userScreenName = "supplieruser");
-		}
-
-		task ("And the Supplier Account is linked to Minium Channel") {
-			CommerceJSONChannelsAPI._patchCommerceChannel(
-				accountIdByName = "Supplier Account",
-				channelName = "Minium Portal");
-		}
-
-		task ("And an SKU Contributor option with two values is assigned to a product U-Joint") {
-			CommerceProducts.openProductsAdmin();
-
-			CommerceProducts.searchAndGoToProductEntry(entryProductName = "U-Joint");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Options");
-
-			CommerceProductOptions.createProductOption(key_optionName = "Option 1");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Options");
-
-			CommerceProductOptions.editProductOption(
-				key_fieldType = "Select from List",
-				key_option = "Option 1",
-				key_priceType = "Dynamic",
-				productOptionPriceType = "true",
-				productOptionRequired = "true",
-				productOptionSkuContributor = "true");
-
-			for (var valueName : list "value1,value2") {
-				CommerceProductOptions.createProductOptionValue(key_name = ${valueName});
-
-				SelectFrame.selectFrameTop();
-
-				SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-			}
-
-			Click(locator1 = "Icon#CLOSE");
-
-			SelectFrameTop();
-
-			var optionValueList = "value1:MIN93015,value2:MIN93020";
-
-			for (var optionValue : list ${optionValueList}) {
-				var optionValueName = StringUtil.extractFirst(${optionValue}, ":");
-				var sku = StringUtil.extractLast(${optionValue}, ":");
-
-				CommerceNavigator.gotoEntry(entryName = "Option 1");
-
-				CommerceProductOptions.editOptionValue(
-					optionValue = ${optionValueName},
-					sku = ${sku});
-			}
-
-			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
-
-			CommerceSKUs.generateAllSkuCombinations();
-
-			var valueList = "VALUE1:10,VALUE2:20";
-
-			for (var value : list ${valueList}) {
-				var sku = StringUtil.extractFirst(${value}, ":");
-				var priceAndQuantity = StringUtil.extractLast(${value}, ":");
-
-				CommerceNavigator.gotoEntry(entryName = ${sku});
-
-				SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-				CommerceEntry.gotoMenuTab(menuTab = "Price");
-
-				CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
-
-				CommerceEntry.editSkuPricingAndInventory(
-					basePrice = ${priceAndQuantity},
-					italyQuantity = ${priceAndQuantity},
-					publish = "true");
-			}
-		}
-
-		task ("When the buyer checkout an order") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			Click(
-				key_productName = "U-Joint",
-				locator1 = "CommerceAccelerators#PRODUCT_CARD_VIEW_ALL_VARIANTS");
-
-			FrontStore.addToCartFromProductDetails(
-				optionNamesAndValues = "Option 1:value2",
-				productName = "U-Joint",
-				productSku = "VALUE2");
-
-			CommerceCheckout.gotoCheckout();
-
-			CommerceCheckout.checkout(
-				newAddressAddress = "Test Address",
-				newAddressCity = "Test City",
-				newAddressCountry = "United States",
-				newAddressName = "Address Name",
-				newAddressZipCode = "Test Zip Code",
-				shippingMethod = "Standard");
-		}
-
-		task ("Then the supplier user can edit the order items of the order") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "supplier@liferay.com",
-				userLoginFullName = "Supplier User");
-
-			CommerceOrders.openOrdersAdmin();
-
-			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
-
-			Click(
-				key_text = "Accept Order",
-				locator1 = "Link#ANY");
-
-			Alert.viewSuccessMessage();
-
-			CommerceOrders.viewOrdersEntry(
-				productDiscount = "0.00",
-				productListPrice = "60.00",
-				productName = "U-Joint",
-				productOptions = "value2",
-				productQuantity = 1,
-				productSku = "VALUE2",
-				productTotalPrice = "60.00");
-
-			CommerceOrders.viewOrdersEntry(
-				productDiscount = "0.00",
-				productListPrice = "40.00",
-				productName = "Brake Rotors",
-				productQuantity = 1,
-				productSku = "MIN93020",
-				productTotalPrice = "40.00");
-
-			CommerceOrders.editOrderItemDetails(
-				orderItemDeliveryGroup = "Supplier Delivery Group",
-				orderItemDiscount = "5.00",
-				orderItemMeasurementUnit = "meters",
-				orderItemPrice = "10.00",
-				orderItemQuantity = 2,
-				orderItemRequestedDeliveryDate = "07/06/2023",
-				orderItemSku = "VALUE2",
-				orderItemTotal = "10.00");
-
-			CommerceOrders.viewOrdersEntry(
-				productDeliveryDate = "7/6/23",
-				productDeliveryGroup = "Supplier Delivery Group",
-				productDiscount = "5.00",
-				productListPrice = "50.00",
-				productName = "U-Joint",
-				productOptions = "value2",
-				productQuantity = "2 meters",
-				productSku = "VALUE2",
-				productTotalPrice = "50.00");
-
-			AssertTextEquals(
-				key_columnIndex = 9,
-				key_rowIndex = 1,
-				locator1 = "CommerceEntry#TABLE_ENTRY_ROW_NESTED_FIELD_GENERIC",
-				value1 = 2);
-		}
-	}
-
-	@description = "This is a test for COMMERCE-11888. As a supplier user, I can edit the order notes of an order"
-	@priority = 5
-	test CanSupplierEditOrderNotes {
-		property portal.acceptance = "true";
-
-		task ("Given a Minium site with a buyer user is created") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				accountType = "Business",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("And a Supplier account with a supplier user is created") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Supplier Account",
-				accountType = "Supplier",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "supplier@liferay.com",
-				userFirstName = "Supplier",
-				userLastName = "User",
-				userRole = "Account Supplier",
-				userScreenName = "supplieruser");
-		}
-
-		task ("And the Supplier Account is linked to Minium Channel") {
-			CommerceJSONChannelsAPI._patchCommerceChannel(
-				accountIdByName = "Supplier Account",
-				channelName = "Minium Portal");
-		}
-
-		task ("And the buyer checkout an order") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			CommerceCheckout.gotoCheckout();
-
-			CommerceCheckout.checkout(
-				newAddressAddress = "Test Address",
-				newAddressCity = "Test City",
-				newAddressCountry = "United States",
-				newAddressName = "Address Name",
-				newAddressZipCode = "Test Zip Code",
-				shippingMethod = "Standard");
-		}
-
-		task ("When two order notes of the supplier order are created via JSON") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "supplier@liferay.com",
-				userLoginFullName = "Supplier User");
-
-			var orderId = CommerceJSONOrdersAPI._getCommerceOrderIds(email = "supplier@liferay.com");
-
-			CommerceJSONOrdersAPI._addCommerceOrderNote(
-				content = "This is a private Commerce Order Test Note.",
-				orderId = ${orderId},
-				restricted = "true",
-				userEmail = "supplier");
-
-			CommerceJSONOrdersAPI._addCommerceOrderNote(
-				content = "This is a public Commerce Order Test Note.",
-				orderId = ${orderId},
-				restricted = "false",
-				userEmail = "supplier");
-		}
-
-		task ("Then the order notes can be displayed on UI") {
-			CommerceOrders.openOrdersAdmin();
-
-			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
-
-			Click(
-				key_text = "Accept Order",
-				locator1 = "Link#ANY");
-
-			Alert.viewSuccessMessage();
-
-			CommerceEntry.gotoMenuTab(menuTab = "Notes");
-
-			CommerceOrders.viewCPCommerceOrderNote(
-				commerceOrderNoteAuthor = "Supplier User",
-				commerceOrderNoteBody = "This is a private Commerce Order Test Note.",
-				restricted = "true",
-				userEmailAddress = "supplier@liferay.com");
-
-			CommerceOrders.viewCPCommerceOrderNote(
-				commerceOrderNoteAuthor = "Supplier User",
-				commerceOrderNoteBody = "This is a public Commerce Order Test Note.",
-				userEmailAddress = "supplier@liferay.com");
-		}
-
-		task ("And the supplier user can edit the order notes") {
-			CommerceOrders.editCommerceOrderNote(
-				orderNoteBody = "This is a public Commerce Order Test Note.",
-				orderNoteBodyEdit = "This is a Commerce Order Test Note Edit from public to private.",
-				restricted = "true");
-
-			CommerceOrders.viewCPCommerceOrderNote(
-				commerceOrderNoteAuthor = "Supplier User",
-				commerceOrderNoteBody = "This is a Commerce Order Test Note Edit from public to private.",
-				restricted = "true",
-				userEmailAddress = "supplier@liferay.com");
-		}
-	}
-
-	@description = "This is a test for COMMERCE-11888. As a supplier user, I can edit the order summary of an order"
-	@priority = 5
-	test CanSupplierEditOrderSummary {
-		property portal.acceptance = "true";
-
-		task ("Given a Minium site with a buyer user is created") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				accountType = "Business",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("And a Supplier account with a supplier user is created") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Supplier Account",
-				accountType = "Supplier",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "supplier@liferay.com",
-				userFirstName = "Supplier",
-				userLastName = "User",
-				userRole = "Account Supplier",
-				userScreenName = "supplieruser");
-		}
-
-		task ("And the Supplier Account is linked to Minium Channel") {
-			CommerceJSONChannelsAPI._patchCommerceChannel(
-				accountIdByName = "Supplier Account",
-				channelName = "Minium Portal");
-		}
-
-		task ("And a 10$ discount is applied on the subtotal of the order") {
-			CommerceJSONDiscountsAPI._addDiscount(
-				active = "true",
-				level = "L1",
-				percentageLevel1 = 10,
-				target = "subtotal",
-				title = "Discount 1",
-				usePercentage = "false");
-		}
-
-		task ("When the buyer checkout an order") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			CommerceCheckout.gotoCheckout();
-
-			CommerceCheckout.checkout(
-				newAddressAddress = "Test Address",
-				newAddressCity = "Test City",
-				newAddressCountry = "United States",
-				newAddressName = "Address Name",
-				newAddressZipCode = "Test Zip Code",
-				shippingMethod = "Standard");
-		}
-
-		task ("Then the supplier user can edit the order summary of the order") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "supplier@liferay.com",
-				userLoginFullName = "Supplier User");
-
-			CommerceOrders.openOrdersAdmin();
-
-			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
-
-			Click(
-				key_text = "Accept Order",
-				locator1 = "Link#ANY");
-
-			Alert.viewSuccessMessage();
-
-			CommerceOrders.viewOrderSummary(
-				deliveryDiscountValue = "$ 0.00",
-				deliveryValue = "$ 15.00",
-				subtotalDiscountValue = "$ 10.00",
-				subtotalValue = "$ 24.00",
-				taxValue = "$ 0.00",
-				totalDiscountValue = "$ 0.00",
-				totalValue = "$ 29.00");
-
-			CommerceOrders.editOrderSummary(
-				deliveryDiscountNewValue = "10.00",
-				deliveryNewValue = "20.00",
-				subtotalDiscountNewValue = "15.00",
-				subtotalNewValue = "30.00",
-				taxNewValue = "5.00",
-				totalDiscountNewValue = "15.00",
-				totalNewValue = "30.00");
-
-			CommerceOrders.viewOrderSummary(
-				deliveryDiscountValue = "$ 10.00",
-				deliveryValue = "$ 20.00",
-				subtotalDiscountValue = "$ 15.00",
-				subtotalValue = "$ 30.00",
-				taxValue = "$ 5.00",
-				totalDiscountValue = "$ 15.00",
-				totalValue = "$ 30.00");
-		}
-	}
-
 	@description = "COMMERCE-11845. This a test to verify that the Supplier User can edit a price list details"
 	@priority = 5
 	test CanSupplierEditPriceListDetails {
@@ -2688,7 +2254,7 @@ definition {
 
 			CommerceOrders.openOrdersAdmin();
 
-			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Processing");
+			CommerceNavigator.gotoOrderEntryViaAdminView(status = "Processing");
 
 			CommerceOrders.checkoutFullWorkflow(
 				sku = "TESTSKU",
@@ -2700,7 +2266,7 @@ definition {
 
 			AssertElementPresent(
 				key_orderStatus = "Completed",
-				locator1 = "CommerceOrders#ORDER_ELLIPSIS_BY_STATUS");
+				locator1 = "CommerceOrders#ORDER_VIEW_BY_STATUS");
 		}
 
 		task ("And the buyer can check that the product split to the supplier user has been shipped in the customer order") {
@@ -3425,11 +2991,10 @@ definition {
 		}
 
 		task ("When the supplier user navigates to a catalog details") {
-			Click(
-				key_firstColumnValue = "Minium",
-				key_secondColumnValue = "USD",
-				key_table = "",
-				locator1 = "CommerceEntry#TABLE_ASSERT_TWO_COLUMNS_EDIT_BUTTON");
+			Click.clickNoMouseOver(
+				key_actionName = "Edit",
+				key_entryName = "Minium",
+				locator1 = "CommerceEntry#TABLE_ENTRY_ACTION");
 		}
 
 		task ("Then the user is able to edit the catalog fields") {
@@ -3442,11 +3007,17 @@ definition {
 
 			Navigator.gotoBack();
 
-			Click(
-				key_firstColumnValue = "Minium 2",
-				key_secondColumnValue = "EUR",
-				key_table = "",
-				locator1 = "CommerceEntry#TABLE_ASSERT_TWO_COLUMNS_EDIT_BUTTON");
+			WaitForPageLoad();
+
+			AssertElementPresent(
+				key_actionName = "Edit",
+				key_entryName = "Minium 2",
+				locator1 = "CommerceEntry#TABLE_ENTRY_ACTION");
+
+			Click.clickNoMouseOver(
+				key_actionName = "Edit",
+				key_entryName = "Minium 2",
+				locator1 = "CommerceEntry#TABLE_ENTRY_ACTION");
 
 			CommerceEntry.viewCatalogsEntry(
 				catalogBasePriceList = "Test Price List",
@@ -3545,18 +3116,16 @@ definition {
 				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
 
 			AssertElementPresent(
-				key_firstColumnValue = "Supplier Channel 1",
-				key_secondColumnValue = "Site",
-				key_table = "",
-				locator1 = "CommerceEntry#TABLE_ASSERT_TWO_COLUMNS_EDIT_BUTTON");
+				key_actionName = "Edit",
+				key_entryName = "Supplier Channel 1",
+				locator1 = "CommerceEntry#TABLE_ENTRY_ACTION");
 		}
 
 		task ("When the supplier user navigates to the channel details") {
-			Click(
-				key_firstColumnValue = "Supplier Channel 1",
-				key_secondColumnValue = "Site",
-				key_table = "",
-				locator1 = "CommerceEntry#TABLE_ASSERT_TWO_COLUMNS_EDIT_BUTTON");
+			Click.clickNoMouseOver(
+				key_actionName = "Edit",
+				key_entryName = "Supplier Channel 1",
+				locator1 = "CommerceEntry#TABLE_ENTRY_ACTION");
 		}
 
 		task ("Then the user is able to edit the channel fields") {
@@ -4250,7 +3819,7 @@ definition {
 				AssertTextEquals(
 					key_cellName1 = ${productTotalPrice},
 					key_cellName2 = "",
-					key_columnNumber = 4,
+					key_columnNumber = 5,
 					locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 					value1 = "Minium Portal");
 			}
@@ -4258,7 +3827,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 5.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Supplier Channel");
 
@@ -4275,7 +3844,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 5.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Supplier Channel");
 

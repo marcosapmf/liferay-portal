@@ -4,14 +4,14 @@
  */
 
 import {render} from '@liferay/frontend-js-react-web';
+import {CopyFragmentModal} from '@liferay/layout-js-components-web';
 import {
 	openConfirmModal,
 	openSelectionModal,
 	openSimpleInputModal,
-	setFormValues,
-} from 'frontend-js-web';
+} from 'frontend-js-components-web';
+import {setFormValues} from 'frontend-js-web';
 
-import CopyFragmentModal from './CopyFragmentModal';
 import openDeleteFragmentModal from './openDeleteFragmentModal';
 
 const ACTIONS = {

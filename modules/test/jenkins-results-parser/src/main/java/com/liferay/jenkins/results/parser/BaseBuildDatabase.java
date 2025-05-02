@@ -25,6 +25,11 @@ import org.json.JSONObject;
 public abstract class BaseBuildDatabase implements BuildDatabase {
 
 	@Override
+	public File getBuildDatabaseFile() {
+		return _buildDatabaseFile;
+	}
+
+	@Override
 	public JSONObject getBuildDataJSONObject(String key) {
 		JSONObject buildsJSONObject = _jsonObject.getJSONObject("builds");
 
@@ -386,6 +391,122 @@ public abstract class BaseBuildDatabase implements BuildDatabase {
 	}
 
 	@Override
+	public void uploadBuildDatabaseFileToCloudBucket() {
+		uploadBuildDatabaseFileToCloudBucket(
+			System.getenv("S3_BUCKET_DIST_PATH") + "/" +
+				FILE_NAME_BUILD_DATABASE_JSON);
+	}
+
+	@Override
+	public void uploadBuildDatabaseFileToCloudBucket(String path) {
+		if (!JenkinsResultsParserUtil.isCINode()) {
+			return;
+		}
+
+		synchronized (_buildDatabaseFile) {
+			String shaPath = path.replace(
+				FILE_NAME_BUILD_DATABASE_JSON,
+				FILE_NAME_BUILD_DATABASE_JSON_SHA);
+
+			Retryable<JSONObject> retryable = new Retryable<JSONObject>(
+				true, 3, 5, true) {
+
+				@Override
+				public JSONObject execute() {
+					File baseTempDir = new File(
+						JenkinsResultsParserUtil.combine(
+							System.getProperty("java.io.tmpdir"), "/",
+							String.valueOf(_buildDatabaseFile.hashCode())));
+
+					String baseTempDirPath =
+						JenkinsResultsParserUtil.getCanonicalPath(baseTempDir);
+
+					File tempFile = new File(
+						baseTempDirPath + "/" + FILE_NAME_BUILD_DATABASE_JSON);
+					File tempSHAFile = new File(
+						baseTempDirPath + "/" +
+							FILE_NAME_BUILD_DATABASE_JSON_SHA);
+
+					String tempFilePath =
+						JenkinsResultsParserUtil.getCanonicalPath(tempFile);
+					String tempSHAFilePath =
+						JenkinsResultsParserUtil.getCanonicalPath(tempSHAFile);
+
+					try {
+						JenkinsResultsParserUtil.write(
+							_buildDatabaseFile, _jsonObject.toString());
+
+						JenkinsResultsParserUtil.copy(
+							_buildDatabaseFile, tempFile);
+
+						JenkinsResultsParserUtil.writeSHAFile(
+							tempFile, tempSHAFile);
+
+						CloudBucketUtil.copyS3File(shaPath, tempSHAFilePath);
+
+						CloudBucketUtil.copyS3File(path, tempFilePath);
+					}
+					catch (IOException ioException) {
+						throw new RuntimeException(ioException);
+					}
+					finally {
+						if (tempFile.exists()) {
+							JenkinsResultsParserUtil.delete(tempFile);
+						}
+
+						if (tempSHAFile.exists()) {
+							JenkinsResultsParserUtil.delete(tempSHAFile);
+						}
+					}
+
+					CloudBucketUtil.copyS3File(tempSHAFilePath, shaPath);
+
+					CloudBucketUtil.copyS3File(tempFilePath, path);
+
+					try {
+						if (!JenkinsResultsParserUtil.isMatchingSHAFile(
+								tempFile, tempSHAFile)) {
+
+							throw new RuntimeException(
+								JenkinsResultsParserUtil.combine(
+									"Invalid file uploaded to ", path,
+									" has mismatched SHA"));
+						}
+					}
+					finally {
+						if (tempFile.exists()) {
+							JenkinsResultsParserUtil.delete(tempFile);
+						}
+
+						if (tempSHAFile.exists()) {
+							JenkinsResultsParserUtil.delete(tempSHAFile);
+						}
+					}
+
+					return null;
+				}
+
+				@Override
+				protected String getRetryMessage(int retryCount) {
+					return JenkinsResultsParserUtil.combine(
+						"Unable to upload ",
+						JenkinsResultsParserUtil.getCanonicalPath(
+							_buildDatabaseFile),
+						" to ", path, ": ", super.getRetryMessage(retryCount));
+				}
+
+			};
+
+			try {
+				retryable.executeWithRetries();
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		}
+	}
+
+	@Override
 	public void writeFilteredPropertiesToFile(
 		String destFilePath, Pattern pattern, String key) {
 
@@ -475,7 +596,7 @@ public abstract class BaseBuildDatabase implements BuildDatabase {
 
 	protected BaseBuildDatabase(File baseDir) {
 		_buildDatabaseFile = new File(
-			baseDir, BuildDatabase.FILE_NAME_BUILD_DATABASE);
+			baseDir, BuildDatabase.FILE_NAME_BUILD_DATABASE_JSON);
 
 		_readBuildDatabaseFile();
 	}

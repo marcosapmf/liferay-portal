@@ -56,6 +56,7 @@ import com.liferay.expando.kernel.model.ExpandoValue;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.expando.kernel.service.ExpandoValueLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -449,10 +450,13 @@ public class DynamicDataMappingUpgradeProcess extends UpgradeProcess {
 							_getDDMFormFieldsNames(parentDDMForm),
 							_getDDMFormFieldsNames(ddmForm));
 
+						String commonDDMFormFieldNamesString = StringUtil.merge(
+							commonDDMFormFieldNames);
+
 						if (!commonDDMFormFieldNames.isEmpty()) {
 							throw new UpgradeException(
-								"Duplicate DDM form field names: " +
-									StringUtil.merge(commonDDMFormFieldNames));
+								"Duplicate dynamic data mapping form field " +
+									"names: " + commonDDMFormFieldNamesString);
 						}
 					}
 
@@ -1997,13 +2001,9 @@ public class DynamicDataMappingUpgradeProcess extends UpgradeProcess {
 				return null;
 			}
 
-			List<DDMFormFieldValue> ddmFormFieldValues = new ArrayList<>();
-
-			for (Element dynamicElement : dynamicElementElements) {
-				ddmFormFieldValues.add(getDDMFormFieldValue(dynamicElement));
-			}
-
-			return ddmFormFieldValues;
+			return TransformUtil.transform(
+				dynamicElementElements,
+				dynamicElement -> getDDMFormFieldValue(dynamicElement));
 		}
 
 		protected String getDDMFormFieldValueValueString(

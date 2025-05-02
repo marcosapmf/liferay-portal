@@ -417,3 +417,43 @@ a073923c873194a0842e0d95d69e06c4adf626d6^..9e7ecc4d22404af783aa77bf0b5a1c8fe2de9
 # Bundle Version 6.0.71
 #
 9e7ecc4d22404af783aa77bf0b5a1c8fe2de9056^..ebbbd572f3a527d5d6f17cd9e35b29bd9511a282=LPD-32125 LPD-33416
+
+#
+# Bundle Version 6.0.72
+#
+ebbbd572f3a527d5d6f17cd9e35b29bd9511a282^..196e0ff32c6cf72702296ff07af25dc3cf51e55a=LPD-33244
+
+#
+# Bundle Version 6.0.73
+#
+196e0ff32c6cf72702296ff07af25dc3cf51e55a^..a61963c89ca05fd369d904e0c1a7bcf6e96020e3=LPD-31793
+
+#
+# Bundle Version 6.0.74
+#
+a61963c89ca05fd369d904e0c1a7bcf6e96020e3^..4a411d6882ab949c8eceeaf29db5af49f50beb20=LPD-42616
+
+#
+# Bundle Version 6.0.75
+#
+4a411d6882ab949c8eceeaf29db5af49f50beb20^..0b8fd2dce4f690cec16fa679c7a14ff5f6a0ec1e=LPD-44303
+
+#
+# Bundle Version 6.0.76
+#
+0b8fd2dce4f690cec16fa679c7a14ff5f6a0ec1e^..d55611f46dde4acd5c9946ae692df1624ea35f4f=LPD-45821
+
+#
+# Bundle Version 6.0.77
+#
+d55611f46dde4acd5c9946ae692df1624ea35f4f^..10b8d5c238b91751b1d573d1a00df1c11bf1f3c6=LPD-47508
+
+#
+# Bundle Version 6.0.78
+#
+10b8d5c238b91751b1d573d1a00df1c11bf1f3c6^..d308de636dbadaef9b96e61d0d70330a7eac500e=LPD-44271 LPD-51373
+
+#
+# Bundle Version 6.0.79
+#
+d308de636dbadaef9b96e61d0d70330a7eac500e^..aa05216611403d8e5fdc883ff07573a83b10e767=LPD-50555 LPD-51570 LPD-51750

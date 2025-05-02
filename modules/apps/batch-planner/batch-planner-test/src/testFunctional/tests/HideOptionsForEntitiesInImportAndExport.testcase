@@ -2,6 +2,7 @@
 definition {
 
 	property custom.properties = "feature.flag.COMMERCE-8087=true${line.separator}feature.flag.LPS-186620=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Data Migration Center";
@@ -74,7 +75,7 @@ definition {
 
 		task ("Then the available Import Strategy is Only Add New Records for Comment,keyword, WorkflowDefinition") {
 			ImportExport.assertStrategiesForEntityTypes(
-				entityTypes = "Comment (v1.0 - Liferay Headless Delivery),Keyword (v1.0 - Liferay Headless Admin Taxonomy),WorkflowDefinition (v1.0 - Liferay Headless Admin Workflow)",
+				entityTypes = "Comment (v1.0 - Liferay Headless Delivery),WorkflowDefinition (v1.0 - Liferay Headless Admin Workflow)",
 				importStrategy = "Only Add New Records");
 		}
 
@@ -112,8 +113,12 @@ definition {
 
 		task ("Then the available Import Strategy is Only Add New Records for CommerceAccount,Catalog") {
 			ImportExport.assertStrategiesForEntityTypes(
-				entityTypes = "Account (v1.0 - Liferay Headless Commerce Admin Account),Catalog (v1.0 - Liferay Headless Commerce Admin Catalog)",
+				entityTypes = "Account (v1.0 - Liferay Headless Commerce Admin Account)",
 				importStrategy = "Only Add New Records");
+
+			ImportExport.assertStrategiesForEntityTypes(
+				entityTypes = "Catalog (v1.0 - Liferay Headless Commerce Admin Catalog)",
+				importStrategy = "Only Add New Records Add or Update Records");
 		}
 
 		task ("And Then the available Update Strategy is empty for CommerceAccount,Catalog") {
@@ -125,8 +130,6 @@ definition {
 
 	@priority = 4
 	test CanConfigImportWithTwoImportStrategiesAndTwoUpdateStrategies {
-		property portal.acceptance = "true";
-
 		task ("Given a custom object Student is created and published") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
 				en_US_label = "Student",
@@ -177,8 +180,6 @@ definition {
 
 	@priority = 4
 	test CannotDisplayIncludeHeaderWithExportBlogPostingJOSNLFormat {
-		property portal.acceptance = "true";
-
 		task ("When I select JSONL format to export BlogPosting") {
 			ImportExport.gotoExport();
 
@@ -196,8 +197,6 @@ definition {
 
 	@priority = 4
 	test CannotDisplayWithExportObjectDefinitionJOSNTFormat {
-		property portal.acceptance = "true";
-
 		task ("When I select JSONT format to export ObjectDefinition") {
 			ImportExport.gotoExport();
 
@@ -215,8 +214,6 @@ definition {
 
 	@priority = 4
 	test CannotDisplyIncludeHeadersWithExportAccountJOSNFormat {
-		property portal.acceptance = "true";
-
 		task ("When I select JSON format to export Account") {
 			ImportExport.gotoExport();
 

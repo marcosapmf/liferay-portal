@@ -7,7 +7,7 @@ package com.liferay.fragment.item.selector.web.internal.display.context;
 
 import com.liferay.fragment.contributor.FragmentCollectionContributor;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
-import com.liferay.fragment.item.selector.criterion.FragmentEntryItemSelectorCriterion;
+import com.liferay.fragment.item.selector.FragmentEntryItemSelectorCriterion;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -204,11 +204,7 @@ public class DefaultFragmentEntriesDisplayContext {
 	}
 
 	public boolean isSearch() {
-		if (Validator.isNotNull(_getKeywords())) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(_getKeywords());
 	}
 
 	private boolean _filterInputTypes(

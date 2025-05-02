@@ -49,15 +49,18 @@ public interface ObjectEntryService extends BaseService {
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.object.service.impl.ObjectEntryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the object entry remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link ObjectEntryServiceUtil} if injection and service tracking are not available.
 	 */
 	public ObjectEntry addObjectEntry(
-			long groupId, long objectDefinitionId,
-			Map<String, Serializable> values, ServiceContext serviceContext)
+			long groupId, long objectDefinitionId, long objectEntryFolderId,
+			String defaultLanguageId, Map<String, Serializable> values,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public ObjectEntry addOrUpdateObjectEntry(
 			String externalReferenceCode, long groupId, long objectDefinitionId,
-			Map<String, Serializable> values, ServiceContext serviceContext)
+			long objectEntryFolderId, Map<String, Serializable> values,
+			ServiceContext serviceContext)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public void checkModelResourcePermission(
 			long objectDefinitionId, long objectEntryId, String actionId)
 		throws PortalException;
@@ -97,6 +100,11 @@ public interface ObjectEntryService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ObjectEntry getObjectEntry(long objectEntryId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectEntry getObjectEntry(
+			String externalReferenceCode, long objectDefinitionId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -145,6 +153,12 @@ public interface ObjectEntryService extends BaseService {
 
 	public ObjectEntry updateObjectEntry(
 			long objectEntryId, Map<String, Serializable> values,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public void validate(
+			long groupId, ObjectEntry objectEntry,
+			List<String> objectValidationRuleExternalReferenceCodes,
 			ServiceContext serviceContext)
 		throws PortalException;
 

@@ -11,10 +11,10 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerCustomizer
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerCustomizerFactory.ServiceWrapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,6 +28,16 @@ import org.osgi.service.component.annotations.Deactivate;
  */
 @Component(service = FDSFilterRegistry.class)
 public class FDSFilterRegistryImpl implements FDSFilterRegistry {
+
+	public FDSFilterRegistryImpl() {
+	}
+
+	public FDSFilterRegistryImpl(
+		ServiceTrackerMap<String, List<ServiceWrapper<FDSFilter>>>
+			serviceTrackerMap) {
+
+		_serviceTrackerMap = serviceTrackerMap;
+	}
 
 	@Override
 	public List<FDSFilter> getFDSFilters(String fdsName) {
@@ -44,15 +54,9 @@ public class FDSFilterRegistryImpl implements FDSFilterRegistry {
 			return Collections.emptyList();
 		}
 
-		List<FDSFilter> fdsFilters = new ArrayList<>();
-
-		for (ServiceWrapper<FDSFilter> fdsFilterServiceWrapper :
-				fdsFilterServiceWrappers) {
-
-			fdsFilters.add(fdsFilterServiceWrapper.getService());
-		}
-
-		return fdsFilters;
+		return TransformUtil.transform(
+			fdsFilterServiceWrappers,
+			fdsFilterServiceWrapper -> fdsFilterServiceWrapper.getService());
 	}
 
 	@Activate

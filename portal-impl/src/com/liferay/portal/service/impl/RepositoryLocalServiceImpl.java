@@ -45,8 +45,9 @@ public class RepositoryLocalServiceImpl extends RepositoryLocalServiceBaseImpl {
 
 	@Override
 	public Repository addRepository(
-			long userId, long groupId, long classNameId, long parentFolderId,
-			String name, String description, String portletId,
+			String externalReferenceCode, long userId, long groupId,
+			long classNameId, long parentFolderId, String name,
+			String description, String portletId,
 			UnicodeProperties typeSettingsUnicodeProperties, boolean hidden,
 			ServiceContext serviceContext)
 		throws PortalException {
@@ -58,6 +59,7 @@ public class RepositoryLocalServiceImpl extends RepositoryLocalServiceBaseImpl {
 		Repository repository = repositoryPersistence.create(repositoryId);
 
 		repository.setUuid(serviceContext.getUuid());
+		repository.setExternalReferenceCode(externalReferenceCode);
 		repository.setGroupId(groupId);
 		repository.setCompanyId(user.getCompanyId());
 		repository.setUserId(user.getUserId());

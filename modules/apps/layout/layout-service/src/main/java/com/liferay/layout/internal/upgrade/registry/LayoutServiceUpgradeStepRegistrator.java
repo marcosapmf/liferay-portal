@@ -10,8 +10,8 @@ import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
+import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.layout.internal.upgrade.v1_0_0.LayoutClassedModelUsageUpgradeProcess;
-import com.liferay.layout.internal.upgrade.v1_0_0.LayoutPermissionsUpgradeProcess;
 import com.liferay.layout.internal.upgrade.v1_0_0.LayoutUpgradeProcess;
 import com.liferay.layout.internal.upgrade.v1_1_0.UpgradeCompanyId;
 import com.liferay.layout.internal.upgrade.v1_2_1.LayoutAssetUpgradeProcess;
@@ -19,19 +19,23 @@ import com.liferay.layout.internal.upgrade.v1_2_2.LayoutSEOUpgradeProcess;
 import com.liferay.layout.internal.upgrade.v1_2_3.LayoutRevisionUpgradeProcess;
 import com.liferay.layout.internal.upgrade.v1_3_0.util.LayoutLocalizationTable;
 import com.liferay.layout.internal.upgrade.v1_3_1.LayoutLocalizationUpgradeProcess;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutBranchLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutRevisionLocalService;
 import com.liferay.portal.kernel.service.LayoutSetBranchLocalService;
+import com.liferay.portal.kernel.service.PortalPreferencesLocalService;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -46,8 +50,7 @@ public class LayoutServiceUpgradeStepRegistrator
 	public void register(Registry registry) {
 		registry.register(
 			"0.0.1", "1.0.0",
-			new LayoutClassedModelUsageUpgradeProcess(_assetEntryLocalService),
-			new LayoutPermissionsUpgradeProcess());
+			new LayoutClassedModelUsageUpgradeProcess(_assetEntryLocalService));
 
 		registry.register("1.0.0", "1.0.1", new LayoutUpgradeProcess());
 
@@ -101,6 +104,34 @@ public class LayoutServiceUpgradeStepRegistrator
 			"1.4.2", "1.4.3",
 			new com.liferay.layout.internal.upgrade.v1_4_3.
 				LayoutClassedModelUsageUpgradeProcess(_classNameLocalService));
+
+		registry.register(
+			"1.4.3", "1.4.4",
+			new com.liferay.layout.internal.upgrade.v1_4_4.
+				LayoutPrivateLayoutsUpgradeProcess(
+					_companyLocalService, _configurationAdmin,
+					_portalPreferencesLocalService));
+
+		registry.register(
+			"1.4.4", "1.5.0",
+			UpgradeProcessFactory.runSQL(
+				"update Layout set type_ = 'content' where type_ = " +
+					"'collection'"));
+
+		registry.register(
+			"1.5.0", "1.5.1",
+			UpgradeProcessFactory.runSQL(
+				StringBundler.concat(
+					"delete FROM LayoutClassedModelUsage WHERE containerType ",
+					"= ",
+					_classNameLocalService.getClassNameId(
+						FragmentEntryLink.class),
+					" and not exists (select 1 from FragmentEntryLink where ",
+					"FragmentEntryLink.ctCollectionId = ",
+					"LayoutClassedModelUsage.ctCollectionId and ",
+					"FragmentEntryLink.fragmentEntryLinkId = ",
+					"CAST_LONG(LayoutClassedModelUsage.containerKey) and ",
+					"FragmentEntryLink.plid = LayoutClassedModelUsage.plid)")));
 	}
 
 	@Reference
@@ -114,6 +145,12 @@ public class LayoutServiceUpgradeStepRegistrator
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
+
+	@Reference
+	private ConfigurationAdmin _configurationAdmin;
 
 	@Reference
 	private CTCollectionLocalService _ctCollectionLocalService;
@@ -151,5 +188,8 @@ public class LayoutServiceUpgradeStepRegistrator
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private PortalPreferencesLocalService _portalPreferencesLocalService;
 
 }

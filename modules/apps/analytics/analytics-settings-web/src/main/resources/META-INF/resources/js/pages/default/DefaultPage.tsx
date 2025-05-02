@@ -5,13 +5,14 @@
 
 import ClayLayout from '@clayui/layout';
 import {ClayVerticalNav} from '@clayui/nav';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
 import {IPages} from '../../utils/types';
 import AttributesPage from './AttributesPage';
 import ConnectPage from './ConnectPage';
 import PeoplePage from './PeoplePage';
 import PropertiesPage from './PropertiesPage';
+import RecommendationsPage from './RecommendationsPage';
 
 export interface IGenericPageProps {
 	title: string;
@@ -21,6 +22,7 @@ enum EPages {
 	Attributes = 'ATTRIBUTES',
 	People = 'PEOPLE',
 	Properties = 'PROPERTIES',
+	Recommendations = 'RECOMMENDATIONS',
 	WorkspaceConnection = 'WORKSPACE_CONNECTION',
 }
 
@@ -47,19 +49,40 @@ const PAGES: IPages<IGenericPageProps, EPages>[] = [
 	},
 ];
 
+if (Liferay.FeatureFlags['LPD-20640']) {
+	PAGES.push({
+		Component: RecommendationsPage,
+		key: EPages.Recommendations,
+		title: Liferay.Language.get('recommendations'),
+	});
+}
+
 const DefaultPage: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
-	const [activePage, setactivePage] = useState(EPages.WorkspaceConnection);
+	const [activePage, setActivePage] = useState(EPages.WorkspaceConnection);
+
+	// Set current page based on URL currentPage param
+
+	useEffect(() => {
+		const queryString = window.location.search;
+		const urlParams = new URLSearchParams(queryString);
+		const currentPage = urlParams.get('currentPage');
+
+		if (currentPage) {
+			setActivePage(currentPage as EPages);
+		}
+	}, []);
 
 	return (
 		<ClayLayout.ContainerFluid>
 			<ClayLayout.Row>
 				<ClayLayout.Col size={3}>
 					<ClayVerticalNav
+						aria-label=""
 						items={PAGES.map(({key, title: label}) => {
 							return {
 								active: activePage === key,
 								label,
-								onClick: () => setactivePage(key),
+								onClick: () => setActivePage(key),
 							};
 						})}
 						large={false}

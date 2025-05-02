@@ -1,22 +1,23 @@
 {
 	"dependencies": {
-		"@clayui/alert": "3.111.0",
-		"@clayui/button": "3.116.0",
-		"@clayui/drop-down": "3.118.0",
-		"@clayui/form": "3.116.0",
-		"@clayui/icon": "3.111.0",
-		"@clayui/layout": "3.111.0",
-		"@clayui/loading-indicator": "3.111.0",
-		"@clayui/modal": "3.117.0",
+		"@clayui/alert": "3.129.1",
+		"@clayui/button": "3.128.0",
+		"@clayui/drop-down": "3.135.0",
+		"@clayui/form": "3.132.0",
+		"@clayui/icon": "3.128.0",
+		"@clayui/layout": "3.128.0",
+		"@clayui/loading-indicator": "3.128.0",
+		"@clayui/modal": "3.134.0",
 		"@liferay/frontend-js-react-web": "*",
 		"asset-taglib": "*",
 		"classnames": "2.3.1",
 		"clipboard": "2.0.4",
+		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
 		"item-selector-taglib": "*",
 		"prop-types": "15.7.2",
-		"react": "16.12.0",
-		"react-dom": "16.12.0",
+		"react": "18.2.0",
+		"react-dom": "18.2.0",
 		"uuid": "9.0.0"
 	},
 	"main": "js/index.js",
@@ -28,5 +29,5 @@
 		"format": "node-scripts format",
 		"test": "node-scripts test"
 	},
-	"version": "6.0.189"
+	"version": "6.0.203"
 }

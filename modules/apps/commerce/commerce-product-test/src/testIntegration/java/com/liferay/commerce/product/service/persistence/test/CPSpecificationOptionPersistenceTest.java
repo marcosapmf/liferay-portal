@@ -143,9 +143,6 @@ public class CPSpecificationOptionPersistenceTest {
 		newCPSpecificationOption.setCPOptionCategoryId(
 			RandomTestUtil.nextLong());
 
-		newCPSpecificationOption.setListTypeDefinitionId(
-			RandomTestUtil.nextLong());
-
 		newCPSpecificationOption.setTitle(RandomTestUtil.randomString());
 
 		newCPSpecificationOption.setDescription(RandomTestUtil.randomString());
@@ -155,6 +152,8 @@ public class CPSpecificationOptionPersistenceTest {
 		newCPSpecificationOption.setKey(RandomTestUtil.randomString());
 
 		newCPSpecificationOption.setPriority(RandomTestUtil.nextDouble());
+
+		newCPSpecificationOption.setVisible(RandomTestUtil.randomBoolean());
 
 		newCPSpecificationOption.setLastPublishDate(RandomTestUtil.nextDate());
 
@@ -201,9 +200,6 @@ public class CPSpecificationOptionPersistenceTest {
 			existingCPSpecificationOption.getCPOptionCategoryId(),
 			newCPSpecificationOption.getCPOptionCategoryId());
 		Assert.assertEquals(
-			existingCPSpecificationOption.getListTypeDefinitionId(),
-			newCPSpecificationOption.getListTypeDefinitionId());
-		Assert.assertEquals(
 			existingCPSpecificationOption.getTitle(),
 			newCPSpecificationOption.getTitle());
 		Assert.assertEquals(
@@ -218,6 +214,9 @@ public class CPSpecificationOptionPersistenceTest {
 		AssertUtils.assertEquals(
 			existingCPSpecificationOption.getPriority(),
 			newCPSpecificationOption.getPriority());
+		Assert.assertEquals(
+			existingCPSpecificationOption.isVisible(),
+			newCPSpecificationOption.isVisible());
 		Assert.assertEquals(
 			Time.getShortTimestamp(
 				existingCPSpecificationOption.getLastPublishDate()),
@@ -284,13 +283,6 @@ public class CPSpecificationOptionPersistenceTest {
 	}
 
 	@Test
-	public void testCountByListTypeDefinitionId() throws Exception {
-		_persistence.countByListTypeDefinitionId(RandomTestUtil.nextLong());
-
-		_persistence.countByListTypeDefinitionId(0L);
-	}
-
-	@Test
 	public void testCountByC_K() throws Exception {
 		_persistence.countByC_K(RandomTestUtil.nextLong(), "");
 
@@ -340,9 +332,9 @@ public class CPSpecificationOptionPersistenceTest {
 			true, "uuid", true, "externalReferenceCode", true,
 			"CPSpecificationOptionId", true, "companyId", true, "userId", true,
 			"userName", true, "createDate", true, "modifiedDate", true,
-			"CPOptionCategoryId", true, "listTypeDefinitionId", true, "title",
-			true, "description", true, "facetable", true, "key", true,
-			"priority", true, "lastPublishDate", true);
+			"CPOptionCategoryId", true, "title", true, "description", true,
+			"facetable", true, "key", true, "priority", true, "visible", true,
+			"lastPublishDate", true);
 	}
 
 	@Test
@@ -689,9 +681,6 @@ public class CPSpecificationOptionPersistenceTest {
 
 		cpSpecificationOption.setCPOptionCategoryId(RandomTestUtil.nextLong());
 
-		cpSpecificationOption.setListTypeDefinitionId(
-			RandomTestUtil.nextLong());
-
 		cpSpecificationOption.setTitle(RandomTestUtil.randomString());
 
 		cpSpecificationOption.setDescription(RandomTestUtil.randomString());
@@ -701,6 +690,8 @@ public class CPSpecificationOptionPersistenceTest {
 		cpSpecificationOption.setKey(RandomTestUtil.randomString());
 
 		cpSpecificationOption.setPriority(RandomTestUtil.nextDouble());
+
+		cpSpecificationOption.setVisible(RandomTestUtil.randomBoolean());
 
 		cpSpecificationOption.setLastPublishDate(RandomTestUtil.nextDate());
 

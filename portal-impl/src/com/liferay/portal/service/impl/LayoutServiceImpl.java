@@ -10,6 +10,7 @@ import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfi
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -499,6 +500,22 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	}
 
 	@Override
+	public Layout fetchLayoutByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		Layout layout = layoutLocalService.fetchLayoutByExternalReferenceCode(
+			externalReferenceCode, groupId);
+
+		if (layout != null) {
+			LayoutPermissionUtil.check(
+				getPermissionChecker(), layout, ActionKeys.VIEW);
+		}
+
+		return layout;
+	}
+
+	@Override
 	public long fetchLayoutPlid(
 			String uuid, long groupId, boolean privateLayout)
 		throws PortalException {
@@ -694,7 +711,7 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 			String externalReferenceCode, long groupId)
 		throws PortalException {
 
-		Layout layout = layoutLocalService.fetchLayoutByExternalReferenceCode(
+		Layout layout = layoutLocalService.getLayoutByExternalReferenceCode(
 			externalReferenceCode, groupId);
 
 		LayoutPermissionUtil.check(
@@ -1659,15 +1676,15 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	}
 
 	protected List<Layout> filterLayouts(List<Layout> layouts) {
-		List<Layout> filteredLayouts = new ArrayList<>();
+		return TransformUtil.transform(
+			layouts,
+			layout -> {
+				if (_hasViewPermission(layout)) {
+					return layout;
+				}
 
-		for (Layout layout : layouts) {
-			if (_hasViewPermission(layout)) {
-				filteredLayouts.add(layout);
-			}
-		}
-
-		return filteredLayouts;
+				return null;
+			});
 	}
 
 	protected List<Layout> filterLayouts(

@@ -65,14 +65,35 @@ export default async function visitProjectTsconfig(
 			continue;
 		}
 
-		const projectEntryPointPath = path.join(
+		const projectMainEntryPointPath = path.join(
 			rootDir,
-			...`${projectEntryPoint.dir}/${projectEntryPoint.path}`.split('/')
+			...`${projectEntryPoint.dir}/${projectEntryPoint.path.main}`.split(
+				'/'
+			)
 		);
 
+		const projectSubmodulesEntryPointsPaths = Object.entries(
+			projectEntryPoint.path.submodules ?? {}
+		).reduce((map, [entryPointName, entryPointPath]) => {
+			map[entryPointName] = path.join(
+				rootDir,
+				...`${projectEntryPoint.dir}/${entryPointPath}`.split('/')
+			);
+
+			return map;
+		}, {});
+
 		paths[dependency] = [
-			path.posix.relative(srcPath, projectEntryPointPath),
+			path.posix.relative(srcPath, projectMainEntryPointPath),
 		];
+
+		Object.entries(projectSubmodulesEntryPointsPaths).forEach(
+			([entryPointName, entryPointPath]) => {
+				paths[`${dependency}/${entryPointName}`] = [
+					path.posix.relative(srcPath, entryPointPath),
+				];
+			}
+		);
 
 		const projectPath = path.posix.relative(
 			srcPath,

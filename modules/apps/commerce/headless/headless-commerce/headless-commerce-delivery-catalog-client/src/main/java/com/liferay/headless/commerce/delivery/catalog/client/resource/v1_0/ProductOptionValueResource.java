@@ -42,7 +42,8 @@ public interface ProductOptionValueResource {
 				String channelExternalReferenceCode,
 				String productExternalReferenceCode,
 				String productOptionExternalReferenceCode, Long accountId,
-				Long productOptionValueId, Long skuId, Pagination pagination)
+				String currencyCode, Long productOptionValueId, Long skuId,
+				Pagination pagination)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
@@ -50,7 +51,22 @@ public interface ProductOptionValueResource {
 				String channelExternalReferenceCode,
 				String productExternalReferenceCode,
 				String productOptionExternalReferenceCode, Long accountId,
-				Long productOptionValueId, Long skuId, Pagination pagination)
+				String currencyCode, Long productOptionValueId, Long skuId,
+				Pagination pagination)
+		throws Exception;
+
+	public Page<ProductOptionValue>
+			getChannelProductProductOptionProductOptionValuesPage(
+				Long channelId, Long productId, Long productOptionId,
+				Long accountId, String currencyCode, Long productOptionValueId,
+				Long skuId, Pagination pagination)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getChannelProductProductOptionProductOptionValuesPageHttpResponse(
+				Long channelId, Long productId, Long productOptionId,
+				Long accountId, String currencyCode, Long productOptionValueId,
+				Long skuId, Pagination pagination)
 		throws Exception;
 
 	public Page<ProductOptionValue>
@@ -58,8 +74,8 @@ public interface ProductOptionValueResource {
 				String channelExternalReferenceCode,
 				String productExternalReferenceCode,
 				String productOptionExternalReferenceCode, Long accountId,
-				Long productOptionValueId, Long skuId, Pagination pagination,
-				SkuOption[] skuOptions)
+				String currencyCode, Long productOptionValueId, Long skuId,
+				Pagination pagination, SkuOption[] skuOptions)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
@@ -67,36 +83,22 @@ public interface ProductOptionValueResource {
 				String channelExternalReferenceCode,
 				String productExternalReferenceCode,
 				String productOptionExternalReferenceCode, Long accountId,
-				Long productOptionValueId, Long skuId, Pagination pagination,
-				SkuOption[] skuOptions)
-		throws Exception;
-
-	public Page<ProductOptionValue>
-			getChannelProductProductOptionProductOptionValuesPage(
-				Long channelId, Long productId, Long productOptionId,
-				Long accountId, Long productOptionValueId, Long skuId,
-				Pagination pagination)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			getChannelProductProductOptionProductOptionValuesPageHttpResponse(
-				Long channelId, Long productId, Long productOptionId,
-				Long accountId, Long productOptionValueId, Long skuId,
-				Pagination pagination)
+				String currencyCode, Long productOptionValueId, Long skuId,
+				Pagination pagination, SkuOption[] skuOptions)
 		throws Exception;
 
 	public Page<ProductOptionValue>
 			postChannelProductProductOptionProductOptionValuesPage(
 				Long channelId, Long productId, Long productOptionId,
-				Long accountId, Long productOptionValueId, Long skuId,
-				Pagination pagination, SkuOption[] skuOptions)
+				Long accountId, String currencyCode, Long productOptionValueId,
+				Long skuId, Pagination pagination, SkuOption[] skuOptions)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			postChannelProductProductOptionProductOptionValuesPageHttpResponse(
 				Long channelId, Long productId, Long productOptionId,
-				Long accountId, Long productOptionValueId, Long skuId,
-				Pagination pagination, SkuOption[] skuOptions)
+				Long accountId, String currencyCode, Long productOptionValueId,
+				Long skuId, Pagination pagination, SkuOption[] skuOptions)
 		throws Exception;
 
 	public static class Builder {
@@ -197,8 +199,8 @@ public interface ProductOptionValueResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -213,14 +215,14 @@ public interface ProductOptionValueResource {
 					String channelExternalReferenceCode,
 					String productExternalReferenceCode,
 					String productOptionExternalReferenceCode, Long accountId,
-					Long productOptionValueId, Long skuId,
+					String currencyCode, Long productOptionValueId, Long skuId,
 					Pagination pagination)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionByExternalReferenceCodeProductOptionExternalReferenceCodeProductOptionValuesPageHttpResponse(
 					channelExternalReferenceCode, productExternalReferenceCode,
-					productOptionExternalReferenceCode, accountId,
+					productOptionExternalReferenceCode, accountId, currencyCode,
 					productOptionValueId, skuId, pagination);
 
 			String content = httpResponse.getContent();
@@ -287,7 +289,7 @@ public interface ProductOptionValueResource {
 					String channelExternalReferenceCode,
 					String productExternalReferenceCode,
 					String productOptionExternalReferenceCode, Long accountId,
-					Long productOptionValueId, Long skuId,
+					String currencyCode, Long productOptionValueId, Long skuId,
 					Pagination pagination)
 			throws Exception {
 
@@ -314,6 +316,11 @@ public interface ProductOptionValueResource {
 
 			if (accountId != null) {
 				httpInvoker.parameter("accountId", String.valueOf(accountId));
+			}
+
+			if (currencyCode != null) {
+				httpInvoker.parameter(
+					"currencyCode", String.valueOf(currencyCode));
 			}
 
 			if (productOptionValueId != null) {
@@ -346,8 +353,154 @@ public interface ProductOptionValueResource {
 				"productOptionExternalReferenceCode",
 				productOptionExternalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public Page<ProductOptionValue>
+				getChannelProductProductOptionProductOptionValuesPage(
+					Long channelId, Long productId, Long productOptionId,
+					Long accountId, String currencyCode,
+					Long productOptionValueId, Long skuId,
+					Pagination pagination)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				getChannelProductProductOptionProductOptionValuesPageHttpResponse(
+					channelId, productId, productOptionId, accountId,
+					currencyCode, productOptionValueId, skuId, pagination);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return Page.of(content, ProductOptionValueSerDes::toDTO);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				getChannelProductProductOptionProductOptionValuesPageHttpResponse(
+					Long channelId, Long productId, Long productOptionId,
+					Long accountId, String currencyCode,
+					Long productOptionValueId, Long skuId,
+					Pagination pagination)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			if (accountId != null) {
+				httpInvoker.parameter("accountId", String.valueOf(accountId));
+			}
+
+			if (currencyCode != null) {
+				httpInvoker.parameter(
+					"currencyCode", String.valueOf(currencyCode));
+			}
+
+			if (productOptionValueId != null) {
+				httpInvoker.parameter(
+					"productOptionValueId",
+					String.valueOf(productOptionValueId));
+			}
+
+			if (skuId != null) {
+				httpInvoker.parameter("skuId", String.valueOf(skuId));
+			}
+
+			if (pagination != null) {
+				httpInvoker.parameter(
+					"page", String.valueOf(pagination.getPage()));
+				httpInvoker.parameter(
+					"pageSize", String.valueOf(pagination.getPageSize()));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-commerce-delivery-catalog/v1.0/channels/{channelId}/products/{productId}/product-options/{productOptionId}/product-option-values");
+
+			httpInvoker.path("channelId", channelId);
+			httpInvoker.path("productId", productId);
+			httpInvoker.path("productOptionId", productOptionId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -357,14 +510,14 @@ public interface ProductOptionValueResource {
 					String channelExternalReferenceCode,
 					String productExternalReferenceCode,
 					String productOptionExternalReferenceCode, Long accountId,
-					Long productOptionValueId, Long skuId,
+					String currencyCode, Long productOptionValueId, Long skuId,
 					Pagination pagination, SkuOption[] skuOptions)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				postChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionByExternalReferenceCodeProductOptionExternalReferenceCodeProductOptionValuesPageHttpResponse(
 					channelExternalReferenceCode, productExternalReferenceCode,
-					productOptionExternalReferenceCode, accountId,
+					productOptionExternalReferenceCode, accountId, currencyCode,
 					productOptionValueId, skuId, pagination, skuOptions);
 
 			String content = httpResponse.getContent();
@@ -431,6 +584,163 @@ public interface ProductOptionValueResource {
 					String channelExternalReferenceCode,
 					String productExternalReferenceCode,
 					String productOptionExternalReferenceCode, Long accountId,
+					String currencyCode, Long productOptionValueId, Long skuId,
+					Pagination pagination, SkuOption[] skuOptions)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			List<String> values = new ArrayList<>();
+
+			for (SkuOption skuOptionValue : skuOptions) {
+				values.add(String.valueOf(skuOptionValue));
+			}
+
+			httpInvoker.body(values.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (accountId != null) {
+				httpInvoker.parameter("accountId", String.valueOf(accountId));
+			}
+
+			if (currencyCode != null) {
+				httpInvoker.parameter(
+					"currencyCode", String.valueOf(currencyCode));
+			}
+
+			if (productOptionValueId != null) {
+				httpInvoker.parameter(
+					"productOptionValueId",
+					String.valueOf(productOptionValueId));
+			}
+
+			if (skuId != null) {
+				httpInvoker.parameter("skuId", String.valueOf(skuId));
+			}
+
+			if (pagination != null) {
+				httpInvoker.parameter(
+					"page", String.valueOf(pagination.getPage()));
+				httpInvoker.parameter(
+					"pageSize", String.valueOf(pagination.getPageSize()));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-commerce-delivery-catalog/v1.0/channels/by-externalReferenceCode/{channelExternalReferenceCode}/products/by-externalReferenceCode/{productExternalReferenceCode}/product-options/by-externalReferenceCode/{productOptionExternalReferenceCode}/product-option-values");
+
+			httpInvoker.path(
+				"channelExternalReferenceCode", channelExternalReferenceCode);
+			httpInvoker.path(
+				"productExternalReferenceCode", productExternalReferenceCode);
+			httpInvoker.path(
+				"productOptionExternalReferenceCode",
+				productOptionExternalReferenceCode);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public Page<ProductOptionValue>
+				postChannelProductProductOptionProductOptionValuesPage(
+					Long channelId, Long productId, Long productOptionId,
+					Long accountId, String currencyCode,
+					Long productOptionValueId, Long skuId,
+					Pagination pagination, SkuOption[] skuOptions)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postChannelProductProductOptionProductOptionValuesPageHttpResponse(
+					channelId, productId, productOptionId, accountId,
+					currencyCode, productOptionValueId, skuId, pagination,
+					skuOptions);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return Page.of(content, ProductOptionValueSerDes::toDTO);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postChannelProductProductOptionProductOptionValuesPageHttpResponse(
+					Long channelId, Long productId, Long productOptionId,
+					Long accountId, String currencyCode,
 					Long productOptionValueId, Long skuId,
 					Pagination pagination, SkuOption[] skuOptions)
 			throws Exception {
@@ -468,143 +778,9 @@ public interface ProductOptionValueResource {
 				httpInvoker.parameter("accountId", String.valueOf(accountId));
 			}
 
-			if (productOptionValueId != null) {
+			if (currencyCode != null) {
 				httpInvoker.parameter(
-					"productOptionValueId",
-					String.valueOf(productOptionValueId));
-			}
-
-			if (skuId != null) {
-				httpInvoker.parameter("skuId", String.valueOf(skuId));
-			}
-
-			if (pagination != null) {
-				httpInvoker.parameter(
-					"page", String.valueOf(pagination.getPage()));
-				httpInvoker.parameter(
-					"pageSize", String.valueOf(pagination.getPageSize()));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-commerce-delivery-catalog/v1.0/channels/by-externalReferenceCode/{channelExternalReferenceCode}/products/by-externalReferenceCode/{productExternalReferenceCode}/product-options/by-externalReferenceCode/{productOptionExternalReferenceCode}/product-option-values");
-
-			httpInvoker.path(
-				"channelExternalReferenceCode", channelExternalReferenceCode);
-			httpInvoker.path(
-				"productExternalReferenceCode", productExternalReferenceCode);
-			httpInvoker.path(
-				"productOptionExternalReferenceCode",
-				productOptionExternalReferenceCode);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Page<ProductOptionValue>
-				getChannelProductProductOptionProductOptionValuesPage(
-					Long channelId, Long productId, Long productOptionId,
-					Long accountId, Long productOptionValueId, Long skuId,
-					Pagination pagination)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				getChannelProductProductOptionProductOptionValuesPageHttpResponse(
-					channelId, productId, productOptionId, accountId,
-					productOptionValueId, skuId, pagination);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return Page.of(content, ProductOptionValueSerDes::toDTO);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				getChannelProductProductOptionProductOptionValuesPageHttpResponse(
-					Long channelId, Long productId, Long productOptionId,
-					Long accountId, Long productOptionValueId, Long skuId,
-					Pagination pagination)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			if (accountId != null) {
-				httpInvoker.parameter("accountId", String.valueOf(accountId));
+					"currencyCode", String.valueOf(currencyCode));
 			}
 
 			if (productOptionValueId != null) {
@@ -633,151 +809,10 @@ public interface ProductOptionValueResource {
 			httpInvoker.path("productId", productId);
 			httpInvoker.path("productOptionId", productOptionId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Page<ProductOptionValue>
-				postChannelProductProductOptionProductOptionValuesPage(
-					Long channelId, Long productId, Long productOptionId,
-					Long accountId, Long productOptionValueId, Long skuId,
-					Pagination pagination, SkuOption[] skuOptions)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				postChannelProductProductOptionProductOptionValuesPageHttpResponse(
-					channelId, productId, productOptionId, accountId,
-					productOptionValueId, skuId, pagination, skuOptions);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return Page.of(content, ProductOptionValueSerDes::toDTO);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				postChannelProductProductOptionProductOptionValuesPageHttpResponse(
-					Long channelId, Long productId, Long productOptionId,
-					Long accountId, Long productOptionValueId, Long skuId,
-					Pagination pagination, SkuOption[] skuOptions)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			List<String> values = new ArrayList<>();
-
-			for (SkuOption skuOptionValue : skuOptions) {
-				values.add(String.valueOf(skuOptionValue));
-			}
-
-			httpInvoker.body(values.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
-
-			if (accountId != null) {
-				httpInvoker.parameter("accountId", String.valueOf(accountId));
-			}
-
-			if (productOptionValueId != null) {
-				httpInvoker.parameter(
-					"productOptionValueId",
-					String.valueOf(productOptionValueId));
-			}
-
-			if (skuId != null) {
-				httpInvoker.parameter("skuId", String.valueOf(skuId));
-			}
-
-			if (pagination != null) {
-				httpInvoker.parameter(
-					"page", String.valueOf(pagination.getPage()));
-				httpInvoker.parameter(
-					"pageSize", String.valueOf(pagination.getPageSize()));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-commerce-delivery-catalog/v1.0/channels/{channelId}/products/{productId}/product-options/{productOptionId}/product-option-values");
-
-			httpInvoker.path("channelId", channelId);
-			httpInvoker.path("productId", productId);
-			httpInvoker.path("productOptionId", productOptionId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}

@@ -6,8 +6,6 @@
 package com.liferay.translation.web.internal.portlet.action;
 
 import com.liferay.info.exception.NoSuchInfoItemException;
-import com.liferay.info.field.InfoField;
-import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.form.InfoForm;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemFieldValues;
@@ -27,7 +25,6 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -153,11 +150,6 @@ public class TranslateMVCRenderCommand implements MVCRenderCommand {
 				renderRequest, "targetLanguageId",
 				_getDefaultTargetLanguageId(availableTargetLanguageIds));
 
-			InfoItemFieldValues targetInfoItemFieldValues =
-				_getTargetInfoItemFieldValues(
-					className, classPK, sourceInfoItemFieldValues,
-					targetLanguageId);
-
 			renderRequest.setAttribute(
 				TranslateDisplayContext.class.getName(),
 				new TranslateDisplayContext(
@@ -168,7 +160,10 @@ public class TranslateMVCRenderCommand implements MVCRenderCommand {
 					_portal.getLiferayPortletRequest(renderRequest),
 					_portal.getLiferayPortletResponse(renderResponse), object,
 					segmentsExperienceId, sourceInfoItemFieldValues,
-					sourceLanguageId, targetInfoItemFieldValues,
+					sourceLanguageId,
+					_getTargetInfoItemFieldValues(
+						className, classPK, sourceInfoItemFieldValues,
+						targetLanguageId),
 					targetLanguageId, _translationInfoFieldChecker));
 
 			return "/translate.jsp";
@@ -297,40 +292,9 @@ public class TranslateMVCRenderCommand implements MVCRenderCommand {
 			return infoItemFieldValues;
 		}
 
-		InfoItemFieldValues translationEntryInfoItemFieldValues =
-			_translationEntryLocalService.getInfoItemFieldValues(
-				translationEntry.getGroupId(), translationEntry.getClassName(),
-				translationEntry.getClassPK(), translationEntry.getContent());
-
-		return InfoItemFieldValues.builder(
-		).infoItemReference(
-			infoItemFieldValues.getInfoItemReference()
-		).infoFieldValues(
-			TransformUtil.transform(
-				infoItemFieldValues.getInfoFieldValues(),
-				infoFieldValue -> new InfoFieldValue<>(
-					infoFieldValue.getInfoField(),
-					GetterUtil.getObject(
-						_getValue(
-							translationEntryInfoItemFieldValues,
-							infoFieldValue.getInfoField()),
-						infoFieldValue.getValue())))
-		).build();
-	}
-
-	private Object _getValue(
-		InfoItemFieldValues translationEntryInfoItemFieldValues,
-		InfoField infoField) {
-
-		InfoFieldValue<Object> infoFieldValue =
-			translationEntryInfoItemFieldValues.getInfoFieldValue(
-				infoField.getUniqueId());
-
-		if (infoFieldValue != null) {
-			return infoFieldValue.getValue();
-		}
-
-		return null;
+		return _translationEntryLocalService.getInfoItemFieldValues(
+			translationEntry.getGroupId(), translationEntry.getClassName(),
+			translationEntry.getClassPK(), translationEntry.getContent());
 	}
 
 	private boolean _hasTranslatePermission(

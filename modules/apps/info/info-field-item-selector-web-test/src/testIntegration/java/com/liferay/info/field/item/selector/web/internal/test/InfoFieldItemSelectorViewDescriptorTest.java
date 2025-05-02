@@ -7,7 +7,7 @@ package com.liferay.info.field.item.selector.web.internal.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.info.field.InfoField;
-import com.liferay.info.field.item.selector.criterion.InfoFieldItemSelectorCriterion;
+import com.liferay.info.field.item.selector.InfoFieldItemSelectorCriterion;
 import com.liferay.info.form.InfoForm;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFormProvider;
@@ -54,7 +54,6 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -110,7 +109,6 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 					"myRichText", false)));
 	}
 
-	@FeatureFlags("LPD-20213")
 	@Test
 	public void testGetResultRowSplitter() throws Exception {
 		_objectDefinition2 = ObjectDefinitionTestUtil.publishObjectDefinition(
@@ -183,7 +181,7 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 
 		long defaultSegmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				_layout.getPlid());
+				draftLayout.getPlid());
 
 		LayoutStructure layoutStructure = new LayoutStructure();
 
@@ -236,7 +234,6 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 		Assert.assertEquals(1, searchContainer.getTotal());
 	}
 
-	@FeatureFlags("LPD-20213")
 	@Test
 	public void testGetSearchContainerWithRelationship() throws Exception {
 		_objectDefinition2 = ObjectDefinitionTestUtil.publishObjectDefinition(
@@ -259,7 +256,6 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 		Assert.assertEquals(5, searchContainer.getTotal());
 	}
 
-	@FeatureFlags("LPD-20213")
 	@Test
 	public void testRowCheckerWithCheckedInfoFields() throws Exception {
 		MockHttpServletRequest mockHttpServletRequest =
@@ -275,13 +271,15 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 		List<InfoField<?>> allInfoFields = ListUtil.filter(
 			infoForm.getAllInfoFields(), InfoField::isEditable);
 
+		Layout draftLayout = _layout.fetchDraftLayout();
+
 		JSONObject jsonObject = ContentLayoutTestUtil.addFormToLayout(
 			false,
 			String.valueOf(
 				_portal.getClassNameId(_objectDefinition1.getClassName())),
-			"0", _layout.fetchDraftLayout(), _layoutStructureProvider,
+			"0", draftLayout, _layoutStructureProvider,
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				_layout.getPlid()),
+				draftLayout.getPlid()),
 			allInfoFields.toArray(new InfoField<?>[0]));
 
 		mockHttpServletRequest.setParameter(
@@ -300,7 +298,6 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 		}
 	}
 
-	@FeatureFlags("LPD-20213")
 	@Test
 	public void testRowCheckerWithoutCheckedInfoFields() throws Exception {
 		MockHttpServletRequest mockHttpServletRequest =
@@ -353,11 +350,14 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 
 		mockHttpServletRequest.setParameter(
 			"itemType", _objectDefinition1.getClassName());
+
+		Layout draftLayout = _layout.fetchDraftLayout();
+
 		mockHttpServletRequest.setParameter(
 			"segmentsExperienceId",
 			String.valueOf(
 				_segmentsExperienceLocalService.
-					fetchDefaultSegmentsExperienceId(_layout.getPlid())));
+					fetchDefaultSegmentsExperienceId(draftLayout.getPlid())));
 
 		_infoFieldProviderItemSelectorView.renderHTML(
 			mockHttpServletRequest, new MockHttpServletResponse(),

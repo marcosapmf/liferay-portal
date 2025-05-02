@@ -62,7 +62,7 @@ definition {
 		}
 
 		task ("Add categories from Audience and Stage Vocabularies") {
-			Panel.expandPanel(panel = "Categorization");
+			Blogs.expandPanel(panel = "Categorization");
 
 			Click(
 				key_fieldName = "Audience",
@@ -385,6 +385,10 @@ definition {
 	@description = ""
 	@priority = 4
 	test CheckBlogFilterByCategoryAtAssetPublisher {
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
 		property portal.acceptance = "true";
 
 		task ("Add a global category") {
@@ -666,7 +670,7 @@ definition {
 		}
 
 		task ("Add categories from Audience and Stage Vocabularies") {
-			Panel.expandPanel(panel = "Categorization");
+			Blogs.expandPanel(panel = "Categorization");
 
 			Click(
 				key_fieldName = "Audience",
@@ -698,7 +702,7 @@ definition {
 		}
 
 		task ("Add categories from Audience and Stage Vocabularies") {
-			Panel.expandPanel(panel = "Categorization");
+			Blogs.expandPanel(panel = "Categorization");
 
 			Click(
 				key_fieldName = "Audience",
@@ -743,7 +747,7 @@ definition {
 		}
 
 		task ("Click to see categorization, assert if Audience and Stage are visible") {
-			Panel.expandPanel(panel = "Categorization");
+			Blogs.expandPanel(panel = "Categorization");
 
 			AssertElementPresent(
 				key_categoryName = "Audience",

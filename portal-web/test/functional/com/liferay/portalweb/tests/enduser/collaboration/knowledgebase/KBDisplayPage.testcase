@@ -48,8 +48,7 @@ definition {
 
 		PageEditor.publish();
 
-		DisplayPageTemplate.selectDisplayPageTemplateForAsset(
-			assetType = "Knowledge Base",
+		KBArticle.selectDisplayPageTemplate(
 			entryTitle = "Knowledge Base Article Title",
 			groupName = "Test Site Name",
 			pageName = "Display Page Name",
@@ -63,7 +62,7 @@ definition {
 
 		DisplayPageTemplatesAdmin.deleteDisplayPage(displayPageName = "Display Page Name");
 
-		DisplayPageTemplatesAdmin.viewDisplayPageNotPresent(displayPageName = "Display Page Name");
+		LexiconCard.viewCardNotPresent(card = "Display Page Name");
 	}
 
 	@description = "This test ensures that the Max Nesting settings can be configured in the KB navigation fragment for a display page."
@@ -261,16 +260,14 @@ definition {
 
 		PageEditor.publish();
 
-		DisplayPageTemplate.selectDisplayPageTemplateForAsset(
-			assetType = "Knowledge Base",
+		KBArticle.selectDisplayPageTemplate(
 			entryTitle = "KB Parent Article",
 			groupName = "Guest",
 			pageName = "Display Page Template Name",
 			siteURLKey = "guest");
 
 		for (var kbChildArticleTitle : list "KB Child Article1,KB Child Article2") {
-			DisplayPageTemplate.selectDisplayPageTemplateForAsset(
-				assetType = "Knowledge Base",
+			KBArticle.selectDisplayPageTemplate(
 				entryTitle = "KB Parent Article",
 				groupName = "Guest",
 				kbChildArticleTitle = ${kbChildArticleTitle},

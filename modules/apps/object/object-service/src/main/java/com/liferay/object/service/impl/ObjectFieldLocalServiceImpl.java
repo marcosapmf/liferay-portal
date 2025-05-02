@@ -43,6 +43,7 @@ import com.liferay.object.model.ObjectEntryTable;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionLocalizationTable;
 import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionLocalizationTableFactory;
 import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTable;
 import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTableUtil;
@@ -73,6 +74,7 @@ import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.jdbc.CurrentConnection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -341,12 +343,6 @@ public class ObjectFieldLocalServiceImpl
 	}
 
 	@Override
-	public ObjectField fetchObjectField(long objectFieldId) {
-		return _getObjectField(
-			objectFieldPersistence.fetchByPrimaryKey(objectFieldId));
-	}
-
-	@Override
 	public ObjectField fetchObjectField(long objectDefinitionId, String name) {
 		return objectFieldPersistence.fetchByODI_N(objectDefinitionId, name);
 	}
@@ -372,33 +368,33 @@ public class ObjectFieldLocalServiceImpl
 			List<ObjectField> objectFields)
 		throws PortalException {
 
-		List<ObjectField> activeObjectFields = new ArrayList<>();
+		return TransformUtil.transform(
+			objectFields,
+			objectField -> {
+				long objectFieldId = objectField.getObjectFieldId();
 
-		for (ObjectField objectField : objectFields) {
-			objectField.setObjectFieldSettings(
-				_objectFieldSettingLocalService.
-					getObjectFieldObjectFieldSettings(
-						objectField.getObjectFieldId()));
+				objectField.setObjectFieldSettings(
+					_objectFieldSettingLocalService.
+						getObjectFieldObjectFieldSettings(objectFieldId));
 
-			if (Validator.isNotNull(objectField.getRelationshipType())) {
+				if (Validator.isNull(objectField.getRelationshipType())) {
+					return objectField;
+				}
+
 				ObjectRelationship objectRelationship =
 					_objectRelationshipPersistence.fetchByObjectFieldId2(
-						objectField.getObjectFieldId());
+						objectFieldId);
 
 				ObjectDefinition objectDefinition =
 					_objectDefinitionPersistence.findByPrimaryKey(
 						objectRelationship.getObjectDefinitionId1());
 
 				if (objectDefinition.isActive()) {
-					activeObjectFields.add(objectField);
+					return objectField;
 				}
-			}
-			else {
-				activeObjectFields.add(objectField);
-			}
-		}
 
-		return activeObjectFields;
+				return null;
+			});
 	}
 
 	@Override
@@ -424,9 +420,6 @@ public class ObjectFieldLocalServiceImpl
 			}
 
 			if (Objects.equals(
-					objectField.getBusinessType(),
-					ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT) ||
-				Objects.equals(
 					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT)) {
 
@@ -459,24 +452,14 @@ public class ObjectFieldLocalServiceImpl
 
 	@Override
 	public List<ObjectField> getLocalizedObjectFields(long objectDefinitionId) {
-		return _getObjectFields(
-			objectFieldPersistence.findByODI_L(objectDefinitionId, true));
-	}
-
-	@Override
-	public ObjectField getObjectField(long objectFieldId)
-		throws PortalException {
-
-		return _getObjectField(
-			objectFieldPersistence.findByPrimaryKey(objectFieldId));
+		return objectFieldPersistence.findByODI_L(objectDefinitionId, true);
 	}
 
 	@Override
 	public ObjectField getObjectField(long objectDefinitionId, String name)
 		throws PortalException {
 
-		return _getObjectField(
-			objectFieldPersistence.findByODI_N(objectDefinitionId, name));
+		return objectFieldPersistence.findByODI_N(objectDefinitionId, name);
 	}
 
 	@Override
@@ -494,17 +477,15 @@ public class ObjectFieldLocalServiceImpl
 
 	@Override
 	public List<ObjectField> getObjectFields(long objectDefinitionId) {
-		return _getObjectFields(
-			objectFieldPersistence.findByObjectDefinitionId(
-				objectDefinitionId));
+		return objectFieldPersistence.findByObjectDefinitionId(
+			objectDefinitionId);
 	}
 
 	@Override
 	public List<ObjectField> getObjectFields(
 		long objectDefinitionId, boolean system) {
 
-		return _getObjectFields(
-			objectFieldPersistence.findByODI_S(objectDefinitionId, system));
+		return objectFieldPersistence.findByODI_S(objectDefinitionId, system);
 	}
 
 	@Override
@@ -512,27 +493,24 @@ public class ObjectFieldLocalServiceImpl
 		long objectDefinitionId, int start, int end,
 		OrderByComparator<ObjectField> orderByComparator) {
 
-		return _getObjectFields(
-			objectFieldPersistence.findByObjectDefinitionId(
-				objectDefinitionId, start, end, orderByComparator));
+		return objectFieldPersistence.findByObjectDefinitionId(
+			objectDefinitionId, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<ObjectField> getObjectFields(
 		long objectDefinitionId, String dbTableName) {
 
-		return _getObjectFields(
-			objectFieldPersistence.findByODI_DTN(
-				objectDefinitionId, dbTableName));
+		return objectFieldPersistence.findByODI_DTN(
+			objectDefinitionId, dbTableName);
 	}
 
 	@Override
 	public List<ObjectField> getObjectFieldsByBusinessType(
 		long objectDefinitionId, String businessType) {
 
-		return _getObjectFields(
-			objectFieldPersistence.findByODI_BT(
-				objectDefinitionId, businessType));
+		return objectFieldPersistence.findByODI_BT(
+			objectDefinitionId, businessType);
 	}
 
 	@Override
@@ -552,6 +530,23 @@ public class ObjectFieldLocalServiceImpl
 
 		return objectFieldPersistence.countByListTypeDefinitionId(
 			listTypeDefinitionId);
+	}
+
+	@Override
+	public Map<Long, List<ObjectField>> getObjectFieldsMap(long companyId) {
+		Map<Long, List<ObjectField>> objectFieldsMap = new HashMap<>();
+
+		for (ObjectField objectField :
+				objectFieldPersistence.findByCompanyId(companyId)) {
+
+			List<ObjectField> objectFields = objectFieldsMap.computeIfAbsent(
+				objectField.getObjectDefinitionId(),
+				objectDefinitionId -> new ArrayList<>());
+
+			objectFields.add(objectField);
+		}
+
+		return objectFieldsMap;
 	}
 
 	@Override
@@ -839,7 +834,6 @@ public class ObjectFieldLocalServiceImpl
 		_validateIndexed(
 			businessType, dbType, indexed, indexedAsKeyword, indexedLanguageId);
 		_validateLabel(labelMap, null);
-		_validateLocalized(businessType, localized, objectDefinition, required);
 		_validateName(0, objectDefinition, name, system);
 		validateReadOnlyAndReadOnlyConditionExpression(
 			businessType, readOnly, readOnlyConditionExpression, required);
@@ -852,7 +846,15 @@ public class ObjectFieldLocalServiceImpl
 
 		objectField.setExternalReferenceCode(externalReferenceCode);
 
-		_setBusinessTypeAndDBType(businessType, dbType, objectField);
+		_setBusinessTypeAndDBType(businessType, dbType, objectField, system);
+
+		ObjectFieldBusinessType objectFieldBusinessType =
+			_objectFieldBusinessTypeRegistry.getObjectFieldBusinessType(
+				objectField.getBusinessType());
+
+		_validateLocalized(
+			localized, objectDefinition, objectField, objectFieldBusinessType,
+			required);
 
 		User user = _userLocalService.getUser(userId);
 
@@ -894,7 +896,8 @@ public class ObjectFieldLocalServiceImpl
 		}
 
 		_addOrUpdateObjectFieldSettings(
-			objectDefinition, objectField, null, objectFieldSettings);
+			objectField, objectDefinition, objectFieldBusinessType,
+			objectFieldSettings, null);
 
 		if (!objectDefinition.isApproved()) {
 			return objectField;
@@ -906,7 +909,26 @@ public class ObjectFieldLocalServiceImpl
 				ObjectFieldConstants.BUSINESS_TYPE_FORMULA)) {
 
 			if (localized) {
-				dbTableName = objectDefinition.getLocalizationDBTableName();
+				DynamicObjectDefinitionLocalizationTable
+					dynamicObjectDefinitionLocalizationTable =
+						DynamicObjectDefinitionLocalizationTableFactory.create(
+							objectDefinition, this);
+
+				dbTableName =
+					dynamicObjectDefinitionLocalizationTable.getTableName();
+
+				List<ObjectField> objectFields =
+					dynamicObjectDefinitionLocalizationTable.getObjectFields();
+
+				if (objectFields.size() == 1) {
+					runSQL("DROP_TABLE_IF_EXISTS(" + dbTableName + ")");
+
+					runSQL(
+						dynamicObjectDefinitionLocalizationTable.
+							getCreateTableSQL());
+
+					return objectField;
+				}
 			}
 
 			_addObjectFieldColumn(dbTableName, objectField);
@@ -935,14 +957,11 @@ public class ObjectFieldLocalServiceImpl
 	}
 
 	private void _addOrUpdateObjectFieldSettings(
-			ObjectDefinition objectDefinition, ObjectField newObjectField,
-			ObjectField oldObjectField,
-			List<ObjectFieldSetting> objectFieldSettings)
+			ObjectField newObjectField, ObjectDefinition objectDefinition,
+			ObjectFieldBusinessType objectFieldBusinessType,
+			List<ObjectFieldSetting> objectFieldSettings,
+			ObjectField oldObjectField)
 		throws PortalException {
-
-		ObjectFieldBusinessType objectFieldBusinessType =
-			_objectFieldBusinessTypeRegistry.getObjectFieldBusinessType(
-				newObjectField.getBusinessType());
 
 		objectFieldBusinessType.validateObjectFieldSettings(
 			newObjectField, objectFieldSettings);
@@ -1145,6 +1164,26 @@ public class ObjectFieldLocalServiceImpl
 				objectDefinition);
 		}
 
+		if (objectDefinition.getTitleObjectFieldId() ==
+				objectField.getObjectFieldId()) {
+
+			ObjectField externalReferenceCodeObjectField =
+				objectFieldPersistence.fetchByODI_N(
+					objectDefinition.getObjectDefinitionId(),
+					"externalReferenceCode");
+
+			if (externalReferenceCodeObjectField != null) {
+				objectDefinition.setTitleObjectFieldId(
+					externalReferenceCodeObjectField.getObjectFieldId());
+			}
+			else {
+				objectDefinition.setTitleObjectFieldId(0);
+			}
+
+			objectDefinition = _objectDefinitionPersistence.update(
+				objectDefinition);
+		}
+
 		_objectFieldSettingLocalService.deleteObjectFieldObjectFieldSetting(
 			objectField);
 
@@ -1230,23 +1269,6 @@ public class ObjectFieldLocalServiceImpl
 		return indexedLanguageId;
 	}
 
-	private ObjectField _getObjectField(ObjectField objectField) {
-		if (objectField == null) {
-			return null;
-		}
-
-		objectField.setObjectFieldSettings(
-			_objectFieldSettingLocalService.getObjectFieldObjectFieldSettings(
-				objectField.getObjectFieldId()));
-
-		return objectField;
-	}
-
-	private List<ObjectField> _getObjectFields(List<ObjectField> objectFields) {
-		return TransformUtil.transform(
-			objectFields, objectField -> _getObjectField(objectField));
-	}
-
 	private ObjectFieldSettingContributor _getObjectFieldSettingContributor(
 		String key) {
 
@@ -1311,7 +1333,8 @@ public class ObjectFieldLocalServiceImpl
 	}
 
 	private void _setBusinessTypeAndDBType(
-			String businessType, String dbType, ObjectField objectField)
+			String businessType, String dbType, ObjectField objectField,
+			boolean system)
 		throws PortalException {
 
 		ObjectFieldBusinessType objectFieldBusinessType =
@@ -1323,7 +1346,13 @@ public class ObjectFieldLocalServiceImpl
 
 		if (objectFieldBusinessType != null) {
 			objectField.setBusinessType(businessType);
-			objectField.setDBType(objectFieldBusinessType.getDBType());
+
+			if (system) {
+				objectField.setDBType(dbType);
+			}
+			else {
+				objectField.setDBType(objectFieldBusinessType.getDBType());
+			}
 		}
 		else if (objectFieldDBTypes.contains(dbType) &&
 				 _businessTypes.containsKey(dbType)) {
@@ -1367,9 +1396,14 @@ public class ObjectFieldLocalServiceImpl
 		_validateIndexed(
 			businessType, dbType, indexed, indexedAsKeyword, indexedLanguageId);
 		_validateLabel(labelMap, newObjectField);
+
+		ObjectFieldBusinessType objectFieldBusinessType =
+			_objectFieldBusinessTypeRegistry.getObjectFieldBusinessType(
+				businessType);
+
 		_validateLocalized(
-			businessType, localized, oldObjectField.getObjectDefinition(),
-			required);
+			localized, oldObjectField.getObjectDefinition(), newObjectField,
+			objectFieldBusinessType, required);
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionPersistence.findByPrimaryKey(
@@ -1429,13 +1463,14 @@ public class ObjectFieldLocalServiceImpl
 			newObjectField = objectFieldPersistence.update(newObjectField);
 
 			_addOrUpdateObjectFieldSettings(
-				objectDefinition, newObjectField, oldObjectField,
-				objectFieldSettings);
+				newObjectField, objectDefinition, objectFieldBusinessType,
+				objectFieldSettings, oldObjectField);
 
 			return newObjectField;
 		}
 
-		_setBusinessTypeAndDBType(businessType, dbType, newObjectField);
+		_setBusinessTypeAndDBType(
+			businessType, dbType, newObjectField, newObjectField.isSystem());
 
 		newObjectField.setListTypeDefinitionId(listTypeDefinitionId);
 
@@ -1455,8 +1490,8 @@ public class ObjectFieldLocalServiceImpl
 		newObjectField = objectFieldPersistence.update(newObjectField);
 
 		_addOrUpdateObjectFieldSettings(
-			objectDefinition, newObjectField, oldObjectField,
-			objectFieldSettings);
+			newObjectField, objectDefinition, objectFieldBusinessType,
+			objectFieldSettings, oldObjectField);
 
 		return newObjectField;
 	}
@@ -1610,19 +1645,60 @@ public class ObjectFieldLocalServiceImpl
 	}
 
 	private void _validateLocalized(
-			String businessType, boolean localized,
-			ObjectDefinition objectDefinition, boolean required)
+			boolean localized, ObjectDefinition objectDefinition,
+			ObjectField objectField,
+			ObjectFieldBusinessType objectFieldBusinessType, boolean required)
 		throws PortalException {
 
 		if (!localized) {
 			return;
 		}
 
-		if (!businessType.equals(
-				ObjectFieldConstants.BUSINESS_TYPE_LONG_TEXT) &&
-			!businessType.equals(
-				ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT) &&
-			!businessType.equals(ObjectFieldConstants.BUSINESS_TYPE_TEXT)) {
+		String objectFieldBusinessTypeName = objectFieldBusinessType.getName();
+
+		if ((!FeatureFlagManagerUtil.isEnabled(
+				objectDefinition.getCompanyId(), "LPD-32050") &&
+			 !objectFieldBusinessTypeName.equals(
+				 ObjectFieldConstants.BUSINESS_TYPE_LONG_TEXT) &&
+			 !objectFieldBusinessTypeName.equals(
+				 ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT) &&
+			 !objectFieldBusinessTypeName.equals(
+				 ObjectFieldConstants.BUSINESS_TYPE_TEXT)) ||
+			(FeatureFlagManagerUtil.isEnabled(
+				objectDefinition.getCompanyId(), "LPD-32050") &&
+			 !objectFieldBusinessType.isLocalizationSupported(objectField))) {
+
+			if (FeatureFlagManagerUtil.isEnabled(
+					objectDefinition.getCompanyId(), "LPD-32050")) {
+
+				throw new ObjectFieldLocalizedException(
+					StringBundler.concat(
+						"Only ", ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT,
+						StringPool.COMMA,
+						ObjectFieldConstants.BUSINESS_TYPE_BOOLEAN,
+						StringPool.COMMA,
+						ObjectFieldConstants.BUSINESS_TYPE_DATE,
+						StringPool.COMMA,
+						ObjectFieldConstants.BUSINESS_TYPE_DATE_TIME,
+						StringPool.COMMA,
+						ObjectFieldConstants.BUSINESS_TYPE_DECIMAL,
+						StringPool.COMMA,
+						ObjectFieldConstants.BUSINESS_TYPE_INTEGER,
+						StringPool.COMMA,
+						ObjectFieldConstants.BUSINESS_TYPE_LONG_INTEGER,
+						StringPool.COMMA,
+						ObjectFieldConstants.BUSINESS_TYPE_LONG_TEXT,
+						StringPool.COMMA,
+						ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST,
+						StringPool.COMMA,
+						ObjectFieldConstants.BUSINESS_TYPE_PICKLIST,
+						StringPool.COMMA,
+						ObjectFieldConstants.BUSINESS_TYPE_PRECISION_DECIMAL,
+						StringPool.COMMA,
+						ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT, " and ",
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						" business types support localization"));
+			}
 
 			throw new ObjectFieldLocalizedException(
 				StringBundler.concat(
@@ -1639,7 +1715,10 @@ public class ObjectFieldLocalServiceImpl
 			throw new ObjectDefinitionEnableLocalizationException();
 		}
 
-		if (required) {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				objectDefinition.getCompanyId(), "LPD-32050") &&
+			required) {
+
 			throw new ObjectFieldLocalizedException(
 				"Localized object fields must not be required");
 		}

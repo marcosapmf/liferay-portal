@@ -2,9 +2,9 @@
 definition {
 
 	property portal.release = "true";
-	property portal.suite.search.engine = "elasticsearch7";
+	property portal.suite.search.engine = "elasticsearch7,opensearch2";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Elasticsearch Impl";
+	property testray.main.component.name = "Search Infrastructure > Elasticsearch Connector";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -27,6 +27,10 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 		property timeout.explicit.wait = "120";
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",

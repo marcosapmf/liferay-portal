@@ -2,6 +2,7 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "API Builder";
@@ -50,8 +51,6 @@ definition {
 
 	@priority = 5
 	test CanApplyFilterParameter {
-		property portal.acceptance = "true";
-
 		task ("And Given an published API application with endpoint with related schema with Student as the main object") {
 			ApplicationAPI.createAPIApplication(
 				baseURL = "my-app",
@@ -96,8 +95,6 @@ definition {
 
 	@priority = 4
 	test CanApplyFilterParameterAndPreFilter {
-		property portal.acceptance = "true";
-
 		task ("And Given an published API application with endpoint with related schema with Student as the main object") {
 			ApplicationAPI.createAPIApplication(
 				baseURL = "my-app",
@@ -148,8 +145,6 @@ definition {
 
 	@priority = 4
 	test CanApplyFilterSortAndPreFilterWithSiteScopedEndpoint {
-		property portal.acceptance = "true";
-
 		task ("Given site scoped custom object University with name text field is created and published") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
 				en_US_label = "University",
@@ -239,8 +234,6 @@ definition {
 
 	@priority = 5
 	test CanApplySortParameter {
-		property portal.acceptance = "true";
-
 		task ("And Given an published API application with endpoint with related schema with Student as the main object") {
 			ApplicationAPI.createAPIApplication(
 				baseURL = "my-app",
@@ -285,8 +278,6 @@ definition {
 
 	@priority = 4
 	test CanApplySortParameterAndPreSort {
-		property portal.acceptance = "true";
-
 		task ("And Given an published API application with endpoint with related schema with Student as the main object") {
 			ApplicationAPI.createAPIApplication(
 				baseURL = "my-app",
@@ -337,8 +328,6 @@ definition {
 
 	@priority = 4
 	test CanSeeFilterAndSortParametersInComapnyScopedEndpoint {
-		property portal.acceptance = "true";
-
 		task ("Given an published API application with company scoped endpoint") {
 			ApplicationAPI.createAPIApplication(
 				baseURL = "my-app",
@@ -372,8 +361,6 @@ definition {
 
 	@priority = 4
 	test CanSeeFilterAndSortParametersInSiteScopedEndpoint {
-		property portal.acceptance = "true";
-
 		task ("Given an published API application with site scoped endpoint") {
 			ApplicationAPI.createAPIApplication(
 				baseURL = "my-app",

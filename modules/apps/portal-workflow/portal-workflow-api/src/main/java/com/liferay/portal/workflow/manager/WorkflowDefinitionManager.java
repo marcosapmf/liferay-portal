@@ -5,6 +5,7 @@
 
 package com.liferay.portal.workflow.manager;
 
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
 import com.liferay.portal.kernel.workflow.WorkflowException;
@@ -21,16 +22,16 @@ import java.util.List;
 public interface WorkflowDefinitionManager {
 
 	public default WorkflowDefinition deployWorkflowDefinition(
-			long companyId, long userId, String title, String name,
-			byte[] bytes)
+			String externalReferenceCode, long companyId, long userId,
+			String title, String name, byte[] bytes)
 		throws WorkflowException {
 
 		throw new UnsupportedOperationException();
 	}
 
 	public default WorkflowDefinition deployWorkflowDefinition(
-			long companyId, long userId, String title, String name,
-			String scope, byte[] bytes)
+			String externalReferenceCode, long companyId, long userId,
+			String title, String name, String scope, byte[] bytes)
 		throws WorkflowException {
 
 		throw new UnsupportedOperationException();
@@ -95,14 +96,21 @@ public interface WorkflowDefinitionManager {
 
 	public default WorkflowDefinition getWorkflowDefinition(
 			long workflowDefinitionId)
-		throws WorkflowException {
+		throws PortalException {
 
 		throw new UnsupportedOperationException();
 	}
 
 	public WorkflowDefinition getWorkflowDefinition(
 			long companyId, String name, int version)
-		throws WorkflowException;
+		throws PortalException;
+
+	public default WorkflowDefinition getWorkflowDefinition(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		throw new UnsupportedOperationException();
+	}
 
 	public List<WorkflowDefinition> getWorkflowDefinitions(
 			long companyId, String name, int start, int end,
@@ -140,7 +148,7 @@ public interface WorkflowDefinitionManager {
 
 	public default WorkflowDefinition liberalGetWorkflowDefinition(
 			long companyId, String name, int version)
-		throws WorkflowException {
+		throws PortalException {
 
 		throw new UnsupportedOperationException();
 	}
@@ -168,8 +176,8 @@ public interface WorkflowDefinitionManager {
 	 *         definition
 	 */
 	public default WorkflowDefinition saveWorkflowDefinition(
-			long companyId, long userId, String title, String name,
-			byte[] bytes)
+			String externalReferenceCode, long companyId, long userId,
+			String title, String name, byte[] bytes)
 		throws WorkflowException {
 
 		throw new UnsupportedOperationException();
@@ -191,8 +199,8 @@ public interface WorkflowDefinitionManager {
 	 *         definition
 	 */
 	public default WorkflowDefinition saveWorkflowDefinition(
-			long companyId, long userId, String title, String name,
-			String scope, byte[] bytes)
+			String externalReferenceCode, long companyId, long userId,
+			String title, String name, String scope, byte[] bytes)
 		throws WorkflowException {
 
 		throw new UnsupportedOperationException();

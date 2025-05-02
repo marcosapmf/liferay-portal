@@ -10,12 +10,8 @@ import ClayIcon from '@clayui/icon';
 import ClayMultiSelect from '@clayui/multi-select';
 import {usePrevious} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {
-	createPortletURL,
-	fetch,
-	openSelectionModal,
-	sub,
-} from 'frontend-js-web';
+import {openSelectionModal} from 'frontend-js-components-web';
+import {createPortletURL, fetch, sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useRef, useState} from 'react';
 
@@ -34,6 +30,7 @@ function AssetVocabulariesCategoriesSelector({
 	showVocabularyLabel = true,
 	singleSelect,
 	sourceItemsVocabularyIds = [],
+	useDataCategoriesAttribute,
 	useFallbackInput,
 }) {
 	const [inputValue, setInputValue] = useState('');
@@ -71,7 +68,7 @@ function AssetVocabulariesCategoriesSelector({
 	const previousInputValue = usePrevious(inputValue);
 
 	useEffect(() => {
-		if (inputValue !== previousInputValue) {
+		if (previousInputValue && inputValue !== previousInputValue) {
 			refetch();
 		}
 
@@ -199,6 +196,13 @@ function AssetVocabulariesCategoriesSelector({
 					/>
 				)}
 
+				{useDataCategoriesAttribute && !!selectedItems.length && (
+					<div
+						data-categories={JSON.stringify(selectedItems)}
+						hidden
+					/>
+				)}
+
 				{label && (
 					<label
 						className={showVocabularyLabel ? '' : 'sr-only'}
@@ -304,6 +308,7 @@ AssetVocabulariesCategoriesSelector.propTypes = {
 	selectedItems: PropTypes.array,
 	singleSelect: PropTypes.bool,
 	sourceItemsVocabularyIds: PropTypes.array,
+	useDataCategoriesAttribute: PropTypes.bool,
 	useFallbackInput: PropTypes.bool,
 };
 

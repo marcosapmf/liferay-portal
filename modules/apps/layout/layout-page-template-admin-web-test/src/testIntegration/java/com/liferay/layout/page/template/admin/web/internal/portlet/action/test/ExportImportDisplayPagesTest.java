@@ -148,7 +148,7 @@ public class ExportImportDisplayPagesTest {
 		DDMFormLayout ddmFormLayout = _ddm.getDefaultDDMFormLayout(ddmForm);
 
 		DDMStructure ddmStructure1 = _ddmStructureLocalService.addStructure(
-			TestPropsValues.getUserId(), _group1.getGroupId(), 0L,
+			null, TestPropsValues.getUserId(), _group1.getGroupId(), 0L,
 			ddmStructureClassNameId, ddmStructureKey, ddmStructureNameMap, null,
 			ddmForm, ddmFormLayout, StorageType.DEFAULT.toString(),
 			DDMStructureConstants.TYPE_DEFAULT, _serviceContext1);
@@ -167,7 +167,7 @@ public class ExportImportDisplayPagesTest {
 				_serviceContext1);
 
 		DDMStructure ddmStructure2 = _ddmStructureLocalService.addStructure(
-			TestPropsValues.getUserId(), _group2.getGroupId(), 0L,
+			null, TestPropsValues.getUserId(), _group2.getGroupId(), 0L,
 			ddmStructureClassNameId, ddmStructureKey, ddmStructureNameMap, null,
 			ddmForm, ddmFormLayout, StorageType.DEFAULT.toString(),
 			DDMStructureConstants.TYPE_DEFAULT, _serviceContext2);
@@ -197,7 +197,7 @@ public class ExportImportDisplayPagesTest {
 			"name", new Locale[] {locale}, locale);
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.addStructure(
-			TestPropsValues.getUserId(), _group1.getGroupId(), 0L,
+			null, TestPropsValues.getUserId(), _group1.getGroupId(), 0L,
 			_portal.getClassNameId(
 				"com.liferay.document.library.kernel.model." +
 					"DLFileEntryMetadata"),
@@ -250,14 +250,14 @@ public class ExportImportDisplayPagesTest {
 		DDMFormLayout ddmFormLayout = _ddm.getDefaultDDMFormLayout(ddmForm);
 
 		DDMStructure ddmStructure1 = _ddmStructureLocalService.addStructure(
-			TestPropsValues.getUserId(), _group1.getGroupId(), 0L, classNameId,
-			ddmStructureKey, nameMap, null, ddmForm, ddmFormLayout,
+			null, TestPropsValues.getUserId(), _group1.getGroupId(), 0L,
+			classNameId, ddmStructureKey, nameMap, null, ddmForm, ddmFormLayout,
 			StorageType.DEFAULT.toString(), DDMStructureConstants.TYPE_DEFAULT,
 			_serviceContext1);
 
 		DDMStructure ddmStructure2 = _ddmStructureLocalService.addStructure(
-			TestPropsValues.getUserId(), _group2.getGroupId(), 0L, classNameId,
-			ddmStructureKey, nameMap, null, ddmForm, ddmFormLayout,
+			null, TestPropsValues.getUserId(), _group2.getGroupId(), 0L,
+			classNameId, ddmStructureKey, nameMap, null, ddmForm, ddmFormLayout,
 			StorageType.DEFAULT.toString(), DDMStructureConstants.TYPE_DEFAULT,
 			_serviceContext2);
 
@@ -279,8 +279,8 @@ public class ExportImportDisplayPagesTest {
 			"name", new Locale[] {locale}, locale);
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.addStructure(
-			TestPropsValues.getUserId(), _group1.getGroupId(), 0L, classNameId,
-			RandomTestUtil.randomString(),
+			null, TestPropsValues.getUserId(), _group1.getGroupId(), 0L,
+			classNameId, RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(locale), null, ddmForm,
 			_ddm.getDefaultDDMFormLayout(ddmForm),
 			StorageType.DEFAULT.toString(), DDMStructureConstants.TYPE_DEFAULT,
@@ -301,8 +301,8 @@ public class ExportImportDisplayPagesTest {
 		LayoutPageTemplateEntry layoutPageTemplateEntry1 =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 				null, _serviceContext1.getUserId(),
-				_serviceContext1.getScopeGroupId(), 0, classNameId, classTypeId,
-				"Display Page Template One",
+				_serviceContext1.getScopeGroupId(), 0, null, classNameId,
+				classTypeId, "Display Page Template One",
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext1);
 

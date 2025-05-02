@@ -93,19 +93,21 @@ export function fetchSites(params: TTableRequestParams) {
 	});
 }
 
+interface IProperty {
+	channelId: string;
+	commerceChannelIds?: number[];
+	commerceSyncEnabled: boolean;
+	dataSourceId?: string;
+	siteIds?: number[];
+}
+
 export function updateProperty({
 	channelId,
 	commerceChannelIds = [],
 	commerceSyncEnabled,
 	dataSourceId,
 	siteIds = [],
-}: {
-	channelId: string;
-	commerceChannelIds?: number[];
-	commerceSyncEnabled: boolean;
-	dataSourceId?: string;
-	siteIds?: number[];
-}) {
+}: IProperty) {
 	return request('/channels', {
 		body: JSON.stringify({
 			channelId,
@@ -238,4 +240,49 @@ export function updateProductsFields(fields: TField[]) {
 		body: JSON.stringify(fields),
 		method: 'PATCH',
 	});
+}
+
+export enum JobId {
+	ContentRecommenderMostPopularItems = 'contentRecommenderMostPopularItems',
+	ContentRecommenderUserPersonalization = 'contentRecommenderUserPersonalization',
+}
+
+export enum JobStatus {
+	Enabled = 'Enabled',
+	Disabled = 'Disabled',
+	Configuring = 'Configuring',
+}
+
+export type TRecommendationConfiguration = {
+	[key in JobId]: {
+		enabled: boolean;
+	};
+};
+
+export type TExtendedRecommendationConfiguration = {
+	[key in JobId]: {
+		enabled: boolean;
+		status: JobStatus;
+	};
+};
+
+export function fetchRecommendationConfiguration() {
+	return request('/recommendation/configuration', {
+		method: 'GET',
+	});
+}
+
+export function updateRecommendationConfiguration(
+	recommendationConfiguration: TRecommendationConfiguration
+) {
+	return request(
+		'/recommendation/configuration',
+		{
+			body: JSON.stringify(recommendationConfiguration),
+			method: 'PUT',
+		},
+		Liferay.Language.get(
+			'configuration-couldnt-be-completed.-please-try-again-later'
+		)
+	);
 }

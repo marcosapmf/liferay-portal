@@ -11,10 +11,10 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerCustomizer
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerCustomizerFactory.ServiceWrapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +29,17 @@ import org.osgi.service.component.annotations.Deactivate;
 @Component(service = FDSViewContextContributorRegistry.class)
 public class FDSViewContextContributorRegistryImpl
 	implements FDSViewContextContributorRegistry {
+
+	public FDSViewContextContributorRegistryImpl() {
+	}
+
+	public FDSViewContextContributorRegistryImpl(
+		ServiceTrackerMap
+			<String, List<ServiceWrapper<FDSViewContextContributor>>>
+				serviceTrackerMap) {
+
+		_serviceTrackerMap = serviceTrackerMap;
+	}
 
 	@Override
 	public List<FDSViewContextContributor> getFDSViewContextContributors(
@@ -48,18 +59,10 @@ public class FDSViewContextContributorRegistryImpl
 			return Collections.emptyList();
 		}
 
-		List<FDSViewContextContributor> fdsViewContextContributors =
-			new ArrayList<>();
-
-		for (ServiceWrapper<FDSViewContextContributor>
-				fdsViewContextContributorServiceWrapper :
-					fdsViewContextContributorServiceWrappers) {
-
-			fdsViewContextContributors.add(
+		return TransformUtil.transform(
+			fdsViewContextContributorServiceWrappers,
+			fdsViewContextContributorServiceWrapper ->
 				fdsViewContextContributorServiceWrapper.getService());
-		}
-
-		return fdsViewContextContributors;
 	}
 
 	@Activate

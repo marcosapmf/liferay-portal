@@ -492,6 +492,45 @@ public class JournalTestUtil {
 			serviceContext);
 	}
 
+	public static JournalArticle addArticleDefaultValues(
+			long userId, long groupId, String title)
+		throws Exception {
+
+		DDMForm ddmForm = DDMStructureTestUtil.getSampleDDMForm(
+			_locales, LocaleUtil.US);
+
+		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
+			groupId, JournalArticle.class.getName(), ddmForm, LocaleUtil.US);
+
+		DDMTemplate ddmTemplate = DDMTemplateTestUtil.addTemplate(
+			groupId, ddmStructure.getStructureId(),
+			PortalUtil.getClassNameId(JournalArticle.class),
+			TemplateConstants.LANG_TYPE_FTL, getSampleTemplateFTL(),
+			LocaleUtil.US);
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(groupId, userId);
+
+		return JournalArticleLocalServiceUtil.addArticleDefaultValues(
+			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
+			PortalUtil.getClassNameId(DDMStructure.class),
+			ddmStructure.getStructureId(),
+			HashMapBuilder.put(
+				LocaleUtil.US, title
+			).build(),
+			null,
+			DDMStructureTestUtil.getSampleStructuredContent(
+				HashMapBuilder.put(
+					LocaleUtil.SPAIN, "Valor Predefinido"
+				).put(
+					LocaleUtil.US, "Predefined Value"
+				).build(),
+				LocaleUtil.US.toString()),
+			ddmStructure.getStructureId(), ddmTemplate.getTemplateKey(), null,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true, true,
+			false, 0, 0, null, null, serviceContext);
+	}
+
 	public static JournalArticle addArticleWithWorkflow(
 			long groupId, boolean approved)
 		throws Exception {

@@ -791,8 +791,8 @@ class App extends EventEmitter {
 				{
 					href,
 					isScheduledNavigation: true,
+					...event,
 				},
-				...event,
 			];
 
 			return true;
@@ -1081,8 +1081,11 @@ class App extends EventEmitter {
 		event.capturedFormElement = form;
 		const buttonSelector =
 			'button:not([type]),button[type=submit],input[type=submit]';
-		if (document.activeElement.matches(buttonSelector)) {
-			event.capturedFormButtonElement = document.activeElement;
+
+		const elementSubmitter = event.submitter ?? document.activeElement;
+
+		if (elementSubmitter.matches(buttonSelector)) {
+			event.capturedFormButtonElement = elementSubmitter;
 		}
 		else {
 			event.capturedFormButtonElement =

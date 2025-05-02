@@ -7,17 +7,35 @@ export function getRandomID() {
 	try {
 		return crypto.randomUUID();
 	}
-	catch (error) {
+	catch {
 		return `liferay-${Math.random()}`.replace('.', '-');
 	}
 }
 
-export function removeUnnecessaryURLString(str: string) {
-	const index = str.indexOf('/o');
+export function normalizeURLProtocol(url = '') {
+	if (window.location.href.startsWith('https')) {
+		return url;
+	}
 
-	return str.substring(index);
+	return url.replace('https', 'http');
 }
 
-export function removeHTMLTags(value: string) {
-	return value.replace(/<\/?[^>]+(>|$)/g, '');
+export function removeUnnecessaryURLString(text: string) {
+	const index = text.indexOf('/o');
+
+	return text.substring(index);
+}
+
+export function removeHTMLTags(text: string) {
+	return text.replace(/<\/?[^>]+(>|$)/g, '');
+}
+
+export function sanitizeStringForURL(text: string) {
+	return text
+		.toLowerCase()
+		.trim()
+		.replace(/[^a-z0-9\s-]/g, '')
+		.replace(/\s+/g, '-')
+		.replace(/-+/g, '-')
+		.replace(/^-|-$/g, '');
 }

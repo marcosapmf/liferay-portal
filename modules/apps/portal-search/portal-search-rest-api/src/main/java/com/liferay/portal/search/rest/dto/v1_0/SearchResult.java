@@ -17,8 +17,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -55,7 +53,52 @@ public class SearchResult implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(SearchResult.class, json);
 	}
 
-	@Schema(description = "The time the item was created.")
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public Map<String, Map<String, String>> getActions() {
+		if (_actionsSupplier != null) {
+			actions = _actionsSupplier.get();
+
+			_actionsSupplier = null;
+		}
+
+		return actions;
+	}
+
+	public void setActions(Map<String, Map<String, String>> actions) {
+		this.actions = actions;
+
+		_actionsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setActions(
+		UnsafeSupplier<Map<String, Map<String, String>>, Exception>
+			actionsUnsafeSupplier) {
+
+		_actionsSupplier = () -> {
+			try {
+				return actionsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Map<String, Map<String, String>> actions;
+
+	@JsonIgnore
+	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The time the item was created."
+	)
 	public Date getDateCreated() {
 		if (_dateCreatedSupplier != null) {
 			dateCreated = _dateCreatedSupplier.get();
@@ -96,7 +139,9 @@ public class SearchResult implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateCreatedSupplier;
 
-	@Schema(description = "The last time the item was changed.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The last time the item was changed."
+	)
 	public Date getDateModified() {
 		if (_dateModifiedSupplier != null) {
 			dateModified = _dateModifiedSupplier.get();
@@ -137,7 +182,9 @@ public class SearchResult implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateModifiedSupplier;
 
-	@Schema(description = "The item's description.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The item's description."
+	)
 	public String getDescription() {
 		if (_descriptionSupplier != null) {
 			description = _descriptionSupplier.get();
@@ -178,7 +225,7 @@ public class SearchResult implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _descriptionSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Object getEmbedded() {
 		if (_embeddedSupplier != null) {
@@ -220,7 +267,52 @@ public class SearchResult implements Serializable {
 	@JsonIgnore
 	private Supplier<Object> _embeddedSupplier;
 
-	@Schema(description = "The link to the embedded item.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The object entry class name."
+	)
+	public String getEntryClassName() {
+		if (_entryClassNameSupplier != null) {
+			entryClassName = _entryClassNameSupplier.get();
+
+			_entryClassNameSupplier = null;
+		}
+
+		return entryClassName;
+	}
+
+	public void setEntryClassName(String entryClassName) {
+		this.entryClassName = entryClassName;
+
+		_entryClassNameSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setEntryClassName(
+		UnsafeSupplier<String, Exception> entryClassNameUnsafeSupplier) {
+
+		_entryClassNameSupplier = () -> {
+			try {
+				return entryClassNameUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The object entry class name.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String entryClassName;
+
+	@JsonIgnore
+	private Supplier<String> _entryClassNameSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The link to the embedded item."
+	)
 	public String getItemURL() {
 		if (_itemURLSupplier != null) {
 			itemURL = _itemURLSupplier.get();
@@ -261,7 +353,9 @@ public class SearchResult implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _itemURLSupplier;
 
-	@Schema(description = "The item's score.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The item's score."
+	)
 	@Valid
 	public Float getScore() {
 		if (_scoreSupplier != null) {
@@ -301,7 +395,9 @@ public class SearchResult implements Serializable {
 	@JsonIgnore
 	private Supplier<Float> _scoreSupplier;
 
-	@Schema(description = "The item's title.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The item's title."
+	)
 	public String getTitle() {
 		if (_titleSupplier != null) {
 			title = _titleSupplier.get();
@@ -371,6 +467,18 @@ public class SearchResult implements Serializable {
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+		Map<String, Map<String, String>> actions = getActions();
+
+		if (actions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(actions));
+		}
 
 		Date dateCreated = getDateCreated();
 
@@ -443,6 +551,22 @@ public class SearchResult implements Serializable {
 			}
 		}
 
+		String entryClassName = getEntryClassName();
+
+		if (entryClassName != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"entryClassName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(entryClassName));
+
+			sb.append("\"");
+		}
+
 		String itemURL = getItemURL();
 
 		if (itemURL != null) {
@@ -492,8 +616,8 @@ public class SearchResult implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.portal.search.rest.dto.v1_0.SearchResult",
 		name = "x-class-name"
 	)

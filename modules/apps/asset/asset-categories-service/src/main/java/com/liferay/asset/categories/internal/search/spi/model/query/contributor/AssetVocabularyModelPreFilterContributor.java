@@ -29,17 +29,39 @@ public class AssetVocabularyModelPreFilterContributor
 		int[] visibilityTypes = GetterUtil.getIntegerValues(
 			searchContext.getAttribute(Field.VISIBILITY_TYPE));
 
-		if (ArrayUtil.isEmpty(visibilityTypes)) {
-			return;
+		if (ArrayUtil.isNotEmpty(visibilityTypes)) {
+			TermsFilter visibilityTypesTermsFilter = new TermsFilter(
+				Field.VISIBILITY_TYPE);
+
+			visibilityTypesTermsFilter.addValues(
+				ArrayUtil.toStringArray(visibilityTypes));
+
+			booleanFilter.add(
+				visibilityTypesTermsFilter, BooleanClauseOccur.MUST);
 		}
 
-		TermsFilter assetEntryIdsTermsFilter = new TermsFilter(
-			Field.VISIBILITY_TYPE);
+		long[] classNameIds = (long[])searchContext.getAttribute(
+			"classNameIds");
 
-		assetEntryIdsTermsFilter.addValues(
-			ArrayUtil.toStringArray(visibilityTypes));
+		if (ArrayUtil.isNotEmpty(classNameIds)) {
+			TermsFilter classNameIdsTermsFilter = new TermsFilter(
+				"classNameIds");
 
-		booleanFilter.add(assetEntryIdsTermsFilter, BooleanClauseOccur.MUST);
+			classNameIdsTermsFilter.addValues(
+				ArrayUtil.toStringArray(classNameIds));
+
+			booleanFilter.add(classNameIdsTermsFilter, BooleanClauseOccur.MUST);
+		}
+
+		long[] groupIds = (long[])searchContext.getAttribute("groupIds");
+
+		if (ArrayUtil.isNotEmpty(groupIds)) {
+			TermsFilter groupIdsTermsFilter = new TermsFilter("groupIds");
+
+			groupIdsTermsFilter.addValues(ArrayUtil.toStringArray(groupIds));
+
+			booleanFilter.add(groupIdsTermsFilter, BooleanClauseOccur.MUST);
+		}
 	}
 
 }

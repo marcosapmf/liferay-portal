@@ -1,12 +1,13 @@
-apiDir: "../headless-admin-taxonomy-api/src/main/java"
-apiPackagePath: "com.liferay.headless.admin.taxonomy"
+apiDir: ../headless-admin-taxonomy-api/src/main/java
+apiPackagePath: com.liferay.headless.admin.taxonomy
 application:
-    baseURI: "/headless-admin-taxonomy"
-    className: "HeadlessAdminTaxonomyApplication"
-    name: "Liferay.Headless.Admin.Taxonomy"
-author: "Javier Gamarra"
-clientDir: "../headless-admin-taxonomy-client/src/main/java"
-compatibilityVersion: 6
+    baseURI: /headless-admin-taxonomy
+    className: HeadlessAdminTaxonomyApplication
+    name: Liferay.Headless.Admin.Taxonomy
+author: Javier Gamarra
+clientDir: ../headless-admin-taxonomy-client/src/main/java
+compatibilityVersion: 9
 forcePredictableOperationId: true
 generateActionProviders: true
-testDir: "../headless-admin-taxonomy-test/src/testIntegration/java"
+generatePermissions: true
+testDir: ../headless-admin-taxonomy-test/src/testIntegration/java

@@ -8,12 +8,12 @@ import {Option, Picker} from '@clayui/core';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
-import {fetch, navigate, openToast, setSessionValue} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {fetch, navigate, setSessionValue} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useState} from 'react';
 
 function PageTypeSelector({
-	addCollectionLayoutURL,
 	addLayoutURL,
 	configureLayoutSetURL,
 	namespace,
@@ -27,7 +27,7 @@ function PageTypeSelector({
 	const handleSelect = (type) => {
 		setSessionValue(`${namespace}PAGE_TYPE_SELECTED_OPTION`, type).then(
 			() => {
-				Liferay.Portlet.destroy(`#p_p_id${namespace}`, true);
+				Liferay.Portlet.destroy(`#p_p_id${namespace}`);
 
 				fetch(pagesTreeURL)
 					.then((response) => {
@@ -63,11 +63,6 @@ function PageTypeSelector({
 			}
 		);
 	};
-
-	const handleOnAddCollectionPageClick = useCallback(() => {
-		setAddPageDropdownActive(false);
-		navigate(addCollectionLayoutURL);
-	}, [addCollectionLayoutURL]);
 
 	const handleOnAddPageClick = useCallback(() => {
 		setAddPageDropdownActive(false);
@@ -137,25 +132,6 @@ function PageTypeSelector({
 									{Liferay.Language.get('add-page')}
 								</ClayDropDown.Item>
 							)}
-
-							{addCollectionLayoutURL && (
-								<ClayDropDown.Item
-									data-value={Liferay.Language.get(
-										'add-collection-page'
-									)}
-									key={Liferay.Language.get(
-										'add-collection-page'
-									)}
-									onClick={handleOnAddCollectionPageClick}
-									title={Liferay.Language.get(
-										'add-collection-page'
-									)}
-								>
-									{Liferay.Language.get(
-										'add-collection-page'
-									)}
-								</ClayDropDown.Item>
-							)}
 						</ClayDropDown.ItemList>
 					</ClayDropDown>
 				)}
@@ -182,7 +158,6 @@ function PageTypeSelector({
 }
 
 PageTypeSelector.propTypes = {
-	addCollectionLayoutURL: PropTypes.string,
 	addLayoutURL: PropTypes.string,
 	configureLayoutSetURL: PropTypes.string,
 	namespace: PropTypes.string,

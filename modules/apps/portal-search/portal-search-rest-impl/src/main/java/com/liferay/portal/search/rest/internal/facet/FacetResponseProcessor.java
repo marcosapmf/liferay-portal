@@ -11,6 +11,7 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.petra.string.StringBundler;
@@ -136,7 +137,7 @@ public class FacetResponseProcessor {
 			return _getSiteDisplayName(GetterUtil.getLong(term), locale);
 		}
 		else if (StringUtil.equals("type", facetConfiguration.getName())) {
-			return _getTypeDisplayName(locale, term);
+			return _getTypeDisplayName(term, companyId, locale);
 		}
 
 		return term;
@@ -221,13 +222,16 @@ public class FacetResponseProcessor {
 		return term;
 	}
 
-	private String _getTypeDisplayName(Locale locale, String className) {
-		if (className.startsWith(ObjectDefinition.class.getName() + "#")) {
-			String[] parts = StringUtil.split(className, "#");
+	private String _getTypeDisplayName(
+		String className, long companyId, Locale locale) {
+
+		if (className.startsWith(
+				ObjectDefinitionConstants.
+					CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION)) {
 
 			ObjectDefinition objectDefinition =
-				_objectDefinitionLocalService.fetchObjectDefinition(
-					Long.valueOf(parts[1]));
+				_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
+					companyId, className);
 
 			if (objectDefinition != null) {
 				return objectDefinition.getLabel(locale);

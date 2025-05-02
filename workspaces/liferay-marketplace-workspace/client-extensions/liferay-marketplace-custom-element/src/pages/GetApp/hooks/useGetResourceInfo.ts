@@ -5,8 +5,8 @@
 
 import useSWR from 'swr';
 
-import useMarketplaceSpringBootOAuth2 from '../../../hooks/useMarketplaceSpringBootOAuth2';
 import {Liferay} from '../../../liferay/liferay';
+import consoleOAuth2 from '../../../services/oauth/Console';
 
 const INSUFICIENT_RESOURCES = 0;
 const ONE_GB = 1024;
@@ -35,17 +35,15 @@ const useGetResourceInfo = ({
 	selectedProject,
 	shouldFetch,
 }: {
-	product: any;
+	product?: any;
 	selectedProject?: string;
 	shouldFetch: boolean;
 }) => {
-	const marketplaceSpringBootOAuth2 = useMarketplaceSpringBootOAuth2();
-
 	const {data: productUsages, isLoading} = useSWR(
 		shouldFetch
 			? `/product-usages/${Liferay.ThemeDisplay.getUserEmailAddress()}`
 			: null,
-		() => marketplaceSpringBootOAuth2.getProductUsages()
+		() => consoleOAuth2.getProjectsUsage()
 	);
 
 	const project = productUsages?.userProjects.find(
@@ -62,13 +60,14 @@ const useGetResourceInfo = ({
 
 	if (project && selectedProject) {
 		validateRamAndCpu = ['ram', 'cpu']
-			.map((requirement) =>
-				product?.productSpecifications.find(
-					(specification: ProductSpecification) =>
-						specification.specificationKey === requirement
-				)
+			.map(
+				(requirement) =>
+					product?.productSpecifications.find(
+						(specification: ProductSpecification) =>
+							specification.specificationKey === requirement
+					) || {}
 			)
-			.some((requirement: any) => {
+			.some((requirement) => {
 				if (requirement.specificationKey === 'ram') {
 					return compareResource(
 						convertMegabyteToGigabyte({

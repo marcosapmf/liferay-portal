@@ -14,7 +14,7 @@ DLAdminManagementToolbarDisplayContext dlAdminManagementToolbarDisplayContext = 
 DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisplayContext, request, renderRequest, renderResponse);
 %>
 
-<liferay-ui:success key='<%= portletDisplay.getId() + "requestProcessed" %>' message="your-request-completed-successfully" />
+<liferay-ui:success key='<%= DLPortletKeys.DOCUMENT_LIBRARY_ADMIN + "requestProcessed" %>' message="your-request-completed-successfully" />
 
 <c:choose>
 	<c:when test="<%= dlViewDisplayContext.isFileEntryTypesNavigation() %>">
@@ -136,7 +136,7 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 					<liferay-util:include page="/document_library/info_panel.jsp" servletContext="<%= application %>" />
 				</liferay-frontend:sidebar-panel>
 
-				<div class="sidenav-content <%= portletTitleBasedNavigation ? "container-fluid container-fluid-max-xl container-view" : StringPool.BLANK %>">
+				<div class="sidenav-content <%= portletTitleBasedNavigation ? "container-fluid container-fluid-max-xxxl container-view" : StringPool.BLANK %>">
 					<c:if test="<%= dlAdminDisplayContext.hasFilterParameters() && ListUtil.isNotEmpty(dlAdminDisplayContext.getMountFolders()) %>">
 						<clay:alert
 							displayType="info"

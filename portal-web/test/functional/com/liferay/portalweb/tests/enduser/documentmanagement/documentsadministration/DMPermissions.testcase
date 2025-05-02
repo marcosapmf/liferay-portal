@@ -4,7 +4,7 @@ definition {
 	property custom.properties = "dl.actions.visible=true${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Document Management";
+	property testray.main.component.name = "Documents and Media";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -474,7 +474,6 @@ definition {
 	@refactordone
 	test CannotDeleteDMFolderAsRegularRoleWithoutPermission {
 		property portal.acceptance = "true";
-		property testray.component.names = "Training";
 
 		HeadlessSite.addSite(siteName = "Site Name");
 
@@ -833,7 +832,6 @@ definition {
 	@refactordone
 	test CannotViewFolderAsOrganizationMemberWithoutPermissions {
 		property portal.acceptance = "true";
-		property testray.component.names = "Training";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1021,7 +1019,6 @@ definition {
 	@refactordone
 	test CannotViewMultipleDocumentsAsSiteMember {
 		property portal.acceptance = "true";
-		property testray.component.names = "Training";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1396,48 +1393,6 @@ definition {
 			value1 = "You do not have the required permissions.");
 	}
 
-	@description = "This is a test for LPS-136852. It checks that a guest cannot access a folder image without permissions."
-	@priority = 4
-	test GuestCannotAccessFolderImageThroughURLWithoutPermissions {
-		property portal.upstream = "true";
-
-		JSONFolder.addFolder(
-			dmFolderDescription = "DM Folder Description",
-			dmFolderName = "DM Folder Name",
-			groupName = "Guest",
-			guestPermissions = "false");
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "DM Document Title",
-			folderName = "DM Folder Name",
-			groupName = "Guest",
-			mimeType = "image/jpeg",
-			sourceFileName = "Document_1.jpg");
-
-		DMNavigator.openToFolderInAdmin(
-			dmFolderName = "DM Folder Name",
-			groupName = "Guest",
-			siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentPermissionsCP(dmDocumentTitle = "DM Document Title");
-
-		PermissionsInline.addOrRemoveAnyPermissionsFromSpecificRole(
-			addOrRemoveViewPermission = "Remove",
-			permissionsKeyList = "INLINE_PERMISSIONS_DOWNLOAD_CHECKBOX",
-			roleTitle = "Guest");
-
-		var dmDocumentURL = JSONDocument.getLatestVersionURL(
-			dmDocumentTitle = "DM Document Title",
-			groupName = "Guest");
-
-		User.logoutPG();
-
-		Navigator.openSpecificURL(url = ${dmDocumentURL});
-
-		User.viewLoginPG();
-	}
-
 	@description = "This is a test for LPS-136833. It checks that a guest cannot add a document in a folder without permissions."
 	@priority = 3
 	test GuestCannotAddDocumentInFolder {
@@ -1536,8 +1491,6 @@ definition {
 	@description = "This is a test for LPS-136836. It checks that a guest cannot update comments in a file without permissions."
 	@priority = 3
 	test GuestCannotUpdateComments {
-		property testray.component.names = "Comment";
-
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Documents and Media Page");
@@ -2196,8 +2149,6 @@ definition {
 	@description = "This is a test for LPS-136849. It checks that a site member cannot update comments without permissions."
 	@priority = 3
 	test SiteMemberCannotUpdateComments {
-		property testray.component.names = "Comment";
-
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",

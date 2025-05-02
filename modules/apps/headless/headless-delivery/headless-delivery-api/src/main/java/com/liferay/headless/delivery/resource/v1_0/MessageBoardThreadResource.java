@@ -8,8 +8,6 @@ package com.liferay.headless.delivery.resource.v1_0;
 import com.liferay.headless.delivery.dto.v1_0.MessageBoardThread;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
 import com.liferay.portal.kernel.change.tracking.CTAware;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -52,17 +50,61 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface MessageBoardThreadResource {
 
+	public void deleteMessageBoardThread(Long messageBoardThreadId)
+		throws Exception;
+
+	public Response deleteMessageBoardThreadBatch(
+			String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteMessageBoardThreadMyRating(Long messageBoardThreadId)
+		throws Exception;
+
 	public Page<MessageBoardThread>
 			getMessageBoardSectionMessageBoardThreadsPage(
 				Long messageBoardSectionId, String search,
 				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-				Filter filter, Pagination pagination, Sort[] sorts)
+				com.liferay.portal.kernel.search.filter.Filter filter,
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
-	public Response postMessageBoardSectionMessageBoardThreadsPageExportBatch(
-			Long messageBoardSectionId, String search, Filter filter,
-			Sort[] sorts, String callbackURL, String contentType,
-			String fieldNames)
+	public MessageBoardThread getMessageBoardThread(Long messageBoardThreadId)
+		throws Exception;
+
+	public Rating getMessageBoardThreadMyRating(Long messageBoardThreadId)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getMessageBoardThreadPermissionsPage(
+				Long messageBoardThreadId, String roleNames)
+		throws Exception;
+
+	public Page<MessageBoardThread> getMessageBoardThreadsRankedPage(
+			Date dateCreated, Date dateModified, Long messageBoardSectionId,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public MessageBoardThread getSiteMessageBoardThreadByFriendlyUrlPath(
+			Long siteId, String friendlyUrlPath)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getSiteMessageBoardThreadPermissionsPage(
+				Long siteId, String roleNames)
+		throws Exception;
+
+	public Page<MessageBoardThread> getSiteMessageBoardThreadsPage(
+			Long siteId, Boolean flatten, String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public MessageBoardThread patchMessageBoardThread(
+			Long messageBoardThreadId, MessageBoardThread messageBoardThread)
 		throws Exception;
 
 	public MessageBoardThread postMessageBoardSectionMessageBoardThread(
@@ -73,23 +115,30 @@ public interface MessageBoardThreadResource {
 			Long messageBoardSectionId, String callbackURL, Object object)
 		throws Exception;
 
-	public Page<MessageBoardThread> getMessageBoardThreadsRankedPage(
-			Date dateCreated, Date dateModified, Long messageBoardSectionId,
-			Pagination pagination, Sort[] sorts)
+	public Response postMessageBoardSectionMessageBoardThreadsPageExportBatch(
+			Long messageBoardSectionId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
-	public void deleteMessageBoardThread(Long messageBoardThreadId)
+	public Rating postMessageBoardThreadMyRating(
+			Long messageBoardThreadId, Rating rating)
 		throws Exception;
 
-	public Response deleteMessageBoardThreadBatch(
-			String callbackURL, Object object)
+	public MessageBoardThread postSiteMessageBoardThread(
+			Long siteId, MessageBoardThread messageBoardThread)
 		throws Exception;
 
-	public MessageBoardThread getMessageBoardThread(Long messageBoardThreadId)
+	public Response postSiteMessageBoardThreadBatch(
+			Long siteId, String callbackURL, Object object)
 		throws Exception;
 
-	public MessageBoardThread patchMessageBoardThread(
-			Long messageBoardThreadId, MessageBoardThread messageBoardThread)
+	public Response postSiteMessageBoardThreadsPageExportBatch(
+			Long siteId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public MessageBoardThread putMessageBoardThread(
@@ -100,23 +149,8 @@ public interface MessageBoardThreadResource {
 			String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteMessageBoardThreadMyRating(Long messageBoardThreadId)
-		throws Exception;
-
-	public Rating getMessageBoardThreadMyRating(Long messageBoardThreadId)
-		throws Exception;
-
-	public Rating postMessageBoardThreadMyRating(
-			Long messageBoardThreadId, Rating rating)
-		throws Exception;
-
 	public Rating putMessageBoardThreadMyRating(
 			Long messageBoardThreadId, Rating rating)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getMessageBoardThreadPermissionsPage(
-				Long messageBoardThreadId, String roleNames)
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
@@ -129,34 +163,6 @@ public interface MessageBoardThreadResource {
 		throws Exception;
 
 	public void putMessageBoardThreadUnsubscribe(Long messageBoardThreadId)
-		throws Exception;
-
-	public Page<MessageBoardThread> getSiteMessageBoardThreadsPage(
-			Long siteId, Boolean flatten, String search,
-			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public Response postSiteMessageBoardThreadsPageExportBatch(
-			Long siteId, String search, Filter filter, Sort[] sorts,
-			String callbackURL, String contentType, String fieldNames)
-		throws Exception;
-
-	public MessageBoardThread postSiteMessageBoardThread(
-			Long siteId, MessageBoardThread messageBoardThread)
-		throws Exception;
-
-	public Response postSiteMessageBoardThreadBatch(
-			Long siteId, String callbackURL, Object object)
-		throws Exception;
-
-	public MessageBoardThread getSiteMessageBoardThreadByFriendlyUrlPath(
-			Long siteId, String friendlyUrlPath)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getSiteMessageBoardThreadPermissionsPage(
-				Long siteId, String roleNames)
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
@@ -187,7 +193,8 @@ public interface MessageBoardThreadResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -212,19 +219,23 @@ public interface MessageBoardThreadResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

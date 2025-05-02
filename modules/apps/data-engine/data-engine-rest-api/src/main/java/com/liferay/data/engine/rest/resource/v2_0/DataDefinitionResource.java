@@ -6,8 +6,6 @@
 package com.liferay.data.engine.rest.resource.v2_0;
 
 import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,28 +46,60 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface DataDefinitionResource {
 
+	public void deleteDataDefinition(Long dataDefinitionId) throws Exception;
+
+	public Response deleteDataDefinitionBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteSiteDataDefinitionByContentTypeByExternalReferenceCode(
+			Long siteId, String contentType, String externalReferenceCode)
+		throws Exception;
+
+	public DataDefinition getDataDefinition(Long dataDefinitionId)
+		throws Exception;
+
 	public Page<DataDefinition> getDataDefinitionByContentTypeContentTypePage(
 			String contentType, String keywords, Pagination pagination,
-			Sort[] sorts)
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public String getDataDefinitionDataDefinitionFieldFieldTypes()
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getDataDefinitionPermissionsPage(
+				Long dataDefinitionId, String roleNames)
+		throws Exception;
+
+	public DataDefinition getSiteDataDefinitionByContentTypeByDataDefinitionKey(
+			Long siteId, String contentType, String dataDefinitionKey)
+		throws Exception;
+
+	public DataDefinition
+			getSiteDataDefinitionByContentTypeByExternalReferenceCode(
+				Long siteId, String contentType, String externalReferenceCode)
+		throws Exception;
+
+	public Page<DataDefinition>
+			getSiteDataDefinitionByContentTypeContentTypePage(
+				Long siteId, String contentType, String keywords,
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public DataDefinition patchDataDefinition(
+			Long dataDefinitionId, DataDefinition dataDefinition)
 		throws Exception;
 
 	public DataDefinition postDataDefinitionByContentType(
 			String contentType, DataDefinition dataDefinition)
 		throws Exception;
 
-	public String getDataDefinitionDataDefinitionFieldFieldTypes()
+	public DataDefinition postDataDefinitionCopy(Long dataDefinitionId)
 		throws Exception;
 
-	public void deleteDataDefinition(Long dataDefinitionId) throws Exception;
-
-	public Response deleteDataDefinitionBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public DataDefinition getDataDefinition(Long dataDefinitionId)
-		throws Exception;
-
-	public DataDefinition patchDataDefinition(
-			Long dataDefinitionId, DataDefinition dataDefinition)
+	public DataDefinition postSiteDataDefinitionByContentType(
+			Long siteId, String contentType, DataDefinition dataDefinition)
 		throws Exception;
 
 	public DataDefinition putDataDefinition(
@@ -79,32 +109,16 @@ public interface DataDefinitionResource {
 	public Response putDataDefinitionBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public DataDefinition postDataDefinitionCopy(Long dataDefinitionId)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getDataDefinitionPermissionsPage(
-				Long dataDefinitionId, String roleNames)
-		throws Exception;
-
 	public Page<com.liferay.portal.vulcan.permission.Permission>
 			putDataDefinitionPermissionsPage(
 				Long dataDefinitionId,
 				com.liferay.portal.vulcan.permission.Permission[] permissions)
 		throws Exception;
 
-	public Page<DataDefinition>
-			getSiteDataDefinitionByContentTypeContentTypePage(
-				Long siteId, String contentType, String keywords,
-				Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public DataDefinition postSiteDataDefinitionByContentType(
-			Long siteId, String contentType, DataDefinition dataDefinition)
-		throws Exception;
-
-	public DataDefinition getSiteDataDefinitionByContentTypeByDataDefinitionKey(
-			Long siteId, String contentType, String dataDefinitionKey)
+	public DataDefinition
+			putSiteDataDefinitionByContentTypeByExternalReferenceCode(
+				Long siteId, String contentType, String externalReferenceCode,
+				DataDefinition dataDefinition)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -129,7 +143,8 @@ public interface DataDefinitionResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -154,19 +169,23 @@ public interface DataDefinitionResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

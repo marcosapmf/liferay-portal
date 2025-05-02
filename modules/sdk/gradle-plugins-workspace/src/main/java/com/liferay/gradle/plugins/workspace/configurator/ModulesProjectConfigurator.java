@@ -8,14 +8,12 @@ package com.liferay.gradle.plugins.workspace.configurator;
 import com.liferay.ant.bnd.metatype.MetatypePlugin;
 import com.liferay.gradle.plugins.JspCDefaultsPlugin;
 import com.liferay.gradle.plugins.LiferayOSGiPlugin;
-import com.liferay.gradle.plugins.extensions.BundleExtension;
 import com.liferay.gradle.plugins.extensions.LiferayOSGiExtension;
 import com.liferay.gradle.plugins.js.module.config.generator.JSModuleConfigGeneratorPlugin;
 import com.liferay.gradle.plugins.js.transpiler.JSTranspilerBasePlugin;
 import com.liferay.gradle.plugins.js.transpiler.JSTranspilerPlugin;
 import com.liferay.gradle.plugins.node.NodePlugin;
 import com.liferay.gradle.plugins.rest.builder.RESTBuilderPlugin;
-import com.liferay.gradle.plugins.service.builder.BuildServiceTask;
 import com.liferay.gradle.plugins.service.builder.ServiceBuilderPlugin;
 import com.liferay.gradle.plugins.soy.SoyPlugin;
 import com.liferay.gradle.plugins.soy.SoyTranslationPlugin;
@@ -23,7 +21,6 @@ import com.liferay.gradle.plugins.test.integration.TestIntegrationBasePlugin;
 import com.liferay.gradle.plugins.test.integration.TestIntegrationPlugin;
 import com.liferay.gradle.plugins.test.integration.TestIntegrationTomcatExtension;
 import com.liferay.gradle.plugins.upgrade.table.builder.UpgradeTableBuilderPlugin;
-import com.liferay.gradle.plugins.util.BndUtil;
 import com.liferay.gradle.plugins.workspace.FrontendPlugin;
 import com.liferay.gradle.plugins.workspace.WorkspaceExtension;
 import com.liferay.gradle.plugins.workspace.WorkspacePlugin;
@@ -53,13 +50,11 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.gradle.api.Action;
-import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.CopySourceSpec;
 import org.gradle.api.file.CopySpec;
-import org.gradle.api.file.DeleteSpec;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.ExtensionContainer;
@@ -72,8 +67,6 @@ import org.gradle.api.tasks.SourceSetOutput;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.jvm.tasks.Jar;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
-
-import org.osgi.framework.Constants;
 
 /**
  * @author Andrea Di Giorgi
@@ -202,9 +195,6 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 			}
 		}
 
-		final BundleExtension bundleExtension = BndUtil.getBundleExtension(
-			project.getExtensions());
-
 		final WorkspaceExtension workspaceExtension = _getWorkspaceExtension(
 			project);
 
@@ -216,23 +206,6 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 				@Override
 				public void execute(Project project) {
 					TaskContainer taskContainer = project.getTasks();
-
-					Task buildServiceTask = taskContainer.findByName(
-						ServiceBuilderPlugin.BUILD_SERVICE_TASK_NAME);
-
-					if (buildServiceTask != null) {
-						_configureTaskBuildService(
-							(BuildServiceTask)buildServiceTask);
-					}
-
-					Task deployFastTask = taskContainer.findByName(
-						LiferayOSGiPlugin.DEPLOY_FAST_TASK_NAME);
-
-					if (deployFastTask != null) {
-						_configureTaskDeployFast(
-							(Copy)deployFastTask, bundleExtension,
-							workspaceExtension);
-					}
 
 					Task setUpTestableTomcatTask = taskContainer.findByName(
 						TestIntegrationPlugin.SET_UP_TESTABLE_TOMCAT_TASK_NAME);
@@ -378,97 +351,6 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 		copy.dependsOn(buildTask);
 
 		copy.into("osgi/modules", _copyJarClosure(project, buildTask));
-	}
-
-	private void _configureTaskBuildService(BuildServiceTask buildServiceTask) {
-		JavaVersion javaVersion = buildServiceTask.getJavaVersion();
-
-		if (javaVersion.compareTo(JavaVersion.VERSION_11) >= 0) {
-			buildServiceTask.jvmArgs(
-				"--add-opens", "java.base/java.lang=ALL-UNNAMED");
-			buildServiceTask.jvmArgs(
-				"--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED");
-			buildServiceTask.jvmArgs(
-				"--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED");
-			buildServiceTask.jvmArgs(
-				"--add-opens", "java.base/java.net=ALL-UNNAMED");
-			buildServiceTask.jvmArgs(
-				"--add-opens",
-				"java.base/sun.net.www.protocol.http=ALL-UNNAMED");
-			buildServiceTask.jvmArgs(
-				"--add-opens", "java.base/sun.util.calendar=ALL-UNNAMED");
-			buildServiceTask.jvmArgs(
-				"--add-opens", "jdk.zipfs/jdk.nio.zipfs=ALL-UNNAMED");
-		}
-	}
-
-	private void _configureTaskDeployFast(
-		Copy deployFastTask, BundleExtension bundleExtension,
-		WorkspaceExtension workspaceExtension) {
-
-		Project project = deployFastTask.getProject();
-
-		String bundleSymbolicName = bundleExtension.getInstruction(
-			Constants.BUNDLE_SYMBOLICNAME);
-		String bundleVersion = bundleExtension.getInstruction(
-			Constants.BUNDLE_VERSION);
-
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("work/");
-		sb.append(bundleSymbolicName);
-		sb.append("-");
-		sb.append(bundleVersion);
-
-		final String pathName = sb.toString();
-
-		File dockerWorkDir = new File(
-			workspaceExtension.getDockerDir(), pathName);
-
-		deployFastTask.setDestinationDir(workspaceExtension.getHomeDir());
-
-		deployFastTask.doLast(
-			new Action<Task>() {
-
-				@Override
-				public void execute(Task task) {
-					project.sync(
-						new Action<CopySpec>() {
-
-							@Override
-							public void execute(CopySpec copySpec) {
-								copySpec.from(
-									new File(
-										deployFastTask.getDestinationDir(),
-										pathName));
-								copySpec.into(dockerWorkDir);
-							}
-
-						});
-				}
-
-			});
-
-		Task cleanTask = GradleUtil.getTask(
-			project, LifecycleBasePlugin.CLEAN_TASK_NAME);
-
-		cleanTask.doLast(
-			new Action<Task>() {
-
-				@Override
-				public void execute(Task task) {
-					project.delete(
-						new Action<DeleteSpec>() {
-
-							@Override
-							public void execute(DeleteSpec deleteSpec) {
-								deleteSpec.delete(dockerWorkDir);
-							}
-
-						});
-				}
-
-			});
 	}
 
 	private void _configureTaskSetUpTestableTomcat(

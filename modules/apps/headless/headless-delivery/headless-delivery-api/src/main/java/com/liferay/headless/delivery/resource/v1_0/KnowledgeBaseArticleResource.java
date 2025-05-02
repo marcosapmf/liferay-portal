@@ -8,8 +8,6 @@ package com.liferay.headless.delivery.resource.v1_0;
 import com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseArticle;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
 import com.liferay.portal.kernel.change.tracking.CTAware;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -58,13 +56,105 @@ public interface KnowledgeBaseArticleResource {
 			String callbackURL, Object object)
 		throws Exception;
 
+	public void deleteKnowledgeBaseArticleMyRating(Long knowledgeBaseArticleId)
+		throws Exception;
+
+	public void deleteSiteKnowledgeBaseArticleByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
 	public KnowledgeBaseArticle getKnowledgeBaseArticle(
 			Long knowledgeBaseArticleId)
+		throws Exception;
+
+	public Page<KnowledgeBaseArticle>
+			getKnowledgeBaseArticleKnowledgeBaseArticlesPage(
+				Long parentKnowledgeBaseArticleId, Boolean flatten,
+				String search,
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+				com.liferay.portal.kernel.search.filter.Filter filter,
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Rating getKnowledgeBaseArticleMyRating(Long knowledgeBaseArticleId)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getKnowledgeBaseArticlePermissionsPage(
+				Long knowledgeBaseArticleId, String roleNames)
+		throws Exception;
+
+	public Page<KnowledgeBaseArticle>
+			getKnowledgeBaseFolderKnowledgeBaseArticlesPage(
+				Long knowledgeBaseFolderId, Boolean flatten, String search,
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+				com.liferay.portal.kernel.search.filter.Filter filter,
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public KnowledgeBaseArticle
+			getSiteKnowledgeBaseArticleByExternalReferenceCode(
+				Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getSiteKnowledgeBaseArticlePermissionsPage(
+				Long siteId, String roleNames)
+		throws Exception;
+
+	public Page<KnowledgeBaseArticle> getSiteKnowledgeBaseArticlesPage(
+			Long siteId, Boolean flatten, String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
 	public KnowledgeBaseArticle patchKnowledgeBaseArticle(
 			Long knowledgeBaseArticleId,
 			KnowledgeBaseArticle knowledgeBaseArticle)
+		throws Exception;
+
+	public KnowledgeBaseArticle postKnowledgeBaseArticleKnowledgeBaseArticle(
+			Long parentKnowledgeBaseArticleId,
+			KnowledgeBaseArticle knowledgeBaseArticle)
+		throws Exception;
+
+	public Rating postKnowledgeBaseArticleMyRating(
+			Long knowledgeBaseArticleId, Rating rating)
+		throws Exception;
+
+	public KnowledgeBaseArticle postKnowledgeBaseFolderKnowledgeBaseArticle(
+			Long knowledgeBaseFolderId,
+			KnowledgeBaseArticle knowledgeBaseArticle)
+		throws Exception;
+
+	public Response postKnowledgeBaseFolderKnowledgeBaseArticleBatch(
+			Long knowledgeBaseFolderId, String callbackURL, Object object)
+		throws Exception;
+
+	public Response postKnowledgeBaseFolderKnowledgeBaseArticlesPageExportBatch(
+			Long knowledgeBaseFolderId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
+		throws Exception;
+
+	public KnowledgeBaseArticle postSiteKnowledgeBaseArticle(
+			Long siteId, KnowledgeBaseArticle knowledgeBaseArticle)
+		throws Exception;
+
+	public Response postSiteKnowledgeBaseArticleBatch(
+			Long siteId, String callbackURL, Object object)
+		throws Exception;
+
+	public Response postSiteKnowledgeBaseArticlesPageExportBatch(
+			Long siteId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public KnowledgeBaseArticle putKnowledgeBaseArticle(
@@ -76,23 +166,8 @@ public interface KnowledgeBaseArticleResource {
 			String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteKnowledgeBaseArticleMyRating(Long knowledgeBaseArticleId)
-		throws Exception;
-
-	public Rating getKnowledgeBaseArticleMyRating(Long knowledgeBaseArticleId)
-		throws Exception;
-
-	public Rating postKnowledgeBaseArticleMyRating(
-			Long knowledgeBaseArticleId, Rating rating)
-		throws Exception;
-
 	public Rating putKnowledgeBaseArticleMyRating(
 			Long knowledgeBaseArticleId, Rating rating)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getKnowledgeBaseArticlePermissionsPage(
-				Long knowledgeBaseArticleId, String roleNames)
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
@@ -107,78 +182,10 @@ public interface KnowledgeBaseArticleResource {
 	public void putKnowledgeBaseArticleUnsubscribe(Long knowledgeBaseArticleId)
 		throws Exception;
 
-	public Page<KnowledgeBaseArticle>
-			getKnowledgeBaseArticleKnowledgeBaseArticlesPage(
-				Long parentKnowledgeBaseArticleId, Boolean flatten,
-				String search,
-				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-				Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public KnowledgeBaseArticle postKnowledgeBaseArticleKnowledgeBaseArticle(
-			Long parentKnowledgeBaseArticleId,
-			KnowledgeBaseArticle knowledgeBaseArticle)
-		throws Exception;
-
-	public Page<KnowledgeBaseArticle>
-			getKnowledgeBaseFolderKnowledgeBaseArticlesPage(
-				Long knowledgeBaseFolderId, Boolean flatten, String search,
-				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-				Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public Response postKnowledgeBaseFolderKnowledgeBaseArticlesPageExportBatch(
-			Long knowledgeBaseFolderId, String search, Filter filter,
-			Sort[] sorts, String callbackURL, String contentType,
-			String fieldNames)
-		throws Exception;
-
-	public KnowledgeBaseArticle postKnowledgeBaseFolderKnowledgeBaseArticle(
-			Long knowledgeBaseFolderId,
-			KnowledgeBaseArticle knowledgeBaseArticle)
-		throws Exception;
-
-	public Response postKnowledgeBaseFolderKnowledgeBaseArticleBatch(
-			Long knowledgeBaseFolderId, String callbackURL, Object object)
-		throws Exception;
-
-	public Page<KnowledgeBaseArticle> getSiteKnowledgeBaseArticlesPage(
-			Long siteId, Boolean flatten, String search,
-			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public Response postSiteKnowledgeBaseArticlesPageExportBatch(
-			Long siteId, String search, Filter filter, Sort[] sorts,
-			String callbackURL, String contentType, String fieldNames)
-		throws Exception;
-
-	public KnowledgeBaseArticle postSiteKnowledgeBaseArticle(
-			Long siteId, KnowledgeBaseArticle knowledgeBaseArticle)
-		throws Exception;
-
-	public Response postSiteKnowledgeBaseArticleBatch(
-			Long siteId, String callbackURL, Object object)
-		throws Exception;
-
-	public void deleteSiteKnowledgeBaseArticleByExternalReferenceCode(
-			Long siteId, String externalReferenceCode)
-		throws Exception;
-
-	public KnowledgeBaseArticle
-			getSiteKnowledgeBaseArticleByExternalReferenceCode(
-				Long siteId, String externalReferenceCode)
-		throws Exception;
-
 	public KnowledgeBaseArticle
 			putSiteKnowledgeBaseArticleByExternalReferenceCode(
 				Long siteId, String externalReferenceCode,
 				KnowledgeBaseArticle knowledgeBaseArticle)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getSiteKnowledgeBaseArticlePermissionsPage(
-				Long siteId, String roleNames)
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
@@ -215,7 +222,8 @@ public interface KnowledgeBaseArticleResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -240,19 +248,23 @@ public interface KnowledgeBaseArticleResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

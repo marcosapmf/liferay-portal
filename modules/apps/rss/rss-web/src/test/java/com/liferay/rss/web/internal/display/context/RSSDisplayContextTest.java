@@ -7,19 +7,18 @@ package com.liferay.rss.web.internal.display.context;
 
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.model.impl.GroupImpl;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.rss.web.internal.configuration.RSSPortletInstanceConfiguration;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -35,50 +34,98 @@ public class RSSDisplayContextTest {
 	public static LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
 
-	@Before
-	public void setUp() {
-		_setUpConfigurationProviderUtil();
-		_setUpGroupLocalServiceUtil();
+	@BeforeClass
+	public static void setUpClass() {
+		_configurationProviderUtilMockedStatic.when(
+			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				Mockito.any(), Mockito.any())
+		).thenReturn(
+			_rssPortletInstanceConfiguration
+		);
 	}
 
-	@After
-	public void tearDown() {
+	@AfterClass
+	public static void tearDownClass() {
 		_configurationProviderUtilMockedStatic.close();
 		_groupLocalServiceUtilMockedStatic.close();
 	}
 
 	@Test
-	public void testGetDisplayStyleGroupKey() throws Exception {
-		RSSDisplayContext rssDisplayContext = new RSSDisplayContext(
-			_mockHttpServletRequest(), null);
+	public void testGetDisplayStyleGroup() throws Exception {
+		_setUpDisplayStyleGroupExternalReferenceCode(null);
+		_setUpGroupLocalServiceUtil(_getGroup());
 
-		Assert.assertEquals(
-			GroupConstants.GUEST, rssDisplayContext.getDisplayStyleGroupKey());
+		Group group = _getGroup();
+
+		_assertRSSDisplayContext(_mockHttpServletRequest(group), group);
+
+		_groupLocalServiceUtilMockedStatic.verifyNoInteractions();
 	}
 
 	@Test
-	public void testGetDisplayStyleGroupKeyWithConfiguration()
-		throws Exception {
+	public void testGetDisplayStyleGroupWithConfiguration() throws Exception {
+		Group group = _getGroup();
 
-		Mockito.when(
-			_rssPortletInstanceConfiguration.displayStyleGroupKey()
-		).thenReturn(
-			GroupConstants.CONTROL_PANEL
-		);
+		_setUpDisplayStyleGroupExternalReferenceCode(
+			group.getExternalReferenceCode());
+		_setUpGroupLocalServiceUtil(group);
 
-		RSSDisplayContext rssDisplayContext = new RSSDisplayContext(
-			_mockHttpServletRequest(), null);
+		_assertRSSDisplayContext(_mockHttpServletRequest(_getGroup()), group);
 
-		Assert.assertEquals(
-			GroupConstants.CONTROL_PANEL,
-			rssDisplayContext.getDisplayStyleGroupKey());
+		_groupLocalServiceUtilMockedStatic.verify(
+			() -> GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				group.getExternalReferenceCode(), 0L),
+			Mockito.times(2));
 	}
 
-	private HttpServletRequest _mockHttpServletRequest() {
+	private void _assertRSSDisplayContext(
+			HttpServletRequest httpServletRequest, Group group)
+		throws Exception {
+
+		RSSDisplayContext rssDisplayContext = new RSSDisplayContext(
+			httpServletRequest, null);
+
+		Assert.assertEquals(
+			group.getGroupId(), rssDisplayContext.getDisplayStyleGroupId());
+		Assert.assertEquals(
+			group.getGroupKey(), rssDisplayContext.getDisplayStyleGroupKey());
+	}
+
+	private Group _getGroup() {
+		Group group = Mockito.mock(Group.class);
+
+		Mockito.when(
+			group.getExternalReferenceCode()
+		).thenReturn(
+			RandomTestUtil.randomString()
+		);
+
+		Mockito.when(
+			group.getGroupId()
+		).thenReturn(
+			RandomTestUtil.randomLong()
+		);
+
+		Mockito.when(
+			group.getGroupKey()
+		).thenReturn(
+			RandomTestUtil.randomString()
+		);
+
+		return group;
+	}
+
+	private HttpServletRequest _mockHttpServletRequest(Group group) {
 		HttpServletRequest httpServletRequest = Mockito.mock(
 			HttpServletRequest.class);
 
 		ThemeDisplay themeDisplay = Mockito.mock(ThemeDisplay.class);
+
+		Mockito.when(
+			themeDisplay.getScopeGroup()
+		).thenReturn(
+			group
+		);
 
 		Mockito.when(
 			(ThemeDisplay)httpServletRequest.getAttribute(WebKeys.THEME_DISPLAY)
@@ -89,34 +136,37 @@ public class RSSDisplayContextTest {
 		return httpServletRequest;
 	}
 
-	private void _setUpConfigurationProviderUtil() {
-		_configurationProviderUtilMockedStatic.when(
-			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
-				Mockito.any(), Mockito.any())
+	private void _setUpDisplayStyleGroupExternalReferenceCode(
+		String externalReferenceCode) {
+
+		Mockito.reset(_rssPortletInstanceConfiguration);
+
+		Mockito.when(
+			_rssPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode()
 		).thenReturn(
-			_rssPortletInstanceConfiguration
+			externalReferenceCode
 		);
 	}
 
-	private void _setUpGroupLocalServiceUtil() {
-		Group group = new GroupImpl();
-
-		group.setGroupKey(GroupConstants.GUEST);
+	private void _setUpGroupLocalServiceUtil(Group group) throws Exception {
+		_groupLocalServiceUtilMockedStatic.reset();
 
 		Mockito.when(
-			GroupLocalServiceUtil.fetchGroup(Mockito.anyLong())
+			GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				group.getExternalReferenceCode(), 0L)
 		).thenReturn(
 			group
 		);
 	}
 
-	private final MockedStatic<ConfigurationProviderUtil>
+	private static final MockedStatic<ConfigurationProviderUtil>
 		_configurationProviderUtilMockedStatic = Mockito.mockStatic(
 			ConfigurationProviderUtil.class);
-	private final MockedStatic<GroupLocalServiceUtil>
+	private static final MockedStatic<GroupLocalServiceUtil>
 		_groupLocalServiceUtilMockedStatic = Mockito.mockStatic(
 			GroupLocalServiceUtil.class);
-	private final RSSPortletInstanceConfiguration
+	private static final RSSPortletInstanceConfiguration
 		_rssPortletInstanceConfiguration = Mockito.mock(
 			RSSPortletInstanceConfiguration.class);
 

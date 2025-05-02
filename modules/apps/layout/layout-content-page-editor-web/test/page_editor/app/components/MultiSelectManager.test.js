@@ -10,7 +10,7 @@ import MultiSelectManager from '../../../../src/main/resources/META-INF/resource
 import {
 	useActivateMultiSelect,
 	useActiveItemIds,
-	useMultiSelectIsActivated,
+	useMultiSelectType,
 	useSelectItem,
 } from '../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ControlsContext';
 import StoreMother from '../../../../src/main/resources/META-INF/resources/page_editor/test_utils/StoreMother';
@@ -24,7 +24,7 @@ jest.mock(
 		return {
 			useActivateMultiSelect: () => activateMultiSelect,
 			useActiveItemIds: jest.fn(() => []),
-			useMultiSelectIsActivated: jest.fn(() => false),
+			useMultiSelectType: jest.fn(() => null),
 			useSelectItem: () => selectItem,
 		};
 	}
@@ -38,12 +38,8 @@ const renderComponent = () =>
 	);
 
 describe('MultiSelectManager', () => {
-	beforeAll(() => {
-		Liferay.FeatureFlags['LPD-18221'] = true;
-	});
-
-	afterAll(() => {
-		Liferay.FeatureFlags['LPD-18221'] = false;
+	afterEach(() => {
+		jest.clearAllMocks();
 	});
 
 	describe('Simple multiselect', () => {
@@ -76,8 +72,23 @@ describe('MultiSelectManager', () => {
 			expect(activateMultiSelect).toBeCalledWith('simple');
 		});
 
+		it('activates simple multiselect when pressing ctrl + "Space"', () => {
+			renderComponent();
+
+			document.body.dispatchEvent(
+				new KeyboardEvent('keydown', {
+					ctrlKey: true,
+					key: 'Space',
+				})
+			);
+
+			const activateMultiSelect = useActivateMultiSelect();
+
+			expect(activateMultiSelect).toBeCalledWith('simple');
+		});
+
 		it('disable simple multiselect when the ctrl key is released', () => {
-			useMultiSelectIsActivated.mockImplementation(() => true);
+			useMultiSelectType.mockImplementation(() => 'simple');
 
 			renderComponent();
 
@@ -91,7 +102,7 @@ describe('MultiSelectManager', () => {
 
 			expect(activateMultiSelect).toBeCalledWith(null);
 
-			useMultiSelectIsActivated.mockImplementation(() => false);
+			useMultiSelectType.mockImplementation(() => null);
 		});
 	});
 
@@ -111,13 +122,13 @@ describe('MultiSelectManager', () => {
 			expect(activateMultiSelect).toBeCalledWith('range');
 		});
 
-		it('activates range multiselect when pressing shift + "Enter"', () => {
+		it('activates range multiselect when pressing shift', () => {
 			renderComponent();
 
 			document.body.dispatchEvent(
 				new KeyboardEvent('keydown', {
 					ctrlKey: false,
-					key: 'Enter',
+					key: 'ArrowUp',
 					shiftKey: true,
 				})
 			);
@@ -128,7 +139,7 @@ describe('MultiSelectManager', () => {
 		});
 
 		it('disable range multiselect when the shift key is released', () => {
-			useMultiSelectIsActivated.mockImplementation(() => true);
+			useMultiSelectType.mockImplementation(() => 'range');
 
 			renderComponent();
 
@@ -142,7 +153,7 @@ describe('MultiSelectManager', () => {
 
 			expect(activateMultiSelect).toBeCalledWith(null);
 
-			useMultiSelectIsActivated.mockImplementation(() => false);
+			useMultiSelectType.mockImplementation(() => null);
 		});
 	});
 

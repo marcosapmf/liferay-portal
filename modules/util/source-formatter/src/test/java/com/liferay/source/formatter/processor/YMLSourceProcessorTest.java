@@ -13,8 +13,23 @@ import org.junit.Test;
 public class YMLSourceProcessorTest extends BaseSourceProcessorTestCase {
 
 	@Test
-	public void testIncorrectEmptyLines() throws Exception {
-		test("IncorrectEmptyLines.testyaml");
+	public void testBooleanValues() throws Exception {
+		test("BooleanValues.testyaml");
+	}
+
+	@Test
+	public void testFormatDescriptions() throws Exception {
+		test("FormatDescriptions.testyaml");
+	}
+
+	@Test
+	public void testFormatIndentations() throws Exception {
+		test("FormatIndentations.testyaml");
+	}
+
+	@Test
+	public void testFormatReviewComments() throws Exception {
+		test("FormatReviewComments.testyaml");
 	}
 
 	@Test
@@ -23,23 +38,13 @@ public class YMLSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testIncorrectWhitespaceOnHelmYaml() throws Exception {
-		test("IncorrectWhitespaceOnHelmYaml.testyaml");
-	}
-
-	@Test
 	public void testLongLinesCheck() throws Exception {
 		test("ExceedMaxLineLength.testyaml");
 	}
 
 	@Test
-	public void testReviewTags() throws Exception {
-		test("ReviewTags.testyaml");
-	}
-
-	@Test
-	public void testSortDefinitionsAndWhitespaceCheck() throws Exception {
-		test("SortDefinitionsAndWhitespace.testyaml");
+	public void testSortDefinitions() throws Exception {
+		test("SortDefinitions.testyaml");
 	}
 
 	@Test
@@ -53,18 +58,18 @@ public class YMLSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testSortSpecificDefinitions() throws Exception {
-		test("SortSpecificDefinitions.testyaml");
+	public void testSortInPaths() throws Exception {
+		test("SortInPaths.testyaml");
 	}
 
 	@Test
-	public void testStyleBlock() throws Exception {
-		test("StyleBlock.testyaml");
+	public void testSortMountPaths() throws Exception {
+		test("SortMountPaths.testyaml");
 	}
 
 	@Test
-	public void testStylingCheck() throws Exception {
-		test("StylingCheck.testyaml");
+	public void testSortParameters() throws Exception {
+		test("SortParameters.testyaml");
 	}
 
 }

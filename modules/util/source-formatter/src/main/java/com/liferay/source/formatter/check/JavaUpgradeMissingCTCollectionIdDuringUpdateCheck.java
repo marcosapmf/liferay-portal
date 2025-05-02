@@ -15,7 +15,6 @@ import com.liferay.source.formatter.util.SourceFormatterUtil;
 
 import java.io.File;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -154,38 +153,10 @@ public class JavaUpgradeMissingCTCollectionIdDuringUpdateCheck
 
 				addMessage(
 					fileName,
-					"Missing 'ctCollectionId' in where clause during update",
+					"Missing \"ctCollectionId\" in where clause during update",
 					getLineNumber(content, x));
 			}
 		}
-	}
-
-	private List<String> _getPrimaryKeys(String tableContent) {
-		List<String> primaryKeys = new ArrayList<>();
-
-		for (String line : StringUtil.splitLines(tableContent)) {
-			String trimmedLine = StringUtil.trimLeading(line);
-
-			if (!trimmedLine.contains("primary key")) {
-				continue;
-			}
-
-			if (trimmedLine.startsWith("primary key")) {
-				String keys = trimmedLine.replaceFirst(
-					"primary key \\((.+)\\)", "$1");
-
-				for (String key : StringUtil.split(keys)) {
-					primaryKeys.add(key.trim());
-				}
-			}
-			else if (trimmedLine.matches("(\\w+) .+ primary key,?")) {
-				int x = trimmedLine.indexOf(" ");
-
-				primaryKeys.add(trimmedLine.substring(0, x));
-			}
-		}
-
-		return primaryKeys;
 	}
 
 	private synchronized List<String> _getPrimaryKeysMap(String tableName)
@@ -227,7 +198,7 @@ public class JavaUpgradeMissingCTCollectionIdDuringUpdateCheck
 
 					if (getLevel(tableContent) == 0) {
 						_primaryKeysMap.put(
-							matcher.group(1), _getPrimaryKeys(tableContent));
+							matcher.group(1), getPrimaryKeys(tableContent));
 
 						break;
 					}

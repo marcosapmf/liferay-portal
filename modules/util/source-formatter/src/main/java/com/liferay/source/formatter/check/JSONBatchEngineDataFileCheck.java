@@ -25,9 +25,7 @@ public class JSONBatchEngineDataFileCheck extends BaseFileCheck {
 			String fileName, String absolutePath, String content)
 		throws JSONException {
 
-		if (!absolutePath.endsWith(".batch-engine-data.json") ||
-			!absolutePath.matches(".+/workspaces/.+/client-extensions/.+")) {
-
+		if (!absolutePath.endsWith(".batch-engine-data.json")) {
 			return content;
 		}
 
@@ -41,6 +39,14 @@ public class JSONBatchEngineDataFileCheck extends BaseFileCheck {
 
 		if (configurationJSONObject != null) {
 			configurationJSONObject.remove("companyId");
+
+			boolean multiCompany = configurationJSONObject.getBoolean(
+				"multiCompany");
+
+			if (!multiCompany) {
+				configurationJSONObject.remove("multiCompany");
+			}
+
 			configurationJSONObject.remove("userId");
 			configurationJSONObject.remove("version");
 

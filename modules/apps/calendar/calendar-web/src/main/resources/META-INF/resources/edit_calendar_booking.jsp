@@ -10,9 +10,9 @@
 <%
 String activeView = ParamUtil.getString(request, "activeView", defaultView);
 
-TimeZone calendarBookingTimeZone = userTimeZone;
-
 boolean allDay = BeanParamUtil.getBoolean(calendarBooking, request, "allDay");
+
+TimeZone calendarBookingTimeZone = allDay ? TimeZone.getTimeZone(StringPool.UTC) : userTimeZone;
 
 java.util.Calendar defaultStartTimeJCalendar = CalendarFactoryUtil.getCalendar(calendarBookingTimeZone);
 
@@ -28,7 +28,7 @@ long calendarId = BeanParamUtil.getLong(calendarBooking, request, "calendarId", 
 
 long startTime = BeanPropertiesUtil.getLong(calendarBooking, "startTime", defaultStartTimeJCalendar.getTimeInMillis());
 
-java.util.Calendar startTimeJCalendar = JCalendarUtil.getJCalendar(startTime, allDay ? TimeZone.getTimeZone(StringPool.UTC) : calendarBookingTimeZone);
+java.util.Calendar startTimeJCalendar = JCalendarUtil.getJCalendar(startTime, calendarBookingTimeZone);
 
 int startTimeYear = ParamUtil.getInteger(request, "startTimeYear", startTimeJCalendar.get(java.util.Calendar.YEAR));
 int startTimeMonth = ParamUtil.getInteger(request, "startTimeMonth", startTimeJCalendar.get(java.util.Calendar.MONTH));
@@ -54,7 +54,7 @@ defaultEndTimeJCalendar.add(java.util.Calendar.MINUTE, defaultDuration);
 
 long endTime = BeanPropertiesUtil.getLong(calendarBooking, "endTime", defaultEndTimeJCalendar.getTimeInMillis());
 
-java.util.Calendar endTimeJCalendar = JCalendarUtil.getJCalendar(endTime, allDay ? TimeZone.getTimeZone(StringPool.UTC) : calendarBookingTimeZone);
+java.util.Calendar endTimeJCalendar = JCalendarUtil.getJCalendar(endTime, calendarBookingTimeZone);
 
 int endTimeYear = ParamUtil.getInteger(request, "endTimeYear", endTimeJCalendar.get(java.util.Calendar.YEAR));
 int endTimeMonth = ParamUtil.getInteger(request, "endTimeMonth", endTimeJCalendar.get(java.util.Calendar.MONTH));
@@ -145,6 +145,10 @@ else if (calendar != null) {
 	}
 	else {
 		pendingCalendarsJSONArray.put(calendarJSONObject);
+
+		if (defaultCalendar.getUserId() == themeDisplay.getUserId()) {
+			acceptedCalendarsJSONArray.put(CalendarUtil.toCalendarJSONObject(themeDisplay, defaultCalendar));
+		}
 	}
 
 	hasWorkflowDefinitionLink = WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), calendarResource.getGroupId(), CalendarBooking.class.getName());
@@ -159,7 +163,7 @@ else {
 	groupIds = ArrayUtil.append(user.getGroupIds(), new long[] {scopeGroupId});
 }
 
-List<Calendar> manageableCalendars = CalendarServiceUtil.search(themeDisplay.getCompanyId(), groupIds, null, null, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS, new CalendarNameComparator(true), CalendarActionKeys.MANAGE_BOOKINGS);
+List<Calendar> manageableCalendars = CalendarServiceUtil.search(themeDisplay.getCompanyId(), groupIds, null, null, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS, CalendarNameComparator.getInstance(true), CalendarActionKeys.MANAGE_BOOKINGS);
 
 CalendarResource guestCalendarResource = CalendarResourceUtil.fetchGuestCalendarResource(themeDisplay.getCompanyId());
 
@@ -272,11 +276,11 @@ while (manageableCalendarsIterator.hasNext()) {
 				<aui:input defaultLanguageId="<%= LocaleUtil.toLanguageId(themeDisplay.getSiteDefaultLocale()) %>" name="title" />
 
 				<div class="<%= allDay ? "allday-class-active" : "" %>" id="<portlet:namespace />startDateContainer">
-					<aui:input ignoreRequestValue="<%= true %>" label="starts" name="startTime" timeFormat="<%= timeFormat %>" value="<%= startTimeJCalendar %>" />
+					<aui:input ignoreRequestValue="<%= true %>" label="starts" name="startTime" required="<%= true %>" timeFormat="<%= timeFormat %>" value="<%= startTimeJCalendar %>" />
 				</div>
 
 				<div class="<%= allDay ? "allday-class-active" : "" %>" id="<portlet:namespace />endDateContainer">
-					<aui:input ignoreRequestValue="<%= true %>" label="ends" name="endTime" timeFormat="<%= timeFormat %>" value="<%= endTimeJCalendar %>" />
+					<aui:input ignoreRequestValue="<%= true %>" label="ends" name="endTime" required="<%= true %>" timeFormat="<%= timeFormat %>" value="<%= endTimeJCalendar %>" />
 				</div>
 
 				<aui:input checked="<%= allDay %>" name="allDay" />
@@ -501,6 +505,15 @@ while (manageableCalendarsIterator.hasNext()) {
 	</aui:button-row>
 </aui:form>
 
+<liferay-frontend:component
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"namespace", "<portlet:namespace />"
+		).build()
+	%>'
+	module="{schedulerEventValidator} from calendar-web"
+/>
+
 <aui:script>
 	function <portlet:namespace />filterCalendarBookings(calendarBooking) {
 		return calendarBooking.calendarBookingId !== '<%= calendarBookingId %>';
@@ -550,9 +563,11 @@ while (manageableCalendarsIterator.hasNext()) {
 					return;
 				}
 
-				const calendarId = calendarIdNode.value;
+				const index = childCalendarIds.indexOf(calendarIdNode.value);
 
-				childCalendarIds.splice(childCalendarIds.indexOf(calendarId), 1);
+				if (index > -1) {
+					childCalendarIds.splice(index, 1);
+				}
 
 				const childCalendarIdsNode = document.getElementById(
 					'<portlet:namespace />childCalendarIds'
@@ -1082,4 +1097,35 @@ while (manageableCalendarsIterator.hasNext()) {
 	};
 
 	scheduler.load();
+
+	var descriptionBoundingBox = document.getElementById(
+		'<portlet:namespace />descriptionBoundingBox'
+	);
+
+	if (descriptionBoundingBox) {
+		const observer = new MutationObserver((mutations, observer) => {
+			outer: for (const mutation of mutations) {
+				for (const node of mutation.addedNodes) {
+					if (node.tagName === 'IFRAME') {
+						node.addEventListener('load', () => {
+							const iframeBody = node.contentDocument?.body;
+
+							if (iframeBody) {
+								iframeBody.setAttribute(
+									'aria-label',
+									'<%= LanguageUtil.get(request, "description") %>'
+								);
+							}
+
+							observer.disconnect();
+						});
+
+						break outer;
+					}
+				}
+			}
+		});
+
+		observer.observe(descriptionBoundingBox, {childList: true, subtree: true});
+	}
 </aui:script>

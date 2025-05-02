@@ -3,182 +3,24 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Option, Picker} from '@clayui/core';
-import DropDown from '@clayui/drop-down';
-import {ClayTooltipProvider} from '@clayui/tooltip';
 import {useFormState} from 'data-engine-js-components-web';
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useMemo} from 'react';
 
 import FieldBase from '../FieldBase/ReactFieldBase.es';
-
-// @ts-ignore
-
-import {normalizeOptions, normalizeValue} from '../util/options';
-import {getTooltipTitle} from '../util/tooltip';
-import MultipleSelection from './MultipleSelect';
-import {MainProps, SelectProps} from './select.d';
+import SelectLocalizedObjectField, {
+	SelectLocalizedObjectFieldProps,
+} from '../localizedObjectFields/SelectLocalizedObjectField';
+import {normalizeValue} from '../util/options';
+import MultipleSelection, {MultipleSelectionProps} from './MultipleSelect';
+import SingleSelectBase from './SingleSelectBase';
+import {useNormalizedOptionsMemo} from './hooks';
+import {SelectMainProps} from './select.d';
 import {toArray} from './selectOperations';
 
 import type {Locale} from '../types';
 
-function Select({
-	errorMessage,
-	id,
-	label,
-	name,
-	onChange,
-	onSelectionChange,
-	options,
-	placeholder,
-	predefinedValue,
-	readOnly,
-	required,
-	selectedKey,
-	showEmptyOption,
-	tip,
-	viewMode,
-}: SelectProps) {
-	const {activeTabTitle} = useFormState();
-	const [loading, setLoading] = useState<boolean>();
-	const [selectedLabel, setSelectedLabel] = useState('');
-	let newSelectedKey = selectedKey;
-
-	if (!selectedKey?.length && showEmptyOption) {
-		newSelectedKey = 'chooseAnOption';
-	}
-
-	if (typeof selectedKey !== 'string' && selectedKey?.[0] === '') {
-		newSelectedKey = undefined;
-	}
-
-	let selectedItem: string | string[] | undefined = newSelectedKey;
-
-	if (newSelectedKey?.[0] !== undefined) {
-		selectedItem =
-			newSelectedKey ??
-			(predefinedValue?.length ? predefinedValue : undefined);
-	}
-	else if (
-		(newSelectedKey === 'chooseAnOption' ||
-			newSelectedKey?.[0] === undefined) &&
-		predefinedValue?.[0] &&
-		!viewMode
-	) {
-		selectedItem = predefinedValue?.[0];
-	}
-	else if (viewMode) {
-		selectedItem = selectedItem ?? predefinedValue;
-	}
-
-	if (typeof selectedItem !== 'string') {
-		selectedItem = selectedItem?.[0];
-	}
-
-	const accessibleProps = {
-		...(label && {
-			'aria-labelledby': `${id ?? name}`,
-		}),
-		...(tip && {
-			'aria-describedby': `${id ?? name}_fieldHelp`,
-		}),
-		...(errorMessage && {
-			'aria-errormessage': `${id ?? name}_fieldError`,
-		}),
-		'aria-required': required,
-	};
-
-	useEffect(() => {
-		if (
-			!readOnly &&
-			activeTabTitle !== Liferay.Language.get('advanced') &&
-			!viewMode &&
-			name?.includes('predefinedValue')
-		) {
-			setLoading(true);
-			setTimeout(() => setLoading(false), 200);
-		}
-
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [options]);
-
-	useEffect(() => {
-		const selectedOption = options.find(
-			(option) => option.value === selectedItem?.[0]
-		);
-
-		if (selectedOption) {
-			setSelectedLabel(selectedOption.label);
-		}
-		else {
-			setSelectedLabel(Liferay.Language.get('choose-an-option'));
-		}
-
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [selectedKey, selectedItem]);
-
-	return (
-		<div
-			data-tooltip-align="top"
-			{...getTooltipTitle({
-				placeholder: Liferay.Language.get('choose-an-option'),
-				value: selectedLabel,
-			})}
-		>
-			{!loading && (
-				<Picker
-					{...accessibleProps}
-					data-testid={id}
-					disabled={readOnly}
-					items={[{items: options, label}]}
-					onSelectionChange={(itemKey: React.Key) => {
-						let newItemKey: React.Key | null = itemKey;
-
-						if ((itemKey as string)?.includes('$.')) {
-							newItemKey = '.';
-						}
-
-						const field = options.find(
-							({value}) => value === newItemKey
-						);
-
-						if (field.value === 'chooseAnOption') {
-							onChange({}, []);
-						}
-						else {
-							onChange({}, [field.value]);
-						}
-
-						if (onSelectionChange) {
-							onSelectionChange(itemKey);
-						}
-					}}
-					placeholder={placeholder}
-					selectedKey={
-						selectedItem === null ? 'chooseAnOption' : selectedItem
-					}
-				>
-					{(group) => (
-						<DropDown.Group
-							header={group.label}
-							items={group.items}
-						>
-							{(item) => (
-								<Option
-									disabled={item.disabled}
-									key={item.value}
-								>
-									{item.label}
-								</Option>
-							)}
-						</DropDown.Group>
-					)}
-				</Picker>
-			)}
-		</div>
-	);
-}
-
-const Main = ({
+const Select = ({
+	defaultLanguageId,
 	fixedOptions = [],
 	label,
 	localizedValue = {},
@@ -196,26 +38,20 @@ const Main = ({
 	value,
 	selectedKey,
 	...otherProps
-}: MainProps) => {
+}: SelectMainProps) => {
 	const {editingLanguageId}: {editingLanguageId: Locale} = useFormState();
 	const predefinedValueArray = toArray(predefinedValue);
 	const valueArray = toArray(value as string | string[]);
 	const {viewMode} = useFormState();
 
-	const normalizedOptions = useMemo(
-		() =>
-			normalizeOptions({
-				editingLanguageId,
-				fixedOptions,
-				multiple,
-				options,
-				showEmptyOption,
-				valueArray,
-			}),
-
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[fixedOptions, multiple, options, showEmptyOption, valueArray]
-	);
+	const normalizedOptions = useNormalizedOptionsMemo({
+		editingLanguageId,
+		fixedOptions,
+		multiple,
+		options,
+		showEmptyOption,
+		valueArray,
+	});
 
 	const multipleSelectValues = useMemo(
 		() =>
@@ -258,6 +94,9 @@ const Main = ({
 		}
 	}
 
+	const MultipleSelectionComponent =
+		MultipleSelection as React.FC<MultipleSelectionProps>;
+
 	return (
 		<FieldBase
 			label={label}
@@ -266,50 +105,63 @@ const Main = ({
 			readOnly={readOnly}
 			{...otherProps}
 		>
-			<ClayTooltipProvider>
-				{multiple ? (
-					<MultipleSelection
-						fixedOptions={[]}
-						label={label}
-						localizedValue={undefined}
-						localizedValueEdited={undefined}
-						name={name}
-						onChange={onChange}
-						options={normalizedOptions}
-						predefinedValue={predefinedValueArray}
-						readOnly={readOnly}
-						required={otherProps.required}
-						showEmptyOption={false}
-						value={
-							viewMode || !!multipleSelectValues.length
-								? multipleSelectValues
-								: predefinedValue
+			{multiple ? (
+				<MultipleSelectionComponent
+					defaultLanguageId={defaultLanguageId}
+					fixedOptions={[]}
+					label={label}
+					name={name}
+					onChange={onChange}
+					options={normalizedOptions}
+					predefinedValue={predefinedValueArray}
+					readOnly={readOnly}
+					value={
+						viewMode || !!multipleSelectValues.length
+							? multipleSelectValues
+							: (predefinedValue as string[])
+					}
+					{...otherProps}
+				/>
+			) : (
+				<SingleSelectBase
+					defaultLanguageId={defaultLanguageId}
+					fixedOptions={fixedOptions}
+					id={id}
+					label={label}
+					multiple={multiple}
+					name={name}
+					onSelectionChange={(itemKey: React.Key) => {
+						let newItemKey: React.Key | null = itemKey;
+
+						if ((itemKey as string)?.includes('$.')) {
+							newItemKey = '.';
 						}
-						{...otherProps}
-					/>
-				) : (
-					<Select
-						fixedOptions={fixedOptions}
-						id={id}
-						label={label}
-						localizedValue={undefined}
-						localizedValueEdited={undefined}
-						multiple={multiple}
-						name={name}
-						onChange={onChange}
-						onSelectionChange={onSelectionChange}
-						options={normalizedOptions}
-						placeholder={placeholder}
-						predefinedValue={newPredefinedValue}
-						readOnly={readOnly}
-						required={otherProps.required}
-						selectedKey={selectedKey ?? newValue}
-						showEmptyOption={showEmptyOption}
-						viewMode={viewMode}
-						{...otherProps}
-					/>
-				)}
-			</ClayTooltipProvider>
+
+						const field = normalizedOptions.find(
+							({value}) => value === newItemKey
+						);
+
+						if (field && field.value === 'chooseAnOption') {
+							onChange({}, []);
+						}
+						else {
+							onChange({}, [field ? field.value : itemKey]);
+						}
+
+						if (onSelectionChange) {
+							onSelectionChange(itemKey);
+						}
+					}}
+					options={normalizedOptions}
+					placeholder={placeholder}
+					predefinedValue={newPredefinedValue}
+					readOnly={readOnly}
+					selectedKey={selectedKey ?? newValue}
+					showEmptyOption={showEmptyOption}
+					viewMode={viewMode}
+					{...otherProps}
+				/>
+			)}
 
 			<input
 				name={name}
@@ -323,6 +175,19 @@ const Main = ({
 				}
 			/>
 		</FieldBase>
+	);
+};
+
+const Main = (props: SelectMainProps | SelectLocalizedObjectFieldProps) => {
+	const isLocalizedObjectField: boolean =
+		Liferay.FeatureFlags['LPD-32050'] && !!props.localizedObjectField;
+
+	return !isLocalizedObjectField ? (
+		<Select {...(props as SelectMainProps)} />
+	) : (
+		<SelectLocalizedObjectField
+			{...(props as SelectLocalizedObjectFieldProps)}
+		/>
 	);
 };
 

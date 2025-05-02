@@ -7,7 +7,7 @@ import {Option, Picker} from '@clayui/core';
 import ClayForm, {ClaySelect} from '@clayui/form';
 import ClayLabel from '@clayui/label';
 import {useIsMounted} from '@liferay/frontend-js-react-web';
-import {useLiferayState} from '@liferay/frontend-js-state-web';
+import {useLiferayState} from '@liferay/frontend-js-state-web/react';
 import classnames from 'classnames';
 import React, {useCallback, useEffect, useState} from 'react';
 
@@ -199,8 +199,6 @@ const ProductOptionSelect = ({
 				(skuOption) => skuOption.skuOptionKey !== productOption.key
 			);
 
-			setHasErrors(optionIsRequired);
-
 			setSkuOptionsAtomState({
 				...skuOptionsAtomState,
 				[errorsKey]: getSkuOptionsErrors(
@@ -221,6 +219,12 @@ const ProductOptionSelect = ({
 					skuOptions: currentSkuOptions,
 				})
 			);
+
+			if (optionIsRequired) {
+				setHasErrors(optionIsRequired);
+
+				return;
+			}
 		}
 		else {
 			setSelectedProductOptionValue({
@@ -281,6 +285,9 @@ const ProductOptionSelect = ({
 			channelId,
 			productId,
 			accountId,
+			Liferay.CommerceContext
+				? Liferay.CommerceContext.currency.currencyCode
+				: '',
 			minQuantity,
 			null,
 			currentSkuOptions
@@ -371,6 +378,9 @@ const ProductOptionSelect = ({
 				productId,
 				productOption.id,
 				accountId,
+				Liferay.CommerceContext
+					? Liferay.CommerceContext.currency.currencyCode
+					: '',
 				productOptionValueId,
 				skuId,
 				1,

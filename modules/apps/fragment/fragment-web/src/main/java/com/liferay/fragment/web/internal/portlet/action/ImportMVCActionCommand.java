@@ -79,11 +79,15 @@ public class ImportMVCActionCommand extends BaseMVCActionCommand {
 			fragmentsImportStrategy = FragmentsImportStrategy.OVERWRITE;
 		}
 
+		boolean marketplace = ParamUtil.getBoolean(
+			actionRequest, "marketplace");
+
 		try {
 			List<FragmentsImporterResultEntry> fragmentsImporterResultEntries =
 				_fragmentsImporter.importFragmentEntries(
 					themeDisplay.getUserId(), themeDisplay.getScopeGroupId(),
-					fragmentCollectionId, file, fragmentsImportStrategy);
+					fragmentCollectionId, file, fragmentsImportStrategy,
+					marketplace);
 
 			if (ListUtil.isNotEmpty(fragmentsImporterResultEntries)) {
 				SessionMessages.add(

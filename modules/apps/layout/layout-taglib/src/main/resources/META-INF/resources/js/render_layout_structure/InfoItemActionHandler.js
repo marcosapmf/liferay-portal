@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {navigate, objectToFormData, openToast} from 'frontend-js-web';
+import {escapeHTML, navigate, objectToFormData} from 'frontend-js-web';
 
 const INTERACTION_NOTIFICATION = 'notification';
 const INTERACTION_PAGE = 'page';
@@ -173,9 +173,14 @@ function handleResult(interaction, reload, text, toastData, url) {
 }
 
 function openResultToast({message, title, type}, text) {
-	openToast({
-		message: text || message,
-		title,
-		type,
-	});
+	import(
+		Liferay.ThemeDisplay.getPathContext() +
+			'/o/frontend-js-components-web/__liferay__/index.js'
+	).then(({openToast}) =>
+		openToast({
+			message: escapeHTML(text || message),
+			title: escapeHTML(title),
+			type,
+		})
+	);
 }

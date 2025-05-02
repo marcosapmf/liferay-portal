@@ -5,14 +5,18 @@
 
 package com.liferay.headless.admin.user.internal.resource.v1_0;
 
+import com.liferay.account.constants.AccountWebKeys;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryUserRel;
+import com.liferay.account.service.AccountEntryService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.account.service.AccountEntryUserRelService;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.announcements.kernel.service.AnnouncementsDeliveryLocalService;
 import com.liferay.captcha.util.CaptchaUtil;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
+import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.admin.user.dto.v1_0.Account;
 import com.liferay.headless.admin.user.dto.v1_0.AccountBrief;
 import com.liferay.headless.admin.user.dto.v1_0.EmailAddress;
@@ -24,7 +28,6 @@ import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccountContactInformation;
 import com.liferay.headless.admin.user.dto.v1_0.WebUrl;
 import com.liferay.headless.admin.user.internal.dto.v1_0.converter.constants.DTOConverterConstants;
-import com.liferay.headless.admin.user.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderAddressUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderEmailAddressUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderListTypeUtil;
@@ -33,6 +36,7 @@ import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderWebs
 import com.liferay.headless.admin.user.internal.odata.entity.v1_0.UserAccountEntityModel;
 import com.liferay.headless.admin.user.resource.v1_0.AccountRoleResource;
 import com.liferay.headless.admin.user.resource.v1_0.UserAccountResource;
+import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.CharPool;
@@ -43,14 +47,18 @@ import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
 import com.liferay.portal.kernel.exception.UserLockoutException;
 import com.liferay.portal.kernel.exception.UserPasswordException;
 import com.liferay.portal.kernel.model.Address;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Contact;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.PasswordPolicy;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.Website;
+import com.liferay.portal.kernel.portlet.PortalPreferences;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
@@ -66,7 +74,12 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.CompanyService;
 import com.liferay.portal.kernel.service.ContactLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.GroupService;
+import com.liferay.portal.kernel.service.OrganizationService;
+import com.liferay.portal.kernel.service.PortalPreferencesLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
@@ -82,12 +95,16 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
 import com.liferay.portal.security.auth.session.AuthenticatedSessionManagerUtil;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
@@ -314,7 +331,11 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 
 	@Override
 	public EntityModel getEntityModel(MultivaluedMap multivaluedMap) {
-		return _entityModel;
+		return new UserAccountEntityModel(
+			EntityFieldsUtil.getEntityFields(
+				_portal.getClassNameId(User.class.getName()),
+				contextCompany.getCompanyId(), _expandoBridgeIndexer,
+				_expandoColumnLocalService, _expandoTableLocalService));
 	}
 
 	@Override
@@ -324,6 +345,22 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 
 		return _toUserAccount(
 			_userService.getUserById(permissionChecker.getUserId()));
+	}
+
+	@Override
+	public Page<UserAccount>
+			getOrganizationByExternalReferenceCodeUserAccountsPage(
+				String externalReferenceCode, String search, Filter filter,
+				Pagination pagination, Sort[] sorts)
+		throws Exception {
+
+		Organization organization =
+			_organizationService.getOrganizationByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		return getOrganizationUserAccountsPage(
+			String.valueOf(organization.getOrganizationId()), search, filter,
+			pagination, sorts);
 	}
 
 	@NestedField(
@@ -358,6 +395,48 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 					BooleanClauseOccur.MUST);
 			},
 			filter, search, pagination, sorts, null);
+	}
+
+	@Override
+	public Boolean getSiteAccountUserAccountSelected(
+			Long siteId, Long accountId, Long userAccountId)
+		throws Exception {
+
+		AccountEntryUserRel accountEntryUserRel =
+			_accountEntryUserRelService.getAccountEntryUserRel(
+				accountId, userAccountId);
+		Group group = _groupService.getGroup(siteId);
+
+		PortalPreferences portalPreferences =
+			_portletPreferencesFactory.getPortalPreferences(
+				accountEntryUserRel.getAccountUserId(), false);
+
+		long currentAccountEntryId = GetterUtil.getLong(
+			portalPreferences.getValue(
+				AccountEntry.class.getName(),
+				AccountWebKeys.CURRENT_ACCOUNT_ENTRY_ID + group.getGroupId()));
+
+		return accountEntryUserRel.getAccountEntryId() == currentAccountEntryId;
+	}
+
+	@Override
+	public Boolean
+			getSiteByFriendlyUrlPathAccountByExternalReferenceCodeAccountExternalReferenceCodeUserAccountByExternalReferenceCodeUserAccountExternalReferenceCodeSelected(
+				String friendlyUrlPath, String accountExternalReferenceCode,
+				String userAccountExternalReferenceCode)
+		throws Exception {
+
+		Group group = _groupLocalService.getFriendlyURLGroup(
+			contextCompany.getCompanyId(), "/" + friendlyUrlPath);
+		AccountEntry accountEntry =
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				accountExternalReferenceCode, contextCompany.getCompanyId());
+		UserAccount userAccount = getUserAccountByExternalReferenceCode(
+			userAccountExternalReferenceCode);
+
+		return getSiteAccountUserAccountSelected(
+			group.getGroupId(), accountEntry.getAccountEntryId(),
+			userAccount.getId());
 	}
 
 	@Override
@@ -404,7 +483,7 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 
 		return _toUserAccount(
 			_userService.getUserByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode));
+				externalReferenceCode, contextCompany.getCompanyId()));
 	}
 
 	@Override
@@ -494,6 +573,20 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 	}
 
 	@Override
+	public Page<UserAccount> getUserGroupByExternalReferenceCodeUsersPage(
+			String externalReferenceCode, String search, Filter filter,
+			Pagination pagination, Sort[] sorts)
+		throws Exception {
+
+		UserGroup userGroup =
+			_userGroupService.getUserGroupByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		return getUserGroupUsersPage(
+			userGroup.getUserGroupId(), search, filter, pagination, sorts);
+	}
+
+	@Override
 	public Page<UserAccount> getUserGroupUsersPage(
 			Long userGroupId, String search, Filter filter,
 			Pagination pagination, Sort[] sorts)
@@ -522,6 +615,50 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 			document -> _toUserAccount(
 				Collections.emptyMap(),
 				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))));
+	}
+
+	@Override
+	public void patchSiteAccountUserAccountSelected(
+			Long siteId, Long accountId, Long userAccountId)
+		throws Exception {
+
+		AccountEntryUserRel accountEntryUserRel =
+			_accountEntryUserRelService.getAccountEntryUserRel(
+				accountId, userAccountId);
+		Group group = _groupService.getGroup(siteId);
+
+		PortalPreferences portalPreferences =
+			_portletPreferencesFactory.getPortalPreferences(
+				accountEntryUserRel.getAccountUserId(), false);
+
+		portalPreferences.setValue(
+			AccountEntry.class.getName(),
+			AccountWebKeys.CURRENT_ACCOUNT_ENTRY_ID + group.getGroupId(),
+			String.valueOf(accountId));
+
+		_portalPreferencesLocalService.updatePreferences(
+			accountEntryUserRel.getAccountUserId(),
+			PortletKeys.PREFS_OWNER_TYPE_USER, portalPreferences);
+	}
+
+	@Override
+	public void
+			patchSiteByFriendlyUrlPathAccountByExternalReferenceCodeAccountExternalReferenceCodeUserAccountByExternalReferenceCodeUserAccountExternalReferenceCodeSelected(
+				String friendlyUrlPath, String accountExternalReferenceCode,
+				String userAccountExternalReferenceCode)
+		throws Exception {
+
+		Group group = _groupLocalService.getFriendlyURLGroup(
+			contextCompany.getCompanyId(), "/" + friendlyUrlPath);
+		AccountEntry accountEntry =
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				accountExternalReferenceCode, contextCompany.getCompanyId());
+		UserAccount userAccount = getUserAccountByExternalReferenceCode(
+			userAccountExternalReferenceCode);
+
+		patchSiteAccountUserAccountSelected(
+			group.getGroupId(), accountEntry.getAccountEntryId(),
+			userAccount.getId());
 	}
 
 	@Override
@@ -599,7 +736,8 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 			GetterUtil.getString(
 				userAccount.getFamilyName(), user.getLastName()),
 			_getPrefixId(contact, userAccount),
-			_getSuffixId(contact, userAccount), true,
+			_getSuffixId(contact, userAccount),
+			_isMale(contact.isMale(), userAccount.getGender()),
 			_getBirthdayMonth(
 				_getCalendarFieldValue(Calendar.MONTH, Calendar.JANUARY, user),
 				userAccount),
@@ -651,6 +789,17 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 		}
 
 		return _toUserAccount(user);
+	}
+
+	@Override
+	public UserAccount patchUserAccountByExternalReferenceCode(
+			String externalReferenceCode, UserAccount userAccount)
+		throws Exception {
+
+		User user = _userService.getUserByExternalReferenceCode(
+			externalReferenceCode, contextCompany.getCompanyId());
+
+		return patchUserAccount(user.getUserId(), userAccount);
 	}
 
 	@Override
@@ -778,11 +927,12 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 	}
 
 	@Override
-	public void postAccountUserAccountByExternalReferenceCodeByEmailAddress(
-			String externalReferenceCode, String emailAddress)
+	public UserAccount
+			postAccountUserAccountByExternalReferenceCodeByEmailAddress(
+				String externalReferenceCode, String emailAddress)
 		throws Exception {
 
-		postAccountUserAccountByEmailAddress(
+		return postAccountUserAccountByEmailAddress(
 			DTOConverterUtil.getModelPrimaryKey(
 				_accountResourceDTOConverter, externalReferenceCode),
 			emailAddress);
@@ -824,14 +974,18 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 	}
 
 	@Override
-	public void postAccountUserAccountsByExternalReferenceCodeByEmailAddress(
-			String externalReferenceCode, String[] emailAddresses)
+	public Page<UserAccount>
+			postAccountUserAccountsByExternalReferenceCodeByEmailAddress(
+				String externalReferenceCode, String accountRoleIds,
+				String[] emailAddresses)
 		throws Exception {
 
-		for (String emailAddress : emailAddresses) {
-			postAccountUserAccountByExternalReferenceCodeByEmailAddress(
-				externalReferenceCode, emailAddress);
-		}
+		AccountEntry accountEntry =
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		return postAccountUserAccountsByEmailAddress(
+			accountEntry.getAccountEntryId(), accountRoleIds, emailAddresses);
 	}
 
 	@Override
@@ -856,18 +1010,29 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 				userAccount.getCustomFields(),
 				contextAcceptLanguage.getPreferredLocale()));
 
+		if (Validator.isNull(serviceContext.getPathMain()) ||
+			Validator.isNull(serviceContext.getPortalURL())) {
+
+			Company company = _companyService.getCompanyById(
+				contextCompany.getCompanyId());
+
+			serviceContext.setPathMain(Portal.PATH_MAIN);
+			serviceContext.setPortalURL(company.getPortalURL(0));
+		}
+
 		if (contextUser.isGuestUser()) {
 			if (_captchaSettings.isCreateAccountCaptchaEnabled()) {
 				CaptchaUtil.check(contextHttpServletRequest);
 			}
 
-			user = _userService.addUser(
+			user = _userService.addUserWithWorkflow(
 				contextCompany.getCompanyId(), autoPassword, password, password,
 				false, userAccount.getAlternateName(),
 				userAccount.getEmailAddress(), _getLocale(userAccount),
 				userAccount.getGivenName(), userAccount.getAdditionalName(),
 				userAccount.getFamilyName(), _getPrefixId(null, userAccount),
-				_getSuffixId(null, userAccount), true,
+				_getSuffixId(null, userAccount),
+				_isMale(true, userAccount.getGender()),
 				_getBirthdayMonth(Calendar.JANUARY, userAccount),
 				_getBirthdayDay(1, userAccount),
 				_getBirthdayYear(1977, userAccount), userAccount.getJobTitle(),
@@ -891,13 +1056,14 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 				_getWebsites(null, userAccount));
 		}
 		else {
-			user = _userService.addUser(
+			user = _userService.addUserWithWorkflow(
 				contextCompany.getCompanyId(), autoPassword, password, password,
 				false, userAccount.getAlternateName(),
 				userAccount.getEmailAddress(), _getLocale(userAccount),
 				userAccount.getGivenName(), userAccount.getAdditionalName(),
 				userAccount.getFamilyName(), _getPrefixId(null, userAccount),
-				_getSuffixId(null, userAccount), true,
+				_getSuffixId(null, userAccount),
+				_isMale(true, userAccount.getGender()),
 				_getBirthdayMonth(Calendar.JANUARY, userAccount),
 				_getBirthdayDay(1, userAccount),
 				_getBirthdayYear(1977, userAccount), userAccount.getJobTitle(),
@@ -1001,7 +1167,8 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 			user.getTimeZoneId(), user.getGreeting(), user.getComments(),
 			userAccount.getGivenName(), userAccount.getAdditionalName(),
 			userAccount.getFamilyName(), _getPrefixId(null, userAccount),
-			_getSuffixId(null, userAccount), true,
+			_getSuffixId(null, userAccount),
+			_isMale(true, userAccount.getGender()),
 			_getBirthdayMonth(Calendar.JANUARY, userAccount),
 			_getBirthdayDay(1, userAccount),
 			_getBirthdayYear(1977, userAccount), sms, facebook, jabber, skype,
@@ -1044,56 +1211,14 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 			String externalReferenceCode, UserAccount userAccount)
 		throws Exception {
 
-		boolean autoPassword = true;
-		String password = userAccount.getPassword();
+		User user = _userService.fetchUserByExternalReferenceCode(
+			externalReferenceCode, contextCompany.getCompanyId());
 
-		if (Validator.isNotNull(password)) {
-			autoPassword = false;
-
-			_checkCurrentPassword(
-				_userLocalService.fetchUserByExternalReferenceCode(
-					externalReferenceCode, contextCompany.getCompanyId()),
-				userAccount.getCurrentPassword());
+		if (user == null) {
+			return postUserAccount(userAccount);
 		}
 
-		ServiceContext serviceContext = _createServiceContext(userAccount);
-
-		User user = _userService.addOrUpdateUser(
-			externalReferenceCode, contextUser.getUserId(),
-			contextCompany.getCompanyId(), autoPassword, password, password,
-			false, userAccount.getAlternateName(),
-			userAccount.getEmailAddress(), _getLocale(userAccount),
-			userAccount.getGivenName(), userAccount.getAdditionalName(),
-			userAccount.getFamilyName(), _getPrefixId(null, userAccount),
-			_getSuffixId(null, userAccount), true,
-			_getBirthdayMonth(Calendar.JANUARY, userAccount),
-			_getBirthdayDay(1, userAccount),
-			_getBirthdayYear(1977, userAccount), userAccount.getJobTitle(),
-			_getAddresses(null, userAccount),
-			_getServiceBuilderEmailAddresses(null, userAccount),
-			_getServiceBuilderPhones(null, userAccount),
-			_getWebsites(null, userAccount), false, serviceContext);
-
-		user = _updateStatus(serviceContext, user, userAccount);
-
-		UserAccountContactInformation userAccountContactInformation =
-			userAccount.getUserAccountContactInformation();
-
-		if (userAccountContactInformation != null) {
-			Contact contact = user.getContact();
-
-			contact.setSmsSn(userAccountContactInformation.getSms());
-			contact.setFacebookSn(userAccountContactInformation.getFacebook());
-			contact.setJabberSn(userAccountContactInformation.getJabber());
-			contact.setSkypeSn(userAccountContactInformation.getSkype());
-			contact.setTwitterSn(userAccountContactInformation.getTwitter());
-
-			_contactLocalService.updateContact(contact);
-
-			user = _userService.getUserById(user.getUserId());
-		}
-
-		return _toUserAccount(user);
+		return putUserAccount(user.getUserId(), userAccount);
 	}
 
 	@Override
@@ -1393,21 +1518,31 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 			boolean useUserDefault, User user, UserAccount userAccount)
 		throws Exception {
 
-		Long imageId = userAccount.getImageId();
+		long imageId = GetterUtil.getLong(userAccount.getImageId());
 
-		if ((user != null) && (imageId == null) && useUserDefault) {
-			imageId = user.getPortraitId();
+		if (imageId == 0) {
+			FileEntry fileEntry =
+				_dlAppLocalService.fetchFileEntryByExternalReferenceCode(
+					contextCompany.getGroupId(),
+					userAccount.getImageExternalReferenceCode());
+
+			if (fileEntry != null) {
+				imageId = fileEntry.getFileEntryId();
+			}
+			else if ((user != null) && useUserDefault) {
+				imageId = user.getPortraitId();
+			}
 		}
 
-		if ((imageId != null) && (imageId != 0) &&
-			((user == null) || (user.getPortraitId() != imageId))) {
+		if ((imageId <= 0) ||
+			((user != null) && (user.getPortraitId() == imageId))) {
 
-			FileEntry fileEntry = _dlAppLocalService.getFileEntry(imageId);
-
-			return _file.getBytes(fileEntry.getContentStream());
+			return null;
 		}
 
-		return null;
+		FileEntry fileEntry = _dlAppLocalService.getFileEntry(imageId);
+
+		return _file.getBytes(fileEntry.getContentStream());
 	}
 
 	private long _getPrefixId(Contact contact, UserAccount userAccount) {
@@ -1573,18 +1708,43 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 			Objects::nonNull);
 	}
 
-	private boolean _hasPortrait(User user, UserAccount userAccount) {
-		Long imageId = userAccount.getImageId();
+	private boolean _hasPortrait(User user, UserAccount userAccount)
+		throws Exception {
 
-		if ((user != null) && (imageId == null)) {
-			imageId = user.getPortraitId();
+		long imageId = GetterUtil.getLong(userAccount.getImageId());
+
+		if (imageId == 0) {
+			FileEntry fileEntry =
+				_dlAppLocalService.fetchFileEntryByExternalReferenceCode(
+					contextCompany.getGroupId(),
+					userAccount.getImageExternalReferenceCode());
+
+			if (fileEntry != null) {
+				imageId = fileEntry.getFileEntryId();
+			}
+			else if (user != null) {
+				imageId = user.getPortraitId();
+			}
 		}
 
-		if ((imageId == null) || (imageId == 0)) {
+		if (imageId == 0) {
 			return false;
 		}
 
 		return true;
+	}
+
+	private boolean _isMale(boolean defaultValue, UserAccount.Gender gender) {
+		if ((gender == null) ||
+			!PrefsPropsUtil.getBoolean(
+				contextCompany.getCompanyId(),
+				PropsKeys.
+					FIELD_ENABLE_COM_LIFERAY_PORTAL_KERNEL_MODEL_CONTACT_MALE)) {
+
+			return defaultValue;
+		}
+
+		return Objects.equals(UserAccount.Gender.MALE, gender);
 	}
 
 	private boolean _isPasswordResetRequired(User user) throws Exception {
@@ -1701,9 +1861,6 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 		return user;
 	}
 
-	private static final EntityModel _entityModel =
-		new UserAccountEntityModel();
-
 	@Reference(
 		policy = ReferencePolicy.DYNAMIC,
 		policyOption = ReferencePolicyOption.GREEDY,
@@ -1711,6 +1868,9 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 	)
 	private volatile ModelResourcePermission<AccountEntry>
 		_accountEntryModelResourcePermission;
+
+	@Reference
+	private AccountEntryService _accountEntryService;
 
 	@Reference
 	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
@@ -1735,6 +1895,9 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 	private CaptchaSettings _captchaSettings;
 
 	@Reference
+	private CompanyService _companyService;
+
+	@Reference
 	private ContactLocalService _contactLocalService;
 
 	@Reference
@@ -1744,7 +1907,22 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 	private DTOConverterRegistry _dtoConverterRegistry;
 
 	@Reference
+	private ExpandoBridgeIndexer _expandoBridgeIndexer;
+
+	@Reference
+	private ExpandoColumnLocalService _expandoColumnLocalService;
+
+	@Reference
+	private ExpandoTableLocalService _expandoTableLocalService;
+
+	@Reference
 	private File _file;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private GroupService _groupService;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.portal.kernel.model.Organization)"
@@ -1760,10 +1938,19 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 			_organizationOrganizationDTOConverter;
 
 	@Reference
+	private OrganizationService _organizationService;
+
+	@Reference
 	private PermissionCheckerFactory _permissionCheckerFactory;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private PortalPreferencesLocalService _portalPreferencesLocalService;
+
+	@Reference
+	private PortletPreferencesFactory _portletPreferencesFactory;
 
 	@Reference
 	private UADAnonymousUserProvider _uadAnonymousUserProvider;

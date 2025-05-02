@@ -8,12 +8,9 @@ package com.liferay.adaptive.media.content.transformer.internal;
 import com.liferay.adaptive.media.image.html.AMImageHTMLTagFactory;
 import com.liferay.adaptive.media.image.mime.type.AMImageMimeTypeProvider;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.petra.string.CharPool;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
@@ -54,23 +51,13 @@ public class HtmlContentTransformerImplTest {
 			"<whatever></whatever>"
 		);
 
-		StringBundler expectedSB = new StringBundler(3);
-
-		expectedSB.append("<div><div>");
-		expectedSB.append("<whatever></whatever>");
-		expectedSB.append("</div></div><br/>");
-
-		StringBundler originalSB = new StringBundler(4);
-
-		originalSB.append("<div><div>");
-		originalSB.append("<img data-fileentryid=\"1989\" ");
-		originalSB.append("src=\"adaptable\"/>");
-		originalSB.append("</div></div><br/>");
-
 		Assert.assertEquals(
-			_duplicateWithNewLine(expectedSB.toString()),
+			_duplicateWithNewLine(
+				"<div><div><whatever></whatever></div></div><br/>"),
 			_htmlContentTransformerImpl.transform(
-				_duplicateWithNewLine(originalSB.toString())));
+				_duplicateWithNewLine(
+					"<div><div><img data-fileentryid=\"1989\" " +
+						"src=\"adaptable\"/></div></div><br/>")));
 	}
 
 	@Test
@@ -183,32 +170,24 @@ public class HtmlContentTransformerImplTest {
 		Assert.assertEquals(
 			"<whatever></whatever>",
 			_htmlContentTransformerImpl.transform(
-				StringBundler.concat(
-					"<img data-fileentryid=\"1989\" ", CharPool.NEW_LINE,
-					"src=\"adaptable\"/>")));
+				"<img data-fileentryid=\"1989\" \nsrc=\"adaptable\"/>"));
 	}
 
 	@Test
-	public void testTheAttributeIsCaseInsensitive() throws Exception {
+	public void testTheAttributeIsCaseSensitive() throws Exception {
 		Mockito.when(
 			_amImageHTMLTagFactory.create(
-				"<img data-fileentryid=\"1989\" src=\"adaptable\"/>",
+				"<img data-fileEntryId=\"1989\" src=\"adaptable\"/>",
 				_pngFileEntry)
 		).thenReturn(
 			"<whatever></whatever>"
 		);
 
-		StringBundler originalSB = new StringBundler(4);
+		String html =
+			"<div><div><img data-fileEntryId=\"1989\" src=\"adaptable\"/>" +
+				"</div></div><br/>";
 
-		originalSB.append("<div><div>");
-		originalSB.append("<img data-fileentryid=\"1989\" ");
-		originalSB.append("src=\"adaptable\"/>");
-		originalSB.append("</div></div><br/>");
-
-		Assert.assertEquals(
-			"<div><div><whatever></whatever></div></div><br/>",
-			_htmlContentTransformerImpl.transform(
-				StringUtil.toLowerCase(originalSB.toString())));
+		Assert.assertEquals(html, _htmlContentTransformerImpl.transform(html));
 	}
 
 	private String _duplicateWithNewLine(String text) {

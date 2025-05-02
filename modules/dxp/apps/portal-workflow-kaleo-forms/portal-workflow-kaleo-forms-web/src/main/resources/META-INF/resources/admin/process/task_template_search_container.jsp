@@ -118,12 +118,11 @@ KaleoFormsTaskTemplateSearchDisplayContext kaleoFormsTaskTemplateSearchDisplayCo
 		window,
 		'<portlet:namespace />editFormTemplate',
 		(uri) => {
-			Liferay.Util.openWindow({
-				dialog: {
-					destroyOnHide: true,
-				},
+			Liferay.Util.openModal({
+				containerProps: {},
+				iframeBodyCssClass: '',
 				title: '<liferay-ui:message key="forms" />',
-				uri: uri,
+				url: url,
 			});
 		},
 		['liferay-util']

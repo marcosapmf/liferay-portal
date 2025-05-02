@@ -1,19 +1,21 @@
 {
-	"@generated": "65cbaac150b74de0363d7a8b0078043935bfee66",
+	"@generated": "3fa1ddc6f81bd3b32fa0f38133dd66ffa482db22",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 			"@liferay/frontend-js-state-web": [
-				"../../../../../../frontend-js-state-web/src/main/resources/META-INF/resources/index.ts"
+				"../../../../../../frontend-js-state-web/src/main/resources/META-INF/resources/main/index.ts"
+			],
+			"@liferay/frontend-js-state-web/react": [
+				"../../../../../../frontend-js-state-web/src/main/resources/META-INF/resources/react/index.ts"
 			],
 			"@liferay/frontend-js-walkthrough-web": [
 				"../../../../../../frontend-js-walkthrough-web/src/main/resources/META-INF/resources/index.js"

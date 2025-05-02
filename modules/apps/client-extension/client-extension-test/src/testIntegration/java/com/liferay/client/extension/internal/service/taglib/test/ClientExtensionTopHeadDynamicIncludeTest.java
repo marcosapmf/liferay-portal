@@ -15,6 +15,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
@@ -22,6 +23,7 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -64,6 +66,7 @@ public class ClientExtensionTopHeadDynamicIncludeTest {
 
 	@Before
 	public void setUp() throws Exception {
+		_company = CompanyTestUtil.addCompany();
 		_group = GroupTestUtil.addGroup();
 	}
 
@@ -91,7 +94,7 @@ public class ClientExtensionTopHeadDynamicIncludeTest {
 
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, null,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
@@ -183,12 +186,15 @@ public class ClientExtensionTopHeadDynamicIncludeTest {
 			).build());
 	}
 
-	private MockHttpServletRequest _getMockHttpServletRequest(Layout layout) {
+	private MockHttpServletRequest _getMockHttpServletRequest(Layout layout)
+		throws Exception {
+
 		MockHttpServletRequest mockHttpServletRequest =
 			new MockHttpServletRequest();
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
+		themeDisplay.setCompany(_company);
 		themeDisplay.setLayout(layout);
 
 		mockHttpServletRequest.setAttribute(
@@ -215,6 +221,9 @@ public class ClientExtensionTopHeadDynamicIncludeTest {
 	@Inject
 	private ClientExtensionEntryRelLocalService
 		_clientExtensionEntryRelLocalService;
+
+	@DeleteAfterTestRun
+	private Company _company;
 
 	@Inject(
 		filter = "component.name=com.liferay.client.extension.internal.service.taglib.ClientExtensionTopHeadDynamicInclude"

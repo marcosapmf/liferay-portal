@@ -6,12 +6,13 @@
 import hasDropZoneChild from '../components/layout_data_items/hasDropZoneChild';
 import {LAYOUT_DATA_ITEM_TYPES} from '../config/constants/layoutDataItemTypes';
 import getWidget from '../utils/getWidget';
+import isStepper from './isStepper';
 
 export default function canBeDuplicated(
 	fragmentEntryLinks,
 	item,
 	layoutData,
-	widgets
+	getWidgets
 ) {
 	switch (item.type) {
 		case LAYOUT_DATA_ITEM_TYPES.collection:
@@ -28,12 +29,23 @@ export default function canBeDuplicated(
 
 			const portletId = fragmentEntryLink?.editableValues.portletId;
 
-			const widget = portletId && getWidget(widgets, portletId);
+			if (hasDropZoneChild(item, layoutData)) {
+				return false;
+			}
 
-			return (
-				(!widget || widget.instanceable) &&
-				!hasDropZoneChild(item, layoutData)
-			);
+			if (portletId) {
+				const widget = getWidget(getWidgets(), portletId);
+
+				if (widget && !widget.instanceable) {
+					return false;
+				}
+			}
+
+			if (isStepper(fragmentEntryLink)) {
+				return false;
+			}
+
+			return true;
 		}
 
 		default:

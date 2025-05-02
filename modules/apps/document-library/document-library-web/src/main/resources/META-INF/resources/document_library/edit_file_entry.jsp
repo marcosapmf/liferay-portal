@@ -126,7 +126,9 @@ renderResponse.setTitle(headerTitle);
 	%>
 
 	<div class="management-bar management-bar-light navbar navbar-expand-md">
-		<clay:container-fluid>
+		<clay:container-fluid
+			fullWidth="<%= true %>"
+		>
 			<ul class="m-auto navbar-nav"></ul>
 
 			<ul class="middle navbar-nav">
@@ -142,6 +144,7 @@ renderResponse.setTitle(headerTitle);
 
 <clay:container-fluid
 	cssClass="container-form-lg"
+	size="lg"
 >
 	<c:if test="<%= checkedOut %>">
 
@@ -223,13 +226,13 @@ renderResponse.setTitle(headerTitle);
 			</liferay-ui:error>
 
 			<liferay-ui:error exception="<%= FileExtensionException.InvalidExtension.class %>">
-				<liferay-ui:message key="document-names-must-end-with-one-of-the-following-extensions" /> <%= StringUtil.merge(dlConfiguration.fileExtensions(), StringPool.COMMA_AND_SPACE) %>.
+				<liferay-ui:message arguments="<%= StringUtil.merge(dlConfiguration.fileExtensions(), StringPool.COMMA_AND_SPACE) %>" key="please-enter-a-file-with-a-valid-extension-x" />
 			</liferay-ui:error>
 
 			<liferay-ui:error exception="<%= FileExtensionException.MismatchExtension.class %>" message="the-file-extension-cannot-be-different-from-the-file-name-extension" />
 
 			<liferay-ui:error exception="<%= FileMimeTypeException.class %>">
-				<liferay-ui:message key="media-files-must-be-one-of-the-following-formats" /> <%= StringUtil.merge(dlPortletInstanceSettings.getMimeTypes(), StringPool.COMMA_AND_SPACE) %>.
+				<liferay-ui:message arguments="<%= dlAdminDisplayContext.getMimeTypes() %>" key="<%= dlAdminDisplayContext.getMimeTypeMessageKey() %>" translateArguments="<%= false %>" />
 			</liferay-ui:error>
 
 			<liferay-ui:error exception="<%= FileNameException.class %>" message="please-enter-a-file-with-a-valid-file-name" />
@@ -543,18 +546,16 @@ renderResponse.setTitle(headerTitle);
 					</c:if>
 
 					<c:if test="<%= !RepositoryUtil.isExternalRepository(repositoryId) %>">
-						<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label='<%= FeatureFlagManagerUtil.isEnabled(themeDisplay.getCompanyId(), "LPD-10701") ? "schedule" : "expiration-date" %>'>
+						<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="schedule">
 							<liferay-ui:error exception="<%= FileEntryDisplayDateException.class %>" message="please-enter-a-valid-publish-date" />
 							<liferay-ui:error exception="<%= FileEntryExpirationDateException.class %>" message="please-enter-a-valid-expiration-date" />
 							<liferay-ui:error exception="<%= FileEntryReviewDateException.class %>" message="please-enter-a-valid-review-date" />
 
-							<c:if test='<%= FeatureFlagManagerUtil.isEnabled(themeDisplay.getCompanyId(), "LPD-10701") %>'>
-								<p class="text-secondary">
-									<liferay-ui:message key="set-the-publication-date-and-time-for-your-document-to-be-published-automatically" />
-								</p>
+							<p class="text-secondary">
+								<liferay-ui:message key="set-the-publication-date-and-time-for-your-document-to-be-published-automatically" />
+							</p>
 
-								<aui:input label="publish-date" name="displayDate" wrapperCssClass="display-date" />
-							</c:if>
+							<aui:input label="publish-date" name="displayDate" wrapperCssClass="display-date" />
 
 							<p class="text-secondary">
 								<liferay-ui:message key="including-an-expiration-date-will-allow-your-documents-or-media-to-expire-automatically-and-become-unpublished" />
@@ -629,11 +630,6 @@ renderResponse.setTitle(headerTitle);
 			</div>
 		</div>
 	</aui:form>
-
-	<liferay-document-library:upload-progress
-		id="<%= uploadProgressId %>"
-		message="uploading"
-	/>
 </clay:container-fluid>
 
 <c:if test="<%= (fileEntry != null) && checkedOut && dlAdminDisplayContext.isVersioningStrategyOverridable() %>">
@@ -710,10 +706,6 @@ renderResponse.setTitle(headerTitle);
 
 	function <portlet:namespace />saveFileEntry(draft) {
 		var fileElement = Liferay.Util.getFormElement(form, 'file');
-
-		if (fileElement && fileElement.value) {
-			<%= HtmlUtil.escape(uploadProgressId) %>.startProgress();
-		}
 
 		var cmdElement = Liferay.Util.getFormElement(form, 'cmd');
 

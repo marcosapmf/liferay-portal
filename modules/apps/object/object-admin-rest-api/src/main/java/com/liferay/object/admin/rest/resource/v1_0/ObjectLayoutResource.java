@@ -6,8 +6,6 @@
 package com.liferay.object.admin.rest.resource.v1_0;
 
 import com.liferay.object.admin.rest.dto.v1_0.ObjectLayout;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,24 +46,27 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ObjectLayoutResource {
 
+	public void deleteObjectLayout(Long objectLayoutId) throws Exception;
+
+	public Response deleteObjectLayoutBatch(String callbackURL, Object object)
+		throws Exception;
+
 	public Page<ObjectLayout>
 			getObjectDefinitionByExternalReferenceCodeObjectLayoutsPage(
 				String externalReferenceCode, String search,
-				Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public ObjectLayout postObjectDefinitionByExternalReferenceCodeObjectLayout(
-			String externalReferenceCode, ObjectLayout objectLayout)
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
 	public Page<ObjectLayout> getObjectDefinitionObjectLayoutsPage(
 			Long objectDefinitionId, String search, Pagination pagination,
-			Sort[] sorts)
+			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
-	public Response postObjectDefinitionObjectLayoutsPageExportBatch(
-			Long objectDefinitionId, String search, Sort[] sorts,
-			String callbackURL, String contentType, String fieldNames)
+	public ObjectLayout getObjectLayout(Long objectLayoutId) throws Exception;
+
+	public ObjectLayout postObjectDefinitionByExternalReferenceCodeObjectLayout(
+			String externalReferenceCode, ObjectLayout objectLayout)
 		throws Exception;
 
 	public ObjectLayout postObjectDefinitionObjectLayout(
@@ -76,12 +77,11 @@ public interface ObjectLayoutResource {
 			Long objectDefinitionId, String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteObjectLayout(Long objectLayoutId) throws Exception;
-
-	public Response deleteObjectLayoutBatch(String callbackURL, Object object)
+	public Response postObjectDefinitionObjectLayoutsPageExportBatch(
+			Long objectDefinitionId, String search,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
-
-	public ObjectLayout getObjectLayout(Long objectLayoutId) throws Exception;
 
 	public ObjectLayout putObjectLayout(
 			Long objectLayoutId, ObjectLayout objectLayout)
@@ -112,7 +112,8 @@ public interface ObjectLayoutResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -137,19 +138,23 @@ public interface ObjectLayoutResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

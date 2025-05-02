@@ -19,8 +19,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -49,11 +47,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 	description = "Represents a document folder that can contain documents and other folders.",
 	value = "DocumentFolder"
 )
-@JsonFilter("Liferay.Vulcan")
-@Schema(
+@io.swagger.v3.oas.annotations.media.Schema(
 	description = "Represents a document folder that can contain documents and other folders.",
 	requiredProperties = {"name"}
 )
+@JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "DocumentFolder")
 public class DocumentFolder implements Serializable {
 
@@ -65,7 +63,7 @@ public class DocumentFolder implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(DocumentFolder.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Block of actions allowed by the user making the request."
 	)
 	@Valid
@@ -112,7 +110,7 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The key of the asset library to which the folder is scoped."
 	)
 	public String getAssetLibraryKey() {
@@ -157,7 +155,9 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _assetLibraryKeySupplier;
 
-	@Schema(description = "The folder's creator.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The folder's creator."
+	)
 	@Valid
 	public Creator getCreator() {
 		if (_creatorSupplier != null) {
@@ -199,11 +199,13 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Creator> _creatorSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A list of the custom fields associated with the folder."
 	)
 	@Valid
-	public CustomField[] getCustomFields() {
+	public com.liferay.portal.vulcan.custom.field.CustomField[]
+		getCustomFields() {
+
 		if (_customFieldsSupplier != null) {
 			customFields = _customFieldsSupplier.get();
 
@@ -213,7 +215,9 @@ public class DocumentFolder implements Serializable {
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields) {
+
 		this.customFields = customFields;
 
 		_customFieldsSupplier = null;
@@ -221,7 +225,9 @@ public class DocumentFolder implements Serializable {
 
 	@JsonIgnore
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.custom.field.CustomField[], Exception>
+				customFieldsUnsafeSupplier) {
 
 		_customFieldsSupplier = () -> {
 			try {
@@ -240,12 +246,15 @@ public class DocumentFolder implements Serializable {
 		description = "A list of the custom fields associated with the folder."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected CustomField[] customFields;
+	protected com.liferay.portal.vulcan.custom.field.CustomField[] customFields;
 
 	@JsonIgnore
-	private Supplier<CustomField[]> _customFieldsSupplier;
+	private Supplier<com.liferay.portal.vulcan.custom.field.CustomField[]>
+		_customFieldsSupplier;
 
-	@Schema(description = "The folder's creation date.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The folder's creation date."
+	)
 	public Date getDateCreated() {
 		if (_dateCreatedSupplier != null) {
 			dateCreated = _dateCreatedSupplier.get();
@@ -286,7 +295,9 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateCreatedSupplier;
 
-	@Schema(description = "The last time a field of the folder changed.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The last time a field of the folder changed."
+	)
 	public Date getDateModified() {
 		if (_dateModifiedSupplier != null) {
 			dateModified = _dateModifiedSupplier.get();
@@ -327,7 +338,9 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateModifiedSupplier;
 
-	@Schema(description = "The folder's description.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The folder's description."
+	)
 	public String getDescription() {
 		if (_descriptionSupplier != null) {
 			description = _descriptionSupplier.get();
@@ -368,7 +381,9 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _descriptionSupplier;
 
-	@Schema(description = "The document folder's external reference code.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document folder's external reference code."
+	)
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -411,7 +426,9 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema(description = "The folder's ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The folder's ID."
+	)
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -450,7 +467,9 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(description = "The folder's main title/name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The folder's main title/name."
+	)
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -490,7 +509,9 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema(description = "The number of this folder's child folders.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The number of this folder's child folders."
+	)
 	public Integer getNumberOfDocumentFolders() {
 		if (_numberOfDocumentFoldersSupplier != null) {
 			numberOfDocumentFolders = _numberOfDocumentFoldersSupplier.get();
@@ -532,7 +553,9 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _numberOfDocumentFoldersSupplier;
 
-	@Schema(description = "The number of documents in this folder.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The number of documents in this folder."
+	)
 	public Integer getNumberOfDocuments() {
 		if (_numberOfDocumentsSupplier != null) {
 			numberOfDocuments = _numberOfDocumentsSupplier.get();
@@ -573,7 +596,9 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _numberOfDocumentsSupplier;
 
-	@Schema(description = "The ID of the folder's parent, if it exists.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The ID of the folder's parent, if it exists."
+	)
 	public Long getParentDocumentFolderId() {
 		if (_parentDocumentFolderIdSupplier != null) {
 			parentDocumentFolderId = _parentDocumentFolderIdSupplier.get();
@@ -614,7 +639,9 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _parentDocumentFolderIdSupplier;
 
-	@Schema(description = "The ID of the site to which this folder is scoped.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The ID of the site to which this folder is scoped."
+	)
 	public Long getSiteId() {
 		if (_siteIdSupplier != null) {
 			siteId = _siteIdSupplier.get();
@@ -657,7 +684,7 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _siteIdSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether the user making the requests is subscribed to this folder."
 	)
 	public Boolean getSubscribed() {
@@ -702,10 +729,10 @@ public class DocumentFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _subscribedSupplier;
 
-	@JsonGetter("viewableBy")
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A write-only property that specifies the folder's default permissions."
 	)
+	@JsonGetter("viewableBy")
 	@Valid
 	public ViewableBy getViewableBy() {
 		if (_viewableBySupplier != null) {
@@ -830,7 +857,8 @@ public class DocumentFolder implements Serializable {
 			sb.append(String.valueOf(creator));
 		}
 
-		CustomField[] customFields = getCustomFields();
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields =
+			getCustomFields();
 
 		if (customFields != null) {
 			if (sb.length() > 1) {
@@ -842,7 +870,7 @@ public class DocumentFolder implements Serializable {
 			sb.append("[");
 
 			for (int i = 0; i < customFields.length; i++) {
-				sb.append(String.valueOf(customFields[i]));
+				sb.append(customFields[i]);
 
 				if ((i + 1) < customFields.length) {
 					sb.append(", ");
@@ -1025,8 +1053,8 @@ public class DocumentFolder implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.DocumentFolder",
 		name = "x-class-name"
 	)

@@ -4,9 +4,6 @@
  */
 
 import {useCallback, useEffect, useMemo, useState} from 'react';
-
-import './index.scss';
-
 import {useForm} from 'react-hook-form';
 import {useNavigate, useParams} from 'react-router-dom';
 import {z} from 'zod';
@@ -14,18 +11,20 @@ import {z} from 'zod';
 import FooterButtons from '../../../../../../../components/FooterButtons';
 import {useMarketplaceContext} from '../../../../../../../context/MarketplaceContext';
 import {Analytics} from '../../../../../../../core/Analytics';
+import {MarketplaceProduct} from '../../../../../../../entity/MarketplaceProduct';
 import useGetProductByOrderId from '../../../../../../../hooks/useGetProductByOrderId';
-import useMarketplaceSpringBootOAuth2 from '../../../../../../../hooks/useMarketplaceSpringBootOAuth2';
 import {Liferay} from '../../../../../../../liferay/liferay';
 import zodSchema from '../../../../../../../schema/zod';
-import {getValueFromDeliverySpecifications} from '../../../../../../../utils/util';
+import provisioningOAuth2 from '../../../../../../../services/oauth/Provisioning';
 import ProductCard from '../../../../../../GetApp/components/ProductCard/ProductCard';
 import StepWizard from '../../../../../../GetApp/components/StepWizard/StepWizard';
 import {formatDate} from '../../../../../../PublisherDashboard/PublisherDashboardPageUtil';
 import AccountEmailInfo from './AccountInfo';
 import LicenseDetails from './LicenseDetails';
 import SelectSubscription from './SelectSubscription';
-import {CreateLicenseForm, StepCreateLicense, StepsInformation} from './Types';
+import {CreateLicenseForm, StepCreateLicense, StepsInformation} from './types';
+
+import './index.scss';
 
 type ExtendBannerProps = {
 	subscription: {
@@ -86,7 +85,6 @@ const CreateLicense = () => {
 	const product = data?.product;
 
 	const productCreatorAccountName = product?.catalogName || '';
-	const marketplaceSpringBootOAuth2 = useMarketplaceSpringBootOAuth2();
 
 	const {
 		formState: {errors},
@@ -132,37 +130,32 @@ const CreateLicense = () => {
 		async (form: z.infer<typeof zodSchema.generateLicenseKey>) => {
 			setLoading(true);
 
-			const producSpecifications =
-				(product as DeliveryProduct)?.productSpecifications || [];
-
-			const appEntryUUID = getValueFromDeliverySpecifications(
-				producSpecifications,
-				'app-entry-uuid'
+			const marketplaceProduct = new MarketplaceProduct(
+				product as DeliveryProduct
 			);
 
 			try {
-				const licenseKey =
-					await marketplaceSpringBootOAuth2.createLicenseKey({
-						licenseEntry: {
-							description: form.description,
-							hostName: form.hostname,
-							ipAddresses: form.ipAddress,
-							macAddresses: form.macAddress,
-							orderId: orderId as string,
-							productId: appEntryUUID || undefined,
-							productPurchaseKey: form.subscription
-								?.productPurchasedKey as string,
-							productVersion:
-								form.subscription?.productVersion ||
-								getValueFromDeliverySpecifications(
-									producSpecifications,
-									'latest-version'
-								) ||
-								'1.0.0',
-						},
-						skuId: form.subscription?.skuId as number,
-						type: form.subscription?.name as string,
-					});
+				const licenseKey = await provisioningOAuth2.createLicenseKey({
+					licenseEntry: {
+						description: form.description,
+						hostName: form.hostname,
+						ipAddresses: form.ipAddress.replaceAll('\n', ','),
+						macAddresses: form.macAddress.replaceAll('\n', ','),
+						orderId: orderId as string,
+						productId:
+							marketplaceProduct.specificationValues
+								.APP_ENTRY_UUID || undefined,
+						productPurchaseKey: form.subscription
+							?.productPurchasedKey as string,
+						productVersion:
+							form.subscription?.productVersion ||
+							marketplaceProduct.specificationValues
+								.APP_VERSION ||
+							'1.0.0',
+					},
+					skuId: form.subscription?.skuId as number,
+					type: form.subscription?.name as string,
+				});
 
 				Liferay.Util.openToast({
 					message: 'License Key created successfully',
@@ -177,9 +170,7 @@ const CreateLicense = () => {
 
 				navigate(`/order/${orderId}/licenses`);
 
-				await marketplaceSpringBootOAuth2.downloadLicenseKey(
-					licenseKey.id
-				);
+				await provisioningOAuth2.downloadLicenseKey(licenseKey.id);
 
 				Analytics.track('DOWNLOAD_LICENSE_KEY', {
 					licenseType: licenseKey.licenseType,
@@ -195,7 +186,7 @@ const CreateLicense = () => {
 
 			setLoading(false);
 		},
-		[marketplaceSpringBootOAuth2, orderId, product, navigate]
+		[navigate, orderId, product]
 	);
 
 	const buttonsInfo = useMemo(

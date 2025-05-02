@@ -7,8 +7,6 @@ package com.liferay.headless.admin.user.resource.v1_0;
 
 import com.liferay.headless.admin.user.dto.v1_0.Organization;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -49,51 +47,117 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface OrganizationResource {
 
-	public Page<Organization>
-			getAccountByExternalReferenceCodeOrganizationsPage(
-				String externalReferenceCode, String search, Filter filter,
-				Pagination pagination, Sort[] sorts)
-		throws Exception;
-
 	public void deleteAccountByExternalReferenceCodeOrganization(
 			String externalReferenceCode, String organizationId)
+		throws Exception;
+
+	public void deleteAccountOrganization(Long accountId, String organizationId)
+		throws Exception;
+
+	public void deleteOrganization(String organizationId) throws Exception;
+
+	public Response deleteOrganizationBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteOrganizationByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public void
+			deleteOrganizationByExternalReferenceCodeUserAccountByEmailAddress(
+				String externalReferenceCode, String emailAddress)
+		throws Exception;
+
+	public void
+			deleteOrganizationByExternalReferenceCodeUserAccountsByEmailAddress(
+				String externalReferenceCode, String[] strings)
+		throws Exception;
+
+	public void deleteUserAccountByEmailAddress(
+			String organizationId, String emailAddress)
+		throws Exception;
+
+	public void deleteUserAccountsByEmailAddress(
+			String organizationId, String[] strings)
 		throws Exception;
 
 	public Organization getAccountByExternalReferenceCodeOrganization(
 			String externalReferenceCode, String organizationId)
 		throws Exception;
 
-	public void postAccountByExternalReferenceCodeOrganization(
-			String externalReferenceCode, String organizationId)
-		throws Exception;
-
-	public Page<Organization> getAccountOrganizationsPage(
-			Long accountId, String search, Filter filter, Pagination pagination,
-			Sort[] sorts)
-		throws Exception;
-
-	public Response postAccountOrganizationsPageExportBatch(
-			Long accountId, String search, Filter filter, Sort[] sorts,
-			String callbackURL, String contentType, String fieldNames)
-		throws Exception;
-
-	public void deleteAccountOrganization(Long accountId, String organizationId)
+	public Page<Organization>
+			getAccountByExternalReferenceCodeOrganizationsPage(
+				String externalReferenceCode, String search,
+				com.liferay.portal.kernel.search.filter.Filter filter,
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
 	public Organization getAccountOrganization(
 			Long accountId, String organizationId)
 		throws Exception;
 
-	public void postAccountOrganization(Long accountId, String organizationId)
+	public Page<Organization> getAccountOrganizationsPage(
+			Long accountId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Organization getOrganization(String organizationId) throws Exception;
+
+	public Organization getOrganizationByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Page<Organization>
+			getOrganizationByExternalReferenceCodeChildOrganizationsPage(
+				String externalReferenceCode, Boolean flatten, String search,
+				com.liferay.portal.kernel.search.filter.Filter filter,
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Page<Organization> getOrganizationChildOrganizationsPage(
+			String organizationId, Boolean flatten, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Page<Organization> getOrganizationOrganizationsPage(
+			String parentOrganizationId, Boolean flatten, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
 	public Page<Organization> getOrganizationsPage(
-			Boolean flatten, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			Boolean flatten, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
-	public Response postOrganizationsPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
+	public Organization patchOrganization(
+			String organizationId, Organization organization)
+		throws Exception;
+
+	public Organization patchOrganizationByExternalReferenceCode(
+			String externalReferenceCode, Organization organization)
+		throws Exception;
+
+	public void postAccountByExternalReferenceCodeOrganization(
+			String externalReferenceCode, String organizationId)
+		throws Exception;
+
+	public void postAccountOrganization(Long accountId, String organizationId)
+		throws Exception;
+
+	public Response postAccountOrganizationsPageExportBatch(
+			Long accountId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
 			String contentType, String fieldNames)
 		throws Exception;
 
@@ -103,31 +167,30 @@ public interface OrganizationResource {
 	public Response postOrganizationBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteOrganizationByExternalReferenceCode(
-			String externalReferenceCode)
+	public UserAccount
+			postOrganizationByExternalReferenceCodeUserAccountByEmailAddress(
+				String externalReferenceCode, String emailAddress)
 		throws Exception;
 
-	public Organization getOrganizationByExternalReferenceCode(
-			String externalReferenceCode)
+	public Page<UserAccount>
+			postOrganizationByExternalReferenceCodeUserAccountsByEmailAddress(
+				String externalReferenceCode, String organizationRoleIds,
+				String[] strings)
 		throws Exception;
 
-	public Organization patchOrganizationByExternalReferenceCode(
-			String externalReferenceCode, Organization organization)
+	public Response postOrganizationsPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
-	public Organization putOrganizationByExternalReferenceCode(
-			String externalReferenceCode, Organization organization)
+	public UserAccount postUserAccountByEmailAddress(
+			String organizationId, String emailAddress)
 		throws Exception;
 
-	public void deleteOrganization(String organizationId) throws Exception;
-
-	public Response deleteOrganizationBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public Organization getOrganization(String organizationId) throws Exception;
-
-	public Organization patchOrganization(
-			String organizationId, Organization organization)
+	public Page<UserAccount> postUserAccountsByEmailAddress(
+			String organizationId, String organizationRoleIds, String[] strings)
 		throws Exception;
 
 	public Organization putOrganization(
@@ -137,30 +200,8 @@ public interface OrganizationResource {
 	public Response putOrganizationBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public Page<Organization> getOrganizationChildOrganizationsPage(
-			String organizationId, Boolean flatten, String search,
-			Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public void deleteUserAccountsByEmailAddress(
-			String organizationId, String[] strings)
-		throws Exception;
-
-	public Page<UserAccount> postUserAccountsByEmailAddress(
-			String organizationId, String organizationRoleIds, String[] strings)
-		throws Exception;
-
-	public void deleteUserAccountByEmailAddress(
-			String organizationId, String emailAddress)
-		throws Exception;
-
-	public UserAccount postUserAccountByEmailAddress(
-			String organizationId, String emailAddress)
-		throws Exception;
-
-	public Page<Organization> getOrganizationOrganizationsPage(
-			String parentOrganizationId, Boolean flatten, String search,
-			Filter filter, Pagination pagination, Sort[] sorts)
+	public Organization putOrganizationByExternalReferenceCode(
+			String externalReferenceCode, Organization organization)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -185,7 +226,8 @@ public interface OrganizationResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -210,19 +252,23 @@ public interface OrganizationResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

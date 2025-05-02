@@ -13,6 +13,7 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.search.internal.spi.model.query.contributor.GroupIdQueryPreFilterContributor;
 import com.liferay.portal.search.test.util.DocumentsAssert;
 import com.liferay.portal.search.test.util.indexing.BaseIndexingTestCase;
@@ -39,7 +40,7 @@ public abstract class BaseGroupIdQueryPreFilterContributorTestCase
 		super.setUp();
 
 		Mockito.doReturn(
-			Arrays.asList(_INACTIVE_GROUP_ID1, _INACTIVE_GROUP_ID2)
+			Arrays.asList(_INACTIVE_GROUP_ID_1, _INACTIVE_GROUP_ID_2)
 		).when(
 			_groupLocalService
 		).getGroupIds(
@@ -48,10 +49,49 @@ public abstract class BaseGroupIdQueryPreFilterContributorTestCase
 	}
 
 	@Test
-	public void testNoEmptyClauses() throws Exception {
+	public void testClausesWithMoreThanOneInactiveGroup() throws Exception {
 		Group group = Mockito.mock(Group.class);
 
-		long groupId = 11111;
+		long groupId = RandomTestUtil.randomLong();
+
+		Mockito.doReturn(
+			group
+		).when(
+			_groupLocalService
+		).getGroup(
+			groupId
+		);
+
+		Mockito.doReturn(
+			false
+		).when(
+			_groupLocalService
+		).isLiveGroupActive(
+			group
+		);
+
+		assertSearch(
+			indexingTestHelper -> indexingTestHelper.define(
+				searchContext -> {
+					searchContext.setGroupIds(
+						new long[] {groupId, RandomTestUtil.randomLong()});
+
+					BooleanFilter booleanFilter = (BooleanFilter)_createFilter(
+						searchContext);
+
+					_assertEmptyClauses(booleanFilter.getMustBooleanClauses());
+					_assertEmptyClauses(
+						booleanFilter.getMustNotBooleanClauses());
+					_assertEmptyClauses(
+						booleanFilter.getShouldBooleanClauses());
+				}));
+	}
+
+	@Test
+	public void testClausesWithOneInactiveGroup() throws Exception {
+		Group group = Mockito.mock(Group.class);
+
+		long groupId = RandomTestUtil.randomLong();
 
 		Mockito.doReturn(
 			group
@@ -77,17 +117,17 @@ public abstract class BaseGroupIdQueryPreFilterContributorTestCase
 					BooleanFilter booleanFilter = (BooleanFilter)_createFilter(
 						searchContext);
 
-					_assertEmptyClauses(booleanFilter.getMustBooleanClauses());
-					_assertEmptyClauses(
-						booleanFilter.getMustNotBooleanClauses());
-					_assertEmptyClauses(
-						booleanFilter.getShouldBooleanClauses());
+					List<BooleanClause<Filter>> clauses =
+						booleanFilter.getMustBooleanClauses();
+
+					Assert.assertNotEquals(
+						clauses.toString(), 0, clauses.size());
 				}));
 	}
 
 	@Test
 	public void testScopeEverythingWithInactiveGroups() {
-		_addDocuments(1, 2, 3, _INACTIVE_GROUP_ID1, _INACTIVE_GROUP_ID2);
+		_addDocuments(1, 2, 3, _INACTIVE_GROUP_ID_1, _INACTIVE_GROUP_ID_2);
 
 		_assertSearch(0, "[1, 2, 3]");
 
@@ -118,7 +158,7 @@ public abstract class BaseGroupIdQueryPreFilterContributorTestCase
 			group
 		);
 
-		_addDocuments(1, 2, 3, _INACTIVE_GROUP_ID1, _INACTIVE_GROUP_ID2);
+		_addDocuments(1, 2, 3, _INACTIVE_GROUP_ID_1, _INACTIVE_GROUP_ID_2);
 
 		_assertSearch(2, "[2]");
 	}
@@ -173,9 +213,9 @@ public abstract class BaseGroupIdQueryPreFilterContributorTestCase
 		return booleanFilter;
 	}
 
-	private static final long _INACTIVE_GROUP_ID1 = 4L;
+	private static final long _INACTIVE_GROUP_ID_1 = 4L;
 
-	private static final long _INACTIVE_GROUP_ID2 = 5L;
+	private static final long _INACTIVE_GROUP_ID_2 = 5L;
 
 	private final GroupLocalService _groupLocalService = Mockito.mock(
 		GroupLocalService.class);

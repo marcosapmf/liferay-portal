@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,13 +46,46 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ProductResource {
 
-	public Page<Product> getProductsPage(
-			String search, Filter filter, Pagination pagination, Sort[] sorts)
+	public void deleteProduct(Long id) throws Exception;
+
+	public Response deleteProductBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public Response postProductsPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
-			String contentType, String fieldNames)
+	public void deleteProductByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public void deleteProductByExternalReferenceCodeByVersion(
+			String externalReferenceCode, Integer version)
+		throws Exception;
+
+	public void deleteProductByVersion(Long id, Integer version)
+		throws Exception;
+
+	public Product getProduct(Long id) throws Exception;
+
+	public Product getProductByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Product getProductByExternalReferenceCodeByVersion(
+			String externalReferenceCode, Integer version)
+		throws Exception;
+
+	public Product getProductByVersion(Long id, Integer version)
+		throws Exception;
+
+	public Page<Product> getProductsPage(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Response patchProduct(Long id, Product product) throws Exception;
+
+	public Response patchProductByExternalReferenceCode(
+			String externalReferenceCode, Product product)
 		throws Exception;
 
 	public Product postProduct(Product product) throws Exception;
@@ -62,46 +93,22 @@ public interface ProductResource {
 	public Response postProductBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteProductByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public Product getProductByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public Response patchProductByExternalReferenceCode(
-			String externalReferenceCode, Product product)
-		throws Exception;
-
-	public void deleteProductByExternalReferenceCodeByVersion(
-			String externalReferenceCode, Integer version)
-		throws Exception;
-
-	public Product getProductByExternalReferenceCodeByVersion(
-			String externalReferenceCode, Integer version)
-		throws Exception;
-
 	public Product postProductByExternalReferenceCodeClone(
 			String externalReferenceCode, String catalogExternalReferenceCode)
 		throws Exception;
 
-	public void deleteProduct(Long id) throws Exception;
-
-	public Response deleteProductBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public Product getProduct(Long id) throws Exception;
-
-	public Response patchProduct(Long id, Product product) throws Exception;
-
-	public void deleteProductByVersion(Long id, Integer version)
-		throws Exception;
-
-	public Product getProductByVersion(Long id, Integer version)
-		throws Exception;
-
 	public Product postProductClone(Long id, Long catalogId) throws Exception;
+
+	public Response postProductsPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
+		throws Exception;
+
+	public Product putProductByExternalReferenceCode(
+			String externalReferenceCode, Product product)
+		throws Exception;
 
 	public default void setContextAcceptLanguage(
 		AcceptLanguage contextAcceptLanguage) {
@@ -125,7 +132,8 @@ public interface ProductResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -150,19 +158,23 @@ public interface ProductResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

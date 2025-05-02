@@ -6,8 +6,6 @@
 package com.liferay.batch.planner.rest.resource.v1_0;
 
 import com.liferay.batch.planner.rest.dto.v1_0.Plan;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -46,18 +44,18 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface PlanResource {
 
-	public Page<Plan> getPlansPage(Pagination pagination) throws Exception;
-
-	public Plan postPlan(Plan plan) throws Exception;
-
-	public Response getPlanTemplate(String internalClassNameKey)
-		throws Exception;
-
 	public void deletePlan(Long planId) throws Exception;
 
 	public Plan getPlan(Long planId) throws Exception;
 
+	public Response getPlanTemplate(String internalClassNameKey)
+		throws Exception;
+
+	public Page<Plan> getPlansPage(Pagination pagination) throws Exception;
+
 	public Plan patchPlan(Long planId, Plan plan) throws Exception;
+
+	public Plan postPlan(Plan plan) throws Exception;
 
 	public default void setContextAcceptLanguage(
 		AcceptLanguage contextAcceptLanguage) {
@@ -81,7 +79,8 @@ public interface PlanResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -98,19 +97,23 @@ public interface PlanResource {
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

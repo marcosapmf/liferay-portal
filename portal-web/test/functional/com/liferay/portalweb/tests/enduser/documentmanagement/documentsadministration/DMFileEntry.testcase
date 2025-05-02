@@ -3,7 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Document Management";
+	property testray.main.component.name = "Documents and Media";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -182,7 +182,6 @@ definition {
 	@refactordone
 	test CanAddCommentToDocument {
 		property portal.acceptance = "true";
-		property testray.component.names = "Comment";
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
@@ -204,60 +203,6 @@ definition {
 		DMDocumentComment.viewPG(
 			commentBody = "This is a comment",
 			dmDocumentTitle = "DM Document Title");
-	}
-
-	@description = "This test asserts that a major version can be created for a file."
-	@priority = 4
-	@refactordone
-	test CanAddMajorVersionIncrement {
-		property portal.acceptance = "true";
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "DM Document Title",
-			groupName = "Guest",
-			mimeType = "text/plain",
-			sourceFileName = "Document_1.txt");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.editCP(
-			dmDocumentDescription = "DM Document Description1",
-			dmDocumentDescriptionEdit = "DM Document Description Edit",
-			dmDocumentTitle = "DM Document Title",
-			dmDocumentTitleEdit = "DM Document Title Edit",
-			revision = "Major",
-			versioning = "true");
-
-		DMDocument.viewEditCP(
-			dmDocumentTitleEdit = "DM Document Title Edit",
-			dmDocumentVersionNumber = "2.0");
-	}
-
-	@description = "This test asserts that a major version can be created for a file."
-	@priority = 4
-	@refactordone
-	test CanAddMinorVersionIncrement {
-		property portal.acceptance = "true";
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "DM Document Title",
-			groupName = "Guest",
-			mimeType = "text/plain",
-			sourceFileName = "Document_1.txt");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.editCP(
-			dmDocumentFileEdit = "Document_2.doc",
-			dmDocumentTitle = "DM Document Title",
-			revision = "Minor",
-			versioning = "true");
-
-		DMDocument.viewEditCP(
-			dmDocumentTitleEdit = "DM Document Title",
-			dmDocumentVersionNumber = "1.1");
 	}
 
 	@description = "This case covers LPS-140006. It ensures that a valid file can be uploaded after the invalid file is discarded."
@@ -381,41 +326,6 @@ definition {
 		DMDocument.viewCategories(categoryNameList = "category");
 	}
 
-	@description = "This test ensures that the filename character restriction can be configured through the blacklist."
-	@priority = 4
-	@refactordone
-	test CanBlacklistCharacters {
-		property custom.properties = "dl.char.blacklist=\\\\,//,:,*,?,<,#,|,../,/..";
-		property portal.acceptance = "true";
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.addCP(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.jpg",
-			dmDocumentFileName = '''#.jpg''',
-			dmDocumentTitle = "DM Document Title",
-			validateFileNameRestriction = "true");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.addCP(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.jpg",
-			dmDocumentFileName = '''>.jpg''',
-			dmDocumentTitle = "DM Document Title");
-
-		DMNavigator.openToEditEntryInSite(
-			dmDocumentTitle = "DM Document Title",
-			groupName = "Guest",
-			siteURLKey = "guest");
-
-		AssertTextEquals(
-			key_fieldLabel = "File Name",
-			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = ">.jpg");
-	}
-
 	@description = "This test ensures that Users can copy multiple documents at the same time."
 	@priority = 5
 	test CanBulkCopyFiles {
@@ -497,30 +407,6 @@ definition {
 				permissionDefinitionKey = ${permissionDefinitionKey},
 				roleTitle = "Guest");
 		}
-	}
-
-	@priority = 4
-	@refactordone
-	test CanCancelCheckout {
-		property custom.properties = "dl.actions.visible=true";
-		property portal.acceptance = "true";
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "DM Document Title",
-			groupName = "Guest",
-			mimeType = "application/msword",
-			sourceFileName = "Document_1.doc");
-
-		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		LexiconEntry.changeDisplayStyle(displayStyle = "list");
-
-		DMDocument.checkoutPG(dmDocumentTitle = "DM Document Title");
-
-		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.cancelCheckoutPG(dmDocumentTitle = "DM Document Title");
 	}
 
 	@description = "This test ensures that the document type of a published basic document can be changed."
@@ -1446,6 +1332,8 @@ definition {
 
 		DMDocument.downloadPG(dmDocumentTitle = "/D/M/@!# Title");
 
+		DownloadTempFile();
+
 		DMDocument.assertFileNameFromTempFolder(fileName = "Document_1.doc");
 	}
 
@@ -1454,7 +1342,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanEditDocument {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property app.server.types = "jboss,tomcat,weblogic,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
@@ -1815,6 +1703,8 @@ definition {
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
 		DMDocument.downloadPG(dmDocumentTitle = "Document_3.doc");
+
+		DownloadTempFile();
 
 		DMDocument.assertFileNameFromTempFolder(fileName = "Document_3.doc");
 
@@ -2499,8 +2389,6 @@ definition {
 	@description = "This is a use case for LPS-114470. Validate crafted or corrupted files cannot cause out of memory errors."
 	@priority = 4
 	test CannotUploadFileThatCausesOutOfMemoryErrors {
-		property testray.component.names = "Security";
-
 		task ("Add new document") {
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentDescription = "DM Document Description",
@@ -2950,7 +2838,7 @@ definition {
 			DMDocument.addCP(
 				dmDocumentFile = ${dmDocumentTitle},
 				dmDocumentTitle = ${dmDocumentTitle},
-				validationError = "Document names must end with one of the following extensions: .doc");
+				validationError = "Please enter a file with a valid extension (.doc).");
 		}
 	}
 
@@ -3448,104 +3336,6 @@ definition {
 		DMDocument.viewCategories(categoryNameList = "Apple,Dragon Fruit");
 	}
 
-	@description = "This test ensures that the user can view an expired document."
-	@priority = 4
-	test CanViewExpiredDocument {
-		property custom.properties = "company.default.time.zone=America/Los_Angeles";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		DMDocument.updateCheckInterval(fieldValue = 1);
-
-		DMNavigator.openToAddEntry(
-			groupName = "Guest",
-			siteURLKey = "guest");
-
-		WaitForPageLoad();
-
-		DMDocument.editDocument(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentTitle = "Document_1.txt");
-
-		DMDocument.setExpirationDate(
-			enableExpirationDate = "true",
-			increaseMinutes = 1);
-
-		Navigator.openURL();
-
-		Notifications.waitForNotificationFlexibly(flexibleRefreshingTime = 20000);
-
-		Notifications.viewBadgeCount(notificationCount = 1);
-
-		Notifications.gotoNotifications();
-
-		Notifications.viewExpiredContent(contentBody = "Document_1.txt");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.viewStatus(
-			dmDocumentStatus = "Expired",
-			dmDocumentTitle = "Document_1.txt");
-	}
-
-	@description = "This test ensures that a user who has content review permissions can see an expired document."
-	@priority = 4
-	test CanViewExpiredDocumentAsContentReviewer {
-		property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}jsonws.web.service.paths.excludes=";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		JSONUser.addUser(
-			userEmailAddress = "userea@liferay.com",
-			userFirstName = "userfn",
-			userLastName = "userln",
-			userScreenName = "usersn");
-
-		JSONUser.setFirstPassword(
-			agreeToTermsAndAnswerReminderQuery = "true",
-			requireReset = "false",
-			userEmailAddress = "userea@liferay.com");
-
-		JSONRole.assignRoleToUser(
-			roleTitle = "Portal Content Reviewer",
-			userEmailAddress = "userea@liferay.com");
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "Document_5.txt",
-			groupName = "Guest",
-			mimeType = "text/plain",
-			sourceFileName = "Document_5.txt");
-
-		DMDocument.updateCheckInterval(fieldValue = 1);
-
-		DMNavigator.openToEditEntryInSite(
-			dmDocumentTitle = "Document_5.txt",
-			groupName = "Guest",
-			siteURLKey = "guest");
-
-		WaitForPageLoad();
-
-		DMDocument.setExpirationDate(
-			enableExpirationDate = "true",
-			increaseMinutes = 1);
-
-		// We need to wait for the system time to pass by 2 minutes in order to verify the document is expired. There is currently no easy way to manipulate the system time in CI for automation. 2 minutes is the shortest value we can set while ensuring the stability of the test. See LPS-157957.
-
-		Pause(value1 = 120000);
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "userea@liferay.com",
-			userLoginFullName = "userfn userln");
-
-		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.viewStatus(
-			dmDocumentStatus = "Expired",
-			dmDocumentTitle = "Document_5.txt");
-	}
-
 	@description = "This test ensures that users can view generic error when bulk copy more than ten wrong files."
 	@priority = 4
 	test CanViewGenericErrorWhenBulkCopyMoreThanTenWrongFiles {
@@ -3819,7 +3609,7 @@ definition {
 			dmDocumentTitle = "Document_1.doc",
 			fieldLabel = "Content");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -4194,7 +3984,7 @@ definition {
 	@description = "This test covers LPS-144687. It validates that a temp zip is not created if NoSuchFileException occurs during a download."
 	@priority = 4
 	test NoZipFileIsCreatedIfDownloadResultsInError {
-		DMDocument.deleteTempFolder(appServer = "tomcat-9.0.90");
+		DMDocument.deleteTempFolder(appServer = "tomcat-9.0.104");
 
 		for (var num : list "1,2,3") {
 			JSONDocument.addFileWithUploadedFile(
@@ -4214,7 +4004,7 @@ definition {
 		AssertConsoleTextPresent(value1 = "com.liferay.document.library.kernel.exception.NoSuchFileException");
 
 		DMDocument.assertNoZipFileFromTempFolder(
-			appServer = "tomcat-9.0.90",
+			appServer = "tomcat-9.0.104",
 			fileNamePattern = "*.zip");
 	}
 

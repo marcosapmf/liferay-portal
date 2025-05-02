@@ -105,6 +105,20 @@ public class NavigationMenuSerDes {
 			sb.append("\"");
 		}
 
+		if (navigationMenu.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(navigationMenu.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (navigationMenu.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -164,6 +178,26 @@ public class NavigationMenuSerDes {
 			sb.append(navigationMenu.getNavigationType());
 
 			sb.append("\"");
+		}
+
+		if (navigationMenu.getPermissions() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"permissions\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < navigationMenu.getPermissions().length; i++) {
+				sb.append(navigationMenu.getPermissions()[i]);
+
+				if ((i + 1) < navigationMenu.getPermissions().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (navigationMenu.getSiteId() != null) {
@@ -232,6 +266,15 @@ public class NavigationMenuSerDes {
 					navigationMenu.getDateModified()));
 		}
 
+		if (navigationMenu.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(navigationMenu.getExternalReferenceCode()));
+		}
+
 		if (navigationMenu.getId() == null) {
 			map.put("id", null);
 		}
@@ -262,6 +305,14 @@ public class NavigationMenuSerDes {
 			map.put(
 				"navigationType",
 				String.valueOf(navigationMenu.getNavigationType()));
+		}
+
+		if (navigationMenu.getPermissions() == null) {
+			map.put("permissions", null);
+		}
+		else {
+			map.put(
+				"permissions", String.valueOf(navigationMenu.getPermissions()));
 		}
 
 		if (navigationMenu.getSiteId() == null) {
@@ -301,6 +352,11 @@ public class NavigationMenuSerDes {
 			else if (Objects.equals(jsonParserFieldName, "dateModified")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				return false;
 			}
@@ -313,6 +369,9 @@ public class NavigationMenuSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "navigationType")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "permissions")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "siteId")) {
@@ -351,6 +410,14 @@ public class NavigationMenuSerDes {
 						toDate((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					navigationMenu.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					navigationMenu.setId(
@@ -387,6 +454,26 @@ public class NavigationMenuSerDes {
 					navigationMenu.setNavigationType(
 						NavigationMenu.NavigationType.create(
 							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "permissions")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					com.liferay.headless.delivery.client.permission.Permission[]
+						permissionsArray = new
+						com.liferay.headless.delivery.client.permission.
+							Permission[jsonParserFieldValues.length];
+
+					for (int i = 0; i < permissionsArray.length; i++) {
+						permissionsArray[i] =
+							com.liferay.headless.delivery.client.permission.
+								Permission.toDTO(
+									(String)jsonParserFieldValues[i]);
+					}
+
+					navigationMenu.setPermissions(permissionsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "siteId")) {
@@ -440,6 +527,10 @@ public class NavigationMenuSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

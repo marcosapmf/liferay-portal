@@ -3,11 +3,14 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Product Info Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(storeFront = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -48,65 +51,6 @@ definition {
 		AssertElementPresent(
 			key_entryName = "Color",
 			locator1 = "CommerceEntry#TABLE_LIST_TITLE");
-	}
-
-	@description = "This is a test for COMMERCE-6287. AddASpecificationAndVerifyIfIsPresent"
-	@priority = 3
-	test AddASpecificationAndVerifyIfIsPresent {
-		property portal.acceptance = "false";
-
-		// TODO Review
-
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-		CommerceProducts.openProductsAdmin();
-
-		CPCommerceCatalog.newProductsEntry(
-			productCatalog = "Master",
-			productName = "Simple T-Shirt",
-			productType = "Simple");
-
-		Click(locator1 = "AppBuilder#SEARCH_BAR_INPUT");
-
-		Type(
-			key_text = "Find or create a specification",
-			locator1 = "TextInput#CUSTOM_CANONICAL_URL_ENABLED",
-			value1 = "Quantity");
-
-		Click(
-			key_text = "Select",
-			locator1 = "Button#ANY_LAST");
-
-		Alert.viewSuccessMessage();
-
-		AssertElementPresent(
-			key_entryName = "Quantity",
-			locator1 = "CommerceEntry#TABLE_LIST_TITLE");
-
-		Click(locator1 = "AppBuilder#SEARCH_BAR_INPUT");
-
-		Type(
-			key_text = "Find or create a specification",
-			locator1 = "TextInput#CUSTOM_CANONICAL_URL_ENABLED",
-			value1 = "Test Specification");
-
-		Click(
-			key_text = "Create New",
-			locator1 = "Button#ANY");
-
-		Alert.viewSuccessMessage();
-
-		AssertElementPresent(
-			key_entryName = "Test Specification",
-			locator1 = "CommerceEntry#TABLE_LIST_TITLE");
-
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Specifications");
-
-		AssertElementPresent(
-			key_entryName = "Test Specification",
-			locator1 = "CommerceEntry#ENTRY_CONTENT_ROW_BY_NAME");
 	}
 
 	@description = "This is a test for COMMERCE-6302. AddGroupedProduct"
@@ -1543,152 +1487,6 @@ definition {
 		}
 	}
 
-	@description = "This is a test for the COMMERCE-11644. Verify that for the product relations an media tab the date is using the correct format"
-	@priority = 5
-	test CanProductMediaAndRelationShowCorrectDateFormat {
-		property portal.acceptance = "true";
-
-		task ("Given 2 products are created") {
-			for (var productName : list "Simple,Relation") {
-				CommerceJSONProductsAPI._addCommerceProduct(
-					catalogName = "Master",
-					productDescription = "Full Description",
-					productName = "${productName} Product",
-					productType = "Simple",
-					purchasable = "true",
-					shortDescription = "Short Description");
-			}
-
-			CommerceProducts.openProductsAdmin();
-
-			CommerceProducts.searchAndGoToProductEntry(entryProductName = "Simple Product");
-		}
-
-		task ("And a new image is added") {
-			CommerceEntry.gotoMenuTab(menuTab = "Media");
-
-			CommerceProductImages.addProductImages(
-				imageTitles = "Black",
-				validationImage = "true");
-		}
-
-		task ("Then the date of the new entry is using the correct format") {
-			for (var dateKeyWords : list "Seconds,Minutes,Hours,Days,Months") {
-				AssertElementNotPresent(
-					key_columnNumber = 3,
-					key_productName = "Commerce_Black",
-					key_value = "${dateKeyWords} Ago",
-					locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
-			}
-
-			var imageDisplayDate = CommerceJSONProductsAPI.getCommerceProductMediaFieldValues(
-				jsonPath = "$..['displayDate']",
-				productName = "Simple Product",
-				type = "images");
-
-			var imageDisplayDate = DateUtil.format(${imageDisplayDate}, "yyyy-MM-dd'T'HH:mm:ss'Z'", "MMM d, yy");
-
-			AssertElementPresent(
-				key_columnNumber = 3,
-				key_productName = "Commerce_Black",
-				key_value = ${imageDisplayDate},
-				locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
-		}
-
-		task ("And a new attachment is added") {
-			CommerceProductImages.addAttachmentImages(imageTitles = "White");
-		}
-
-		task ("Then the date of the new entry is using the correct format") {
-			var imageDiplayDate = CommerceJSONProductsAPI.getCommerceProductMediaFieldValues(
-				jsonPath = "$..['displayDate']",
-				productName = "Simple Product",
-				type = "images");
-
-			var imageDiplayDate = DateUtil.format(${imageDiplayDate}, "yyyy-MM-dd'T'HH:mm:ss'Z'", "MMM d, yy");
-
-			for (var dateKeyWords : list "Seconds,Minutes,Hours,Days,Months") {
-				AssertElementNotPresent(
-					key_columnNumber = 3,
-					key_productName = "Commerce_Black",
-					key_value = "${dateKeyWords} Ago",
-					locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
-			}
-
-			AssertElementPresent(
-				key_columnNumber = 3,
-				key_productName = "Commerce_Black",
-				key_value = ${imageDiplayDate},
-				locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
-		}
-
-		task ("And during the process to add a new product relation") {
-			CommerceEntry.gotoMenuTab(menuTab = "Product Relations");
-
-			Click(locator1 = "Button#PLUS");
-
-			Click(
-				key_selectAction = "Add Up-Sell Product",
-				locator1 = "FormViewBuilder#FIELD_ELLIPSIS_ACTION_FIELDSET");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_IFRAME");
-
-			Type(
-				locator1 = "CommerceEntry#SEARCH_PRODUCT_RELATIONS",
-				value1 = "Relation Product");
-
-			KeyPress(
-				locator1 = "CommerceEntry#SEARCH_PRODUCT_RELATIONS",
-				value1 = "\RETURN");
-		}
-
-		task ("Then the date for all the possible product relation is using the correct format") {
-			for (var dateKeyWords : list "Seconds Ago,Minutes Ago,Hours Ago,Days Ago,Months Ago") {
-				AssertElementNotPresent(
-					key_columnNumber = 6,
-					key_productName = "Relation Product",
-					key_value = ${dateKeyWords},
-					locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT_RELATIONS");
-			}
-
-			var currentDate = DateUtil.getFormattedCurrentDate("MMM dd", "GMT");
-
-			AssertElementPresent(
-				key_columnNumber = 6,
-				key_productName = "Relation Product",
-				key_value = ${currentDate},
-				locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT_RELATIONS");
-
-			Check.checkToggleSwitch(
-				locator1 = "CommerceAccelerators#SELECT_PRODUCT_RELATIONS",
-				productName = "Relation Product");
-
-			SelectFrameTop();
-
-			Button.clickAdd();
-
-			Alert.viewSuccessMessage();
-		}
-
-		task ("And the date for the new created relation iis using the correct date format") {
-			for (var dateKeyWords : list "Seconds Ago,Minutes Ago,Hours Ago,Days Ago,Months Ago") {
-				AssertElementNotPresent(
-					key_columnNumber = 4,
-					key_productName = "Relation Product",
-					key_value = ${dateKeyWords},
-					locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
-			}
-
-			var currentDate = DateUtil.getFormattedCurrentDate("MMM d", "GMT");
-
-			AssertElementPresent(
-				key_columnNumber = 4,
-				key_productName = "Relation Product",
-				key_value = ${currentDate},
-				locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
-		}
-	}
-
 	@description = "This is a test for COMMERCE-11961. User can search products on the Grouped tab of grouped products"
 	@priority = 5
 	test CanSearchProductsOnGroupedProducts {
@@ -2739,6 +2537,7 @@ definition {
 			CommerceEntry.gotoMenuTab(menuTab = "Price");
 
 			AssertTextEquals(
+				key_cellContent = "Minium Base Price List",
 				key_columnIndex = 4,
 				key_rowIndex = 1,
 				locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
@@ -2804,80 +2603,6 @@ definition {
 		CommerceNavigator.searchEntry(entryName = "MIN930178");
 
 		CommerceEntry.deleteCommerceEntry(entryName = "MIN930178");
-	}
-
-	@priority = 5
-	test ProductPublishing {
-		property portal.acceptance = "true";
-
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-		CommerceProducts.openProductsAdmin();
-
-		CPCommerceCatalog.newProductsEntry(
-			productCatalog = "Minium",
-			productName = "Simple T-Shirt",
-			productType = "Simple");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Options");
-
-		CommerceRelations.assignSingleRelationToProductsEntry(
-			entryName = "Package Quantity",
-			title = "Add Option");
-
-		CommerceEntry.gotoMenuTab(menuTab = "SKUs");
-
-		CommerceSKUs.addSKU(
-			optionValuesList = "6:10.0,12:20.0,24:30.0,48:40.0,112:50.0",
-			priceList = "Minium Base Price List");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Media");
-
-		CommerceProductImages.addProductImages(
-			imageTitles = "Black,Black:1,Blue,Blue:1,White",
-			optionValues = "6,12,24,48,112",
-			validationImage = "true");
-
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Specifications");
-
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Specification Groups");
-
-		CommerceEntry.createNewSpecificationGroups(
-			specificationDescription = "SpecificationGroups",
-			specificationTitle = "SpecificationGroups");
-
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Specifications");
-
-		CommerceEntry.createNewSpecificationLabels(
-			specificationDescription = "SpecificationLabel",
-			specificationGroupTitle = "SpecificationGroups",
-			specificationTitle = "SpecificationLabel");
-
-		CommerceProducts.openProductsAdmin();
-
-		WaitForElementPresent(locator1 = "CommerceNavigation#SEARCH_FIELD");
-
-		CommerceNavigator.searchEntry(entryName = "Simple T-Shirt");
-
-		CommerceNavigator.gotoEntry(entryName = "Simple T-Shirt");
-
-		CommerceRelations.assignSingleRelationToProductsEntry(
-			entryName = "SpecificationLabel",
-			title = "Specifications");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Options");
-
-		CommerceEntry.viewProductOptions(
-			optionList = "6,12,24,48,112",
-			optionName = "Package Quantity");
-
-		CommerceEntry.gotoMenuTab(menuTab = "SKUs");
-
-		CommerceEntry.viewProductSkus(skusList = "6:10.00,12:20.00,24:30.00,48:40.00,112:50.00");
 	}
 
 	@priority = 5

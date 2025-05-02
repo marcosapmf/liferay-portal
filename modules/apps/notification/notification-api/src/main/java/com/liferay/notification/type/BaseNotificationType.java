@@ -46,6 +46,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -124,9 +125,7 @@ public abstract class BaseNotificationType implements NotificationType {
 
 				Set<String> roleNames = new HashSet<>();
 
-				for (Map<String, String> roleMap :
-						(List<Map<String, String>>)entry.getValue()) {
-
+				for (Map<String, String> roleMap : _toList(entry.getValue())) {
 					String roleName = roleMap.get(
 						NotificationRecipientSettingConstants.NAME_ROLE_NAME);
 
@@ -454,6 +453,14 @@ public abstract class BaseNotificationType implements NotificationType {
 		}
 
 		notificationRecipientSettings.add(notificationRecipientSetting);
+	}
+
+	private List<Map<String, String>> _toList(Object value) {
+		if (value instanceof Object[]) {
+			value = Arrays.asList((Object[])value);
+		}
+
+		return (List<Map<String, String>>)value;
 	}
 
 }

@@ -52,6 +52,49 @@ public class Account implements Cloneable, Serializable {
 
 	protected AccountContactInformation accountContactInformation;
 
+	public AccountGroupBrief[] getAccountGroupBriefs() {
+		return accountGroupBriefs;
+	}
+
+	public void setAccountGroupBriefs(AccountGroupBrief[] accountGroupBriefs) {
+		this.accountGroupBriefs = accountGroupBriefs;
+	}
+
+	public void setAccountGroupBriefs(
+		UnsafeSupplier<AccountGroupBrief[], Exception>
+			accountGroupBriefsUnsafeSupplier) {
+
+		try {
+			accountGroupBriefs = accountGroupBriefsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected AccountGroupBrief[] accountGroupBriefs;
+
+	public AccountRole[] getAccountRoles() {
+		return accountRoles;
+	}
+
+	public void setAccountRoles(AccountRole[] accountRoles) {
+		this.accountRoles = accountRoles;
+	}
+
+	public void setAccountRoles(
+		UnsafeSupplier<AccountRole[], Exception> accountRolesUnsafeSupplier) {
+
+		try {
+			accountRoles = accountRolesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected AccountRole[] accountRoles;
+
 	public UserAccount[] getAccountUserAccounts() {
 		return accountUserAccounts;
 	}
@@ -96,16 +139,44 @@ public class Account implements Cloneable, Serializable {
 
 	protected Map<String, Map<String, String>> actions;
 
-	public CustomField[] getCustomFields() {
+	public Creator getCreator() {
+		return creator;
+	}
+
+	public void setCreator(Creator creator) {
+		this.creator = creator;
+	}
+
+	public void setCreator(
+		UnsafeSupplier<Creator, Exception> creatorUnsafeSupplier) {
+
+		try {
+			creator = creatorUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Creator creator;
+
+	public com.liferay.headless.admin.user.client.custom.field.CustomField[]
+		getCustomFields() {
+
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.headless.admin.user.client.custom.field.CustomField[]
+			customFields) {
+
 		this.customFields = customFields;
 	}
 
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.headless.admin.user.client.custom.field.CustomField[],
+			 Exception> customFieldsUnsafeSupplier) {
 
 		try {
 			customFields = customFieldsUnsafeSupplier.get();
@@ -115,7 +186,8 @@ public class Account implements Cloneable, Serializable {
 		}
 	}
 
-	protected CustomField[] customFields;
+	protected com.liferay.headless.admin.user.client.custom.field.CustomField[]
+		customFields;
 
 	public Date getDateCreated() {
 		return dateCreated;
@@ -159,6 +231,32 @@ public class Account implements Cloneable, Serializable {
 
 	protected Date dateModified;
 
+	public String getDefaultBillingAddressExternalReferenceCode() {
+		return defaultBillingAddressExternalReferenceCode;
+	}
+
+	public void setDefaultBillingAddressExternalReferenceCode(
+		String defaultBillingAddressExternalReferenceCode) {
+
+		this.defaultBillingAddressExternalReferenceCode =
+			defaultBillingAddressExternalReferenceCode;
+	}
+
+	public void setDefaultBillingAddressExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			defaultBillingAddressExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			defaultBillingAddressExternalReferenceCode =
+				defaultBillingAddressExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String defaultBillingAddressExternalReferenceCode;
+
 	public Long getDefaultBillingAddressId() {
 		return defaultBillingAddressId;
 	}
@@ -180,6 +278,32 @@ public class Account implements Cloneable, Serializable {
 	}
 
 	protected Long defaultBillingAddressId;
+
+	public String getDefaultShippingAddressExternalReferenceCode() {
+		return defaultShippingAddressExternalReferenceCode;
+	}
+
+	public void setDefaultShippingAddressExternalReferenceCode(
+		String defaultShippingAddressExternalReferenceCode) {
+
+		this.defaultShippingAddressExternalReferenceCode =
+			defaultShippingAddressExternalReferenceCode;
+	}
+
+	public void setDefaultShippingAddressExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			defaultShippingAddressExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			defaultShippingAddressExternalReferenceCode =
+				defaultShippingAddressExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String defaultShippingAddressExternalReferenceCode;
 
 	public Long getDefaultShippingAddressId() {
 		return defaultShippingAddressId;
@@ -286,6 +410,50 @@ public class Account implements Cloneable, Serializable {
 
 	protected Long id;
 
+	public String[] getKeywords() {
+		return keywords;
+	}
+
+	public void setKeywords(String[] keywords) {
+		this.keywords = keywords;
+	}
+
+	public void setKeywords(
+		UnsafeSupplier<String[], Exception> keywordsUnsafeSupplier) {
+
+		try {
+			keywords = keywordsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String[] keywords;
+
+	public String getLogoExternalReferenceCode() {
+		return logoExternalReferenceCode;
+	}
+
+	public void setLogoExternalReferenceCode(String logoExternalReferenceCode) {
+		this.logoExternalReferenceCode = logoExternalReferenceCode;
+	}
+
+	public void setLogoExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			logoExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			logoExternalReferenceCode =
+				logoExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String logoExternalReferenceCode;
+
 	public Long getLogoId() {
 		return logoId;
 	}
@@ -368,6 +536,32 @@ public class Account implements Cloneable, Serializable {
 
 	protected Integer numberOfUsers;
 
+	public String[] getOrganizationExternalReferenceCodes() {
+		return organizationExternalReferenceCodes;
+	}
+
+	public void setOrganizationExternalReferenceCodes(
+		String[] organizationExternalReferenceCodes) {
+
+		this.organizationExternalReferenceCodes =
+			organizationExternalReferenceCodes;
+	}
+
+	public void setOrganizationExternalReferenceCodes(
+		UnsafeSupplier<String[], Exception>
+			organizationExternalReferenceCodesUnsafeSupplier) {
+
+		try {
+			organizationExternalReferenceCodes =
+				organizationExternalReferenceCodesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String[] organizationExternalReferenceCodes;
+
 	public Long[] getOrganizationIds() {
 		return organizationIds;
 	}
@@ -389,6 +583,32 @@ public class Account implements Cloneable, Serializable {
 
 	protected Long[] organizationIds;
 
+	public String getParentAccountExternalReferenceCode() {
+		return parentAccountExternalReferenceCode;
+	}
+
+	public void setParentAccountExternalReferenceCode(
+		String parentAccountExternalReferenceCode) {
+
+		this.parentAccountExternalReferenceCode =
+			parentAccountExternalReferenceCode;
+	}
+
+	public void setParentAccountExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			parentAccountExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			parentAccountExternalReferenceCode =
+				parentAccountExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String parentAccountExternalReferenceCode;
+
 	public Long getParentAccountId() {
 		return parentAccountId;
 	}
@@ -409,6 +629,35 @@ public class Account implements Cloneable, Serializable {
 	}
 
 	protected Long parentAccountId;
+
+	public com.liferay.headless.admin.user.client.permission.Permission[]
+		getPermissions() {
+
+		return permissions;
+	}
+
+	public void setPermissions(
+		com.liferay.headless.admin.user.client.permission.Permission[]
+			permissions) {
+
+		this.permissions = permissions;
+	}
+
+	public void setPermissions(
+		UnsafeSupplier
+			<com.liferay.headless.admin.user.client.permission.Permission[],
+			 Exception> permissionsUnsafeSupplier) {
+
+		try {
+			permissions = permissionsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected com.liferay.headless.admin.user.client.permission.Permission[]
+		permissions;
 
 	public PostalAddress[] getPostalAddresses() {
 		return postalAddresses;
@@ -473,6 +722,30 @@ public class Account implements Cloneable, Serializable {
 	}
 
 	protected String taxId;
+
+	public TaxonomyCategoryBrief[] getTaxonomyCategoryBriefs() {
+		return taxonomyCategoryBriefs;
+	}
+
+	public void setTaxonomyCategoryBriefs(
+		TaxonomyCategoryBrief[] taxonomyCategoryBriefs) {
+
+		this.taxonomyCategoryBriefs = taxonomyCategoryBriefs;
+	}
+
+	public void setTaxonomyCategoryBriefs(
+		UnsafeSupplier<TaxonomyCategoryBrief[], Exception>
+			taxonomyCategoryBriefsUnsafeSupplier) {
+
+		try {
+			taxonomyCategoryBriefs = taxonomyCategoryBriefsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected TaxonomyCategoryBrief[] taxonomyCategoryBriefs;
 
 	public Type getType() {
 		return type;

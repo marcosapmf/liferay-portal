@@ -7,6 +7,7 @@ package com.liferay.portal.tools.service.builder.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.counter.kernel.service.CounterLocalService;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.exception.DataLimitExceededException;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
@@ -38,31 +39,29 @@ public class DataLimitTest {
 		new LiferayIntegrationTestRule();
 
 	@Test
-	public void testDataLimit() {
-		_initializeDataLimit(3);
+	public void test() {
+		_setDataLimitModelMaxCount(3);
 
 		try {
-			_testDataLimit();
+			_test();
 
 			// Asserting limit is per company
 
 			long companyId = CompanyThreadLocal.getCompanyId();
 
-			CompanyThreadLocal.setCompanyId(companyId + 1);
+			try (SafeCloseable safeCloseable =
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						companyId + 1)) {
 
-			try {
-				_testDataLimit();
-			}
-			finally {
-				CompanyThreadLocal.setCompanyId(companyId);
+				_test();
 			}
 		}
 		finally {
-			_initializeDataLimit(0);
+			_setDataLimitModelMaxCount(0);
 		}
 	}
 
-	private void _initializeDataLimit(long dataLimit) {
+	private void _setDataLimitModelMaxCount(long dataLimit) {
 		ReflectionTestUtil.setFieldValue(
 			_dataLimitEntryPersistence, "_dataLimitModelMaxCount", 0);
 
@@ -76,7 +75,7 @@ public class DataLimitTest {
 			new Class<?>[] {Class.class}, DataLimitEntry.class);
 	}
 
-	private void _testDataLimit() {
+	private void _test() {
 
 		// Within data limit
 

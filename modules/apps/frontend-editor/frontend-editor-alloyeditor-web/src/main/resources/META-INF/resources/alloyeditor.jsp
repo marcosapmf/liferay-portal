@@ -70,7 +70,7 @@ if (editorOptions != null) {
 </aui:script>
 
 <liferay-util:html-top>
-	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/main.css") %>" rel="stylesheet" type="text/css" />
+	<aui:link href='<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/main.css") %>' rel="stylesheet" type="text/css" />
 </liferay-util:html-top>
 
 <liferay-util:buffer
@@ -82,7 +82,12 @@ if (editorOptions != null) {
 		<liferay-ui:message key="<%= placeholder %>" />
 
 		<c:if test="<%= Boolean.parseBoolean(required) %>">
-			<span class="text-warning">*</span>
+			<clay:icon
+				cssClass="reference-mark text-warning"
+				symbol="asterisk"
+			/>
+
+			<span class="hide-accessible sr-only"><liferay-ui:message key="required" /></span>
 		</c:if>
 	</div>
 

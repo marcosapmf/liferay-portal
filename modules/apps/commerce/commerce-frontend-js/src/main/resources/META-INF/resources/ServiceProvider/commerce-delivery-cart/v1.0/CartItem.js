@@ -19,6 +19,10 @@ function resolveCartItemsPath(basePath = '', itemId) {
 	return `${basePath}${VERSION}${CART_ITEMS_PATH}/${itemId}`;
 }
 
+function resolveCartItemsBatchPath(basePath = '') {
+	return `${basePath}${VERSION}${CART_ITEMS_PATH}/batch`;
+}
+
 export default function CartItem(basePath) {
 	return {
 		createItemByCartId: (cartId, json) =>
@@ -27,11 +31,17 @@ export default function CartItem(basePath) {
 		deleteItemById: (itemId) =>
 			AJAX.DELETE(resolveCartItemsPath(basePath, itemId)),
 
+		deleteItemsById: (items) =>
+			AJAX.DELETE(resolveCartItemsBatchPath(basePath), {
+				body: JSON.stringify(items),
+			}),
+
 		getItemById: (itemId) =>
 			AJAX.GET(resolveCartItemsPath(basePath, itemId)),
 
-		getItemsByCartId: (cartId) =>
-			AJAX.GET(resolveItemsPath(basePath, cartId)),
+		getItemsByCartId: (cartId, params) => {
+			return AJAX.GET(resolveItemsPath(basePath, cartId), {}, params);
+		},
 
 		replaceItemById: (itemId, json) =>
 			AJAX.PUT(resolveCartItemsPath(basePath, itemId), json),

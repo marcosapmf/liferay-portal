@@ -7,8 +7,6 @@ package com.liferay.headless.delivery.resource.v1_0;
 
 import com.liferay.headless.delivery.dto.v1_0.StructuredContentFolder;
 import com.liferay.portal.kernel.change.tracking.CTAware;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -50,16 +48,80 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface StructuredContentFolderResource {
 
+	public void
+			deleteAssetLibraryStructuredContentFolderByExternalReferenceCode(
+				Long assetLibraryId, String externalReferenceCode)
+		throws Exception;
+
+	public void deleteSiteStructuredContentFolderByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public void deleteStructuredContentFolder(Long structuredContentFolderId)
+		throws Exception;
+
+	public Response deleteStructuredContentFolderBatch(
+			String callbackURL, Object object)
+		throws Exception;
+
+	public StructuredContentFolder
+			getAssetLibraryStructuredContentFolderByExternalReferenceCode(
+				Long assetLibraryId, String externalReferenceCode)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getAssetLibraryStructuredContentFolderPermissionsPage(
+				Long assetLibraryId, String roleNames)
+		throws Exception;
+
 	public Page<StructuredContentFolder>
 			getAssetLibraryStructuredContentFoldersPage(
 				Long assetLibraryId, Boolean flatten, String search,
 				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-				Filter filter, Pagination pagination, Sort[] sorts)
+				com.liferay.portal.kernel.search.filter.Filter filter,
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
-	public Response postAssetLibraryStructuredContentFoldersPageExportBatch(
-			Long assetLibraryId, String search, Filter filter, Sort[] sorts,
-			String callbackURL, String contentType, String fieldNames)
+	public StructuredContentFolder
+			getSiteStructuredContentFolderByExternalReferenceCode(
+				Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getSiteStructuredContentFolderPermissionsPage(
+				Long siteId, String roleNames)
+		throws Exception;
+
+	public Page<StructuredContentFolder> getSiteStructuredContentFoldersPage(
+			Long siteId, Boolean flatten, String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public StructuredContentFolder getStructuredContentFolder(
+			Long structuredContentFolderId)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getStructuredContentFolderPermissionsPage(
+				Long structuredContentFolderId, String roleNames)
+		throws Exception;
+
+	public Page<StructuredContentFolder>
+			getStructuredContentFolderStructuredContentFoldersPage(
+				Long parentStructuredContentFolderId, String search,
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+				com.liferay.portal.kernel.search.filter.Filter filter,
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public StructuredContentFolder patchStructuredContentFolder(
+			Long structuredContentFolderId,
+			StructuredContentFolder structuredContentFolder)
 		throws Exception;
 
 	public StructuredContentFolder postAssetLibraryStructuredContentFolder(
@@ -71,42 +133,11 @@ public interface StructuredContentFolderResource {
 			Long assetLibraryId, String callbackURL, Object object)
 		throws Exception;
 
-	public void
-			deleteAssetLibraryStructuredContentFolderByExternalReferenceCode(
-				Long assetLibraryId, String externalReferenceCode)
-		throws Exception;
-
-	public StructuredContentFolder
-			getAssetLibraryStructuredContentFolderByExternalReferenceCode(
-				Long assetLibraryId, String externalReferenceCode)
-		throws Exception;
-
-	public StructuredContentFolder
-			putAssetLibraryStructuredContentFolderByExternalReferenceCode(
-				Long assetLibraryId, String externalReferenceCode,
-				StructuredContentFolder structuredContentFolder)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getAssetLibraryStructuredContentFolderPermissionsPage(
-				Long assetLibraryId, String roleNames)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			putAssetLibraryStructuredContentFolderPermissionsPage(
-				Long assetLibraryId,
-				com.liferay.portal.vulcan.permission.Permission[] permissions)
-		throws Exception;
-
-	public Page<StructuredContentFolder> getSiteStructuredContentFoldersPage(
-			Long siteId, Boolean flatten, String search,
-			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public Response postSiteStructuredContentFoldersPageExportBatch(
-			Long siteId, String search, Filter filter, Sort[] sorts,
-			String callbackURL, String contentType, String fieldNames)
+	public Response postAssetLibraryStructuredContentFoldersPageExportBatch(
+			Long assetLibraryId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public StructuredContentFolder postSiteStructuredContentFolder(
@@ -117,13 +148,29 @@ public interface StructuredContentFolderResource {
 			Long siteId, String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteSiteStructuredContentFolderByExternalReferenceCode(
-			Long siteId, String externalReferenceCode)
+	public Response postSiteStructuredContentFoldersPageExportBatch(
+			Long siteId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public StructuredContentFolder
-			getSiteStructuredContentFolderByExternalReferenceCode(
-				Long siteId, String externalReferenceCode)
+			postStructuredContentFolderStructuredContentFolder(
+				Long parentStructuredContentFolderId,
+				StructuredContentFolder structuredContentFolder)
+		throws Exception;
+
+	public StructuredContentFolder
+			putAssetLibraryStructuredContentFolderByExternalReferenceCode(
+				Long assetLibraryId, String externalReferenceCode,
+				StructuredContentFolder structuredContentFolder)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			putAssetLibraryStructuredContentFolderPermissionsPage(
+				Long assetLibraryId,
+				com.liferay.portal.vulcan.permission.Permission[] permissions)
 		throws Exception;
 
 	public StructuredContentFolder
@@ -133,54 +180,9 @@ public interface StructuredContentFolderResource {
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getSiteStructuredContentFolderPermissionsPage(
-				Long siteId, String roleNames)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
 			putSiteStructuredContentFolderPermissionsPage(
 				Long siteId,
 				com.liferay.portal.vulcan.permission.Permission[] permissions)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getStructuredContentFolderPermissionsPage(
-				Long structuredContentFolderId, String roleNames)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			putStructuredContentFolderPermissionsPage(
-				Long structuredContentFolderId,
-				com.liferay.portal.vulcan.permission.Permission[] permissions)
-		throws Exception;
-
-	public Page<StructuredContentFolder>
-			getStructuredContentFolderStructuredContentFoldersPage(
-				Long parentStructuredContentFolderId, String search,
-				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-				Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public StructuredContentFolder
-			postStructuredContentFolderStructuredContentFolder(
-				Long parentStructuredContentFolderId,
-				StructuredContentFolder structuredContentFolder)
-		throws Exception;
-
-	public void deleteStructuredContentFolder(Long structuredContentFolderId)
-		throws Exception;
-
-	public Response deleteStructuredContentFolderBatch(
-			String callbackURL, Object object)
-		throws Exception;
-
-	public StructuredContentFolder getStructuredContentFolder(
-			Long structuredContentFolderId)
-		throws Exception;
-
-	public StructuredContentFolder patchStructuredContentFolder(
-			Long structuredContentFolderId,
-			StructuredContentFolder structuredContentFolder)
 		throws Exception;
 
 	public StructuredContentFolder putStructuredContentFolder(
@@ -190,6 +192,12 @@ public interface StructuredContentFolderResource {
 
 	public Response putStructuredContentFolderBatch(
 			String callbackURL, Object object)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			putStructuredContentFolderPermissionsPage(
+				Long structuredContentFolderId,
+				com.liferay.portal.vulcan.permission.Permission[] permissions)
 		throws Exception;
 
 	public void putStructuredContentFolderSubscribe(
@@ -222,7 +230,8 @@ public interface StructuredContentFolderResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -247,19 +256,23 @@ public interface StructuredContentFolderResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

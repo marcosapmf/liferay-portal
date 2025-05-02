@@ -13,7 +13,6 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import org.osgi.service.component.annotations.Component;
@@ -30,7 +29,7 @@ public class LayoutServiceWrapper
 	public Layout publishLayout(long plid) throws Exception {
 		Layout layout = _layoutLocalService.getLayout(plid);
 
-		if (!layout.isTypeContent()) {
+		if (layout.isTypeAssetDisplay() && !layout.isTypeContent()) {
 			throw new UnsupportedOperationException(
 				"Only layouts of type content can be published");
 		}
@@ -38,8 +37,8 @@ public class LayoutServiceWrapper
 		LayoutPermissionUtil.check(
 			GuestOrUserUtil.getPermissionChecker(), layout, ActionKeys.UPDATE);
 
-		Layout draftLayout = _layoutLocalService.fetchLayout(
-			_portal.getClassNameId(Layout.class), layout.getPlid());
+		Layout draftLayout = _layoutLocalService.fetchDraftLayout(
+			layout.getPlid());
 
 		LayoutPermissionUtil.check(
 			GuestOrUserUtil.getPermissionChecker(), draftLayout,
@@ -61,8 +60,5 @@ public class LayoutServiceWrapper
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
-
-	@Reference
-	private Portal _portal;
 
 }

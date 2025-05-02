@@ -19,6 +19,9 @@ import com.liferay.data.engine.rest.client.pagination.Page;
 import com.liferay.data.engine.rest.client.pagination.Pagination;
 import com.liferay.data.engine.rest.client.resource.v2_0.DataRecordResource;
 import com.liferay.data.engine.rest.client.serdes.v2_0.DataRecordSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
+import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -29,10 +32,17 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -41,12 +51,18 @@ import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.net.URI;
+
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,13 +71,20 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.servlet.http.HttpServletRequest;
+
 import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -70,6 +93,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Jeyvison Nascimento
@@ -80,12 +106,14 @@ public abstract class BaseDataRecordResourceTestCase {
 
 	@ClassRule
 	@Rule
-	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
-		new LiferayIntegrationTestRule();
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -99,10 +127,25 @@ public abstract class BaseDataRecordResourceTestCase {
 
 		_dataRecordResource.setContextCompany(testCompany);
 
-		DataRecordResource.Builder builder = DataRecordResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		dataRecordResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		dataRecordResource = DataRecordResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -116,7 +159,32 @@ public abstract class BaseDataRecordResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		DataRecord dataRecord1 = randomDataRecord();
+
+		String json = objectMapper.writeValueAsString(dataRecord1);
+
+		DataRecord dataRecord2 = DataRecordSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(dataRecord1, dataRecord2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		DataRecord dataRecord = randomDataRecord();
+
+		String json1 = objectMapper.writeValueAsString(dataRecord);
+		String json2 = DataRecordSerDes.toJSON(dataRecord);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -131,40 +199,6 @@ public abstract class BaseDataRecordResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		DataRecord dataRecord1 = randomDataRecord();
-
-		String json = objectMapper.writeValueAsString(dataRecord1);
-
-		DataRecord dataRecord2 = DataRecordSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(dataRecord1, dataRecord2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		DataRecord dataRecord = randomDataRecord();
-
-		String json1 = objectMapper.writeValueAsString(dataRecord);
-		String json2 = DataRecordSerDes.toJSON(dataRecord);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -181,6 +215,142 @@ public abstract class BaseDataRecordResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteDataRecord() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DataRecord dataRecord = testDeleteDataRecord_addDataRecord();
+
+		assertHttpResponseStatusCode(
+			204,
+			dataRecordResource.deleteDataRecordHttpResponse(
+				dataRecord.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			dataRecordResource.getDataRecordHttpResponse(dataRecord.getId()));
+		assertHttpResponseStatusCode(
+			404, dataRecordResource.getDataRecordHttpResponse(0L));
+	}
+
+	protected DataRecord testDeleteDataRecord_addDataRecord() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteDataRecord() throws Exception {
+
+		// No namespace
+
+		DataRecord dataRecord1 = testGraphQLDeleteDataRecord_addDataRecord();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteDataRecord",
+						new HashMap<String, Object>() {
+							{
+								put("dataRecordId", dataRecord1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteDataRecord"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"dataRecord",
+					new HashMap<String, Object>() {
+						{
+							put("dataRecordId", dataRecord1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace dataEngine_v2_0
+
+		DataRecord dataRecord2 = testGraphQLDeleteDataRecord_addDataRecord();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"dataEngine_v2_0",
+						new GraphQLField(
+							"deleteDataRecord",
+							new HashMap<String, Object>() {
+								{
+									put("dataRecordId", dataRecord2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/dataEngine_v2_0",
+				"Object/deleteDataRecord"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"dataEngine_v2_0",
+					new GraphQLField(
+						"dataRecord",
+						new HashMap<String, Object>() {
+							{
+								put("dataRecordId", dataRecord2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected DataRecord testGraphQLDeleteDataRecord_addDataRecord()
+		throws Exception {
+
+		return testGraphQLDataRecord_addDataRecord();
+	}
+
+	@Test
+	public void testDeleteDataRecordBatch() throws Exception {
+		DataRecord dataRecord1 = testDeleteDataRecordBatch_addDataRecord();
+
+		testDeleteDataRecordBatch_deleteDataRecord(
+			"COMPLETED", null, dataRecord1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			dataRecordResource.getDataRecordHttpResponse(dataRecord1.getId()));
+	}
+
+	protected DataRecord testDeleteDataRecordBatch_addDataRecord()
+		throws Exception {
+
+		return testDeleteDataRecord_addDataRecord();
+	}
+
+	protected void testDeleteDataRecordBatch_deleteDataRecord(
+			String expectedExecuteStatus, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			dataRecordResource.deleteDataRecordBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(202, httpResponse.getStatusCode());
+
+		waitForFinish(
+			expectedExecuteStatus,
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
 	public void testGetDataDefinitionDataRecordsPage() throws Exception {
 		Long dataDefinitionId =
 			testGetDataDefinitionDataRecordsPage_getDataDefinitionId();
@@ -189,8 +359,7 @@ public abstract class BaseDataRecordResourceTestCase {
 
 		Page<DataRecord> page =
 			dataRecordResource.getDataDefinitionDataRecordsPage(
-				dataDefinitionId, null, RandomTestUtil.randomString(),
-				Pagination.of(1, 10), null);
+				dataDefinitionId, null, null, Pagination.of(1, 10), null);
 
 		long totalCount = page.getTotalCount();
 
@@ -265,11 +434,11 @@ public abstract class BaseDataRecordResourceTestCase {
 		Long dataDefinitionId =
 			testGetDataDefinitionDataRecordsPage_getDataDefinitionId();
 
-		Page<DataRecord> dataRecordPage =
+		Page<DataRecord> dataRecordsPage =
 			dataRecordResource.getDataDefinitionDataRecordsPage(
 				dataDefinitionId, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(dataRecordPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(dataRecordsPage.getTotalCount());
 
 		DataRecord dataRecord1 =
 			testGetDataDefinitionDataRecordsPage_addDataRecord(
@@ -522,23 +691,304 @@ public abstract class BaseDataRecordResourceTestCase {
 	}
 
 	@Test
-	public void testPostDataDefinitionDataRecord() throws Exception {
-		DataRecord randomDataRecord = randomDataRecord();
+	public void testGetDataRecord() throws Exception {
+		DataRecord postDataRecord = testGetDataRecord_addDataRecord();
 
-		DataRecord postDataRecord =
-			testPostDataDefinitionDataRecord_addDataRecord(randomDataRecord);
+		DataRecord getDataRecord = dataRecordResource.getDataRecord(
+			postDataRecord.getId());
 
-		assertEquals(randomDataRecord, postDataRecord);
-		assertValid(postDataRecord);
+		assertEquals(postDataRecord, getDataRecord);
+		assertValid(getDataRecord);
 	}
 
-	protected DataRecord testPostDataDefinitionDataRecord_addDataRecord(
-			DataRecord dataRecord)
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		DataRecord postDataRecord = testGetDataRecord_addDataRecord();
+
+		DataRecord getDataRecord = dataRecordResource.getDataRecord(
+			postDataRecord.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany, "com.liferay.data.engine.rest.dto.v2_0.DataRecord"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(postDataRecord.getId());
+
+		assertEquals(getDataRecord, DataRecordSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
+	}
+
+	protected DataRecord testGetDataRecord_addDataRecord() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetDataRecord() throws Exception {
+		DataRecord dataRecord = testGraphQLGetDataRecord_addDataRecord();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				dataRecord,
+				DataRecordSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"dataRecord",
+								new HashMap<String, Object>() {
+									{
+										put("dataRecordId", dataRecord.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/dataRecord"))));
+
+		// Using the namespace dataEngine_v2_0
+
+		Assert.assertTrue(
+			equals(
+				dataRecord,
+				DataRecordSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"dataEngine_v2_0",
+								new GraphQLField(
+									"dataRecord",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"dataRecordId",
+												dataRecord.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/dataEngine_v2_0",
+						"Object/dataRecord"))));
+	}
+
+	@Test
+	public void testGraphQLGetDataRecordNotFound() throws Exception {
+		Long irrelevantDataRecordId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"dataRecord",
+						new HashMap<String, Object>() {
+							{
+								put("dataRecordId", irrelevantDataRecordId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace dataEngine_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"dataEngine_v2_0",
+						new GraphQLField(
+							"dataRecord",
+							new HashMap<String, Object>() {
+								{
+									put("dataRecordId", irrelevantDataRecordId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected DataRecord testGraphQLGetDataRecord_addDataRecord()
 		throws Exception {
 
-		return dataRecordResource.postDataDefinitionDataRecord(
-			testGetDataDefinitionDataRecordsPage_getDataDefinitionId(),
-			dataRecord);
+		return testGraphQLDataRecord_addDataRecord();
+	}
+
+	@Test
+	public void testGetDataRecordCollectionDataRecordExport() throws Exception {
+		Assert.assertTrue(false);
 	}
 
 	@Test
@@ -550,8 +1000,7 @@ public abstract class BaseDataRecordResourceTestCase {
 
 		Page<DataRecord> page =
 			dataRecordResource.getDataRecordCollectionDataRecordsPage(
-				dataRecordCollectionId, null, RandomTestUtil.randomString(),
-				Pagination.of(1, 10), null);
+				dataRecordCollectionId, null, null, Pagination.of(1, 10), null);
 
 		long totalCount = page.getTotalCount();
 
@@ -628,11 +1077,11 @@ public abstract class BaseDataRecordResourceTestCase {
 		Long dataRecordCollectionId =
 			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId();
 
-		Page<DataRecord> dataRecordPage =
+		Page<DataRecord> dataRecordsPage =
 			dataRecordResource.getDataRecordCollectionDataRecordsPage(
 				dataRecordCollectionId, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(dataRecordPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(dataRecordsPage.getTotalCount());
 
 		DataRecord dataRecord1 =
 			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
@@ -887,239 +1336,6 @@ public abstract class BaseDataRecordResourceTestCase {
 	}
 
 	@Test
-	public void testPostDataRecordCollectionDataRecord() throws Exception {
-		DataRecord randomDataRecord = randomDataRecord();
-
-		DataRecord postDataRecord =
-			testPostDataRecordCollectionDataRecord_addDataRecord(
-				randomDataRecord);
-
-		assertEquals(randomDataRecord, postDataRecord);
-		assertValid(postDataRecord);
-	}
-
-	protected DataRecord testPostDataRecordCollectionDataRecord_addDataRecord(
-			DataRecord dataRecord)
-		throws Exception {
-
-		return dataRecordResource.postDataRecordCollectionDataRecord(
-			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId(),
-			dataRecord);
-	}
-
-	@Test
-	public void testGetDataRecordCollectionDataRecordExport() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testDeleteDataRecord() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DataRecord dataRecord = testDeleteDataRecord_addDataRecord();
-
-		assertHttpResponseStatusCode(
-			204,
-			dataRecordResource.deleteDataRecordHttpResponse(
-				dataRecord.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			dataRecordResource.getDataRecordHttpResponse(dataRecord.getId()));
-
-		assertHttpResponseStatusCode(
-			404, dataRecordResource.getDataRecordHttpResponse(0L));
-	}
-
-	protected DataRecord testDeleteDataRecord_addDataRecord() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteDataRecord() throws Exception {
-
-		// No namespace
-
-		DataRecord dataRecord1 = testGraphQLDeleteDataRecord_addDataRecord();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteDataRecord",
-						new HashMap<String, Object>() {
-							{
-								put("dataRecordId", dataRecord1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteDataRecord"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"dataRecord",
-					new HashMap<String, Object>() {
-						{
-							put("dataRecordId", dataRecord1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace dataEngine_v2_0
-
-		DataRecord dataRecord2 = testGraphQLDeleteDataRecord_addDataRecord();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"dataEngine_v2_0",
-						new GraphQLField(
-							"deleteDataRecord",
-							new HashMap<String, Object>() {
-								{
-									put("dataRecordId", dataRecord2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/dataEngine_v2_0",
-				"Object/deleteDataRecord"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"dataEngine_v2_0",
-					new GraphQLField(
-						"dataRecord",
-						new HashMap<String, Object>() {
-							{
-								put("dataRecordId", dataRecord2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected DataRecord testGraphQLDeleteDataRecord_addDataRecord()
-		throws Exception {
-
-		return testGraphQLDataRecord_addDataRecord();
-	}
-
-	@Test
-	public void testGetDataRecord() throws Exception {
-		DataRecord postDataRecord = testGetDataRecord_addDataRecord();
-
-		DataRecord getDataRecord = dataRecordResource.getDataRecord(
-			postDataRecord.getId());
-
-		assertEquals(postDataRecord, getDataRecord);
-		assertValid(getDataRecord);
-	}
-
-	protected DataRecord testGetDataRecord_addDataRecord() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetDataRecord() throws Exception {
-		DataRecord dataRecord = testGraphQLGetDataRecord_addDataRecord();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				dataRecord,
-				DataRecordSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"dataRecord",
-								new HashMap<String, Object>() {
-									{
-										put("dataRecordId", dataRecord.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/dataRecord"))));
-
-		// Using the namespace dataEngine_v2_0
-
-		Assert.assertTrue(
-			equals(
-				dataRecord,
-				DataRecordSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"dataEngine_v2_0",
-								new GraphQLField(
-									"dataRecord",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"dataRecordId",
-												dataRecord.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/dataEngine_v2_0",
-						"Object/dataRecord"))));
-	}
-
-	@Test
-	public void testGraphQLGetDataRecordNotFound() throws Exception {
-		Long irrelevantDataRecordId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"dataRecord",
-						new HashMap<String, Object>() {
-							{
-								put("dataRecordId", irrelevantDataRecordId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace dataEngine_v2_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"dataEngine_v2_0",
-						new GraphQLField(
-							"dataRecord",
-							new HashMap<String, Object>() {
-								{
-									put("dataRecordId", irrelevantDataRecordId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected DataRecord testGraphQLGetDataRecord_addDataRecord()
-		throws Exception {
-
-		return testGraphQLDataRecord_addDataRecord();
-	}
-
-	@Test
 	public void testPatchDataRecord() throws Exception {
 		DataRecord postDataRecord = testPatchDataRecord_addDataRecord();
 
@@ -1144,6 +1360,47 @@ public abstract class BaseDataRecordResourceTestCase {
 	protected DataRecord testPatchDataRecord_addDataRecord() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostDataDefinitionDataRecord() throws Exception {
+		DataRecord randomDataRecord = randomDataRecord();
+
+		DataRecord postDataRecord =
+			testPostDataDefinitionDataRecord_addDataRecord(randomDataRecord);
+
+		assertEquals(randomDataRecord, postDataRecord);
+		assertValid(postDataRecord);
+	}
+
+	protected DataRecord testPostDataDefinitionDataRecord_addDataRecord(
+			DataRecord dataRecord)
+		throws Exception {
+
+		return dataRecordResource.postDataDefinitionDataRecord(
+			testGetDataDefinitionDataRecordsPage_getDataDefinitionId(),
+			dataRecord);
+	}
+
+	@Test
+	public void testPostDataRecordCollectionDataRecord() throws Exception {
+		DataRecord randomDataRecord = randomDataRecord();
+
+		DataRecord postDataRecord =
+			testPostDataRecordCollectionDataRecord_addDataRecord(
+				randomDataRecord);
+
+		assertEquals(randomDataRecord, postDataRecord);
+		assertValid(postDataRecord);
+	}
+
+	protected DataRecord testPostDataRecordCollectionDataRecord_addDataRecord(
+			DataRecord dataRecord)
+		throws Exception {
+
+		return dataRecordResource.postDataRecordCollectionDataRecord(
+			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId(),
+			dataRecord);
 	}
 
 	@Test
@@ -1630,7 +1887,30 @@ public abstract class BaseDataRecordResourceTestCase {
 		return randomDataRecord();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected DataRecordResource dataRecordResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -1640,12 +1920,12 @@ public abstract class BaseDataRecordResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1654,11 +1934,16 @@ public abstract class BaseDataRecordResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1690,6 +1975,24 @@ public abstract class BaseDataRecordResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1711,16 +2014,6 @@ public abstract class BaseDataRecordResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -1818,10 +2111,34 @@ public abstract class BaseDataRecordResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseDataRecordResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.data.engine.rest.resource.v2_0.DataRecordResource
 		_dataRecordResource;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private ScopeChecker _scopeChecker;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	@Inject
+	private VulcanCRUDItemDelegateBuilderRegistry
+		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }

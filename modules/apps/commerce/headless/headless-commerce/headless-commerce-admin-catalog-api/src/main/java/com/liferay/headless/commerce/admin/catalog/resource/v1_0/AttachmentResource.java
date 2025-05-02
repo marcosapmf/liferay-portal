@@ -8,8 +8,6 @@ package com.liferay.headless.commerce.admin.catalog.resource.v1_0;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Attachment;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.AttachmentBase64;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.AttachmentUrl;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -50,17 +48,37 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface AttachmentResource {
 
-	public void deleteAttachmentByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
 	public void deleteAttachment(Long id) throws Exception;
 
 	public Response deleteAttachmentBatch(String callbackURL, Object object)
 		throws Exception;
 
+	public void deleteAttachmentByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Attachment getAttachmentByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
 	public Page<Attachment> getProductByExternalReferenceCodeAttachmentsPage(
 			String externalReferenceCode, Pagination pagination)
+		throws Exception;
+
+	public Page<Attachment> getProductByExternalReferenceCodeImagesPage(
+			String externalReferenceCode, Pagination pagination)
+		throws Exception;
+
+	public Page<Attachment> getProductIdAttachmentsPage(
+			Long id, Pagination pagination)
+		throws Exception;
+
+	public Page<Attachment> getProductIdImagesPage(
+			Long id, Pagination pagination)
+		throws Exception;
+
+	public Attachment patchAttachmentByExternalReferenceCode(
+			String externalReferenceCode, Attachment attachment)
 		throws Exception;
 
 	public Attachment postProductByExternalReferenceCodeAttachment(
@@ -75,10 +93,6 @@ public interface AttachmentResource {
 			String externalReferenceCode, AttachmentUrl attachmentUrl)
 		throws Exception;
 
-	public Page<Attachment> getProductByExternalReferenceCodeImagesPage(
-			String externalReferenceCode, Pagination pagination)
-		throws Exception;
-
 	public Attachment postProductByExternalReferenceCodeImage(
 			String externalReferenceCode, Attachment attachment)
 		throws Exception;
@@ -89,10 +103,6 @@ public interface AttachmentResource {
 
 	public Attachment postProductByExternalReferenceCodeImageByUrl(
 			String externalReferenceCode, AttachmentUrl attachmentUrl)
-		throws Exception;
-
-	public Page<Attachment> getProductIdAttachmentsPage(
-			Long id, Pagination pagination)
 		throws Exception;
 
 	public Attachment postProductIdAttachment(Long id, Attachment attachment)
@@ -110,10 +120,6 @@ public interface AttachmentResource {
 			Long id, AttachmentUrl attachmentUrl)
 		throws Exception;
 
-	public Page<Attachment> getProductIdImagesPage(
-			Long id, Pagination pagination)
-		throws Exception;
-
 	public Attachment postProductIdImage(Long id, Attachment attachment)
 		throws Exception;
 
@@ -123,6 +129,10 @@ public interface AttachmentResource {
 
 	public Attachment postProductIdImageByUrl(
 			Long id, AttachmentUrl attachmentUrl)
+		throws Exception;
+
+	public Attachment putAttachmentByExternalReferenceCode(
+			String externalReferenceCode, Attachment attachment)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -147,7 +157,8 @@ public interface AttachmentResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -172,19 +183,23 @@ public interface AttachmentResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

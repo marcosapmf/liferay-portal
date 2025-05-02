@@ -14,12 +14,12 @@ import OrderStatus from '../../../../components/OrderStatus';
 import Table from '../../../../components/Table/Table';
 import TableKebabButton from '../../../../components/Table/TableButtons/TableKebabButton';
 import {
-	PRODUCT_WORKFLOW_STATUS_CODE,
-	PRODUCT_WORKFLOW_STATUS_LABEL,
+	ProductWorkflowStatusCode,
+	ProductWorkflowStatusLabel,
 } from '../../../../enums/Product';
 import i18n from '../../../../i18n';
 import {Liferay} from '../../../../liferay/liferay';
-import HeadlessCommerceAdminCatalogImpl from '../../../../services/rest/HeadlessCommerceAdminCatalog';
+import HeadlessCommerceAdminCatalog from '../../../../services/rest/HeadlessCommerceAdminCatalog';
 import {formatDate} from '../../PublisherDashboardPageUtil';
 
 type PublishedSolutionsTableProps = {
@@ -41,9 +41,7 @@ const PublishedSolutionsTable: React.FC<PublishedSolutionsTableProps> = ({
 		setLoading(true);
 
 		try {
-			await HeadlessCommerceAdminCatalogImpl.deleteProduct(
-				product.productId
-			);
+			await HeadlessCommerceAdminCatalog.deleteProduct(product.productId);
 
 			mutate(items);
 
@@ -75,7 +73,8 @@ const PublishedSolutionsTable: React.FC<PublishedSolutionsTableProps> = ({
 							{
 								disabled:
 									row.workflowStatusInfo.code ===
-									PRODUCT_WORKFLOW_STATUS_CODE.PENDING,
+									ProductWorkflowStatusCode.PENDING,
+								icon: 'pencil',
 								label: i18n.translate('edit'),
 								onClick: () =>
 									navigate(
@@ -85,7 +84,7 @@ const PublishedSolutionsTable: React.FC<PublishedSolutionsTableProps> = ({
 							{
 								disabled:
 									row.workflowStatusInfo.code ===
-									PRODUCT_WORKFLOW_STATUS_CODE.PENDING,
+									ProductWorkflowStatusCode.PENDING,
 								label: i18n.translate('delete'),
 								onClick: () => {
 									setSelectedApp(row);
@@ -131,8 +130,8 @@ const PublishedSolutionsTable: React.FC<PublishedSolutionsTableProps> = ({
 						render: (workflowStatusInfo) => (
 							<OrderStatus orderStatus={workflowStatusInfo.label}>
 								{
-									PRODUCT_WORKFLOW_STATUS_LABEL[
-										workflowStatusInfo.code as keyof typeof PRODUCT_WORKFLOW_STATUS_LABEL
+									ProductWorkflowStatusLabel[
+										workflowStatusInfo.code as keyof typeof ProductWorkflowStatusLabel
 									]
 								}
 							</OrderStatus>

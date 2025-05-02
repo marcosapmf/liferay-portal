@@ -5,7 +5,9 @@ import LocationsCard from 'assets/document-and-media/hocs/LocationsCard';
 import React from 'react';
 import {
 	Accessor,
-	AssetAppearsOnCard
+	AssetAppearsOnCard,
+	EmptyStateLink,
+	EmptyStateText
 } from 'assets/components/AssetAppearsOnCard';
 import {AssetTypes} from 'shared/util/constants';
 import {MetricName} from 'shared/types/MetricName';
@@ -60,9 +62,11 @@ const Overview = () => (
 				<AssetAppearsOnCard
 					accessors={[
 						Accessor.DownloadsMetric,
-						Accessor.PreviewsMetric
+						Accessor.ImpressionMadeMetric
 					]}
 					assetType={AssetTypes.Document}
+					emptyStateLink={EmptyStateLink.Document}
+					emptyStateText={EmptyStateText.Document}
 				/>
 			</div>
 		</div>

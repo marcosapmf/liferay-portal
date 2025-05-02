@@ -24,13 +24,15 @@ public class CommerceOrderPaymentConstants {
 
 	public static final int STATUS_FAILED = WorkflowConstants.STATUS_DENIED;
 
+	public static final int STATUS_NOT_REQUIRED = 23;
+
 	public static final int STATUS_PENDING = WorkflowConstants.STATUS_PENDING;
 
 	public static final int STATUS_REFUNDED = 17;
 
 	public static final int[] STATUSES = {
 		STATUS_AUTHORIZED, STATUS_CANCELLED, STATUS_COMPLETED, STATUS_FAILED,
-		STATUS_PENDING
+		STATUS_NOT_REQUIRED, STATUS_PENDING, STATUS_REFUNDED
 	};
 
 	public static final int[] STATUSES_RETRY_PAYMENT = {
@@ -41,7 +43,10 @@ public class CommerceOrderPaymentConstants {
 		if (orderPaymentStatus == STATUS_AUTHORIZED) {
 			return "info";
 		}
-		else if (orderPaymentStatus == STATUS_COMPLETED) {
+		else if ((orderPaymentStatus == STATUS_COMPLETED) ||
+				 (orderPaymentStatus == STATUS_NOT_REQUIRED) ||
+				 (orderPaymentStatus == STATUS_REFUNDED)) {
+
 			return "success";
 		}
 		else if (orderPaymentStatus == STATUS_PENDING) {
@@ -69,8 +74,14 @@ public class CommerceOrderPaymentConstants {
 		else if (orderPaymentStatus == STATUS_FAILED) {
 			return "failed";
 		}
+		else if (orderPaymentStatus == STATUS_NOT_REQUIRED) {
+			return "not-required";
+		}
 		else if (orderPaymentStatus == STATUS_PENDING) {
 			return WorkflowConstants.LABEL_PENDING;
+		}
+		else if (orderPaymentStatus == STATUS_REFUNDED) {
+			return "refunded";
 		}
 
 		return null;

@@ -21,6 +21,7 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -101,6 +102,7 @@ public class DDMFormTemplateContextProcessor {
 		_setDDMFormFieldNumericInputMask(
 			jsonObject.getString("numericInputMask"), ddmFormField);
 		_setDDMFormFieldOptions(
+			jsonObject.getString("optionsDefaultLanguageId"),
 			jsonObject.getJSONArray("options"), ddmFormField);
 		_setDDMFormFieldPlaceholder(
 			jsonObject.getString("placeholder"), ddmFormField);
@@ -143,16 +145,35 @@ public class DDMFormTemplateContextProcessor {
 		return ddmFormField;
 	}
 
-	protected DDMFormFieldOptions getDDMFormFieldOptions(JSONArray jsonArray) {
-		DDMFormFieldOptions ddmFormFieldOptions = new DDMFormFieldOptions();
+	protected DDMFormFieldOptions getDDMFormFieldOptions(
+		String optionsDefaultLanguageId, JSONArray jsonArray) {
+
+		DDMFormFieldOptions ddmFormFieldOptions = new DDMFormFieldOptions(
+			LocaleUtil.fromLanguageId(optionsDefaultLanguageId));
 
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONObject jsonObject = jsonArray.getJSONObject(i);
 
 			String value = jsonObject.getString("value");
 
-			ddmFormFieldOptions.addOptionLabel(
-				value, _locale, jsonObject.getString("label"));
+			JSONObject labelMapJSONObject = jsonObject.getJSONObject(
+				"labelMap");
+
+			if (labelMapJSONObject != null) {
+				Map<String, String> labelMap = JSONUtil.toStringMap(
+					labelMapJSONObject);
+
+				for (Map.Entry<String, String> entry : labelMap.entrySet()) {
+					ddmFormFieldOptions.addOptionLabel(
+						value, LocaleUtil.fromLanguageId(entry.getKey()),
+						entry.getValue());
+				}
+			}
+			else {
+				ddmFormFieldOptions.addOptionLabel(
+					value, _locale, jsonObject.getString("label"));
+			}
+
 			ddmFormFieldOptions.addOptionReference(
 				value, jsonObject.getString("reference"));
 		}
@@ -368,13 +389,15 @@ public class DDMFormTemplateContextProcessor {
 	}
 
 	private void _setDDMFormFieldOptions(
-		JSONArray jsonArray, DDMFormField ddmFormField) {
+		String optionsDefaultLanguageId, JSONArray jsonArray,
+		DDMFormField ddmFormField) {
 
 		if (jsonArray == null) {
 			return;
 		}
 
-		ddmFormField.setDDMFormFieldOptions(getDDMFormFieldOptions(jsonArray));
+		ddmFormField.setDDMFormFieldOptions(
+			getDDMFormFieldOptions(optionsDefaultLanguageId, jsonArray));
 	}
 
 	private void _setDDMFormFieldPlaceholder(
@@ -457,7 +480,8 @@ public class DDMFormTemplateContextProcessor {
 			return;
 		}
 
-		ddmFormField.setProperty(property, getDDMFormFieldOptions(jsonArray));
+		ddmFormField.setProperty(
+			property, getDDMFormFieldOptions(null, jsonArray));
 	}
 
 	private void _setDDMFormFieldPropertyRows(

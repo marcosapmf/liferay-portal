@@ -50,16 +50,25 @@ public class OrderItem implements Cloneable, Serializable {
 
 	protected Long bookedQuantityId;
 
-	public CustomField[] getCustomFields() {
+	public
+		com.liferay.headless.commerce.admin.order.client.custom.field.
+			CustomField[] getCustomFields() {
+
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.headless.commerce.admin.order.client.custom.field.
+			CustomField[] customFields) {
+
 		this.customFields = customFields;
 	}
 
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.headless.commerce.admin.order.client.custom.field.
+				CustomField[],
+			 Exception> customFieldsUnsafeSupplier) {
 
 		try {
 			customFields = customFieldsUnsafeSupplier.get();
@@ -69,7 +78,9 @@ public class OrderItem implements Cloneable, Serializable {
 		}
 	}
 
-	protected CustomField[] customFields;
+	protected
+		com.liferay.headless.commerce.admin.order.client.custom.field.
+			CustomField[] customFields;
 
 	public BigDecimal getDecimalQuantity() {
 		return decimalQuantity;
@@ -112,6 +123,27 @@ public class OrderItem implements Cloneable, Serializable {
 	}
 
 	protected String deliveryGroup;
+
+	public String getDeliveryGroupName() {
+		return deliveryGroupName;
+	}
+
+	public void setDeliveryGroupName(String deliveryGroupName) {
+		this.deliveryGroupName = deliveryGroupName;
+	}
+
+	public void setDeliveryGroupName(
+		UnsafeSupplier<String, Exception> deliveryGroupNameUnsafeSupplier) {
+
+		try {
+			deliveryGroupName = deliveryGroupNameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String deliveryGroupName;
 
 	public BigDecimal getDiscountAmount() {
 		return discountAmount;
@@ -705,6 +737,32 @@ public class OrderItem implements Cloneable, Serializable {
 
 	protected String replacedSku;
 
+	public String getReplacedSkuExternalReferenceCode() {
+		return replacedSkuExternalReferenceCode;
+	}
+
+	public void setReplacedSkuExternalReferenceCode(
+		String replacedSkuExternalReferenceCode) {
+
+		this.replacedSkuExternalReferenceCode =
+			replacedSkuExternalReferenceCode;
+	}
+
+	public void setReplacedSkuExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			replacedSkuExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			replacedSkuExternalReferenceCode =
+				replacedSkuExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String replacedSkuExternalReferenceCode;
+
 	public Long getReplacedSkuId() {
 		return replacedSkuId;
 	}
@@ -746,6 +804,27 @@ public class OrderItem implements Cloneable, Serializable {
 	}
 
 	protected Date requestedDeliveryDate;
+
+	public Boolean getShippable() {
+		return shippable;
+	}
+
+	public void setShippable(Boolean shippable) {
+		this.shippable = shippable;
+	}
+
+	public void setShippable(
+		UnsafeSupplier<Boolean, Exception> shippableUnsafeSupplier) {
+
+		try {
+			shippable = shippableUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean shippable;
 
 	public BigDecimal getShippedQuantity() {
 		return shippedQuantity;
@@ -789,6 +868,32 @@ public class OrderItem implements Cloneable, Serializable {
 	}
 
 	protected ShippingAddress shippingAddress;
+
+	public String getShippingAddressExternalReferenceCode() {
+		return shippingAddressExternalReferenceCode;
+	}
+
+	public void setShippingAddressExternalReferenceCode(
+		String shippingAddressExternalReferenceCode) {
+
+		this.shippingAddressExternalReferenceCode =
+			shippingAddressExternalReferenceCode;
+	}
+
+	public void setShippingAddressExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			shippingAddressExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			shippingAddressExternalReferenceCode =
+				shippingAddressExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String shippingAddressExternalReferenceCode;
 
 	public Long getShippingAddressId() {
 		return shippingAddressId;

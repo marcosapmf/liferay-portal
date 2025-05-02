@@ -279,6 +279,13 @@ public class ResourcePermissionLocalServiceUtil {
 		return getService().deleteResourcePermission(resourcePermission);
 	}
 
+	public static void deleteResourcePermissions(
+			long companyId, String name, int scope)
+		throws PortalException {
+
+		getService().deleteResourcePermissions(companyId, name, scope);
+	}
+
 	/**
 	 * Deletes all resource permissions at the scope to resources of the type.
 	 * This method should not be confused with any of the
@@ -333,6 +340,10 @@ public class ResourcePermissionLocalServiceUtil {
 		throws PortalException {
 
 		getService().deleteResourcePermissions(companyId, name, scope, primKey);
+	}
+
+	public static void deleteResourcePermissions(String name) {
+		getService().deleteResourcePermissions(name);
 	}
 
 	public static <T> T dslQuery(DSLQuery dslQuery) {
@@ -552,6 +563,14 @@ public class ResourcePermissionLocalServiceUtil {
 		int start, int end) {
 
 		return getService().getResourcePermissions(start, end);
+	}
+
+	public static List<ResourcePermission> getResourcePermissions(
+		long companyId, String name, int scope, long roleId,
+		boolean viewActionId) {
+
+		return getService().getResourcePermissions(
+			companyId, name, scope, roleId, viewActionId);
 	}
 
 	/**
@@ -814,6 +833,14 @@ public class ResourcePermissionLocalServiceUtil {
 
 		return getService().hasScopeResourcePermission(
 			companyId, name, scope, roleId, actionId);
+	}
+
+	public static void initDefaultModelResourcePermissions(
+			long companyId, java.util.Collection<String> modelResources)
+		throws PortalException {
+
+		getService().initDefaultModelResourcePermissions(
+			companyId, modelResources);
 	}
 
 	public static void initPortletDefaultPermissions(

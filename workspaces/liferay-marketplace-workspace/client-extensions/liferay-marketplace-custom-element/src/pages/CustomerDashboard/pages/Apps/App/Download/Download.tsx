@@ -10,8 +10,13 @@ import {useOutletContext} from 'react-router-dom';
 import useSWR from 'swr';
 
 import {useMarketplaceContext} from '../../../../../../context/MarketplaceContext';
+import {
+	ProductCategoies,
+	ProductSpecificationKey,
+} from '../../../../../../enums/Product';
 import useGetProductByOrderId from '../../../../../../hooks/useGetProductByOrderId';
-import HeadlessCommerceDeliveryCatalogImpl from '../../../../../../services/rest/HeadlessCommerceDeliveryCatalog';
+import HeadlessCommerceDeliveryCatalog from '../../../../../../services/rest/HeadlessCommerceDeliveryCatalog';
+import {getProductCategoriesByVocabularyName} from '../../../../../../utils/productUtils';
 import DownloadTable from './DownloadTable';
 
 type OutletContext = ReturnType<typeof useGetProductByOrderId>;
@@ -19,24 +24,31 @@ type OutletContext = ReturnType<typeof useGetProductByOrderId>;
 const Download = () => {
 	const marketplaceContext = useMarketplaceContext();
 	const outletContext = useOutletContext<OutletContext['data']>();
+
 	const [search, setSearch] = useState('');
 
 	const channel = marketplaceContext.channel;
-	const virtualProducts = outletContext?.placedOrder.placedOrderItems;
-	const hasVersionSpecification =
+
+	const virtualProducts = useMemo(
+		() => outletContext?.placedOrder.placedOrderItems || [],
+		[outletContext?.placedOrder.placedOrderItems]
+	);
+
+	const latestVersionSpecification =
 		outletContext?.product.productSpecifications.find(
 			(specification) =>
-				specification.specificationKey === 'latest-version'
+				specification.specificationKey ===
+				ProductSpecificationKey.APP_VERSION
 		);
 
 	const {data: skus = [], isLoading} = useSWR(
-		hasVersionSpecification
+		latestVersionSpecification
 			? null
 			: `marketplace-order-${outletContext?.placedOrder.id}`,
 		() =>
 			Promise.all(
 				virtualProducts.map((orderItem: PlacedOrderItems) =>
-					HeadlessCommerceDeliveryCatalogImpl.getSkuInfo(
+					HeadlessCommerceDeliveryCatalog.getSkuInfo(
 						channel.id,
 						orderItem.productId,
 						orderItem.skuId,
@@ -48,61 +60,76 @@ const Download = () => {
 			)
 	);
 
-	const virualItems = useMemo(() => {
-		const hasSkuVersion = skus[0]?.customFields.find(
+	const virtualItems = useMemo(() => {
+		const versionSKUCustomField = (skus as any)[0]?.customFields.find(
 			(customField: CustomField) =>
 				customField.name === 'Version' && customField.customValue.data
 		);
 
 		const virtualItemsWithVersion = virtualProducts[0].virtualItems?.map(
-			(virtualItem: VirtualItem) => {
-				return {
-					...virtualItem,
-					productVersion: !hasVersionSpecification
-						? hasSkuVersion?.customValue.data
-						: hasVersionSpecification.value,
-				};
-			}
+			(virtualItem: VirtualItem) => ({
+				...virtualItem,
+				productVersion: latestVersionSpecification
+					? latestVersionSpecification.value
+					: versionSKUCustomField?.customValue.data,
+				version:
+					virtualItem.version ||
+					'Liferay Portal ' +
+						getProductCategoriesByVocabularyName(
+							outletContext?.product?.categories || [],
+							ProductCategoies.MARKETPLACE_LIFERAY_VERSION
+						)
+							.map((versionName) => versionName)
+							.join(', '),
+			})
 		);
 
 		return virtualItemsWithVersion?.filter(
-			(item: VirtualItem) =>
-				item.version?.toLowerCase()?.includes(search) ||
-				item.productVersion?.toLowerCase()?.includes(search)
+			(virtualItem: VirtualItem) =>
+				virtualItem.version
+					?.toLowerCase()
+					?.includes(search.toLowerCase()) ||
+				virtualItem.productVersion
+					?.toLowerCase()
+					?.includes(search.toLowerCase())
 		);
-	}, [hasVersionSpecification, search, skus, virtualProducts]);
+	}, [
+		latestVersionSpecification,
+		outletContext?.product?.categories,
+		search,
+		skus,
+		virtualProducts,
+	]);
 
 	return (
-		<div>
-			<div className="align-items-center bg-light d-flex justify-content-center my-6 p-3 rounded-lg">
-				<ClayForm.Group className="mb-0 w-100">
-					<ClayInput.Group stacked>
-						<ClayInput.GroupItem prepend>
-							<ClayInput
-								className="bg-white border-0"
-								onChange={({target}) => setSearch(target.value)}
-								placeholder="Search"
-								type="text"
-								value={search}
+		<>
+			<ClayForm.Group className="align-items-center bg-light d-flex justify-content-center mb-0 my-6 p-3 rounded-lg w-100">
+				<ClayInput.Group stacked>
+					<ClayInput.GroupItem prepend>
+						<ClayInput
+							className="bg-white border-0"
+							onChange={({target}) => setSearch(target.value)}
+							placeholder="Search"
+							type="text"
+							value={search}
+						/>
+					</ClayInput.GroupItem>
+
+					<ClayInput.GroupItem prepend shrink>
+						<ClayInput.GroupText className="bg-white border-0">
+							<ClayButtonWithIcon
+								aria-label="Search"
+								className="border-0"
+								displayType="unstyled"
+								symbol="search"
 							/>
-						</ClayInput.GroupItem>
+						</ClayInput.GroupText>
+					</ClayInput.GroupItem>
+				</ClayInput.Group>
+			</ClayForm.Group>
 
-						<ClayInput.GroupItem prepend shrink>
-							<ClayInput.GroupText className="bg-white border-0">
-								<ClayButtonWithIcon
-									aria-label="Search"
-									className="border-0"
-									displayType="unstyled"
-									symbol="search"
-								/>
-							</ClayInput.GroupText>
-						</ClayInput.GroupItem>
-					</ClayInput.Group>
-				</ClayForm.Group>
-			</div>
-
-			<DownloadTable loading={isLoading} virualItems={virualItems} />
-		</div>
+			<DownloadTable loading={isLoading} virtualItems={virtualItems} />
+		</>
 	);
 };
 

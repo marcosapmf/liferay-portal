@@ -131,17 +131,6 @@ if (layout != null) {
 	<aui:script use="event-move,liferay-navigation">
 		var navBlock = A.one(Liferay.Data.NAV_SELECTOR);
 
-		Liferay.once(
-			'initNavigation',
-			function() {
-				new Liferay.Navigation(
-					{
-						navBlock: navBlock
-					}
-				);
-			}
-		);
-
 		if (navBlock) {
 			if (A.UA.touchMobile) {
 				var panel = document.querySelector(Liferay.Data.NAV_SELECTOR_MOBILE);
@@ -159,7 +148,7 @@ if (layout != null) {
 			else {
 				navBlock.once(
 					['gesturemovestart', 'mousemove'],
-					function() {
+					function () {
 						Liferay.fire('initNavigation');
 					}
 				);
@@ -168,7 +157,7 @@ if (layout != null) {
 
 		A.on(
 			'io:complete',
-			function() {
+			function () {
 				Liferay.fire('io:complete');
 			}
 		);
@@ -199,7 +188,7 @@ if (layout != null) {
 	// ]]>
 </aui:script>
 
-<c:if test="<%= layout != null %>">
+<c:if test="<%= (layout != null) && !layout.isTypeControlPanel() %>">
 
 	<%-- User Inputted Layout and LayoutSet JavaScript --%>
 
@@ -221,15 +210,15 @@ if (layout != null) {
 	UnicodeProperties layoutTypeSettingsUnicodeProperties = layout.getTypeSettingsProperties();
 	%>
 
-	<aui:script type="text/javascript">
-		// <![CDATA[
-			<c:if test="<%= !layout.isTypeControlPanel() %>">
-				<%= GetterUtil.getString(layoutSetSettingsUnicodeProperties.getProperty("javascript")) %>
+	<liferay-util:include page="/html/common/themes/bottom_js_script.jsp">
+		<liferay-util:param name="snippet" value='<%= GetterUtil.getString(layoutSetSettingsUnicodeProperties.getProperty("javascript")) %>' />
+	</liferay-util:include>
 
-				<%= GetterUtil.getString(masterLayoutTypeSettingsUnicodeProperties.getProperty("javascript")) %>
+	<liferay-util:include page="/html/common/themes/bottom_js_script.jsp">
+		<liferay-util:param name="snippet" value='<%= GetterUtil.getString(masterLayoutTypeSettingsUnicodeProperties.getProperty("javascript")) %>' />
+	</liferay-util:include>
 
-				<%= GetterUtil.getString(layoutTypeSettingsUnicodeProperties.getProperty("javascript")) %>
-			</c:if>
-		// ]]>
-	</aui:script>
+	<liferay-util:include page="/html/common/themes/bottom_js_script.jsp">
+		<liferay-util:param name="snippet" value='<%= GetterUtil.getString(layoutTypeSettingsUnicodeProperties.getProperty("javascript")) %>' />
+	</liferay-util:include>
 </c:if>

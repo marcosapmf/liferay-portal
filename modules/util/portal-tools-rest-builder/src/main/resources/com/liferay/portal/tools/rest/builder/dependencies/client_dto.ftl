@@ -30,7 +30,10 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class ${schemaName} implements Cloneable, Serializable {
+
+<#assign dtoParentClassName = freeMarkerTool.getDTOParentClassName(openAPIYAML, schemaName)! />
+
+public <#if schema.discriminator?has_content>abstract</#if> class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoParentClassName}</#if> implements Cloneable, Serializable {
 
 	public static ${schemaName} toDTO(String json) {
 		return ${schemaName}SerDes.toDTO(json);
@@ -48,7 +51,7 @@ public class ${schemaName} implements Cloneable, Serializable {
 			<#assign capitalizedPropertyName = properties[propertyName] />
 		</#if>
 
-		<#assign propertyType = properties[propertyName]?replace("com.liferay.portal.vulcan.permission.", "${configYAML.apiPackagePath}.client.permission.") />
+		<#assign propertyType = properties[propertyName]?replace("com.liferay.portal.vulcan.", "${configYAML.apiPackagePath}.client.") />
 
 		public ${propertyType} get${capitalizedPropertyName}() {
 			return ${propertyName};

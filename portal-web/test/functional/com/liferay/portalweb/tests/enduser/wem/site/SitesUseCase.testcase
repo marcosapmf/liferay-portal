@@ -17,7 +17,10 @@ definition {
 	test AddChildSiteFromImportedSiteTemplate {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Add an organization") {
 			JSONOrganization.addOrganization(organizationName = "Space Program Academy of Continuing Education");
@@ -406,7 +409,10 @@ definition {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property osgi.module.configuration.file.names = "com.liferay.login.web.internal.configuration.AuthLoginConfiguration.config";
 		property osgi.module.configurations = "promptEnabled=\"true\"";
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Get site name") {
 			var siteName = TestCase.getSiteName(siteName = ${siteName});
@@ -849,7 +855,10 @@ definition {
 		property osgi.module.configuration.file.names = "com.liferay.login.web.internal.configuration.AuthLoginConfiguration.config";
 		property osgi.module.configurations = "promptEnabled=\"true\"";
 		property portal.release = "true";
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		var portalURL = PropsUtil.get("portal.url");
 

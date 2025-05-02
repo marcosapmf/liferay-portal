@@ -6,8 +6,8 @@
 package com.liferay.commerce.price.list.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.currency.exception.NoSuchCurrencyException;
 import com.liferay.commerce.currency.model.CommerceCurrency;
+import com.liferay.commerce.price.list.exception.CommercePriceListCurrencyException;
 import com.liferay.commerce.price.list.exception.NoSuchPriceListException;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
@@ -336,8 +336,9 @@ public class CommercePriceListLocalServiceTest {
 			RandomTestUtil.randomDouble(), true, null, null);
 
 		CommercePriceList commercePriceList =
-			_commercePriceListLocalService.fetchByExternalReferenceCode(
-				externalReferenceCode, _group.getCompanyId());
+			_commercePriceListLocalService.
+				fetchCommercePriceListByExternalReferenceCode(
+					externalReferenceCode, _group.getCompanyId());
 
 		_assertPriceListAttributes(
 			updatedCurrency, updatedName, commercePriceList);
@@ -393,7 +394,7 @@ public class CommercePriceListLocalServiceTest {
 			updatedCurrency, updatedName, updatedCommercePriceList);
 	}
 
-	@Test(expected = NoSuchCurrencyException.class)
+	@Test(expected = CommercePriceListCurrencyException.class)
 	public void testAddOrUpdateCommercePriceList4() throws Exception {
 		frutillaRule.scenario(
 			"Adding a new Price List"
@@ -656,9 +657,9 @@ public class CommercePriceListLocalServiceTest {
 	@Test(expected = NoSuchPriceListException.class)
 	public void testUpdateCommercePriceList2() throws Exception {
 		frutillaRule.scenario(
-			"Update a nonexisting Price List"
+			"Update a nonexistent Price List"
 		).given(
-			"A nonexisting Price List ID"
+			"A nonexistent Price List ID"
 		).when(
 			"The value is used in the method invocation"
 		).then(

@@ -7,7 +7,6 @@ package com.liferay.osb.faro.service.impl;
 
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
-import com.liferay.osb.faro.constants.DocumentationConstants;
 import com.liferay.osb.faro.constants.FaroUserConstants;
 import com.liferay.osb.faro.model.FaroProject;
 import com.liferay.osb.faro.model.FaroUser;
@@ -31,6 +30,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -270,7 +271,8 @@ public class FaroUserLocalServiceImpl extends FaroUserLocalServiceBaseImpl {
 	}
 
 	private String _getNotificationMessage(
-			long roleId, long groupId, ResourceBundle resourceBundle)
+			long roleId, long groupId, ResourceBundle resourceBundle,
+			String userEmailAddress)
 		throws Exception {
 
 		String roleName = null;
@@ -290,10 +292,10 @@ public class FaroUserLocalServiceImpl extends FaroUserLocalServiceBaseImpl {
 			groupId);
 
 		return _language.format(
-			resourceBundle, "you-have-been-added-as-a-team-x-on-workspace-x",
-			new String[] {
-				roleName, "<strong>" + faroProject.getName() + "</strong>"
-			});
+			resourceBundle,
+			"you-have-been-added-as-a-team-x-on-the-analytics-cloud-x-" +
+				"workspace-by-x",
+			new String[] {roleName, faroProject.getName(), userEmailAddress});
 	}
 
 	private void _sendEmail(
@@ -338,10 +340,7 @@ public class FaroUserLocalServiceImpl extends FaroUserLocalServiceBaseImpl {
 			body = StringUtil.read(
 				getClassLoader(),
 				"com/liferay/osb/faro/dependencies/invite-existing-user.html");
-			subject = _language.format(
-				resourceBundle,
-				"x-has-added-you-to-a-workspace-on-analytics-cloud",
-				user.getFullName());
+			subject = _language.get(resourceBundle, "new-workspace-access");
 		}
 		else {
 			body = StringUtil.read(
@@ -354,35 +353,48 @@ public class FaroUserLocalServiceImpl extends FaroUserLocalServiceBaseImpl {
 		body = StringUtil.replace(
 			body,
 			new String[] {
-				"[$BUTTON_TEXT$]", "[$BUTTON_URL$]", "[$EMAIL_TITLE$]",
-				"[$HELP_MSG$]", "[$INSTRUCTION_MSG$]", "[$LOGO_ICON_URL$]",
-				"[$NOTIFICATION_MSG$]", "[$TITLE_ICON_URL$]", "[$WELCOME_MSG$]"
+				"[$BUTTON_TEXT$]", "[$BUTTON_URL$]", "[$EMAIL_HEADER_URL$]",
+				"[$EMAIL_TITLE$]", "[$FARO_URL$]", "[$FOOTER_MENU_1$]",
+				"[$FOOTER_MENU_2$]", "[$FOOTER_MENU_3$]", "[$FOOTER_MSG_1$]",
+				"[$FOOTER_MSG_2$]", "[$FOOTER_MSG_3$]", "[$FOOTER_MSG_4$]",
+				"[$HEADER_MSG_1$]", "[$LIFERAY_LOGO_URL$]",
+				"[$NOTIFICATION_MSG_1$]", "[$NOTIFICATION_MSG_2$]", "[$YEAR$]"
 			},
 			new String[] {
-				_language.get(resourceBundle, "sign-in"),
-				EmailUtil.getWorkspaceURL(
-					_groupLocalService.getGroup(faroUser.getGroupId())),
-				subject,
+				_language.get(resourceBundle, "go-to-analytics-cloud"),
+				EmailUtil.getShareIconURL(), EmailUtil.getEmailHeaderURL(),
+				subject, FaroPropsValues.FARO_URL,
+				_language.get(resourceBundle, "contact-support"),
+				_language.get(resourceBundle, "documentation"),
+				_language.get(resourceBundle, "announcements"),
 				_language.format(
-					resourceBundle, "email-need-more-help",
+					resourceBundle, "this-email-was-sent-by-x",
 					new String[] {
-						"<a class=\"body-link\" href=\"" +
-							DocumentationConstants.BASE_URL + "\">",
+						"<a style=\"color: #0b5fff; text-decoration: none;\" " +
+							"href=\"https://liferay.com\" target=\"_blank\">",
 						"</a>"
 					}),
+				_language.get(resourceBundle, "need-help"),
+				_language.get(
+					resourceBundle, "let-our-team-do-the-work-for-you"),
+				_language.get(
+					resourceBundle,
+					"liferay-experts-are-available-to-answer-your-questions-" +
+						"anytime"),
+				subject, EmailUtil.getLiferayIconURL(),
+				_getNotificationMessage(
+					roleId, groupId, resourceBundle, user.getEmailAddress()),
 				_language.format(
-					resourceBundle, "email-sign-in-or-create-an-account",
+					resourceBundle,
+					"sign-in-with-your-existing-liferay-username-and-" +
+						"password-or-create-an-account-using-x",
 					new String[] {
-						"<a class=\"body-link\" href=\"" +
-							FaroPropsValues.FARO_URL + "\">",
-						"</a>",
-						"<b class=\"link-override\">" +
-							faroUser.getEmailAddress() + "</strong>"
+						"<a style=\"color: #0b5fff; text-decoration: none;\" " +
+							"href=\"https://login.liferay.com/signin" +
+								"/register\" target=\"_blank\">",
+						"</a>", faroUser.getEmailAddress()
 					}),
-				EmailUtil.getLogoIconURL(),
-				_getNotificationMessage(roleId, groupId, resourceBundle),
-				EmailUtil.getTitleIconURL(),
-				_language.get(resourceBundle, "welcome-to-analytics-cloud")
+				String.valueOf(DateUtil.getYear(new Date()))
 			});
 
 		_mailService.sendEmail(new MailMessage(from, to, subject, body, true));
@@ -411,46 +423,56 @@ public class FaroUserLocalServiceImpl extends FaroUserLocalServiceBaseImpl {
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", receiverUser.getLocale(), getClass());
 
-		String workspaceURL = EmailUtil.getWorkspaceURL(
-			_groupLocalService.getGroup(faroProject.getGroupId()));
+		String subject = _language.get(
+			resourceBundle, "request-to-join-workspace");
 
 		String body = StringUtil.replace(
 			StringUtil.read(
 				getClassLoader(),
 				"com/liferay/osb/faro/dependencies/join-request.html"),
 			new String[] {
-				"[$BUTTON_TEXT$]", "[$BUTTON_URL$]", "[$HELP_MSG$]",
-				"[$INSTRUCTION_MSG$]", "[$LOGO_ICON_URL$]",
-				"[$NOTIFICATION_MSG_1$]", "[$NOTIFICATION_MSG_2$]",
-				"[$TITLE_ICON_URL$]"
+				"[$BUTTON_TEXT$]", "[$BUTTON_URL$]", "[$EMAIL_HEADER_URL$]",
+				"[$EMAIL_TITLE$]", "[$FARO_URL$]", "[$FOOTER_MENU_1$]",
+				"[$FOOTER_MENU_2$]", "[$FOOTER_MENU_3$]", "[$FOOTER_MSG_1$]",
+				"[$FOOTER_MSG_2$]", "[$FOOTER_MSG_3$]", "[$FOOTER_MSG_4$]",
+				"[$HEADER_MSG_1$]", "[$LIFERAY_LOGO_URL$]",
+				"[$NOTIFICATION_MSG_1$]", "[$NOTIFICATION_MSG_2$]", "[$YEAR$]"
 			},
 			new String[] {
-				_language.get(resourceBundle, "sign-in"),
-				workspaceURL + "/settings/users",
+				_language.get(resourceBundle, "go-to-analytics-cloud"),
+				EmailUtil.getShareIconURL(), EmailUtil.getEmailHeaderURL(),
+				subject, FaroPropsValues.FARO_URL,
+				_language.get(resourceBundle, "contact-support"),
+				_language.get(resourceBundle, "documentation"),
+				_language.get(resourceBundle, "announcements"),
 				_language.format(
-					resourceBundle, "email-need-more-help",
+					resourceBundle, "this-email-was-sent-by-x",
 					new String[] {
-						"<a class=\"body-link\" href=\"" +
-							DocumentationConstants.BASE_URL + "\">",
+						"<a style=\"color: #0b5fff; text-decoration: none;\" " +
+							"href=\"https://liferay.com\" target=\"_blank\">",
 						"</a>"
 					}),
+				_language.get(resourceBundle, "need-help"),
 				_language.get(
-					resourceBundle, "email-sign-in-to-approve-or-deny"),
-				EmailUtil.getLogoIconURL(),
-				_language.get(resourceBundle, "new-request-to-join-workspace"),
+					resourceBundle, "let-our-team-do-the-work-for-you"),
+				_language.get(
+					resourceBundle,
+					"liferay-experts-are-available-to-answer-your-questions-" +
+						"anytime"),
+				subject, EmailUtil.getLiferayIconURL(),
 				_language.format(
-					resourceBundle, "x-has-requested-to-join-the-x-workspace",
+					resourceBundle,
+					"x-has-requested-to-join-the-analytics-cloud-x-workspace",
 					new String[] {
 						StringBundler.concat(
-							"<strong>", senderUser.getFullName(), "</strong> (",
+							senderUser.getFullName(), "(",
 							senderUser.getEmailAddress(), ")"),
 						faroProject.getName()
 					}),
-				EmailUtil.getTitleIconURL()
+				_language.get(
+					resourceBundle, "email-sign-in-to-approve-or-deny"),
+				String.valueOf(DateUtil.getYear(new Date()))
 			});
-
-		String subject = _language.format(
-			resourceBundle, "new-request-to-join-x", faroProject.getName());
 
 		_mailService.sendEmail(new MailMessage(from, to, subject, body, true));
 

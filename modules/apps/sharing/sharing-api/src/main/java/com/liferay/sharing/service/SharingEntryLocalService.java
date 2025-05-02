@@ -82,11 +82,25 @@ public interface SharingEntryLocalService
 	 * @review
 	 */
 	public SharingEntry addOrUpdateSharingEntry(
-			long userId, long toUserId, long classNameId, long classPK,
-			long groupId, boolean shareable,
+			String externalReferenceCode, long userId, long toUserGroupId,
+			long toUserId, long classNameId, long classPK, long groupId,
+			boolean shareable,
 			Collection<SharingEntryAction> sharingEntryActions,
 			Date expirationDate, ServiceContext serviceContext)
 		throws PortalException;
+
+	/**
+	 * Adds the sharing entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharingEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
+	 * @param sharingEntry the sharing entry
+	 * @return the sharing entry that was added
+	 */
+	@Indexable(type = IndexableType.REINDEX)
+	public SharingEntry addSharingEntry(SharingEntry sharingEntry);
 
 	/**
 	 * Adds a new sharing entry in the database.
@@ -109,25 +123,14 @@ public interface SharingEntryLocalService
 	 the expiration date is a past value
 	 * @review
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	public SharingEntry addSharingEntry(
-			long userId, long toUserId, long classNameId, long classPK,
-			long groupId, boolean shareable,
+			String externalReferenceCode, long userId, long toUserGroupId,
+			long toUserId, long classNameId, long classPK, long groupId,
+			boolean shareable,
 			Collection<SharingEntryAction> sharingEntryActions,
 			Date expirationDate, ServiceContext serviceContext)
 		throws PortalException;
-
-	/**
-	 * Adds the sharing entry to the database. Also notifies the appropriate model listeners.
-	 *
-	 * <p>
-	 * <strong>Important:</strong> Inspect SharingEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
-	 * </p>
-	 *
-	 * @param sharingEntry the sharing entry
-	 * @return the sharing entry that was added
-	 */
-	@Indexable(type = IndexableType.REINDEX)
-	public SharingEntry addSharingEntry(SharingEntry sharingEntry);
 
 	/**
 	 * @throws PortalException
@@ -143,6 +146,8 @@ public interface SharingEntryLocalService
 	 */
 	@Transactional(enabled = false)
 	public SharingEntry createSharingEntry(long sharingEntryId);
+
+	public void deleteCompanySharingEntries(long companyId, long classNameId);
 
 	/**
 	 * Deletes the sharing entries whose expiration date is before the current
@@ -215,6 +220,10 @@ public interface SharingEntryLocalService
 	@Indexable(type = IndexableType.DELETE)
 	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public SharingEntry deleteSharingEntry(SharingEntry sharingEntry);
+
+	public SharingEntry deleteSharingEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException;
 
 	/**
 	 * Deletes the sharing entries for resources shared with the user.
@@ -313,6 +322,10 @@ public interface SharingEntryLocalService
 	public SharingEntry fetchSharingEntry(
 		long toUserId, long classNameId, long classPK);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public SharingEntry fetchSharingEntryByExternalReferenceCode(
+		String externalReferenceCode, long groupId);
+
 	/**
 	 * Returns the sharing entry matching the UUID and group.
 	 *
@@ -326,6 +339,9 @@ public interface SharingEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getCompanySharingEntriesCount(long companyId, long classNameId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
@@ -510,6 +526,11 @@ public interface SharingEntryLocalService
 			long toUserId, long classNameId, long classPK)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public SharingEntry getSharingEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException;
+
 	/**
 	 * Returns the sharing entry matching the UUID and group.
 	 *
@@ -674,6 +695,7 @@ public interface SharingEntryLocalService
 	 value), or if the expiration date is a past value
 	 * @review
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	public SharingEntry updateSharingEntry(
 			long userId, long sharingEntryId,
 			Collection<SharingEntryAction> sharingEntryActions,

@@ -1,25 +1,24 @@
 {
-	"@generated": "40e653bf83ba1e97f2322e3979748c0a4feebdcf",
+	"@generated": "c19cd151749a77262f472375ec73736beaf7ad3f",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 			"@liferay/accessibility-settings-state-web": [
 				"../../../../../../../accessibility/accessibility-settings-state-web/src/main/resources/META-INF/resources/index.ts"
 			],
-			"@liferay/frontend-js-react-web": [
-				"../../../../../../frontend-js-react-web/src/main/resources/META-INF/resources/js/index.ts"
-			],
 			"@liferay/frontend-js-state-web": [
-				"../../../../../../frontend-js-state-web/src/main/resources/META-INF/resources/index.ts"
+				"../../../../../../frontend-js-state-web/src/main/resources/META-INF/resources/main/index.ts"
+			],
+			"@liferay/frontend-js-state-web/react": [
+				"../../../../../../frontend-js-state-web/src/main/resources/META-INF/resources/react/index.ts"
 			]
 		},
 		"rootDir": "../../../../../../../..",
@@ -40,9 +39,6 @@
 	"references": [
 		{
 			"path": "../../../../../../../accessibility/accessibility-settings-state-web/src/main/resources/META-INF/resources/tsconfig.json"
-		},
-		{
-			"path": "../../../../../../frontend-js-react-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},
 		{
 			"path": "../../../../../../frontend-js-state-web/src/main/resources/META-INF/resources/tsconfig.json"

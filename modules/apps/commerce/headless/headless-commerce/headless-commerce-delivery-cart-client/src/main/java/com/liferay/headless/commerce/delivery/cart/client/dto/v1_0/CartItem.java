@@ -12,6 +12,7 @@ import java.io.Serializable;
 
 import java.math.BigDecimal;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
@@ -92,6 +93,48 @@ public class CartItem implements Cloneable, Serializable {
 	}
 
 	protected Map<String, ?> customFields;
+
+	public String getDeliveryGroup() {
+		return deliveryGroup;
+	}
+
+	public void setDeliveryGroup(String deliveryGroup) {
+		this.deliveryGroup = deliveryGroup;
+	}
+
+	public void setDeliveryGroup(
+		UnsafeSupplier<String, Exception> deliveryGroupUnsafeSupplier) {
+
+		try {
+			deliveryGroup = deliveryGroupUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String deliveryGroup;
+
+	public String getDeliveryGroupName() {
+		return deliveryGroupName;
+	}
+
+	public void setDeliveryGroupName(String deliveryGroupName) {
+		this.deliveryGroupName = deliveryGroupName;
+	}
+
+	public void setDeliveryGroupName(
+		UnsafeSupplier<String, Exception> deliveryGroupNameUnsafeSupplier) {
+
+		try {
+			deliveryGroupName = deliveryGroupNameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String deliveryGroupName;
 
 	public String[] getErrorMessages() {
 		return errorMessages;
@@ -319,6 +362,32 @@ public class CartItem implements Cloneable, Serializable {
 
 	protected String replacedSku;
 
+	public String getReplacedSkuExternalReferenceCode() {
+		return replacedSkuExternalReferenceCode;
+	}
+
+	public void setReplacedSkuExternalReferenceCode(
+		String replacedSkuExternalReferenceCode) {
+
+		this.replacedSkuExternalReferenceCode =
+			replacedSkuExternalReferenceCode;
+	}
+
+	public void setReplacedSkuExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			replacedSkuExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			replacedSkuExternalReferenceCode =
+				replacedSkuExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String replacedSkuExternalReferenceCode;
+
 	public Long getReplacedSkuId() {
 		return replacedSkuId;
 	}
@@ -340,6 +409,27 @@ public class CartItem implements Cloneable, Serializable {
 
 	protected Long replacedSkuId;
 
+	public Date getRequestedDeliveryDate() {
+		return requestedDeliveryDate;
+	}
+
+	public void setRequestedDeliveryDate(Date requestedDeliveryDate) {
+		this.requestedDeliveryDate = requestedDeliveryDate;
+	}
+
+	public void setRequestedDeliveryDate(
+		UnsafeSupplier<Date, Exception> requestedDeliveryDateUnsafeSupplier) {
+
+		try {
+			requestedDeliveryDate = requestedDeliveryDateUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Date requestedDeliveryDate;
+
 	public Settings getSettings() {
 		return settings;
 	}
@@ -360,6 +450,74 @@ public class CartItem implements Cloneable, Serializable {
 	}
 
 	protected Settings settings;
+
+	public Address getShippingAddress() {
+		return shippingAddress;
+	}
+
+	public void setShippingAddress(Address shippingAddress) {
+		this.shippingAddress = shippingAddress;
+	}
+
+	public void setShippingAddress(
+		UnsafeSupplier<Address, Exception> shippingAddressUnsafeSupplier) {
+
+		try {
+			shippingAddress = shippingAddressUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Address shippingAddress;
+
+	public String getShippingAddressExternalReferenceCode() {
+		return shippingAddressExternalReferenceCode;
+	}
+
+	public void setShippingAddressExternalReferenceCode(
+		String shippingAddressExternalReferenceCode) {
+
+		this.shippingAddressExternalReferenceCode =
+			shippingAddressExternalReferenceCode;
+	}
+
+	public void setShippingAddressExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			shippingAddressExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			shippingAddressExternalReferenceCode =
+				shippingAddressExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String shippingAddressExternalReferenceCode;
+
+	public Long getShippingAddressId() {
+		return shippingAddressId;
+	}
+
+	public void setShippingAddressId(Long shippingAddressId) {
+		this.shippingAddressId = shippingAddressId;
+	}
+
+	public void setShippingAddressId(
+		UnsafeSupplier<Long, Exception> shippingAddressIdUnsafeSupplier) {
+
+		try {
+			shippingAddressId = shippingAddressIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long shippingAddressId;
 
 	public String getSku() {
 		return sku;
@@ -462,6 +620,27 @@ public class CartItem implements Cloneable, Serializable {
 	}
 
 	protected String thumbnail;
+
+	public String getUnitOfMeasure() {
+		return unitOfMeasure;
+	}
+
+	public void setUnitOfMeasure(String unitOfMeasure) {
+		this.unitOfMeasure = unitOfMeasure;
+	}
+
+	public void setUnitOfMeasure(
+		UnsafeSupplier<String, Exception> unitOfMeasureUnsafeSupplier) {
+
+		try {
+			unitOfMeasure = unitOfMeasureUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String unitOfMeasure;
 
 	public Boolean getValid() {
 		return valid;

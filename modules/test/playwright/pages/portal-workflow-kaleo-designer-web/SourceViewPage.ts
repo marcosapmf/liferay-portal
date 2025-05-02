@@ -7,13 +7,13 @@ import {Locator, Page} from '@playwright/test';
 
 export class SourceViewPage {
 	readonly diagramViewButton: Locator;
+	readonly page: Page;
 	readonly saveButton: Locator;
 	readonly xmlFirstLine: Locator;
-	readonly page: Page;
 
 	constructor(page: Page) {
 		this.diagramViewButton = page
-			.locator('button[title="Diagram View"]')
+			.getByRole('button', {name: 'Diagram View'})
 			.first();
 		this.saveButton = page.getByText('Save');
 		this.xmlFirstLine = page

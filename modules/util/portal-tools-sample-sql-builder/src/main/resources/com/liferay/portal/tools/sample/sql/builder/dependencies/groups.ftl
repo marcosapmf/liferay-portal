@@ -23,9 +23,9 @@
 
 	<#include "mb.ftl">
 
-	<#include "users.ftl">
+	<#include "object_definition_layout.ftl">
 
-	<#include "wiki.ftl">
+	<#include "users.ftl">
 
 	<@insertDLFolder
 		_ddmStructureId = dataFactory.defaultDLDDMStructureId

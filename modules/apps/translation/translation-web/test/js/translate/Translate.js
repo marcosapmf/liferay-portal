@@ -82,6 +82,18 @@ const baseProps = {
 					targetContentDir: 'ltr',
 					targetLanguageId: 'es_ES',
 				},
+				{
+					editorConfiguration: null,
+					html: false,
+					id: 'infoField--text--',
+					label: 'Text',
+					multiline: false,
+					sourceContent: ['mock text'],
+					sourceContentDir: 'ltr',
+					targetContent: ['mock text'],
+					targetContentDir: 'ltr',
+					targetLanguageId: 'es_ES',
+				},
 			],
 			legend: 'Content with repeateable fields',
 		},
@@ -199,6 +211,8 @@ describe('Translate', () => {
 							'<p>campo repetible de fuente simulada 2</p>',
 						'infoField--repeteableContent--2':
 							'<p>campo repetible de fuente simulada 3</p>',
+						'infoField--text--0':
+							'Esto es un &quot;texto de ejemplo&quot;',
 						'infoField--title--0': 'título simulado&#39;',
 					},
 					sourceLanguageId: 'en_US',
@@ -250,7 +264,7 @@ describe('Translate', () => {
 
 			// LPS-133164
 
-			it('updates the input with the translated message with HTML unescaped character', () => {
+			it('updates the `Title` input of a non-html field with the translated message with unescaped characters', () => {
 				const {getByDisplayValue} = result;
 
 				expect(
@@ -279,11 +293,23 @@ describe('Translate', () => {
 				});
 			});
 
-			it('updates the input with the translated message with HTML unescaped character', () => {
+			// LPS-133164
+
+			it('updates the `Title` input with a translated message containing unescaped HTML characters', () => {
 				const {getByDisplayValue} = result;
 
 				expect(
 					getByDisplayValue("título simulado'")
+				).toBeInTheDocument();
+			});
+
+			// LPD-52521
+
+			it('updates the `Text` input with a translated message containing unescaped HTML characters', () => {
+				const {getByDisplayValue} = result;
+
+				expect(
+					getByDisplayValue('Esto es un "texto de ejemplo"')
 				).toBeInTheDocument();
 			});
 

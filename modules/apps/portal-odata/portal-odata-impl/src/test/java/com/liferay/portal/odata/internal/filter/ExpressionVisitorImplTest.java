@@ -782,11 +782,11 @@ public class ExpressionVisitorImplTest {
 
 	@Test
 	public void testVisitUnaryExpressionOperation() {
-		TermFilter termFilter = new TermFilter("title", "title1");
+		Filter filter = new TermFilter("title", "title1");
 
 		BooleanFilter booleanFilter =
 			(BooleanFilter)_expressionVisitorImpl.visitUnaryExpressionOperation(
-				UnaryExpression.Operation.NOT, termFilter);
+				UnaryExpression.Operation.NOT, filter);
 
 		Assert.assertTrue(booleanFilter.hasClauses());
 
@@ -798,7 +798,7 @@ public class ExpressionVisitorImplTest {
 
 		BooleanClause<Filter> queryBooleanClause = booleanClauses.get(0);
 
-		Assert.assertEquals(termFilter, queryBooleanClause.getClause());
+		Assert.assertEquals(filter, queryBooleanClause.getClause());
 		Assert.assertEquals(
 			BooleanClauseOccur.MUST_NOT,
 			queryBooleanClause.getBooleanClauseOccur());

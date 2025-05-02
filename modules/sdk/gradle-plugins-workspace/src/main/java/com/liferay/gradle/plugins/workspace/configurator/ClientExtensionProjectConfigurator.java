@@ -19,6 +19,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import com.liferay.gradle.plugins.LiferayBasePlugin;
 import com.liferay.gradle.plugins.extensions.LiferayExtension;
+import com.liferay.gradle.plugins.lang.builder.BuildLangTask;
+import com.liferay.gradle.plugins.lang.builder.LangBuilderPlugin;
 import com.liferay.gradle.plugins.node.task.ExecuteNodeTask;
 import com.liferay.gradle.plugins.workspace.WorkspaceExtension;
 import com.liferay.gradle.plugins.workspace.WorkspacePlugin;
@@ -30,6 +32,7 @@ import com.liferay.gradle.plugins.workspace.internal.util.JsonNodeUtil;
 import com.liferay.gradle.plugins.workspace.internal.util.StringUtil;
 import com.liferay.gradle.plugins.workspace.internal.util.copy.HashifyAction;
 import com.liferay.gradle.plugins.workspace.task.CreateClientExtensionConfigTask;
+import com.liferay.gradle.plugins.workspace.task.WriteLanguageBatchEngineDataTask;
 import com.liferay.gradle.util.ArrayUtil;
 import com.liferay.gradle.util.Validator;
 
@@ -37,13 +40,17 @@ import groovy.lang.Closure;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -73,10 +80,12 @@ import org.gradle.api.invocation.Gradle;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.ExtensionAware;
+import org.gradle.api.plugins.PluginManager;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Delete;
+import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskInputs;
 import org.gradle.api.tasks.TaskOutputs;
@@ -109,6 +118,9 @@ public class ClientExtensionProjectConfigurator
 
 	public static final String VALIDATE_CLIENT_EXTENSIONS_TASK_NAME =
 		"validateClientExtensions";
+
+	public static final String WRITE_LANGUAGE_BATCH_ENGINE_DATA_TASK_NAME =
+		"writeLanguageBatchEngineData";
 
 	public static String getClientExtensionBuildDir(Project project) {
 		WorkspaceExtension workspaceExtension = GradleUtil.getExtension(
@@ -233,17 +245,7 @@ public class ClientExtensionProjectConfigurator
 
 								}));
 
-						_clientExtensionIds.compute(
-							clientExtension.id,
-							(key, value) -> {
-								if (value == null) {
-									value = new HashSet<>();
-								}
-
-								value.add(project);
-
-								return value;
-							});
+						_registerClientExtensionId(project, clientExtension.id);
 
 						createClientExtensionConfigTaskProvider.configure(
 							createClientExtensionConfigTask -> {
@@ -310,6 +312,14 @@ public class ClientExtensionProjectConfigurator
 			createClientExtensionConfigTaskProvider, workspaceExtension);
 
 		_configureLiferayRoutes(project, workspaceExtension);
+
+		if (_isLanguageProject(project)) {
+			GradleUtil.applyPlugin(project, LangBuilderPlugin.class);
+
+			_configureLanguageProject(project);
+		}
+
+		_configureSpringBootPlugin(project);
 	}
 
 	@Override
@@ -337,6 +347,12 @@ public class ClientExtensionProjectConfigurator
 					String dirName = String.valueOf(dirPath.getFileName());
 
 					if (isExcludedDirName(dirName)) {
+						return FileVisitResult.SKIP_SUBTREE;
+					}
+
+					if (_isLanguageProject(rootDir, dirPath.toFile())) {
+						projectDirs.add(dirPath.toFile());
+
 						return FileVisitResult.SKIP_SUBTREE;
 					}
 
@@ -603,9 +619,27 @@ public class ClientExtensionProjectConfigurator
 	private Map<String, JsonNode> _configureClientExtensionJsonNodes(
 		Project project, TaskProvider<?>... taskProviders) {
 
-		Map<String, JsonNode> profileJsonNodes = new HashMap<>();
+		if (_isLanguageProject(project)) {
+			InputStream inputStream =
+				WriteLanguageBatchEngineDataTask.class.getResourceAsStream(
+					"dependencies/templates/language/client-extension.yaml");
+
+			try {
+				return Collections.singletonMap(
+					"default", _yamlObjectMapper.readTree(inputStream));
+			}
+			catch (IOException ioException) {
+				throw new UncheckedIOException(ioException);
+			}
+		}
 
 		File clientExtensionYamlFile = project.file(_CLIENT_EXTENSION_YAML);
+
+		if (!clientExtensionYamlFile.exists()) {
+			return Collections.emptyMap();
+		}
+
+		Map<String, JsonNode> profileJsonNodes = new HashMap<>();
 
 		JsonNode rootJsonNode = _getJsonNode(clientExtensionYamlFile);
 
@@ -678,10 +712,12 @@ public class ClientExtensionProjectConfigurator
 					VALIDATE_CLIENT_EXTENSION_IDS_TASK_NAME,
 					VALIDATE_CLIENT_EXTENSIONS_TASK_NAME);
 
-				TaskInputs taskInputs =
-					createClientExtensionConfigTask.getInputs();
+				if (clientExtensionYamlFile.exists()) {
+					TaskInputs taskInputs =
+						createClientExtensionConfigTask.getInputs();
 
-				taskInputs.file(clientExtensionYamlFile);
+					taskInputs.file(clientExtensionYamlFile);
+				}
 			});
 
 		File clientExtensionBuildDir = new File(
@@ -689,9 +725,11 @@ public class ClientExtensionProjectConfigurator
 
 		assembleClientExtensionTaskProvider.configure(
 			copy -> {
-				TaskInputs taskInputs = copy.getInputs();
+				if (clientExtensionYamlFile.exists()) {
+					TaskInputs taskInputs = copy.getInputs();
 
-				taskInputs.file(clientExtensionYamlFile);
+					taskInputs.file(clientExtensionYamlFile);
+				}
 
 				copy.into(clientExtensionBuildDir);
 
@@ -772,9 +810,11 @@ public class ClientExtensionProjectConfigurator
 						"unique among all projects.");
 				task.setGroup(LifecycleBasePlugin.VERIFICATION_GROUP);
 
-				TaskInputs taskInputs = task.getInputs();
+				if (clientExtensionYamlFile.exists()) {
+					TaskInputs taskInputs = task.getInputs();
 
-				taskInputs.file(clientExtensionYamlFile);
+					taskInputs.file(clientExtensionYamlFile);
+				}
 
 				TaskOutputs taskOutputs = task.getOutputs();
 
@@ -831,9 +871,11 @@ public class ClientExtensionProjectConfigurator
 
 		validateClientExtensionTaskProvider.configure(
 			task -> {
-				TaskInputs taskInputs = task.getInputs();
+				if (clientExtensionYamlFile.exists()) {
+					TaskInputs taskInputs = task.getInputs();
 
-				taskInputs.file(clientExtensionYamlFile);
+					taskInputs.file(clientExtensionYamlFile);
+				}
 
 				TaskOutputs taskOutputs = task.getOutputs();
 
@@ -896,6 +938,31 @@ public class ClientExtensionProjectConfigurator
 				}
 
 			});
+	}
+
+	private void _configureLanguageProject(Project project) {
+		TaskProvider<BuildLangTask> buildLangTaskProvider =
+			GradleUtil.getTaskProvider(
+				project, LangBuilderPlugin.BUILD_LANG_TASK_NAME,
+				BuildLangTask.class);
+
+		buildLangTaskProvider.configure(
+			task -> {
+				task.setLangDir(project.getProjectDir());
+
+				Project rootProject = project.getRootProject();
+
+				task.setWorkingDir(rootProject.getProjectDir());
+			});
+
+		TaskProvider<WriteLanguageBatchEngineDataTask>
+			writeLanguageBatchEngineDataTaskProvider =
+				GradleUtil.addTaskProvider(
+					project, WRITE_LANGUAGE_BATCH_ENGINE_DATA_TASK_NAME,
+					WriteLanguageBatchEngineDataTask.class);
+
+		writeLanguageBatchEngineDataTaskProvider.configure(
+			task -> task.dependsOn(buildLangTaskProvider));
 	}
 
 	private void _configureLiferayExtension(
@@ -1027,6 +1094,52 @@ public class ClientExtensionProjectConfigurator
 			});
 	}
 
+	private void _configureSpringBootPlugin(Project project) {
+		PluginManager pluginManager = project.getPluginManager();
+
+		Map<String, String> environmentMap = Collections.singletonMap(
+			"JDK_JAVA_OPTIONS",
+			StringUtil.concat(
+				"--add-opens=java.base/java.lang.reflect=ALL-UNNAMED ",
+				"--add-opens=java.base/java.net=ALL-UNNAMED ",
+				"--add-opens=java.base/sun.net.www.protocol.http=ALL-UNNAMED ",
+				"--add-opens=java.base/sun.net.www.protocol.https=ALL-UNNAMED ",
+				"--add-opens=java.base/sun.util.calendar=ALL-UNNAMED ",
+				"--add-opens=jdk.zipfs/jdk.nio.zipfs=ALL-UNNAMED"));
+
+		pluginManager.withPlugin(
+			"org.springframework.boot",
+			appliedPlugin -> {
+				TaskContainer taskContainer = project.getTasks();
+
+				taskContainer.withType(
+					JavaExec.class,
+					javaExecTask -> {
+						javaExecTask.environment(environmentMap);
+
+						Logger logger = javaExecTask.getLogger();
+
+						if (!logger.isInfoEnabled()) {
+							return;
+						}
+
+						logger.info(
+							StringUtil.concat(
+								"Injected the environment variable ",
+								" \"JDK_JAVA_OPTIONS\" into the process ",
+								"invoked by the task {}"),
+							javaExecTask.getPath());
+
+						for (Map.Entry<String, String> entry :
+								environmentMap.entrySet()) {
+
+							logger.info(
+								"{}: {}", entry.getKey(), entry.getValue());
+						}
+					});
+			});
+	}
+
 	private void _configureTaskCheck(Project project) {
 		Task checkTask = GradleUtil.getTask(
 			project, LifecycleBasePlugin.CHECK_TASK_NAME);
@@ -1089,16 +1202,62 @@ public class ClientExtensionProjectConfigurator
 		return false;
 	}
 
+	private boolean _isLanguageProject(File rootDir, File projectDir) {
+		Path dirPath = projectDir.toPath();
+
+		if (Objects.equals(rootDir.toPath(), dirPath.getParent()) &&
+			dirPath.endsWith(Paths.get("language")) &&
+			Files.exists(
+				Paths.get(dirPath.toString(), "Language.properties"))) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isLanguageProject(Project project) {
+		return _isLanguageProject(
+			project.getRootDir(), project.getProjectDir());
+	}
+
+	private void _registerClientExtensionId(
+		Project project, String clientExtensionId) {
+
+		_clientExtensionIds.compute(
+			clientExtensionId,
+			(key, value) -> {
+				if (value == null) {
+					value = new HashSet<>();
+				}
+
+				value.add(project);
+
+				return value;
+			});
+	}
+
 	private void _validateClientExtension(
 		ClientExtension clientExtension, Project project) {
 
 		if (Objects.equals(clientExtension.type, "batch")) {
-			_validateRequiredDirectory(clientExtension, project, "batch");
+			if (!_isLanguageProject(project)) {
+				_validateRequiredDirectory(clientExtension, project, "batch");
+			}
+
 			_validateRequiredTypeSettingsKeys(
 				clientExtension, "oAuthApplicationHeadlessServer");
 		}
+		else if (Objects.equals(clientExtension.type, "globalCSS")) {
+			_validateTypeSettingsValues(
+				clientExtension, "scope", "company", "layout");
+		}
 		else if (Objects.equals(clientExtension.type, "globalJS")) {
 			_validateGlobalJSScriptElementAttributes(clientExtension);
+			_validateTypeSettingsValues(
+				clientExtension, "scope", "company", "layout");
+			_validateTypeSettingsValues(
+				clientExtension, "scriptLocation", "bottom", "head");
 		}
 		else if (Objects.equals(clientExtension.type, "instanceSettings")) {
 			_validateRequiredTypeSettingsKeys(clientExtension, "pid");
@@ -1115,6 +1274,10 @@ public class ClientExtensionProjectConfigurator
 			_validateTypeSettingsValues(
 				clientExtension, "membershipType", "open", "private",
 				"restricted");
+		}
+		else if (Objects.equals(clientExtension.type, "themeCSS")) {
+			_validateTypeSettingsValues(
+				clientExtension, "scope", "controlPanel", "layout");
 		}
 	}
 

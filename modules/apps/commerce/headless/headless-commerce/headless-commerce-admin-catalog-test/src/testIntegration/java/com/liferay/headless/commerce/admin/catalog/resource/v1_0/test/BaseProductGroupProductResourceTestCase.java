@@ -13,6 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.ProductGroupProduct;
 import com.liferay.headless.commerce.admin.catalog.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
@@ -29,8 +31,9 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -43,7 +46,7 @@ import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,7 +85,7 @@ public abstract class BaseProductGroupProductResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -96,11 +99,25 @@ public abstract class BaseProductGroupProductResourceTestCase {
 
 		_productGroupProductResource.setContextCompany(testCompany);
 
-		ProductGroupProductResource.Builder builder =
-			ProductGroupProductResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		productGroupProductResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		productGroupProductResource = ProductGroupProductResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -114,7 +131,33 @@ public abstract class BaseProductGroupProductResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductGroupProduct productGroupProduct1 = randomProductGroupProduct();
+
+		String json = objectMapper.writeValueAsString(productGroupProduct1);
+
+		ProductGroupProduct productGroupProduct2 =
+			ProductGroupProductSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(productGroupProduct1, productGroupProduct2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductGroupProduct productGroupProduct = randomProductGroupProduct();
+
+		String json1 = objectMapper.writeValueAsString(productGroupProduct);
+		String json2 = ProductGroupProductSerDes.toJSON(productGroupProduct);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -129,41 +172,6 @@ public abstract class BaseProductGroupProductResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ProductGroupProduct productGroupProduct1 = randomProductGroupProduct();
-
-		String json = objectMapper.writeValueAsString(productGroupProduct1);
-
-		ProductGroupProduct productGroupProduct2 =
-			ProductGroupProductSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(productGroupProduct1, productGroupProduct2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ProductGroupProduct productGroupProduct = randomProductGroupProduct();
-
-		String json1 = objectMapper.writeValueAsString(productGroupProduct);
-		String json2 = ProductGroupProductSerDes.toJSON(productGroupProduct);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -261,6 +269,44 @@ public abstract class BaseProductGroupProductResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteProductGroupProductBatch() throws Exception {
+		ProductGroupProduct productGroupProduct1 =
+			testDeleteProductGroupProductBatch_addProductGroupProduct();
+
+		testDeleteProductGroupProductBatch_deleteProductGroupProduct(
+			"COMPLETED", null, productGroupProduct1.getId());
+	}
+
+	protected ProductGroupProduct
+			testDeleteProductGroupProductBatch_addProductGroupProduct()
+		throws Exception {
+
+		return testDeleteProductGroupProduct_addProductGroupProduct();
+	}
+
+	protected void testDeleteProductGroupProductBatch_deleteProductGroupProduct(
+			String expectedExecuteStatus, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			productGroupProductResource.
+				deleteProductGroupProductBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(202, httpResponse.getStatusCode());
+
+		waitForFinish(
+			expectedExecuteStatus,
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
 	public void testGetProductGroupByExternalReferenceCodeProductGroupProductsPage()
 		throws Exception {
 
@@ -347,13 +393,13 @@ public abstract class BaseProductGroupProductResourceTestCase {
 		String externalReferenceCode =
 			testGetProductGroupByExternalReferenceCodeProductGroupProductsPage_getExternalReferenceCode();
 
-		Page<ProductGroupProduct> productGroupProductPage =
+		Page<ProductGroupProduct> productGroupProductsPage =
 			productGroupProductResource.
 				getProductGroupByExternalReferenceCodeProductGroupProductsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			productGroupProductPage.getTotalCount());
+			productGroupProductsPage.getTotalCount());
 
 		ProductGroupProduct productGroupProduct1 =
 			testGetProductGroupByExternalReferenceCodeProductGroupProductsPage_addProductGroupProduct(
@@ -483,30 +529,6 @@ public abstract class BaseProductGroupProductResourceTestCase {
 	}
 
 	@Test
-	public void testPostProductGroupByExternalReferenceCodeProductGroupProduct()
-		throws Exception {
-
-		ProductGroupProduct randomProductGroupProduct =
-			randomProductGroupProduct();
-
-		ProductGroupProduct postProductGroupProduct =
-			testPostProductGroupByExternalReferenceCodeProductGroupProduct_addProductGroupProduct(
-				randomProductGroupProduct);
-
-		assertEquals(randomProductGroupProduct, postProductGroupProduct);
-		assertValid(postProductGroupProduct);
-	}
-
-	protected ProductGroupProduct
-			testPostProductGroupByExternalReferenceCodeProductGroupProduct_addProductGroupProduct(
-				ProductGroupProduct productGroupProduct)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetProductGroupIdProductGroupProductsPage()
 		throws Exception {
 
@@ -589,12 +611,12 @@ public abstract class BaseProductGroupProductResourceTestCase {
 
 		Long id = testGetProductGroupIdProductGroupProductsPage_getId();
 
-		Page<ProductGroupProduct> productGroupProductPage =
+		Page<ProductGroupProduct> productGroupProductsPage =
 			productGroupProductResource.
 				getProductGroupIdProductGroupProductsPage(id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			productGroupProductPage.getTotalCount());
+			productGroupProductsPage.getTotalCount());
 
 		ProductGroupProduct productGroupProduct1 =
 			testGetProductGroupIdProductGroupProductsPage_addProductGroupProduct(
@@ -716,6 +738,30 @@ public abstract class BaseProductGroupProductResourceTestCase {
 		throws Exception {
 
 		return null;
+	}
+
+	@Test
+	public void testPostProductGroupByExternalReferenceCodeProductGroupProduct()
+		throws Exception {
+
+		ProductGroupProduct randomProductGroupProduct =
+			randomProductGroupProduct();
+
+		ProductGroupProduct postProductGroupProduct =
+			testPostProductGroupByExternalReferenceCodeProductGroupProduct_addProductGroupProduct(
+				randomProductGroupProduct);
+
+		assertEquals(randomProductGroupProduct, postProductGroupProduct);
+		assertValid(postProductGroupProduct);
+	}
+
+	protected ProductGroupProduct
+			testPostProductGroupByExternalReferenceCodeProductGroupProduct_addProductGroupProduct(
+				ProductGroupProduct productGroupProduct)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -1488,7 +1534,30 @@ public abstract class BaseProductGroupProductResourceTestCase {
 		return randomProductGroupProduct();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ProductGroupProductResource productGroupProductResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -1498,12 +1567,12 @@ public abstract class BaseProductGroupProductResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1512,11 +1581,16 @@ public abstract class BaseProductGroupProductResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1548,6 +1622,24 @@ public abstract class BaseProductGroupProductResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1569,16 +1661,6 @@ public abstract class BaseProductGroupProductResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -1676,7 +1758,9 @@ public abstract class BaseProductGroupProductResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseProductGroupProductResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.commerce.admin.catalog.resource.v1_0.

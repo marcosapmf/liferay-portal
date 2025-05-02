@@ -5,17 +5,22 @@
 
 package com.liferay.dynamic.data.mapping.data.provider.web.internal.portlet;
 
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderRegistry;
 import com.liferay.dynamic.data.mapping.data.provider.web.internal.display.context.DDMDataProviderDisplayContext;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializer;
+import com.liferay.dynamic.data.mapping.model.DDMDataProviderInstance;
 import com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceService;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
+
+import java.util.Objects;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
@@ -59,6 +64,21 @@ public class DDMDataProviderPortlet extends MVCPortlet {
 	public void render(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
+
+		CTTimelineUtil.setClassName(
+			renderRequest, DDMDataProviderInstance.class);
+
+		if (Objects.equals(
+				getPath(renderRequest, renderResponse),
+				"/edit_data_provider.jsp")) {
+
+			long dataProviderInstanceId = ParamUtil.getLong(
+				renderRequest, "dataProviderInstanceId");
+
+			CTTimelineUtil.setCTTimelineKeys(
+				renderRequest, DDMDataProviderInstance.class,
+				dataProviderInstanceId);
+		}
 
 		DDMDataProviderDisplayContext ddmDataProviderDisplayContext =
 			new DDMDataProviderDisplayContext(

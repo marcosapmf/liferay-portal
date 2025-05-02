@@ -6,15 +6,19 @@
 package com.liferay.object.internal.workflow;
 
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.model.ObjectEntryFolder;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.workflow.BaseWorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -34,10 +38,13 @@ public class ObjectEntryWorkflowHandler
 
 	public ObjectEntryWorkflowHandler(
 		ObjectDefinition objectDefinition,
-		ObjectEntryLocalService objectEntryLocalService) {
+		ObjectEntryLocalService objectEntryLocalService,
+		WorkflowDefinitionLinkLocalService workflowDefinitionLinkLocalService) {
 
 		_objectDefinition = objectDefinition;
 		_objectEntryLocalService = objectEntryLocalService;
+		_workflowDefinitionLinkLocalService =
+			workflowDefinitionLinkLocalService;
 	}
 
 	@Override
@@ -65,6 +72,24 @@ public class ObjectEntryWorkflowHandler
 	@Override
 	public String getType(Locale locale) {
 		return _objectDefinition.getLabel(locale);
+	}
+
+	@Override
+	public WorkflowDefinitionLink getWorkflowDefinitionLink(
+			long companyId, long groupId, long classPK)
+		throws PortalException {
+
+		WorkflowDefinitionLink workflowDefinitionLink =
+			_workflowDefinitionLinkLocalService.fetchWorkflowDefinitionLink(
+				companyId, groupId, ObjectEntryFolder.class.getName(),
+				_getObjectEntryFolderId(classPK),
+				ObjectDefinitionConstants.OBJECT_DEFINITION_ID_ALL, true);
+
+		if (workflowDefinitionLink != null) {
+			return workflowDefinitionLink;
+		}
+
+		return super.getWorkflowDefinitionLink(companyId, groupId, classPK);
 	}
 
 	@Override
@@ -98,10 +123,42 @@ public class ObjectEntryWorkflowHandler
 			userId, classPK, status, serviceContext);
 	}
 
+	@Override
+	public ObjectEntry updateStatus(
+			ObjectEntry objectEntry, int status,
+			Map<String, Serializable> workflowContext)
+		throws PortalException {
+
+		long userId = GetterUtil.getLong(
+			(String)workflowContext.get(WorkflowConstants.CONTEXT_USER_ID));
+
+		ServiceContext serviceContext = (ServiceContext)workflowContext.get(
+			"serviceContext");
+
+		return _objectEntryLocalService.updateStatus(
+			userId, objectEntry, status, serviceContext);
+	}
+
+	private long _getObjectEntryFolderId(long classPK) throws PortalException {
+		Long objectEntryFolderId =
+			ObjectEntryThreadLocal.getObjectEntryFolderId();
+
+		if (objectEntryFolderId != null) {
+			return objectEntryFolderId;
+		}
+
+		ObjectEntry objectEntry = _objectEntryLocalService.getObjectEntry(
+			classPK);
+
+		return objectEntry.getObjectEntryFolderId();
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectEntryWorkflowHandler.class);
 
 	private final ObjectDefinition _objectDefinition;
 	private final ObjectEntryLocalService _objectEntryLocalService;
+	private final WorkflowDefinitionLinkLocalService
+		_workflowDefinitionLinkLocalService;
 
 }

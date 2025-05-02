@@ -29,11 +29,9 @@ import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.headless.common.spi.resource.SPIRatingResource;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.headless.delivery.dto.v1_0.ContentField;
-import com.liferay.headless.delivery.dto.v1_0.CustomField;
 import com.liferay.headless.delivery.dto.v1_0.Document;
 import com.liferay.headless.delivery.dto.v1_0.DocumentType;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
-import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.dto.v1_0.util.DDMFormValuesUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.DisplayPageRendererUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RatingUtil;
@@ -50,7 +48,6 @@ import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.ServicePreAction;
 import com.liferay.portal.events.ThemeServicePreAction;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -84,6 +81,8 @@ import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.custom.field.CustomField;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -95,7 +94,6 @@ import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +125,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		throws Exception {
 
 		FileEntry fileEntry = _dlAppService.getFileEntryByExternalReferenceCode(
-			assetLibraryId, externalReferenceCode);
+			externalReferenceCode, assetLibraryId);
 
 		_dlAppService.deleteFileEntry(fileEntry.getFileEntryId());
 	}
@@ -150,7 +148,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		throws Exception {
 
 		FileEntry fileEntry = _dlAppService.getFileEntryByExternalReferenceCode(
-			siteId, externalReferenceCode);
+			externalReferenceCode, siteId);
 
 		_dlAppService.deleteFileEntry(fileEntry.getFileEntryId());
 	}
@@ -162,7 +160,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		return _toDocument(
 			_dlAppService.getFileEntryByExternalReferenceCode(
-				assetLibraryId, externalReferenceCode));
+				externalReferenceCode, assetLibraryId));
 	}
 
 	@Override
@@ -301,7 +299,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		return _toDocument(
 			_dlAppService.getFileEntryByExternalReferenceCode(
-				siteId, externalReferenceCode));
+				externalReferenceCode, siteId));
 	}
 
 	@Override
@@ -382,13 +380,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			fileName = document.getFileName();
 			title = document.getTitle();
 			description = document.getDescription();
-
-			if (FeatureFlagManagerUtil.isEnabled(
-					contextCompany.getCompanyId(), "LPD-10701")) {
-
-				displayDate = document.getDatePublished();
-			}
-
+			displayDate = document.getDatePublished();
 			expirationDate = document.getDateExpired();
 		}
 
@@ -552,6 +544,18 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			externalReferenceCode = document.getExternalReferenceCode();
 		}
 
+		if ((document != null) &&
+			(document.getDocumentFolderExternalReferenceCode() != null)) {
+
+			Folder folder =
+				_dlAppLocalService.fetchFolderByExternalReferenceCode(
+					document.getDocumentFolderExternalReferenceCode(), groupId);
+
+			if (folder != null) {
+				documentFolderId = folder.getFolderId();
+			}
+		}
+
 		if (documentFolderId == null) {
 			if (document != null) {
 				documentFolderId = document.getDocumentFolderId();
@@ -578,13 +582,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			fileName = document.getFileName();
 			title = document.getTitle();
 			description = document.getDescription();
-
-			if (FeatureFlagManagerUtil.isEnabled(
-					contextCompany.getCompanyId(), "LPD-10701")) {
-
-				displayDate = document.getDatePublished();
-			}
-
+			displayDate = document.getDatePublished();
 			expirationDate = document.getDateExpired();
 		}
 
@@ -785,7 +783,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 					_dlFileEntryTypeLocalService.getFolderFileEntryTypes(
 						_siteConnectedGroupGroupProvider.
 							getCurrentAndAncestorSiteAndDepotGroupIds(
-								groupId, true),
+								groupId, false, true),
 						documentFolderId, true)) {
 
 				if (name.equals(
@@ -918,11 +916,26 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		Long folderId = null;
 
-		if ((document != null) && (document.getDocumentFolderId() != null) &&
-			(document.getDocumentFolderId() !=
-				existingFileEntry.getFolderId())) {
+		if (document != null) {
+			String documentFolderExternalReferenceCode =
+				document.getDocumentFolderExternalReferenceCode();
 
-			folderId = document.getDocumentFolderId();
+			if (documentFolderExternalReferenceCode != null) {
+				Folder folder =
+					_dlAppLocalService.fetchFolderByExternalReferenceCode(
+						documentFolderExternalReferenceCode,
+						existingFileEntry.getGroupId());
+
+				if (folder != null) {
+					folderId = folder.getFolderId();
+				}
+			}
+			else if ((document.getDocumentFolderId() != null) &&
+					 (document.getDocumentFolderId() !=
+						 existingFileEntry.getFolderId())) {
+
+				folderId = document.getDocumentFolderId();
+			}
 		}
 
 		if (folderId != null) {
@@ -977,13 +990,9 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 	private List<Document> _toDocuments(List<DLFileEntry> dlFileEntries)
 		throws Exception {
 
-		List<Document> documents = new ArrayList<>();
-
-		for (DLFileEntry dlFileEntry : dlFileEntries) {
-			documents.add(_toDocument(new LiferayFileEntry(dlFileEntry)));
-		}
-
-		return documents;
+		return transform(
+			dlFileEntries,
+			dlFileEntry -> _toDocument(new LiferayFileEntry(dlFileEntry)));
 	}
 
 	private Document _updateDocument(
@@ -1018,13 +1027,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			fileName = document.getFileName();
 			title = document.getTitle();
 			description = document.getDescription();
-
-			if (FeatureFlagManagerUtil.isEnabled(
-					contextCompany.getCompanyId(), "LPD-10701")) {
-
-				displayDate = document.getDatePublished();
-			}
-
+			displayDate = document.getDatePublished();
 			expirationDate = document.getDateExpired();
 		}
 

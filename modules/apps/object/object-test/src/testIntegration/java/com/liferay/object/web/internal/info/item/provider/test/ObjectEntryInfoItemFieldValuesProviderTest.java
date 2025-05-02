@@ -20,6 +20,7 @@ import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.object.constants.ObjectActionExecutorConstants;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.field.builder.AttachmentObjectFieldBuilder;
 import com.liferay.object.field.builder.PicklistObjectFieldBuilder;
@@ -172,7 +173,7 @@ public class ObjectEntryInfoItemFieldValuesProviderTest {
 			null, TestPropsValues.getUserId(),
 			_parentObjectDefinition.getObjectDefinitionId(),
 			_childObjectDefinition.getObjectDefinitionId(), 0,
-			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+			ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			"oneToManyRelationshipName", false,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
@@ -191,6 +192,8 @@ public class ObjectEntryInfoItemFieldValuesProviderTest {
 		ObjectEntry parentObjectEntry = _objectEntryLocalService.addObjectEntry(
 			TestPropsValues.getUserId(), _group.getGroupId(),
 			_parentObjectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"parentTextObjectFieldName", parentTextObjectFieldNameValue
 			).build(),
@@ -199,6 +202,8 @@ public class ObjectEntryInfoItemFieldValuesProviderTest {
 		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
 			TestPropsValues.getUserId(), _group.getGroupId(),
 			_childObjectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"r_oneToManyRelationshipName_" +
 					_parentObjectDefinition.getPKObjectFieldName(),
@@ -247,13 +252,14 @@ public class ObjectEntryInfoItemFieldValuesProviderTest {
 		throws Exception {
 
 		return _objectDefinitionLocalService.addCustomObjectDefinition(
-			TestPropsValues.getUserId(), 0, false, true, true, false,
+			TestPropsValues.getUserId(), 0, null, false, false, true, true,
+			false, false,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			ObjectDefinitionTestUtil.getRandomName(), null, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			true, ObjectDefinitionConstants.SCOPE_SITE,
 			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
-			Arrays.asList(objectFields));
+			Collections.emptyList(), Arrays.asList(objectFields));
 	}
 
 	private void _assertInfoFieldValue(

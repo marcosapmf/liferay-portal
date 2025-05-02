@@ -48,11 +48,16 @@ public interface ObjectDefinition
 
 		};
 
+	public java.util.Locale getDefaultLocale();
+
 	public String getDestinationName();
 
 	public String getExtensionDBTableName();
 
 	public String getLocalizationDBTableName();
+
+	public java.util.List<ObjectDefinitionSetting>
+		getObjectDefinitionSettings();
 
 	public String getObjectFolderExternalReferenceCode();
 
@@ -61,6 +66,8 @@ public interface ObjectDefinition
 	public String getOSGiJaxRsName(String className);
 
 	public String getPortletId();
+
+	public String getPreviousRESTContextPath();
 
 	public String getResourceName();
 
@@ -85,5 +92,10 @@ public interface ObjectDefinition
 	public boolean isRootNode();
 
 	public boolean isUnmodifiableSystemObject();
+
+	public void setObjectDefinitionSettings(
+		java.util.List<ObjectDefinitionSetting> objectDefinitionSettings);
+
+	public void setPreviousRESTContextPath(String previousRESTContextPath);
 
 }

@@ -16,6 +16,8 @@ import com.liferay.dynamic.data.mapping.util.DDMFormDeserializeUtil;
 import com.liferay.dynamic.data.mapping.util.DDMFormSerializeUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.PortalUtil;
 
@@ -51,9 +53,12 @@ public class DDMStructureUpgradeProcess extends UpgradeProcess {
 		try (PreparedStatement selectPreparedStatement =
 				connection.prepareStatement(
 					StringBundler.concat(
-						"select DDMStructure.structureId, ",
+						"select DDMStructure.ctCollectionId, ",
+						"DDMStructure.structureId, ",
 						"DDMStructureVersion.definition from DDMStructure ",
 						"inner join DDMStructureVersion on ",
+						"DDMStructure.ctCollectionId = ",
+						"DDMStructureVersion.ctCollectionId and ",
 						"DDMStructure.structureid = ",
 						"DDMStructureVersion.structureid where ",
 						"DDMStructure.version = DDMStructureVersion.version ",
@@ -62,7 +67,7 @@ public class DDMStructureUpgradeProcess extends UpgradeProcess {
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
 					"update DDMStructure set definition = ? where " +
-						"structureId = ?")) {
+						"ctCollectionId = ? and structureId = ?")) {
 
 			selectPreparedStatement.setLong(
 				1, PortalUtil.getClassNameId(DDMFormInstance.class.getName()));
@@ -72,7 +77,9 @@ public class DDMStructureUpgradeProcess extends UpgradeProcess {
 					updatePreparedStatement.setString(
 						1, resultSet.getString("definition"));
 					updatePreparedStatement.setLong(
-						2, resultSet.getLong("structureId"));
+						2, resultSet.getLong("ctCollectionId"));
+					updatePreparedStatement.setLong(
+						3, resultSet.getLong("structureId"));
 
 					updatePreparedStatement.addBatch();
 				}
@@ -86,7 +93,9 @@ public class DDMStructureUpgradeProcess extends UpgradeProcess {
 		try (PreparedStatement selectPreparedStatement =
 				connection.prepareStatement(
 					StringBundler.concat(
-						"select DDMStructureVersion.structureVersionId, ",
+						"select DDMStructure.structureId, ",
+						"DDMStructureVersion.ctCollectionId, ",
+						"DDMStructureVersion.structureVersionId, ",
 						"DDMStructureVersion.definition from DDMStructure ",
 						"inner join DDMStructureVersion on ",
 						"DDMStructure.structureId = ",
@@ -96,7 +105,7 @@ public class DDMStructureUpgradeProcess extends UpgradeProcess {
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
 					"update DDMStructureVersion set definition = ? where " +
-						"structureVersionId = ?")) {
+						"ctCollectionId = ? and structureVersionId = ?")) {
 
 			selectPreparedStatement.setLong(
 				1, PortalUtil.getClassNameId(DDMFormInstance.class.getName()));
@@ -116,24 +125,42 @@ public class DDMStructureUpgradeProcess extends UpgradeProcess {
 					spiDDMFormRuleSerializerContext.addAttribute(
 						"form", ddmForm);
 
-					List<DDMFormRule> newDDMFormRules =
-						_spiDDMFormRuleConverter.convert(
-							_spiDDMFormRuleConverter.convert(ddmFormRules),
-							spiDDMFormRuleSerializerContext);
+					try {
+						List<DDMFormRule> newDDMFormRules =
+							_spiDDMFormRuleConverter.convert(
+								_spiDDMFormRuleConverter.convert(ddmFormRules),
+								spiDDMFormRuleSerializerContext);
 
-					if (Objects.equals(ddmFormRules, newDDMFormRules)) {
+						if (Objects.equals(ddmFormRules, newDDMFormRules)) {
+							continue;
+						}
+
+						ddmForm.setDDMFormRules(newDDMFormRules);
+					}
+					catch (Exception exception) {
+						String message =
+							"Unable to normalize form rules for dynamic data " +
+								"mapping structure ID " +
+									resultSet.getLong("structureId");
+
+						if (_log.isDebugEnabled()) {
+							_log.debug(message, exception);
+						}
+						else if (_log.isWarnEnabled()) {
+							_log.warn(message);
+						}
+
 						continue;
 					}
-
-					ddmForm.setDDMFormRules(newDDMFormRules);
 
 					updatePreparedStatement.setString(
 						1,
 						DDMFormSerializeUtil.serialize(
 							ddmForm, _ddmFormSerializer));
-
 					updatePreparedStatement.setLong(
-						2, resultSet.getLong("structureVersionId"));
+						2, resultSet.getLong("ctCollectionId"));
+					updatePreparedStatement.setLong(
+						3, resultSet.getLong("structureVersionId"));
 
 					updatePreparedStatement.addBatch();
 				}
@@ -142,6 +169,9 @@ public class DDMStructureUpgradeProcess extends UpgradeProcess {
 			}
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DDMStructureUpgradeProcess.class);
 
 	private final DDMFormDeserializer _ddmFormDeserializer;
 	private final DDMFormSerializer _ddmFormSerializer;

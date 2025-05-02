@@ -7,6 +7,7 @@ package com.liferay.object.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.field.builder.AttachmentObjectFieldBuilder;
 import com.liferay.object.field.builder.ObjectFieldBuilder;
@@ -22,6 +23,7 @@ import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -497,6 +499,49 @@ public class ObjectEntryLocalServiceSearchObjectEntriesTest {
 	}
 
 	@Test
+	public void testSearchWithDoubleQuotes() throws Exception {
+		_addObjectDefinition(
+			ObjectFieldUtil.createObjectField(
+				ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+				ObjectFieldConstants.DB_TYPE_STRING, true, false, null, "Alpha",
+				"alpha", false));
+
+		String string1 = RandomTestUtil.randomString();
+		String string2 = RandomTestUtil.randomString();
+
+		String text = string1 + StringPool.SPACE + string2;
+
+		_addObjectEntry(
+			HashMapBuilder.<String, Serializable>put(
+				"alpha", string1
+			).build());
+		_addObjectEntry(
+			HashMapBuilder.<String, Serializable>put(
+				"alpha", string1 + RandomTestUtil.randomString()
+			).build());
+
+		_assertKeywords(StringPool.QUOTE + string1 + StringPool.QUOTE, 1);
+
+		_addObjectEntry(
+			HashMapBuilder.<String, Serializable>put(
+				"alpha", string2
+			).build());
+		_addObjectEntry(
+			HashMapBuilder.<String, Serializable>put(
+				"alpha", string2 + RandomTestUtil.randomString()
+			).build());
+
+		_assertKeywords(StringPool.QUOTE + string2 + StringPool.QUOTE, 1);
+
+		_addObjectEntry(
+			HashMapBuilder.<String, Serializable>put(
+				"alpha", text
+			).build());
+
+		_assertKeywords(StringPool.QUOTE + text + StringPool.QUOTE, 1);
+	}
+
+	@Test
 	public void testString() throws Exception {
 		_testCharacterDataType(
 			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
@@ -535,8 +580,9 @@ public class ObjectEntryLocalServiceSearchObjectEntriesTest {
 
 		return _objectEntryLocalService.addObjectEntry(
 			TestPropsValues.getUserId(), 0,
-			_objectDefinition.getObjectDefinitionId(), values,
-			ServiceContextTestUtil.getServiceContext());
+			_objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null, values, ServiceContextTestUtil.getServiceContext());
 	}
 
 	private void _assertKeywords(String keywords, int count) throws Exception {

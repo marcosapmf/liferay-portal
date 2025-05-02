@@ -8,21 +8,31 @@ package com.liferay.portal.search.web.internal.search.bar.portlet.display.contex
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.capabilities.SearchCapabilities;
@@ -38,6 +48,7 @@ import com.liferay.portal.search.web.internal.search.bar.portlet.SearchBarPortle
 import com.liferay.portal.search.web.internal.search.bar.portlet.configuration.SearchBarPortletInstanceConfiguration;
 import com.liferay.portal.search.web.internal.search.bar.portlet.display.context.SearchBarPortletDisplayContext;
 import com.liferay.portal.search.web.internal.search.bar.portlet.helper.SearchBarPrecedenceHelper;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 import com.liferay.portal.search.web.search.request.SearchSettings;
@@ -54,12 +65,13 @@ public class SearchBarPortletDisplayContextFactory {
 
 	public SearchBarPortletDisplayContextFactory(
 			LayoutLocalService layoutLocalService, Portal portal,
-			RenderRequest renderRequest)
+			RenderRequest renderRequest, UserLocalService userLocalService)
 		throws ConfigurationException {
 
 		_layoutLocalService = layoutLocalService;
 		_portal = portal;
 		_renderRequest = renderRequest;
+		_userLocalService = userLocalService;
 
 		_searchBarPortletInstanceConfiguration =
 			ConfigurationProviderUtil.getPortletInstanceConfiguration(
@@ -135,6 +147,7 @@ public class SearchBarPortletDisplayContextFactory {
 
 		searchBarPortletDisplayContext.setEverythingSearchScopeParameterString(
 			SearchScope.EVERYTHING.getParameterString());
+
 		searchBarPortletDisplayContext.setInputPlaceholder(
 			LanguageUtil.get(
 				getHttpServletRequest(_renderRequest), "search-..."));
@@ -196,13 +209,14 @@ public class SearchBarPortletDisplayContextFactory {
 		else {
 			searchBarPortletDisplayContext.
 				setSuggestionsContributorConfiguration(
-					StringBundler.concat(
-						StringPool.OPEN_BRACKET,
-						StringUtil.merge(
-							searchBarPortletInstanceConfiguration.
-								suggestionsContributorConfigurations(),
-							StringPool.COMMA),
-						StringPool.CLOSE_BRACKET));
+					_getSuggestionsContributorConfiguration(
+						themeDisplay.getCompanyId(),
+						_isIncludeAttachments(
+							portletPreferencesLookup, searchBarPrecedenceHelper,
+							portletSharedSearchResponse.getSearchSettings(),
+							searchBarPortletPreferences, themeDisplay),
+						searchBarPortletInstanceConfiguration.
+							suggestionsContributorConfigurations()));
 			searchBarPortletDisplayContext.setSuggestionsDisplayThreshold(
 				searchBarPortletInstanceConfiguration.
 					suggestionsDisplayThreshold());
@@ -237,14 +251,10 @@ public class SearchBarPortletDisplayContextFactory {
 			searchBarPortletInstanceConfiguration,
 		ThemeDisplay themeDisplay) {
 
-		long displayStyleGroupId =
-			searchBarPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = themeDisplay.getScopeGroupId();
-		}
-
-		return displayStyleGroupId;
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			searchBarPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			themeDisplay);
 	}
 
 	protected HttpServletRequest getHttpServletRequest(
@@ -341,11 +351,33 @@ public class SearchBarPortletDisplayContextFactory {
 		Layout layout = fetchLayoutByFriendlyURL(
 			themeDisplay.getScopeGroupId(), _slashify(destinationString));
 
-		if (layout == null) {
-			return null;
+		if (layout != null) {
+			return getLayoutFriendlyURL(layout, themeDisplay);
 		}
 
-		return getLayoutFriendlyURL(layout, themeDisplay);
+		Group scopeGroup = themeDisplay.getScopeGroup();
+
+		User user = _userLocalService.fetchUserById(scopeGroup.getClassPK());
+
+		if (user == null) {
+			user = themeDisplay.getUser();
+		}
+
+		for (UserGroup userGroup : user.getUserGroups()) {
+			try {
+				layout = fetchLayoutByFriendlyURL(
+					userGroup.getGroupId(), _slashify(destinationString));
+			}
+			catch (PortalException portalException) {
+				throw new RuntimeException(portalException);
+			}
+
+			if (layout != null) {
+				return getLayoutFriendlyURL(layout, themeDisplay);
+			}
+		}
+
+		return null;
 	}
 
 	private String _getKeywordsParameterName(
@@ -412,8 +444,84 @@ public class SearchBarPortletDisplayContextFactory {
 		return searchBarPortletPreferences.getScopeParameterName();
 	}
 
+	private String _getSuggestionsContributorConfiguration(
+		long companyId, boolean includeAttachments,
+		String[] suggestionsContributorConfigurations) {
+
+		if (!FeatureFlagManagerUtil.isEnabled(companyId, "LPD-35128")) {
+			return StringBundler.concat(
+				StringPool.OPEN_BRACKET,
+				StringUtil.merge(
+					suggestionsContributorConfigurations, StringPool.COMMA),
+				StringPool.CLOSE_BRACKET);
+		}
+
+		try {
+			JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+			for (String suggestionsContributorConfiguration :
+					suggestionsContributorConfigurations) {
+
+				JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+					suggestionsContributorConfiguration);
+
+				JSONObject attributesJSONObject = jsonObject.getJSONObject(
+					"attributes");
+
+				if (attributesJSONObject != null) {
+					attributesJSONObject.put(
+						"includeAttachments", includeAttachments);
+				}
+				else {
+					jsonObject.put(
+						"attributes",
+						JSONUtil.put("includeAttachments", includeAttachments));
+				}
+
+				jsonArray.put(jsonObject);
+			}
+
+			return jsonArray.toString();
+		}
+		catch (JSONException jsonException) {
+			_log.error(jsonException);
+		}
+
+		return StringPool.OPEN_BRACKET + StringPool.CLOSE_BRACKET;
+	}
+
 	private String _getURLCurrentPath(ThemeDisplay themeDisplay) {
 		return HttpComponentsUtil.getPath(themeDisplay.getURLCurrent());
+	}
+
+	private boolean _isIncludeAttachments(
+		PortletPreferencesLookup portletPreferencesLookup,
+		SearchBarPrecedenceHelper searchBarPrecedenceHelper,
+		SearchSettings searchSettings,
+		SearchBarPortletPreferences searchBarPortletPreferences,
+		ThemeDisplay themeDisplay) {
+
+		Portlet headerSearchBarPortlet =
+			searchBarPrecedenceHelper.findHeaderSearchBarPortlet(themeDisplay);
+
+		if (headerSearchBarPortlet == null) {
+			return searchBarPortletPreferences.isIncludeAttachments();
+		}
+
+		PortletPreferences portletPreferences =
+			portletPreferencesLookup.fetchPreferences(
+				headerSearchBarPortlet, themeDisplay);
+
+		if ((portletPreferences == null) ||
+			!SearchBarPortletDestinationUtil.isSameDestination(
+				portletPreferences, themeDisplay)) {
+
+			return searchBarPortletPreferences.isIncludeAttachments();
+		}
+
+		return GetterUtil.getBoolean(
+			searchSettings.isIncludeAttachments(),
+			searchBarPortletPreferences.isIncludeAttachments());
 	}
 
 	private void _setSelectedSearchScopePreference(
@@ -474,5 +582,6 @@ public class SearchBarPortletDisplayContextFactory {
 	private final RenderRequest _renderRequest;
 	private final SearchBarPortletInstanceConfiguration
 		_searchBarPortletInstanceConfiguration;
+	private final UserLocalService _userLocalService;
 
 }

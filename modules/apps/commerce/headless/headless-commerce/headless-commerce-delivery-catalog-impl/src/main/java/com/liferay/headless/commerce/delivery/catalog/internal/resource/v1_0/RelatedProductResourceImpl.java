@@ -23,7 +23,6 @@ import com.liferay.portal.vulcan.fields.NestedFieldId;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
@@ -64,7 +63,7 @@ public class RelatedProductResourceImpl extends BaseRelatedProductResourceImpl {
 		throws Exception {
 
 		List<CPDefinitionLink> cpDefinitionLinks;
-		int totalItems;
+		int totalCount;
 
 		if (Validator.isNull(type)) {
 			cpDefinitionLinks =
@@ -73,7 +72,7 @@ public class RelatedProductResourceImpl extends BaseRelatedProductResourceImpl {
 					WorkflowConstants.STATUS_APPROVED,
 					pagination.getStartPosition(), pagination.getEndPosition());
 
-			totalItems =
+			totalCount =
 				_cpDefinitionLinkLocalService.getCPDefinitionLinksCount(
 					cpDefinition.getCPDefinitionId(),
 					WorkflowConstants.STATUS_APPROVED);
@@ -86,31 +85,26 @@ public class RelatedProductResourceImpl extends BaseRelatedProductResourceImpl {
 					pagination.getStartPosition(), pagination.getEndPosition(),
 					null);
 
-			totalItems =
+			totalCount =
 				_cpDefinitionLinkLocalService.getCPDefinitionLinksCount(
 					cpDefinition.getCPDefinitionId(), type,
 					WorkflowConstants.STATUS_APPROVED);
 		}
 
 		return Page.of(
-			_toRelatedProducts(cpDefinitionLinks), pagination, totalItems);
+			_toRelatedProducts(cpDefinitionLinks), pagination, totalCount);
 	}
 
 	private List<RelatedProduct> _toRelatedProducts(
 			List<CPDefinitionLink> cpDefinitionLinks)
 		throws Exception {
 
-		List<RelatedProduct> relatedProducts = new ArrayList<>();
-
-		for (CPDefinitionLink cpDefinitionLink : cpDefinitionLinks) {
-			relatedProducts.add(
-				_relatedProductDTOConverter.toDTO(
-					new DefaultDTOConverterContext(
-						cpDefinitionLink.getCPDefinitionLinkId(),
-						contextAcceptLanguage.getPreferredLocale())));
-		}
-
-		return relatedProducts;
+		return transform(
+			cpDefinitionLinks,
+			cpDefinitionLink -> _relatedProductDTOConverter.toDTO(
+				new DefaultDTOConverterContext(
+					cpDefinitionLink.getCPDefinitionLinkId(),
+					contextAcceptLanguage.getPreferredLocale())));
 	}
 
 	@Reference

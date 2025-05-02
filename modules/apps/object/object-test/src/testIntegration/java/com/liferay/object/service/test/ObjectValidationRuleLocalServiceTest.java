@@ -7,6 +7,7 @@ package com.liferay.object.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectValidationRuleConstants;
 import com.liferay.object.constants.ObjectValidationRuleSettingConstants;
 import com.liferay.object.exception.NoSuchObjectValidationRuleException;
@@ -56,7 +57,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.security.script.management.test.rule.ScriptManagementConfigurationTestRule;
 import com.liferay.portal.security.script.management.test.util.ScriptManagementConfigurationTestUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
@@ -86,7 +86,6 @@ import org.junit.runner.RunWith;
 /**
  * @author Marcela Cunha
  */
-@FeatureFlags("LPD-29637")
 @RunWith(Arquillian.class)
 public class ObjectValidationRuleLocalServiceTest {
 
@@ -380,6 +379,8 @@ public class ObjectValidationRuleLocalServiceTest {
 		_objectEntryLocalService.addObjectEntry(
 			TestPropsValues.getUserId(), 0,
 			_objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"textObjectField", RandomTestUtil.randomString()
 			).build(),
@@ -485,6 +486,9 @@ public class ObjectValidationRuleLocalServiceTest {
 			_objectEntryLocalService.addObjectEntry(
 				TestPropsValues.getUserId(), 0,
 				_objectDefinition.getObjectDefinitionId(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null,
 				HashMapBuilder.<String, Serializable>put(
 					"textObjectField", RandomTestUtil.randomString()
 				).build(),
@@ -740,6 +744,9 @@ public class ObjectValidationRuleLocalServiceTest {
 		try {
 			_objectEntryLocalService.addObjectEntry(
 				user.getUserId(), 0, _objectDefinition.getObjectDefinitionId(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null,
 				HashMapBuilder.<String, Serializable>put(
 					"textObjectField", RandomTestUtil.randomString()
 				).build(),
@@ -1104,17 +1111,17 @@ public class ObjectValidationRuleLocalServiceTest {
 				(proxy, method, arguments) -> {
 					_argumentsList.add(arguments);
 
-					if (Objects.equals(
+					if (!Objects.equals(
 							method.getDeclaringClass(),
-							ObjectScriptingExecutor.class) &&
-						Objects.equals(method.getName(), "execute")) {
+							ObjectScriptingExecutor.class) ||
+						!Objects.equals(method.getName(), "execute")) {
 
-						return HashMapBuilder.<String, Object>put(
-							"validationCriteriaMet", true
-						).build();
+						return null;
 					}
 
-					return null;
+					return HashMapBuilder.<String, Object>put(
+						"validationCriteriaMet", true
+					).build();
 				}));
 	}
 

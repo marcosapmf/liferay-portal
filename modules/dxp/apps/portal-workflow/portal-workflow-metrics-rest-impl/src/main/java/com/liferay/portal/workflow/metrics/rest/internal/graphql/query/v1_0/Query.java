@@ -7,8 +7,6 @@ package com.liferay.portal.workflow.metrics.rest.internal.graphql.query.v1_0;
 
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -240,6 +238,24 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processInstance(instanceId: ___, processId: ___){active, assetTitle, assetTitle_i18n, assetType, assetType_i18n, assignees, className, classPK, completed, creator, dateCompletion, dateCreated, dateModified, duration, id, processId, processVersion, slaResults, slaStatus, taskNames, transitions}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public Instance processInstance(
+			@GraphQLName("processId") Long processId,
+			@GraphQLName("instanceId") Long instanceId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_instanceResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			instanceResource -> instanceResource.getProcessInstance(
+				processId, instanceId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processInstances(assigneeIds: ___, classPKs: ___, dateEnd: ___, dateStart: ___, page: ___, pageSize: ___, processId: ___, slaStatuses: ___, sorts: ___, statuses: ___, taskNames: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -266,24 +282,6 @@ public class Query {
 					slaStatuses, statuses, taskNames,
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(instanceResource, sortsString))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processInstance(instanceId: ___, processId: ___){active, assetTitle, assetTitle_i18n, assetType, assetType_i18n, assignees, className, classPK, completed, creator, dateCompletion, dateCreated, dateModified, duration, id, processId, processVersion, slaResults, slaStatus, taskNames, transitions}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public Instance processInstance(
-			@GraphQLName("processId") Long processId,
-			@GraphQLName("instanceId") Long instanceId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_instanceResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			instanceResource -> instanceResource.getProcessInstance(
-				processId, instanceId));
 	}
 
 	/**
@@ -363,6 +361,26 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processMetric(completed: ___, dateEnd: ___, dateStart: ___, processId: ___){instanceCount, onTimeInstanceCount, overdueInstanceCount, process, untrackedInstanceCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ProcessMetric processMetric(
+			@GraphQLName("processId") Long processId,
+			@GraphQLName("completed") Boolean completed,
+			@GraphQLName("dateEnd") Date dateEnd,
+			@GraphQLName("dateStart") Date dateStart)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_processMetricResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			processMetricResource -> processMetricResource.getProcessMetric(
+				processId, completed, dateEnd, dateStart));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processMetrics(page: ___, pageSize: ___, sorts: ___, title: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -381,26 +399,6 @@ public class Query {
 					title, Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(
 						processMetricResource, sortsString))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processMetric(completed: ___, dateEnd: ___, dateStart: ___, processId: ___){instanceCount, onTimeInstanceCount, overdueInstanceCount, process, untrackedInstanceCount}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public ProcessMetric processMetric(
-			@GraphQLName("processId") Long processId,
-			@GraphQLName("completed") Boolean completed,
-			@GraphQLName("dateEnd") Date dateEnd,
-			@GraphQLName("dateStart") Date dateStart)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_processMetricResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			processMetricResource -> processMetricResource.getProcessMetric(
-				processId, completed, dateEnd, dateStart));
 	}
 
 	/**
@@ -505,22 +503,6 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processTasks(processId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public TaskPage processTasks(@GraphQLName("processId") Long processId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_taskResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			taskResource -> new TaskPage(
-				taskResource.getProcessTasksPage(processId)));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processTask(processId: ___, taskId: ___){assetTitle, assetTitle_i18n, assetType, assetType_i18n, assignee, className, classPK, completed, completionUserId, dateCompletion, dateCreated, dateModified, duration, id, instanceId, label, name, nodeId, processId, processVersion}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -533,6 +515,22 @@ public class Query {
 			_taskResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			taskResource -> taskResource.getProcessTask(processId, taskId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processTasks(processId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public TaskPage processTasks(@GraphQLName("processId") Long processId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_taskResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			taskResource -> new TaskPage(
+				taskResource.getProcessTasksPage(processId)));
 	}
 
 	/**
@@ -1616,12 +1614,15 @@ public class Query {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

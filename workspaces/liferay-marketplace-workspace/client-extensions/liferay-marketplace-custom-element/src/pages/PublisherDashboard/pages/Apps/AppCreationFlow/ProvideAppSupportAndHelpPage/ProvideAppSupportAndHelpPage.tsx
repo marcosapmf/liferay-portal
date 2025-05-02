@@ -11,14 +11,13 @@ import {NewAppPageFooterButtons} from '../../../../../../components/NewAppPageFo
 import {Section} from '../../../../../../components/Section/Section';
 import {submitSpecification} from '../../../../../../utils/util';
 import {useAppContext} from '../AppContext/AppManageState';
-import {TYPES} from '../AppContext/actionTypes';
+import {ActionTypes} from '../AppContext/actionTypes';
 
 import './ProvideAppSupportAndHelpPage.scss';
 import {
-	PRODUCT_PRICE_MODEL,
-	PRODUCT_SUPPORT_SPECIFICATION_KEY,
+	ProductPriceModel,
+	ProductSupportSpecificationKey,
 } from '../../../../../../enums/Product';
-import useFeaturePreview from '../../../../../../hooks/useFeaturePreview';
 
 interface ProvideAppSupportAndHelpPageProps {
 	onClickBack: () => void;
@@ -33,7 +32,6 @@ export function ProvideAppSupportAndHelpPage({
 	const [
 		{
 			appDocumentationURL,
-			appId,
 			appInstallationGuideURL,
 			appProductId,
 			appUsageTermsURL,
@@ -46,47 +44,38 @@ export function ProvideAppSupportAndHelpPage({
 		dispatch,
 	] = useAppContext();
 
-	const {getTemporaryProductIdForSpefication} = useFeaturePreview();
-
-	const _tempProductId = getTemporaryProductIdForSpefication({
-		appId,
-		productId: appProductId,
-	});
-
 	const bodySpecification = useMemo(
 		() => [
 			{
-				specificationKey: PRODUCT_SUPPORT_SPECIFICATION_KEY.SUPPORT_URL,
+				specificationKey: ProductSupportSpecificationKey.SUPPORT_URL,
 				value: supportURL?.value,
 			},
 			{
 				specificationKey:
-					PRODUCT_SUPPORT_SPECIFICATION_KEY.PUBLISHER_WEBSITE_URL,
+					ProductSupportSpecificationKey.PUBLISHER_WEBSITE_URL,
 				value: publisherWebsiteURL?.value,
 			},
 			{
-				specificationKey:
-					PRODUCT_SUPPORT_SPECIFICATION_KEY.SUPPORT_EMAIL,
+				specificationKey: ProductSupportSpecificationKey.SUPPORT_EMAIL,
 				value: supportEmail?.value,
 			},
 			{
-				specificationKey:
-					PRODUCT_SUPPORT_SPECIFICATION_KEY.SUPPORT_PHONE,
+				specificationKey: ProductSupportSpecificationKey.SUPPORT_PHONE,
 				value: supportPhone?.value,
 			},
 			{
 				specificationKey:
-					PRODUCT_SUPPORT_SPECIFICATION_KEY.APP_USAGE_TERMS_URL,
+					ProductSupportSpecificationKey.APP_USAGE_TERMS_URL,
 				value: appUsageTermsURL?.value,
 			},
 			{
 				specificationKey:
-					PRODUCT_SUPPORT_SPECIFICATION_KEY.APP_DOCUMENTATION_URL,
+					ProductSupportSpecificationKey.APP_DOCUMENTATION_URL,
 				value: appDocumentationURL?.value,
 			},
 			{
 				specificationKey:
-					PRODUCT_SUPPORT_SPECIFICATION_KEY.APP_INSTALLATION_GUIDE_URL,
+					ProductSupportSpecificationKey.APP_INSTALLATION_GUIDE_URL,
 				value: appInstallationGuideURL?.value,
 			},
 		],
@@ -101,7 +90,7 @@ export function ProvideAppSupportAndHelpPage({
 		]
 	);
 
-	const isPaidApp = priceModel.value === PRODUCT_PRICE_MODEL.PAID;
+	const isPaidApp = priceModel.value === ProductPriceModel.PAID;
 
 	return (
 		<div className="provide-app-support-and-help-page-container">
@@ -125,7 +114,7 @@ export function ProvideAppSupportAndHelpPage({
 								id: supportURL?.id,
 								value: target.value,
 							},
-							type: TYPES.UPDATE_APP_SUPPORT_URL,
+							type: ActionTypes.UPDATE_APP_SUPPORT_URL,
 						})
 					}
 					placeholder="http:// Enter app name"
@@ -140,7 +129,7 @@ export function ProvideAppSupportAndHelpPage({
 								id: publisherWebsiteURL?.id,
 								value: target.value,
 							},
-							type: TYPES.UPDATE_APP_PUBLISHER_WEBSITE_URL,
+							type: ActionTypes.UPDATE_APP_PUBLISHER_WEBSITE_URL,
 						})
 					}
 					placeholder="http:// Enter app name"
@@ -156,7 +145,7 @@ export function ProvideAppSupportAndHelpPage({
 								id: supportEmail?.id,
 								value: target.value,
 							},
-							type: TYPES.UPDATE_APP_SUPPORT_EMAIL,
+							type: ActionTypes.UPDATE_APP_SUPPORT_EMAIL,
 						})
 					}
 					placeholder="Enter Support Email Address"
@@ -172,7 +161,7 @@ export function ProvideAppSupportAndHelpPage({
 								id: supportPhone?.id,
 								value: target.value,
 							},
-							type: TYPES.UPDATE_APP_SUPPORT_PHONE,
+							type: ActionTypes.UPDATE_APP_SUPPORT_PHONE,
 						})
 					}
 					placeholder="Enter Support Phone"
@@ -188,7 +177,7 @@ export function ProvideAppSupportAndHelpPage({
 								id: appUsageTermsURL?.id,
 								value: target.value,
 							},
-							type: TYPES.UPDATE_APP_USAGE_TERMS_URL,
+							type: ActionTypes.UPDATE_APP_USAGE_TERMS_URL,
 						})
 					}
 					placeholder="http:// Enter app name"
@@ -203,7 +192,7 @@ export function ProvideAppSupportAndHelpPage({
 								id: appDocumentationURL?.id,
 								value: target.value,
 							},
-							type: TYPES.UPDATE_APP_DOCUMENTATION_URL,
+							type: ActionTypes.UPDATE_APP_DOCUMENTATION_URL,
 						})
 					}
 					placeholder="http:// Enter app name"
@@ -218,7 +207,7 @@ export function ProvideAppSupportAndHelpPage({
 								id: appInstallationGuideURL?.id,
 								value: target.value,
 							},
-							type: TYPES.UPDATE_APP_INSTALLATION_AND_UNINSTALLATION_GUIDE_URL,
+							type: ActionTypes.UPDATE_APP_INSTALLATION_AND_UNINSTALLATION_GUIDE_URL,
 						})
 					}
 					placeholder="http://Enter app name"
@@ -240,10 +229,7 @@ export function ProvideAppSupportAndHelpPage({
 				onClickContinue={async () => {
 					setProcessing(true);
 
-					await submitSpecification(
-						_tempProductId as number,
-						bodySpecification
-					);
+					await submitSpecification(appProductId, bodySpecification);
 
 					setProcessing(false);
 

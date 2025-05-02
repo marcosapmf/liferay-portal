@@ -11,6 +11,7 @@ import com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0.Acc
 import com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0.AttachmentResourceImpl;
 import com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0.CategoryResourceImpl;
 import com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0.ChannelResourceImpl;
+import com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0.CurrencyResourceImpl;
 import com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0.LinkedProductResourceImpl;
 import com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0.MappedProductResourceImpl;
 import com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0.PinResourceImpl;
@@ -26,6 +27,7 @@ import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.AccountResou
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.AttachmentResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.CategoryResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ChannelResource;
+import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.CurrencyResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.LinkedProductResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.MappedProductResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.PinResource;
@@ -83,6 +85,8 @@ public class ServletDataImpl implements ServletData {
 			_categoryResourceComponentServiceObjects);
 		Query.setChannelResourceComponentServiceObjects(
 			_channelResourceComponentServiceObjects);
+		Query.setCurrencyResourceComponentServiceObjects(
+			_currencyResourceComponentServiceObjects);
 		Query.setLinkedProductResourceComponentServiceObjects(
 			_linkedProductResourceComponentServiceObjects);
 		Query.setMappedProductResourceComponentServiceObjects(
@@ -180,15 +184,6 @@ public class ServletDataImpl implements ServletData {
 							SkuResourceImpl.class,
 							"postChannelProductSkuBySkuOption"));
 					put(
-						"mutation#createChannelByExternalReferenceCodeWishList",
-						new ObjectValuePair<>(
-							WishListResourceImpl.class,
-							"postChannelByExternalReferenceCodeWishList"));
-					put(
-						"mutation#createChannelWishList",
-						new ObjectValuePair<>(
-							WishListResourceImpl.class, "postChannelWishList"));
-					put(
 						"mutation#deleteWishList",
 						new ObjectValuePair<>(
 							WishListResourceImpl.class, "deleteWishList"));
@@ -200,6 +195,15 @@ public class ServletDataImpl implements ServletData {
 						"mutation#patchWishList",
 						new ObjectValuePair<>(
 							WishListResourceImpl.class, "patchWishList"));
+					put(
+						"mutation#createChannelByExternalReferenceCodeWishList",
+						new ObjectValuePair<>(
+							WishListResourceImpl.class,
+							"postChannelByExternalReferenceCodeWishList"));
+					put(
+						"mutation#createChannelWishList",
+						new ObjectValuePair<>(
+							WishListResourceImpl.class, "postChannelWishList"));
 					put(
 						"mutation#deleteWishListItem",
 						new ObjectValuePair<>(
@@ -241,6 +245,16 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							ChannelResourceImpl.class, "getChannelsPage"));
 					put(
+						"query#channelByExternalReferenceCodeCurrencies",
+						new ObjectValuePair<>(
+							CurrencyResourceImpl.class,
+							"getChannelByExternalReferenceCodeCurrenciesPage"));
+					put(
+						"query#channelCurrencies",
+						new ObjectValuePair<>(
+							CurrencyResourceImpl.class,
+							"getChannelCurrenciesPage"));
+					put(
 						"query#channelProductLinkedProducts",
 						new ObjectValuePair<>(
 							LinkedProductResourceImpl.class,
@@ -261,14 +275,19 @@ public class ServletDataImpl implements ServletData {
 							PinResourceImpl.class,
 							"getChannelProductPinsPage"));
 					put(
+						"query#channelProduct",
+						new ObjectValuePair<>(
+							ProductResourceImpl.class, "getChannelProduct"));
+					put(
+						"query#channelProductByFriendlyUrlPath",
+						new ObjectValuePair<>(
+							ProductResourceImpl.class,
+							"getChannelProductByFriendlyUrlPath"));
+					put(
 						"query#channelProducts",
 						new ObjectValuePair<>(
 							ProductResourceImpl.class,
 							"getChannelProductsPage"));
-					put(
-						"query#channelProduct",
-						new ObjectValuePair<>(
-							ProductResourceImpl.class, "getChannelProduct"));
 					put(
 						"query#channelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptions",
 						new ObjectValuePair<>(
@@ -305,24 +324,24 @@ public class ServletDataImpl implements ServletData {
 							RelatedProductResourceImpl.class,
 							"getChannelProductRelatedProductsPage"));
 					put(
-						"query#channelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkus",
-						new ObjectValuePair<>(
-							SkuResourceImpl.class,
-							"getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage"));
-					put(
 						"query#channelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode",
 						new ObjectValuePair<>(
 							SkuResourceImpl.class,
 							"getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode"));
 					put(
-						"query#channelProductSkus",
+						"query#channelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkus",
 						new ObjectValuePair<>(
 							SkuResourceImpl.class,
-							"getChannelProductSkusPage"));
+							"getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage"));
 					put(
 						"query#channelProductSku",
 						new ObjectValuePair<>(
 							SkuResourceImpl.class, "getChannelProductSku"));
+					put(
+						"query#channelProductSkus",
+						new ObjectValuePair<>(
+							SkuResourceImpl.class,
+							"getChannelProductSkusPage"));
 					put(
 						"query#channelByExternalReferenceCodeWishLists",
 						new ObjectValuePair<>(
@@ -386,6 +405,10 @@ public class ServletDataImpl implements ServletData {
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<CategoryResource>
 		_categoryResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<CurrencyResource>
+		_currencyResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<LinkedProductResource>

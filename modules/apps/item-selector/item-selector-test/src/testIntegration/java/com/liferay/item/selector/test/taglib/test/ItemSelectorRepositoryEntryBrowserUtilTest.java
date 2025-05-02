@@ -10,6 +10,7 @@ import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.test.util.DLTestUtil;
 import com.liferay.item.selector.taglib.servlet.taglib.ImageSelectorTag;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -17,6 +18,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
@@ -64,7 +66,14 @@ public class ItemSelectorRepositoryEntryBrowserUtilTest {
 		_company = _companyLocalService.getCompany(
 			TestPropsValues.getCompanyId());
 
-		_setUpThemeDisplay();
+		_themeDisplay.setCompany(_company);
+		_themeDisplay.setRefererGroupId(_company.getGroupId());
+		_themeDisplay.setScopeGroupId(_company.getGroupId());
+		_themeDisplay.setSiteGroupId(_company.getGroupId());
+
+		_user = UserTestUtil.addUser();
+
+		_themeDisplay.setUser(_user);
 	}
 
 	@Test
@@ -73,14 +82,51 @@ public class ItemSelectorRepositoryEntryBrowserUtilTest {
 
 		DLTestUtil.addDLFileEntry(dlFolder.getFolderId());
 
-		User user = UserTestUtil.addUser();
+		List<BreadcrumbEntry> breadcrumbEntries = _getBreadcrumbEntries(
+			dlFolder.getFolderId());
+
+		Assert.assertEquals(
+			breadcrumbEntries.toString(), 3, breadcrumbEntries.size());
+
+		BreadcrumbEntry breadcrumbEntry = breadcrumbEntries.get(2);
+
+		Assert.assertEquals(dlFolder.getName(), breadcrumbEntry.getTitle());
+	}
+
+	@Test
+	public void testCompanyGroupBreadcrumbEntry() throws Exception {
+		Group controlPanelGroup = GroupLocalServiceUtil.getGroup(
+			_company.getCompanyId(), "Control Panel");
+
+		long originalScopeGroupId = _themeDisplay.getScopeGroupId();
+
+		try {
+			_themeDisplay.setScopeGroupId(controlPanelGroup.getGroupId());
+
+			List<BreadcrumbEntry> breadcrumbEntries = _getBreadcrumbEntries(0);
+
+			Group companyGroup = _company.getGroup();
+
+			BreadcrumbEntry breadcrumbEntry = breadcrumbEntries.get(1);
+
+			Assert.assertEquals(
+				companyGroup.getName(_themeDisplay.getLanguageId()),
+				breadcrumbEntry.getTitle());
+		}
+		finally {
+			_themeDisplay.setScopeGroupId(originalScopeGroupId);
+		}
+	}
+
+	private List<BreadcrumbEntry> _getBreadcrumbEntries(long folderId)
+		throws Exception {
 
 		PermissionChecker originalPermissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 
 		try {
 			PermissionThreadLocal.setPermissionChecker(
-				PermissionCheckerFactoryUtil.create(user));
+				PermissionCheckerFactoryUtil.create(_user));
 
 			MockHttpServletRequest mockHttpServletRequest =
 				new MockHttpServletRequest();
@@ -107,21 +153,13 @@ public class ItemSelectorRepositoryEntryBrowserUtilTest {
 					LiferayPortletRequest.class, LiferayPortletResponse.class,
 					PortletURL.class
 				},
-				dlFolder.getFolderId(), "", mockHttpServletRequest,
+				folderId, "", mockHttpServletRequest,
 				mockLiferayPortletActionRequest,
 				new MockLiferayPortletActionResponse(),
 				new MockLiferayPortletURL());
 
-			List<BreadcrumbEntry> breadcrumbEntries =
-				(List<BreadcrumbEntry>)mockHttpServletRequest.getAttribute(
-					WebKeys.PORTLET_BREADCRUMBS);
-
-			Assert.assertEquals(
-				breadcrumbEntries.toString(), 3, breadcrumbEntries.size());
-
-			BreadcrumbEntry breadcrumbEntry = breadcrumbEntries.get(2);
-
-			Assert.assertEquals(dlFolder.getName(), breadcrumbEntry.getTitle());
+			return (List<BreadcrumbEntry>)mockHttpServletRequest.getAttribute(
+				WebKeys.PORTLET_BREADCRUMBS);
 		}
 		finally {
 			PermissionThreadLocal.setPermissionChecker(
@@ -129,19 +167,11 @@ public class ItemSelectorRepositoryEntryBrowserUtilTest {
 		}
 	}
 
-	private void _setUpThemeDisplay() throws Exception {
-		_themeDisplay.setCompany(_company);
-
-		_themeDisplay.setRefererGroupId(_company.getGroupId());
-		_themeDisplay.setScopeGroupId(_company.getGroupId());
-		_themeDisplay.setSiteGroupId(_company.getGroupId());
-		_themeDisplay.setUser(TestPropsValues.getUser());
-	}
-
 	@Inject
 	private static CompanyLocalService _companyLocalService;
 
 	private Company _company;
 	private final ThemeDisplay _themeDisplay = new ThemeDisplay();
+	private User _user;
 
 }

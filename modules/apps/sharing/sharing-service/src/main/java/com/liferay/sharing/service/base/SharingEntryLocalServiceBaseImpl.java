@@ -14,8 +14,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
+import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DefaultActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -45,6 +44,8 @@ import com.liferay.sharing.service.persistence.SharingEntryFinder;
 import com.liferay.sharing.service.persistence.SharingEntryPersistence;
 
 import java.io.Serializable;
+
+import java.sql.Connection;
 
 import java.util.List;
 
@@ -255,6 +256,23 @@ public abstract class SharingEntryLocalServiceBaseImpl
 		String uuid, long groupId) {
 
 		return sharingEntryPersistence.fetchByUUID_G(uuid, groupId);
+	}
+
+	@Override
+	public SharingEntry fetchSharingEntryByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return sharingEntryPersistence.fetchByERC_G(
+			externalReferenceCode, groupId);
+	}
+
+	@Override
+	public SharingEntry getSharingEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return sharingEntryPersistence.findByERC_G(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -578,18 +596,23 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	 * @param sql the sql query
 	 */
 	protected void runSQL(String sql) {
+		DataSource dataSource = sharingEntryPersistence.getDataSource();
+
+		DB db = DBManagerUtil.getDB();
+
+		Connection currentConnection = CurrentConnectionUtil.getConnection(
+			dataSource);
+
 		try {
-			DataSource dataSource = sharingEntryPersistence.getDataSource();
+			if (currentConnection != null) {
+				db.runSQL(currentConnection, new String[] {sql});
 
-			DB db = DBManagerUtil.getDB();
+				return;
+			}
 
-			sql = db.buildSQL(sql);
-			sql = PortalUtil.transformSQL(sql);
-
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
-				dataSource, sql);
-
-			sqlUpdate.update();
+			try (Connection connection = dataSource.getConnection()) {
+				db.runSQL(connection, new String[] {sql});
+			}
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);

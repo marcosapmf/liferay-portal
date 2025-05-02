@@ -5,6 +5,7 @@
 
 package com.liferay.object.scope.util;
 
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -24,13 +25,20 @@ public class GroupUtil {
 			return groupId;
 		}
 
-		Group group = groupLocalService.fetchGroup(companyId, siteKey);
+		Group group = groupLocalService.fetchGroup(GetterUtil.getLong(siteKey));
 
 		if (group == null) {
-			group = groupLocalService.fetchGroup(GetterUtil.getLong(siteKey));
+			group = groupLocalService.fetchGroup(companyId, siteKey);
 		}
 
-		if ((group != null) && group.isUserGroup()) {
+		if ((group == null) &&
+			FeatureFlagManagerUtil.isEnabled(companyId, "LPD-45945")) {
+
+			group = groupLocalService.fetchGroupByExternalReferenceCode(
+				siteKey, companyId);
+		}
+
+		if (group != null) {
 			return group.getGroupId();
 		}
 

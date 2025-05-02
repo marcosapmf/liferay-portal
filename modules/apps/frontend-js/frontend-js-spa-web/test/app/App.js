@@ -17,7 +17,6 @@ import {
 	getNodeOffset,
 	getUrlPathWithoutHash,
 } from '../../src/main/resources/META-INF/resources/util/utils';
-
 class StubScreen extends Screen {}
 StubScreen.prototype.activate = jest.fn();
 StubScreen.prototype.beforeDeactivate = jest.fn();
@@ -1132,7 +1131,7 @@ describe('App', function () {
 			.cancel();
 	});
 
-	it('navigates when clicking on routed links', () => {
+	it('navigates when clicking on routed links', async () => {
 		this.app = new App();
 		this.app.addRoutes(new Route('/path', Screen));
 
@@ -1146,23 +1145,27 @@ describe('App', function () {
 			'syncScrollPositionSyncThenAsync_'
 		).mockImplementation(() => {});
 
-		userEvent.click(enterDocumentLinkElement('/path'));
-		expect(this.app.pendingNavigate).toBeTruthy();
+		const link = enterDocumentLinkElement('/path');
+
+		await userEvent.click(link);
+
+		expect(this.app.navigationStrategy).toBe('immediate');
+
 		exitDocumentLinkElement();
 	});
 
-	it('does not navigate when clicking on target blank links', () => {
+	it('does not navigate when clicking on target blank links', async () => {
 		this.app = new App();
 		this.app.addRoutes(new Route('/path', Screen));
 		const link = enterDocumentLinkElement('/path');
 		link.setAttribute('target', '_blank');
 		link.addEventListener('click', (event) => event.preventDefault());
-		userEvent.click(link);
+		await userEvent.click(link);
 		exitDocumentLinkElement();
 		expect(this.app.pendingNavigate).toBeNull();
 	});
 
-	it('passes original event object to "beforeNavigate" when a link is clicked', () => {
+	it('passes original event object to "beforeNavigate" when a link is clicked', async () => {
 		this.app = new App();
 		this.app.addRoutes(new Route('/path', Screen));
 
@@ -1180,57 +1183,57 @@ describe('App', function () {
 			expect(data.event).toBeTruthy();
 			expect(data.event.type).toBe('click');
 		});
-		userEvent.click(enterDocumentLinkElement('/path'));
+		await userEvent.click(enterDocumentLinkElement('/path'));
 		exitDocumentLinkElement();
 
 		expect(window.location.pathname).not.toBe('/path');
 	});
 
-	it('prevents navigation on both senna and the browser via beforeNavigate', () => {
+	it('prevents navigation on both senna and the browser via beforeNavigate', async () => {
 		this.app = new App();
 		this.app.addRoutes(new Route('/preventedPath', Screen));
 		this.app.on('beforeNavigate', (data, event) => {
 			data.event.preventDefault();
 			event.preventDefault();
 		});
-		userEvent.click(enterDocumentLinkElement('/preventedPath'));
+		await userEvent.click(enterDocumentLinkElement('/preventedPath'));
 		exitDocumentLinkElement();
 
 		expect(window.location.pathname).not.toBe('/preventedPath');
 	});
 
-	it('does not navigate when clicking on external links', () => {
+	it('does not navigate when clicking on external links', async () => {
 		const link = enterDocumentLinkElement('http://sennajs.com');
 		this.app = new App();
 		this.app.setAllowPreventNavigate(false);
 		link.addEventListener('click', preventDefault);
-		userEvent.click(link);
+		await userEvent.click(link);
 		expect(this.app.pendingNavigate).toBeFalsy();
 		exitDocumentLinkElement();
 	});
 
-	it('does not navigate when clicking on links outside basepath', () => {
+	it('does not navigate when clicking on links outside basepath', async () => {
 		const link = enterDocumentLinkElement('/path');
 		this.app = new App();
 		this.app.setAllowPreventNavigate(false);
 		this.app.setBasePath('/base');
 		link.addEventListener('click', preventDefault);
-		userEvent.click(link);
+		await userEvent.click(link);
 		expect(this.app.pendingNavigate).toBeFalsy();
 		exitDocumentLinkElement();
 	});
 
-	it('does not navigate when clicking on unrouted links', () => {
+	it('does not navigate when clicking on unrouted links', async () => {
 		const link = enterDocumentLinkElement('/path');
 		this.app = new App();
 		this.app.setAllowPreventNavigate(false);
 		link.addEventListener('click', preventDefault);
-		userEvent.click(link);
+		await userEvent.click(link);
 		expect(this.app.pendingNavigate).toBeFalsy();
 		exitDocumentLinkElement();
 	});
 
-	it('does not navigate when clicking on links with invalid mouse button or modifier keys pressed', () => {
+	it('does not navigate when clicking on links with invalid mouse button or modifier keys pressed', async () => {
 		const link = enterDocumentLinkElement('/path');
 		this.app = new App();
 		this.app.setAllowPreventNavigate(false);
@@ -1238,18 +1241,18 @@ describe('App', function () {
 
 		link.addEventListener('click', preventDefault);
 
-		userEvent.click(link, {altKey: false});
-		userEvent.click(link, {ctrlKey: false});
-		userEvent.click(link, {metaKey: false});
-		userEvent.click(link, {shiftKey: false});
-		userEvent.click(link, {button: 1});
-		userEvent.click(link, {button: 2});
+		await userEvent.click(link, {altKey: false});
+		await userEvent.click(link, {ctrlKey: false});
+		await userEvent.click(link, {metaKey: false});
+		await userEvent.click(link, {shiftKey: false});
+		await userEvent.click(link, {button: 1});
+		await userEvent.click(link, {button: 2});
 
 		expect(this.app.pendingNavigate).toBeFalsy();
 		exitDocumentLinkElement();
 	});
 
-	it('does not navigate when navigate fails synchronously', () => {
+	it('does not navigate when navigate fails synchronously', async () => {
 		const link = enterDocumentLinkElement('/path');
 		this.app = new App();
 		this.app.setAllowPreventNavigate(false);
@@ -1258,7 +1261,7 @@ describe('App', function () {
 			throw new Error();
 		};
 		link.addEventListener('click', preventDefault);
-		userEvent.click(link);
+		await userEvent.click(link);
 		expect(this.app.pendingNavigate).toBeFalsy();
 		exitDocumentLinkElement();
 	});
@@ -1368,7 +1371,7 @@ describe('App', function () {
 		fireEvent(window, new PopStateEvent('popstate'));
 	});
 
-	it('does not navigate on clicking links when onbeforeunload returns truthy value', () => {
+	it('does not navigate on clicking links when onbeforeunload returns truthy value', async () => {
 		const beforeunload = jest.fn();
 		window.onbeforeunload = beforeunload;
 		this.app = new App();
@@ -1385,7 +1388,7 @@ describe('App', function () {
 
 		this.app.addRoutes(new Route('/path', Screen));
 		const link = enterDocumentLinkElement('/path');
-		userEvent.click(link);
+		await await userEvent.click(link);
 		exitDocumentLinkElement();
 		expect(beforeunload).toHaveBeenCalled();
 	});
@@ -2011,7 +2014,7 @@ describe('App', function () {
 		});
 	});
 
-	it.skip('navigates cancelling navigation to multiple paths after navigation is scheduled to keep only the last one', (done) => {
+	it('navigates cancelling navigation to multiple paths after navigation is scheduled to keep only the last one', (done) => {
 		const app = (this.app = new App());
 
 		class TestScreen extends Screen {
@@ -2023,7 +2026,7 @@ describe('App', function () {
 			}
 
 			evaluateScripts(surfaces) {
-				expect(app.scheduledNavigationEvent).toBeTruthy();
+				expect(app.isNavigationPending).toBeTruthy();
 
 				return super.evaluateScripts(surfaces);
 			}
@@ -2038,62 +2041,72 @@ describe('App', function () {
 			}
 
 			evaluateScripts(surfaces) {
-				expect(app.scheduledNavigationEvent).toBeTruthy();
+				expect(app.isNavigationPending).toBeTruthy();
 
 				return super.evaluateScripts(surfaces);
 			}
 		}
 
+		const startNavigateStub = jest.fn();
+		const endNavigateStub = jest.fn();
+		this.app.stopPendingNavigate_ = jest.fn();
+
+		this.app.on('startNavigate', startNavigateStub);
+		this.app.on('endNavigate', endNavigateStub);
+
 		this.app.addRoutes(new Route('/path1', TestScreen));
 		this.app.addRoutes(new Route('/path2', TestScreen2));
 		this.app.addRoutes(new Route('/path3', TestScreen2));
 
 		this.app.navigate('/path1');
+		this.app.navigate('/path2');
 
-		this.app.on('endNavigate', (event) => {
-			if (event.path === '/path3') {
-				expect(this.app.scheduledNavigationEvent).toBeFalsy();
-				expect(window.location.pathname).toBe('/path3');
-				done();
-			}
+		this.app.navigate('/path1').then(() => {
+			expect(startNavigateStub).toHaveBeenCalledTimes(3);
+			expect(endNavigateStub).toHaveBeenCalledTimes(3);
+			expect(this.app.stopPendingNavigate_).toHaveBeenCalledTimes(3);
+
+			expect(this.app.isNavigationPending).toBeFalsy();
+
+			done();
 		});
 	});
 
-	it.skip('navigates cancelling navigation to multiple paths when navigation strategy is setted up to be immediate', (done) => {
+	it('navigates cancelling previous navigation when navigation is to the same path', (done) => {
 		this.app = new App();
 
 		class TestScreen extends Screen {
 			load(path) {
-				userEvent.click(enterDocumentLinkElement('/path2'));
+				userEvent.click(enterDocumentLinkElement('/path1'));
 				exitDocumentLinkElement();
 
 				return super.load(path);
 			}
 		}
 
-		class TestScreen2 extends Screen {
-			load(path) {
-				userEvent.click(enterDocumentLinkElement('/path3'));
-				exitDocumentLinkElement();
+		const startNavigateStub = jest.fn();
+		const endNavigateStub = jest.fn();
+		this.app.stopPendingNavigate_ = jest.fn();
 
-				return super.load(path);
-			}
-		}
+		this.app.on('startNavigate', startNavigateStub);
+		this.app.on('endNavigate', endNavigateStub);
 
 		this.app.addRoutes(new Route('/path1', TestScreen));
-		this.app.addRoutes(new Route('/path2', TestScreen2));
-		this.app.addRoutes(new Route('/path3', TestScreen2));
 
 		this.app.navigate('/path1');
+		this.app.navigate('/path1');
+		this.app.navigate('/path1');
+		this.app.navigate('/path1');
 
-		expect(this.app.scheduledNavigationEvent).toBeFalsy();
+		this.app.navigate('/path1').then(() => {
+			expect(startNavigateStub).toHaveBeenCalledTimes(1);
+			expect(endNavigateStub).toHaveBeenCalledTimes(1);
 
-		this.app.on('endNavigate', (event) => {
-			if (event.path === '/path3') {
-				expect(this.app.scheduledNavigationEvent).toBeFalsy();
-				expect(window.location.pathname).toBe('/path3');
-				done();
-			}
+			expect(this.app.stopPendingNavigate_).toHaveBeenCalledTimes(1);
+
+			expect(this.app.isNavigationPending).toBeFalsy();
+
+			done();
 		});
 	});
 

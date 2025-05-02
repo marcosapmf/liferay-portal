@@ -67,6 +67,14 @@
 
 		<!-- Finder methods -->
 
+		<finder name="G_C" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="classNameId" />
+		</finder>
+		<finder name="C_C" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="classNameId" />
+		</finder>
 		<finder name="G_C_C" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="classNameId" />
@@ -87,7 +95,7 @@
 
 		<column name="classNameId" type="long" />
 		<column name="classPK" type="long" />
-		<column change-tracking-resolution-type="merge" name="friendlyURLEntryId" type="long" />
+		<column name="friendlyURLEntryId" type="long" />
 
 		<!-- Finder methods -->
 
@@ -100,5 +108,6 @@
 		<exception>DuplicateFriendlyURLEntry</exception>
 		<exception>FriendlyURLCategory</exception>
 		<exception>FriendlyURLLength</exception>
+		<exception>FriendlyURLLocalizationUrlTitle</exception>
 	</exceptions>
 </service-builder>

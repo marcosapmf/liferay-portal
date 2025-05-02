@@ -1,12 +1,13 @@
-apiDir: "../headless-delivery-api/src/main/java"
-apiPackagePath: "com.liferay.headless.delivery"
+apiDir: ../headless-delivery-api/src/main/java
+apiPackagePath: com.liferay.headless.delivery
 application:
-    baseURI: "/headless-delivery"
-    className: "HeadlessDeliveryApplication"
-    name: "Liferay.Headless.Delivery"
-author: "Javier Gamarra"
+    baseURI: /headless-delivery
+    className: HeadlessDeliveryApplication
+    name: Liferay.Headless.Delivery
+author: Javier Gamarra
 changeTrackingEnabled: true
-clientDir: "../headless-delivery-client/src/main/java"
-compatibilityVersion: 6
+clientDir: ../headless-delivery-client/src/main/java
+compatibilityVersion: 9
 forcePredictableOperationId: true
-testDir: "../headless-delivery-test/src/testIntegration/java"
+managePermissions: true
+testDir: ../headless-delivery-test/src/testIntegration/java

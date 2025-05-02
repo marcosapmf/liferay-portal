@@ -13,8 +13,8 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.PortletConfigurationListener;
 import com.liferay.portal.kernel.portlet.PortletConfigurationListenerException;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -51,10 +51,9 @@ public class JournalContentPortletConfigurationListener
 			portletPreferences.reset("portletSetupUseCustomTitle");
 
 			if (_resetValues(portletPreferences)) {
-				portletPreferences.reset("articleId");
-				portletPreferences.reset("assetEntryId");
-				portletPreferences.reset("ddmTemplateKey");
-				portletPreferences.reset("groupId");
+				portletPreferences.reset("articleExternalReferenceCode");
+				portletPreferences.reset("ddmTemplateExternalReferenceCode");
+				portletPreferences.reset("groupExternalReferenceCode");
 			}
 
 			portletPreferences.store();
@@ -69,14 +68,15 @@ public class JournalContentPortletConfigurationListener
 	}
 
 	private boolean _resetValues(PortletPreferences portletPreferences) {
-		long groupId = GetterUtil.getLong(
-			portletPreferences.getValue("groupId", "0"));
+		String groupExternalReferenceCode = portletPreferences.getValue(
+			"groupExternalReferenceCode", null);
 
-		if (groupId == 0) {
+		if (Validator.isNull(groupExternalReferenceCode)) {
 			return false;
 		}
 
-		Group group = _groupLocalService.fetchGroup(groupId);
+		Group group = _groupLocalService.fetchGroupByExternalReferenceCode(
+			groupExternalReferenceCode, CompanyThreadLocal.getCompanyId());
 
 		if (group == null) {
 			return false;

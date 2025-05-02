@@ -12,81 +12,67 @@ import classNames from 'classnames';
 import {sub} from 'frontend-js-web';
 import React, {useContext, useEffect, useMemo, useState} from 'react';
 
+import CollectionSelector from '../../../common/components/CollectionSelector';
 import {COLUMN_SIZE_MODULE_PER_ROW_SIZES} from '../../config/constants/columnSizes';
 import {CONTENT_DISPLAY_OPTIONS} from '../../config/constants/contentDisplayOptions';
 import {config} from '../../config/index';
 import {
 	CollectionItemContext,
 	CollectionItemContextProvider,
-	useToControlsId,
+	useCollectionItemId,
+	useIsDisabledCollectionItem,
 } from '../../contexts/CollectionItemContext';
 import {useDisplayPagePreviewItem} from '../../contexts/DisplayPagePreviewItemContext';
 import {useDispatch, useSelector} from '../../contexts/StoreContext';
 import selectLanguageId from '../../selectors/selectLanguageId';
 import selectSegmentsExperienceId from '../../selectors/selectSegmentsExperienceId';
 import CollectionService from '../../services/CollectionService';
+import updateCollectionDisplayCollection from '../../thunks/updateCollectionDisplayCollection';
 import updateItemConfig from '../../thunks/updateItemConfig';
 import {collectionIsMapped} from '../../utils/collectionIsMapped';
+import {COLLECTION_LIST_STYLES} from '../../utils/collectionListStyles';
 import getLayoutDataItemClassName from '../../utils/getLayoutDataItemClassName';
 import getLayoutDataItemUniqueClassName from '../../utils/getLayoutDataItemUniqueClassName';
 import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
+import {ITEM_SELECTOR_VARIANTS} from '../../utils/itemSelectorVariants';
 import UnsafeHTML from '../UnsafeHTML';
 import CollectionPagination from './CollectionPagination';
-
-const COLLECTION_ID_DIVIDER = '$';
 
 function paginationIsEnabled(collectionConfig) {
 	return collectionConfig.paginationType !== 'none';
 }
 
-function getCollectionPrefix(collectionId, index) {
-	return `collection-${collectionId}-${index}${COLLECTION_ID_DIVIDER}`;
-}
-
-export function getToControlsId(collectionId, index, toControlsId) {
-	return (itemId) => {
-		if (!itemId) {
-			return null;
-		}
-
-		// If the itemId correspond to a collectionId ignore it,
-		// that id is only applied to the children not to the collection itself.
-
-		if (collectionId === itemId) {
-			return itemId;
-		}
-
-		return toControlsId(
-			`${getCollectionPrefix(collectionId, index)}${itemId}`
+const NotCollectionSelected = ({collection, dispatch, item}) => {
+	const handleCollectionSelect = (collection = {}) => {
+		dispatch(
+			updateCollectionDisplayCollection({
+				collection: Object.keys(collection).length ? collection : null,
+				itemId: item.itemId,
+				listStyle: COLLECTION_LIST_STYLES.grid,
+			})
 		);
 	};
-}
 
-export function fromControlsId(controlsItemId) {
-	const getItemIdFromControlsId = (id) => {
-		const splits = id.split(COLLECTION_ID_DIVIDER);
+	return (
+		<div className="align-items-center bg-lighter d-flex flex-column page-editor__form-unmapped-state page-editor__no-fragments-state">
+			<p className="page-editor__no-fragments-state__title">
+				{Liferay.Language.get('map-your-collection')}
+			</p>
 
-		const itemId = splits.pop();
+			<p className="mb-3 page-editor__no-fragments-state__message">
+				{Liferay.Language.get('select-a-collection-to-display')}
+			</p>
 
-		return itemId || id;
-	};
-
-	if (!controlsItemId) {
-		return null;
-	}
-	else if (Array.isArray(controlsItemId)) {
-		return controlsItemId.map(getItemIdFromControlsId);
-	}
-	else {
-		return getItemIdFromControlsId(controlsItemId);
-	}
-}
-
-const NotCollectionSelectedMessage = () => (
-	<div className="page-editor__collection__message">
-		{Liferay.Language.get('no-collection-selected-yet')}
-	</div>
-);
+			<CollectionSelector
+				collectionItem={collection}
+				itemSelectorURL={config.collectionSelectorURL}
+				label={Liferay.Language.get('select-collection')}
+				onCollectionSelect={handleCollectionSelect}
+				variant={ITEM_SELECTOR_VARIANTS.button}
+			/>
+		</div>
+	);
+};
 
 const EmptyCollectionMessage = () => (
 	<div className="page-editor__collection__message">
@@ -251,26 +237,28 @@ const ItemContext = ({
 	customCollectionSelectorURL,
 	index,
 }) => {
-	const toControlsId = useToControlsId();
+	const isDisabled = useIsDisabledCollectionItem();
+
+	const ancestorId = useCollectionItemId();
 
 	const contextValue = useMemo(
 		() => ({
 			collectionConfig,
 			collectionId,
 			collectionItem,
+			collectionItemId: `${ancestorId}_${index}`,
 			collectionItemIndex: index,
 			customCollectionSelectorURL,
-			fromControlsId,
-			parentToControlsId: toControlsId,
-			toControlsId: getToControlsId(collectionId, index, toControlsId),
+			isDisabled: isDisabled || index > 0,
 		}),
 		[
+			ancestorId,
 			collectionConfig,
 			collectionId,
 			collectionItem,
 			index,
-			toControlsId,
 			customCollectionSelectorURL,
+			isDisabled,
 		]
 	);
 
@@ -472,7 +460,13 @@ const Collection = React.memo(
 			CollectionContent = <ClayLoadingIndicator />;
 		}
 		else if (!collectionIsMapped(collectionConfig)) {
-			CollectionContent = <NotCollectionSelectedMessage />;
+			CollectionContent = (
+				<NotCollectionSelected
+					collection={collection}
+					dispatch={dispatch}
+					item={item}
+				/>
+			);
 		}
 		else if (showEmptyMessage) {
 			CollectionContent = <EmptyCollectionMessage />;

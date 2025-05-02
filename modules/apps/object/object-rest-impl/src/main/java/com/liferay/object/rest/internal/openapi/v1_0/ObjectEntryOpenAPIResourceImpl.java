@@ -14,6 +14,7 @@ import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.rest.dto.v1_0.FileEntry;
 import com.liferay.object.rest.dto.v1_0.ListEntry;
+import com.liferay.object.rest.internal.resource.v1_0.CollaboratorResourceImpl;
 import com.liferay.object.rest.internal.resource.v1_0.ObjectEntryRelatedObjectsResourceImpl;
 import com.liferay.object.rest.internal.resource.v1_0.ObjectEntryResourceImpl;
 import com.liferay.object.rest.internal.resource.v1_0.OpenAPIResourceImpl;
@@ -21,11 +22,14 @@ import com.liferay.object.rest.internal.vulcan.openapi.contributor.ObjectEntryOp
 import com.liferay.object.rest.openapi.v1_0.ObjectEntryOpenAPIResource;
 import com.liferay.object.rest.openapi.v1_0.ObjectEntryOpenAPIResourceProvider;
 import com.liferay.object.service.ObjectActionLocalService;
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.vulcan.batch.engine.Field;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
@@ -65,6 +69,7 @@ public class ObjectEntryOpenAPIResourceImpl
 		BundleContext bundleContext, DTOConverterRegistry dtoConverterRegistry,
 		ObjectActionLocalService objectActionLocalService,
 		ObjectDefinition objectDefinition,
+		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ObjectEntryOpenAPIResourceProvider objectEntryOpenAPIResourceProvider,
 		ObjectFieldLocalService objectFieldLocalService,
 		ObjectRelationshipLocalService objectRelationshipLocalService,
@@ -76,6 +81,7 @@ public class ObjectEntryOpenAPIResourceImpl
 		_dtoConverterRegistry = dtoConverterRegistry;
 		_objectActionLocalService = objectActionLocalService;
 		_objectDefinition = objectDefinition;
+		_objectDefinitionLocalService = objectDefinitionLocalService;
 		_objectEntryOpenAPIResourceProvider =
 			objectEntryOpenAPIResourceProvider;
 		_objectFieldLocalService = objectFieldLocalService;
@@ -87,7 +93,13 @@ public class ObjectEntryOpenAPIResourceImpl
 
 	@Override
 	public Map<String, Field> getFields(UriInfo uriInfo) throws Exception {
-		Response response = getOpenAPI(null, "json", uriInfo);
+		DTOProperty objectEntryDTOProperty = _getObjectEntryDTOProperty(
+			_objectDefinition);
+
+		Response response = _getOpenAPI(
+			true,
+			_getOpenAPISchemaFilter(objectEntryDTOProperty, _objectDefinition),
+			"json", uriInfo);
 
 		Schema schema = _getObjectDefinitionSchema(
 			(OpenAPI)response.getEntity());
@@ -97,6 +109,23 @@ public class ObjectEntryOpenAPIResourceImpl
 		}
 
 		Map<String, Field> fields = new HashMap<>();
+
+		Map<String, String> relationshipNames = new HashMap<>();
+
+		for (DTOProperty dtoProperty :
+				objectEntryDTOProperty.getDTOProperties()) {
+
+			if (!(dtoProperty instanceof RelationshipDTOProperty)) {
+				continue;
+			}
+
+			RelationshipDTOProperty relationshipDTOProperty =
+				(RelationshipDTOProperty)dtoProperty;
+
+			relationshipNames.put(
+				relationshipDTOProperty.getName(),
+				relationshipDTOProperty.getRelationshipName());
+		}
 
 		List<String> requiredPropertySchemaNames =
 			_getRequiredPropertySchemaNames(schema);
@@ -110,6 +139,7 @@ public class ObjectEntryOpenAPIResourceImpl
 			fields.put(
 				propertyName,
 				Field.of(
+					MapUtil.getString(relationshipNames, propertyName, null),
 					propertySchema.getDescription(), propertyName,
 					GetterUtil.getBoolean(propertySchema.getReadOnly()),
 					_getRef(propertySchema),
@@ -128,12 +158,22 @@ public class ObjectEntryOpenAPIResourceImpl
 			HttpServletRequest httpServletRequest, String type, UriInfo uriInfo)
 		throws Exception {
 
-		return _getOpenAPI(true, type, uriInfo);
+		return _getOpenAPI(
+			true,
+			_getOpenAPISchemaFilter(
+				_getObjectEntryDTOProperty(_objectDefinition),
+				_objectDefinition),
+			type, uriInfo);
 	}
 
 	@Override
 	public Map<String, Schema> getSchemas() throws Exception {
-		Response response = _getOpenAPI(false, "json", null);
+		Response response = _getOpenAPI(
+			false,
+			_getOpenAPISchemaFilter(
+				_getObjectEntryDTOProperty(_objectDefinition),
+				_objectDefinition),
+			"json", null);
 
 		OpenAPI openAPI = (OpenAPI)response.getEntity();
 
@@ -142,7 +182,7 @@ public class ObjectEntryOpenAPIResourceImpl
 		return components.getSchemas();
 	}
 
-	private DTOProperty _getDTOProperty(ObjectField objectField) {
+	private List<DTOProperty> _getDTOProperties(ObjectField objectField) {
 		if (Objects.equals(
 				objectField.getBusinessType(),
 				ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT)) {
@@ -163,41 +203,43 @@ public class ObjectEntryOpenAPIResourceImpl
 						"name", String.class.getSimpleName())));
 			dtoProperty.setRequired(objectField.isRequired());
 
-			return dtoProperty;
+			return ListUtil.fromArray(dtoProperty);
 		}
 		else if (Objects.equals(
 					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_DATE) &&
 				 _fieldNameMappings.containsKey(objectField.getName())) {
 
-			return new DTOProperty(
-				null, _fieldNameMappings.get(objectField.getName()),
-				ObjectFieldConstants.BUSINESS_TYPE_DATE_TIME) {
+			return ListUtil.fromArray(
+				new DTOProperty(
+					null, _fieldNameMappings.get(objectField.getName()),
+					ObjectFieldConstants.BUSINESS_TYPE_DATE_TIME) {
 
-				{
-					setRequired(objectField.isRequired());
-				}
-			};
+					{
+						setRequired(objectField.isRequired());
+					}
+				});
 		}
 		else if (Objects.equals(
 					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_DATE_TIME)) {
 
-			return new DTOProperty(
-				HashMapBuilder.<String, Object>put(
-					"x-parent-map", "properties"
-				).put(
-					"x-timeStorage",
-					ObjectFieldSettingUtil.getValue(
-						ObjectFieldSettingConstants.NAME_TIME_STORAGE,
-						objectField)
-				).build(),
-				objectField.getName(), objectField.getDBType()) {
+			return ListUtil.fromArray(
+				new DTOProperty(
+					HashMapBuilder.<String, Object>put(
+						"x-parent-map", "properties"
+					).put(
+						"x-timeStorage",
+						ObjectFieldSettingUtil.getValue(
+							ObjectFieldSettingConstants.NAME_TIME_STORAGE,
+							objectField)
+					).build(),
+					objectField.getName(), objectField.getDBType()) {
 
-				{
-					setRequired(objectField.isRequired());
-				}
-			};
+					{
+						setRequired(objectField.isRequired());
+					}
+				});
 		}
 		else if (Objects.equals(
 					objectField.getBusinessType(),
@@ -209,16 +251,17 @@ public class ObjectEntryOpenAPIResourceImpl
 					 objectField.getBusinessType(),
 					 ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT)) {
 
-			return new DTOProperty(
-				HashMapBuilder.<String, Object>put(
-					"x-parent-map", "properties"
-				).build(),
-				objectField.getName(), "String") {
+			return ListUtil.fromArray(
+				new DTOProperty(
+					HashMapBuilder.<String, Object>put(
+						"x-parent-map", "properties"
+					).build(),
+					objectField.getName(), "String") {
 
-				{
-					setRequired(objectField.isRequired());
-				}
-			};
+					{
+						setRequired(objectField.isRequired());
+					}
+				});
 		}
 		else if (Objects.equals(
 					objectField.getBusinessType(),
@@ -243,32 +286,95 @@ public class ObjectEntryOpenAPIResourceImpl
 						"name", String.class.getSimpleName())));
 			dtoProperty.setRequired(objectField.isRequired());
 
-			return dtoProperty;
+			return ListUtil.fromArray(dtoProperty);
 		}
 		else if (Objects.equals(
 					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_PRECISION_DECIMAL)) {
 
-			return new DTOProperty(
-				Collections.singletonMap("x-parent-map", "properties"),
-				objectField.getName(), Double.class.getSimpleName()) {
+			return ListUtil.fromArray(
+				new DTOProperty(
+					Collections.singletonMap("x-parent-map", "properties"),
+					objectField.getName(), Double.class.getSimpleName()) {
+
+					{
+						setRequired(objectField.isRequired());
+					}
+				});
+		}
+		else if (Objects.equals(
+					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP) &&
+				 Objects.equals(
+					 objectField.getRelationshipType(),
+					 ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
+
+			ObjectRelationship objectRelationship =
+				_objectRelationshipLocalService.
+					fetchObjectRelationshipByObjectFieldId2(
+						objectField.getObjectFieldId());
+
+			String relationshipName = objectRelationship.getName();
+
+			return Arrays.asList(
+				new RelationshipDTOProperty(
+					HashMapBuilder.<String, Object>put(
+						"x-parent-map", "properties"
+					).build(),
+					objectField.getName(), relationshipName,
+					objectField.getDBType()) {
+
+					{
+						setRequired(objectField.isRequired());
+					}
+				},
+				new RelationshipDTOProperty(
+					HashMapBuilder.<String, Object>put(
+						"x-parent-map", "properties"
+					).build(),
+					relationshipName, relationshipName,
+					String.class.getSimpleName()) {
+
+					{
+						setRequired(objectField.isRequired());
+					}
+				},
+				new RelationshipDTOProperty(
+					HashMapBuilder.<String, Object>put(
+						"x-parent-map", "properties"
+					).build(),
+					ObjectFieldSettingUtil.getValue(
+						ObjectFieldSettingConstants.
+							NAME_OBJECT_RELATIONSHIP_ERC_OBJECT_FIELD_NAME,
+						objectField),
+					relationshipName, String.class.getSimpleName()) {
+
+					{
+						setRequired(objectField.isRequired());
+					}
+				},
+				new RelationshipDTOProperty(
+					Collections.singletonMap("x-parent-map", "properties"),
+					relationshipName + "ERC", relationshipName,
+					String.class.getSimpleName()) {
+
+					{
+						setReadOnly(true);
+					}
+				});
+		}
+
+		return ListUtil.fromArray(
+			new DTOProperty(
+				HashMapBuilder.<String, Object>put(
+					"x-parent-map", "properties"
+				).build(),
+				objectField.getName(), objectField.getDBType()) {
 
 				{
 					setRequired(objectField.isRequired());
 				}
-			};
-		}
-
-		return new DTOProperty(
-			HashMapBuilder.<String, Object>put(
-				"x-parent-map", "properties"
-			).build(),
-			objectField.getName(), objectField.getDBType()) {
-
-			{
-				setRequired(objectField.isRequired());
-			}
-		};
+			});
 	}
 
 	private Schema _getObjectDefinitionSchema(OpenAPI openAPI) {
@@ -279,35 +385,8 @@ public class ObjectEntryOpenAPIResourceImpl
 		return schemas.get(_objectDefinition.getShortName());
 	}
 
-	private Response _getOpenAPI(
-			boolean addRelatedSchemas, String type, UriInfo uriInfo)
-		throws Exception {
-
-		return _openAPIResource.getOpenAPI(
-			new ObjectEntryOpenAPIContributor(
-				addRelatedSchemas, _bundleContext, _dtoConverterRegistry,
-				_objectActionLocalService, _objectDefinition,
-				_objectEntryOpenAPIResourceProvider, _objectFieldLocalService,
-				_objectRelationshipLocalService, _openAPIResource,
-				_systemObjectDefinitionManagerRegistry),
-			_getOpenAPISchemaFilter(_objectDefinition),
-			new HashSet<Class<?>>() {
-				{
-					add(ObjectEntryRelatedObjectsResourceImpl.class);
-					add(ObjectEntryResourceImpl.class);
-					add(OpenAPIResourceImpl.class);
-				}
-			},
-			type, uriInfo);
-	}
-
-	private OpenAPISchemaFilter _getOpenAPISchemaFilter(
+	private DTOProperty _getObjectEntryDTOProperty(
 		ObjectDefinition objectDefinition) {
-
-		OpenAPISchemaFilter openAPISchemaFilter = new OpenAPISchemaFilter();
-
-		openAPISchemaFilter.setApplicationPath(
-			objectDefinition.getRESTContextPath());
 
 		DTOProperty dtoProperty = new DTOProperty(
 			new HashMap<>(), "ObjectEntry", "Object");
@@ -318,7 +397,7 @@ public class ObjectEntryOpenAPIResourceImpl
 				_objectFieldLocalService.getObjectFields(
 					objectDefinition.getObjectDefinitionId())) {
 
-			dtoProperties.add(_getDTOProperty(objectField));
+			dtoProperties.addAll(_getDTOProperties(objectField));
 
 			if (objectField.isLocalized()) {
 				dtoProperties.add(
@@ -332,44 +411,44 @@ public class ObjectEntryOpenAPIResourceImpl
 						}
 					});
 			}
-
-			if (Objects.equals(
-					objectField.getRelationshipType(),
-					ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
-
-				ObjectRelationship objectRelationship =
-					_objectRelationshipLocalService.
-						fetchObjectRelationshipByObjectFieldId2(
-							objectField.getObjectFieldId());
-
-				dtoProperties.add(
-					new DTOProperty(
-						Collections.singletonMap("x-parent-map", "properties"),
-						objectRelationship.getName(),
-						String.class.getSimpleName()) {
-
-						{
-							setRequired(objectField.isRequired());
-						}
-					});
-
-				dtoProperties.add(
-					new DTOProperty(
-						Collections.singletonMap("x-parent-map", "properties"),
-						ObjectFieldSettingUtil.getValue(
-							ObjectFieldSettingConstants.
-								NAME_OBJECT_RELATIONSHIP_ERC_OBJECT_FIELD_NAME,
-							objectField),
-						String.class.getSimpleName()) {
-
-						{
-							setRequired(objectField.isRequired());
-						}
-					});
-			}
 		}
 
 		dtoProperty.setDTOProperties(dtoProperties);
+
+		return dtoProperty;
+	}
+
+	private Response _getOpenAPI(
+			boolean addRelatedSchemas, OpenAPISchemaFilter openAPISchemaFilter,
+			String type, UriInfo uriInfo)
+		throws Exception {
+
+		return _openAPIResource.getOpenAPI(
+			new ObjectEntryOpenAPIContributor(
+				addRelatedSchemas, _bundleContext, _dtoConverterRegistry,
+				_objectActionLocalService, _objectDefinition,
+				_objectEntryOpenAPIResourceProvider, _objectFieldLocalService,
+				_objectRelationshipLocalService, _openAPIResource,
+				_systemObjectDefinitionManagerRegistry),
+			openAPISchemaFilter,
+			new HashSet<Class<?>>() {
+				{
+					add(CollaboratorResourceImpl.class);
+					add(ObjectEntryRelatedObjectsResourceImpl.class);
+					add(ObjectEntryResourceImpl.class);
+					add(OpenAPIResourceImpl.class);
+				}
+			},
+			type, uriInfo);
+	}
+
+	private OpenAPISchemaFilter _getOpenAPISchemaFilter(
+		DTOProperty dtoProperty, ObjectDefinition objectDefinition) {
+
+		OpenAPISchemaFilter openAPISchemaFilter = new OpenAPISchemaFilter();
+
+		openAPISchemaFilter.setApplicationPath(
+			objectDefinition.getRESTContextPath());
 
 		DTOProperty pageDTOProperty = new DTOProperty(
 			new HashMap<>(), "PageObject", "Object");
@@ -433,6 +512,7 @@ public class ObjectEntryOpenAPIResourceImpl
 	).build();
 	private final ObjectActionLocalService _objectActionLocalService;
 	private final ObjectDefinition _objectDefinition;
+	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
 	private final ObjectEntryOpenAPIResourceProvider
 		_objectEntryOpenAPIResourceProvider;
 	private final ObjectFieldLocalService _objectFieldLocalService;
@@ -441,5 +521,24 @@ public class ObjectEntryOpenAPIResourceImpl
 	private final OpenAPIResource _openAPIResource;
 	private final SystemObjectDefinitionManagerRegistry
 		_systemObjectDefinitionManagerRegistry;
+
+	private class RelationshipDTOProperty extends DTOProperty {
+
+		public RelationshipDTOProperty(
+			Map<String, Object> extensions, String name,
+			String relationshipName, String type) {
+
+			super(extensions, name, type);
+
+			_relationshipName = relationshipName;
+		}
+
+		public String getRelationshipName() {
+			return _relationshipName;
+		}
+
+		private final String _relationshipName;
+
+	}
 
 }

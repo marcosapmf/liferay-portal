@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -54,7 +52,7 @@ public class PlacedOrder implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(PlacedOrder.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getAccount() {
 		if (_accountSupplier != null) {
 			account = _accountSupplier.get();
@@ -95,7 +93,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _accountSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getAccountId() {
 		if (_accountIdSupplier != null) {
 			accountId = _accountIdSupplier.get();
@@ -136,7 +134,49 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _accountIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public Attachment[] getAttachments() {
+		if (_attachmentsSupplier != null) {
+			attachments = _attachmentsSupplier.get();
+
+			_attachmentsSupplier = null;
+		}
+
+		return attachments;
+	}
+
+	public void setAttachments(Attachment[] attachments) {
+		this.attachments = attachments;
+
+		_attachmentsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setAttachments(
+		UnsafeSupplier<Attachment[], Exception> attachmentsUnsafeSupplier) {
+
+		_attachmentsSupplier = () -> {
+			try {
+				return attachmentsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Attachment[] attachments;
+
+	@JsonIgnore
+	private Supplier<Attachment[]> _attachmentsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getAuthor() {
 		if (_authorSupplier != null) {
 			author = _authorSupplier.get();
@@ -177,7 +217,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _authorSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getChannelId() {
 		if (_channelIdSupplier != null) {
 			channelId = _channelIdSupplier.get();
@@ -218,7 +258,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _channelIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getCouponCode() {
 		if (_couponCodeSupplier != null) {
 			couponCode = _couponCodeSupplier.get();
@@ -259,7 +299,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _couponCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getCreateDate() {
 		if (_createDateSupplier != null) {
 			createDate = _createDateSupplier.get();
@@ -300,7 +340,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _createDateSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getCurrencyCode() {
 		if (_currencyCodeSupplier != null) {
 			currencyCode = _currencyCodeSupplier.get();
@@ -341,7 +381,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _currencyCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, ?> getCustomFields() {
 		if (_customFieldsSupplier != null) {
@@ -377,13 +417,13 @@ public class PlacedOrder implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, ?> customFields;
 
 	@JsonIgnore
 	private Supplier<Map<String, ?>> _customFieldsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String[] getErrorMessages() {
 		if (_errorMessagesSupplier != null) {
 			errorMessages = _errorMessagesSupplier.get();
@@ -424,7 +464,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _errorMessagesSupplier;
 
-	@Schema(example = "AB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -465,7 +505,48 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getFriendlyURLSeparator() {
+		if (_friendlyURLSeparatorSupplier != null) {
+			friendlyURLSeparator = _friendlyURLSeparatorSupplier.get();
+
+			_friendlyURLSeparatorSupplier = null;
+		}
+
+		return friendlyURLSeparator;
+	}
+
+	public void setFriendlyURLSeparator(String friendlyURLSeparator) {
+		this.friendlyURLSeparator = friendlyURLSeparator;
+
+		_friendlyURLSeparatorSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setFriendlyURLSeparator(
+		UnsafeSupplier<String, Exception> friendlyURLSeparatorUnsafeSupplier) {
+
+		_friendlyURLSeparatorSupplier = () -> {
+			try {
+				return friendlyURLSeparatorUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String friendlyURLSeparator;
+
+	@JsonIgnore
+	private Supplier<String> _friendlyURLSeparatorSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -504,7 +585,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getLastPriceUpdateDate() {
 		if (_lastPriceUpdateDateSupplier != null) {
 			lastPriceUpdateDate = _lastPriceUpdateDateSupplier.get();
@@ -545,7 +626,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _lastPriceUpdateDateSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getModifiedDate() {
 		if (_modifiedDateSupplier != null) {
 			modifiedDate = _modifiedDateSupplier.get();
@@ -586,7 +667,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _modifiedDateSupplier;
 
-	@Schema(example = "Order Name")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "Order Name")
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -625,7 +706,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Status getOrderStatusInfo() {
 		if (_orderStatusInfoSupplier != null) {
@@ -667,7 +748,48 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Status> _orderStatusInfoSupplier;
 
-	@Schema(example = "AB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getOrderType() {
+		if (_orderTypeSupplier != null) {
+			orderType = _orderTypeSupplier.get();
+
+			_orderTypeSupplier = null;
+		}
+
+		return orderType;
+	}
+
+	public void setOrderType(String orderType) {
+		this.orderType = orderType;
+
+		_orderTypeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setOrderType(
+		UnsafeSupplier<String, Exception> orderTypeUnsafeSupplier) {
+
+		_orderTypeSupplier = () -> {
+			try {
+				return orderTypeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String orderType;
+
+	@JsonIgnore
+	private Supplier<String> _orderTypeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
 	public String getOrderTypeExternalReferenceCode() {
 		if (_orderTypeExternalReferenceCodeSupplier != null) {
 			orderTypeExternalReferenceCode =
@@ -712,7 +834,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _orderTypeExternalReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getOrderTypeId() {
 		if (_orderTypeIdSupplier != null) {
 			orderTypeId = _orderTypeIdSupplier.get();
@@ -753,7 +875,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _orderTypeIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getOrderUUID() {
 		if (_orderUUIDSupplier != null) {
 			orderUUID = _orderUUIDSupplier.get();
@@ -794,7 +916,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _orderUUIDSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPaymentMethod() {
 		if (_paymentMethodSupplier != null) {
 			paymentMethod = _paymentMethodSupplier.get();
@@ -835,7 +957,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _paymentMethodSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPaymentMethodLabel() {
 		if (_paymentMethodLabelSupplier != null) {
 			paymentMethodLabel = _paymentMethodLabelSupplier.get();
@@ -876,7 +998,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _paymentMethodLabelSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Integer getPaymentStatus() {
 		if (_paymentStatusSupplier != null) {
 			paymentStatus = _paymentStatusSupplier.get();
@@ -917,7 +1039,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _paymentStatusSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Status getPaymentStatusInfo() {
 		if (_paymentStatusInfoSupplier != null) {
@@ -959,7 +1081,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Status> _paymentStatusInfoSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPaymentStatusLabel() {
 		if (_paymentStatusLabelSupplier != null) {
 			paymentStatusLabel = _paymentStatusLabelSupplier.get();
@@ -1000,7 +1122,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _paymentStatusLabelSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public PlacedOrderAddress getPlacedOrderBillingAddress() {
 		if (_placedOrderBillingAddressSupplier != null) {
@@ -1046,7 +1168,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<PlacedOrderAddress> _placedOrderBillingAddressSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getPlacedOrderBillingAddressId() {
 		if (_placedOrderBillingAddressIdSupplier != null) {
 			placedOrderBillingAddressId =
@@ -1091,7 +1213,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _placedOrderBillingAddressIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public PlacedOrderComment[] getPlacedOrderComments() {
 		if (_placedOrderCommentsSupplier != null) {
@@ -1136,7 +1258,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<PlacedOrderComment[]> _placedOrderCommentsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public PlacedOrderItem[] getPlacedOrderItems() {
 		if (_placedOrderItemsSupplier != null) {
@@ -1179,7 +1301,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<PlacedOrderItem[]> _placedOrderItemsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public PlacedOrderAddress getPlacedOrderShippingAddress() {
 		if (_placedOrderShippingAddressSupplier != null) {
@@ -1225,7 +1347,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<PlacedOrderAddress> _placedOrderShippingAddressSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getPlacedOrderShippingAddressId() {
 		if (_placedOrderShippingAddressIdSupplier != null) {
 			placedOrderShippingAddressId =
@@ -1270,7 +1392,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _placedOrderShippingAddressIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPrintedNote() {
 		if (_printedNoteSupplier != null) {
 			printedNote = _printedNoteSupplier.get();
@@ -1305,13 +1427,13 @@ public class PlacedOrder implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String printedNote;
 
 	@JsonIgnore
 	private Supplier<String> _printedNoteSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPurchaseOrderNumber() {
 		if (_purchaseOrderNumberSupplier != null) {
 			purchaseOrderNumber = _purchaseOrderNumberSupplier.get();
@@ -1346,13 +1468,55 @@ public class PlacedOrder implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String purchaseOrderNumber;
 
 	@JsonIgnore
 	private Supplier<String> _purchaseOrderNumberSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public Shipment getShipments() {
+		if (_shipmentsSupplier != null) {
+			shipments = _shipmentsSupplier.get();
+
+			_shipmentsSupplier = null;
+		}
+
+		return shipments;
+	}
+
+	public void setShipments(Shipment shipments) {
+		this.shipments = shipments;
+
+		_shipmentsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setShipments(
+		UnsafeSupplier<Shipment, Exception> shipmentsUnsafeSupplier) {
+
+		_shipmentsSupplier = () -> {
+			try {
+				return shipmentsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Shipment shipments;
+
+	@JsonIgnore
+	private Supplier<Shipment> _shipmentsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getShippingMethod() {
 		if (_shippingMethodSupplier != null) {
 			shippingMethod = _shippingMethodSupplier.get();
@@ -1393,7 +1557,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _shippingMethodSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getShippingOption() {
 		if (_shippingOptionSupplier != null) {
 			shippingOption = _shippingOptionSupplier.get();
@@ -1434,7 +1598,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _shippingOptionSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getStatus() {
 		if (_statusSupplier != null) {
 			status = _statusSupplier.get();
@@ -1475,7 +1639,49 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _statusSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public Step[] getSteps() {
+		if (_stepsSupplier != null) {
+			steps = _stepsSupplier.get();
+
+			_stepsSupplier = null;
+		}
+
+		return steps;
+	}
+
+	public void setSteps(Step[] steps) {
+		this.steps = steps;
+
+		_stepsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setSteps(
+		UnsafeSupplier<Step[], Exception> stepsUnsafeSupplier) {
+
+		_stepsSupplier = () -> {
+			try {
+				return stepsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Step[] steps;
+
+	@JsonIgnore
+	private Supplier<Step[]> _stepsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Summary getSummary() {
 		if (_summarySupplier != null) {
@@ -1517,7 +1723,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Summary> _summarySupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getUseAsBilling() {
 		if (_useAsBillingSupplier != null) {
 			useAsBilling = _useAsBillingSupplier.get();
@@ -1558,7 +1764,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _useAsBillingSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getValid() {
 		if (_validSupplier != null) {
 			valid = _validSupplier.get();
@@ -1599,7 +1805,7 @@ public class PlacedOrder implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _validSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Status getWorkflowStatusInfo() {
 		if (_workflowStatusInfoSupplier != null) {
@@ -1697,6 +1903,28 @@ public class PlacedOrder implements Serializable {
 			sb.append("\"accountId\": ");
 
 			sb.append(accountId);
+		}
+
+		Attachment[] attachments = getAttachments();
+
+		if (attachments != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"attachments\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < attachments.length; i++) {
+				sb.append(String.valueOf(attachments[i]));
+
+				if ((i + 1) < attachments.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		String author = getAuthor();
@@ -1829,6 +2057,22 @@ public class PlacedOrder implements Serializable {
 			sb.append("\"");
 		}
 
+		String friendlyURLSeparator = getFriendlyURLSeparator();
+
+		if (friendlyURLSeparator != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"friendlyURLSeparator\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(friendlyURLSeparator));
+
+			sb.append("\"");
+		}
+
 		Long id = getId();
 
 		if (id != null) {
@@ -1899,6 +2143,22 @@ public class PlacedOrder implements Serializable {
 			sb.append("\"orderStatusInfo\": ");
 
 			sb.append(String.valueOf(orderStatusInfo));
+		}
+
+		String orderType = getOrderType();
+
+		if (orderType != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"orderType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(orderType));
+
+			sb.append("\"");
 		}
 
 		String orderTypeExternalReferenceCode =
@@ -2144,6 +2404,18 @@ public class PlacedOrder implements Serializable {
 			sb.append("\"");
 		}
 
+		Shipment shipments = getShipments();
+
+		if (shipments != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"shipments\": ");
+
+			sb.append(String.valueOf(shipments));
+		}
+
 		String shippingMethod = getShippingMethod();
 
 		if (shippingMethod != null) {
@@ -2190,6 +2462,28 @@ public class PlacedOrder implements Serializable {
 			sb.append(_escape(status));
 
 			sb.append("\"");
+		}
+
+		Step[] steps = getSteps();
+
+		if (steps != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"steps\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < steps.length; i++) {
+				sb.append(String.valueOf(steps[i]));
+
+				if ((i + 1) < steps.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		Summary summary = getSummary();
@@ -2245,8 +2539,8 @@ public class PlacedOrder implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.delivery.order.dto.v1_0.PlacedOrder",
 		name = "x-class-name"
 	)

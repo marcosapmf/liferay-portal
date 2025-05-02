@@ -7,7 +7,7 @@ import {ClayButtonWithIcon} from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
-import {openSelectionModal} from 'frontend-js-web';
+import {openSelectionModal} from 'frontend-js-components-web';
 import React, {useEffect, useState} from 'react';
 
 const DEFAULT_MASTER_LAYOUT_PLID = '0';
@@ -49,25 +49,36 @@ export default function MasterLayoutConfiguration({
 	};
 
 	useEffect(() => {
+		const customCSS = document.getElementById(
+			`${portletNamespace}customCSS`
+		);
+
+		if (customCSS) {
+			if (masterLayout.plid === DEFAULT_MASTER_LAYOUT_PLID) {
+				customCSS.classList.remove('hide');
+			}
+			else {
+				customCSS.classList.add('hide');
+			}
+		}
+
 		const themeContainer = document.getElementById(
 			`${portletNamespace}themeContainer`
 		);
 
-		if (!themeContainer) {
-			return;
-		}
+		if (themeContainer) {
+			const sheet = themeContainer.closest('.sheet');
 
-		const sheet = themeContainer.closest('.sheet');
+			if (masterLayout.plid === DEFAULT_MASTER_LAYOUT_PLID) {
+				sheet.classList.remove('hide');
 
-		if (masterLayout.plid === DEFAULT_MASTER_LAYOUT_PLID) {
-			sheet.classList.remove('hide');
+				sheet.removeAttribute('aria-hidden');
+			}
+			else {
+				sheet.classList.add('hide');
 
-			sheet.removeAttribute('aria-hidden');
-		}
-		else {
-			sheet.classList.add('hide');
-
-			sheet.setAttribute('aria-hidden', 'true');
+				sheet.setAttribute('aria-hidden', 'true');
+			}
 		}
 	}, [masterLayout.plid, portletNamespace]);
 

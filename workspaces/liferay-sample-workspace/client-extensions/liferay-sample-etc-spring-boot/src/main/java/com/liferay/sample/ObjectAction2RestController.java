@@ -5,8 +5,9 @@
 
 package com.liferay.sample;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
+
+import org.json.JSONObject;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,12 +31,26 @@ public class ObjectAction2RestController extends BaseRestController {
 	public ResponseEntity<String> post(
 		@AuthenticationPrincipal Jwt jwt, @RequestBody String json) {
 
-		log(jwt, _log, json);
+		JSONObject jsonObject = new JSONObject(json);
 
-		return new ResponseEntity<>(json, HttpStatus.OK);
+		JSONObject modelDTOAccountJSONObject = jsonObject.getJSONObject(
+			"modelDTOAccount");
+
+		if (modelDTOAccountJSONObject == null) {
+			return new ResponseEntity<>(json, HttpStatus.OK);
+		}
+
+		return new ResponseEntity<>(
+			patch(
+				"Bearer " + jwt.getTokenValue(),
+				new JSONObject(
+				).put(
+					"alternateName",
+					modelDTOAccountJSONObject.getString("givenName")
+				).toString(),
+				"/o/headless-admin-user/v1.0/user-accounts/" +
+					modelDTOAccountJSONObject.getLong("id")),
+			HttpStatus.OK);
 	}
-
-	private static final Log _log = LogFactory.getLog(
-		ObjectAction2RestController.class);
 
 }

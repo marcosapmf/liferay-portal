@@ -1,6 +1,6 @@
 Bundle-Name: ${manifest.bundle.name}
 Bundle-SymbolicName: ${manifest.bundle.symbolic.name}
-Bundle-Version: 24.5.2
+Bundle-Version: 27.0.2
 Export-Package:\
 	com.liferay.portal.kernel.dao.db.test,\
 	com.liferay.portal.kernel.test,\
@@ -12,6 +12,7 @@ Export-Package:\
 	com.liferay.portal.kernel.test.randomizerbumpers,\
 	com.liferay.portal.kernel.test.rule,\
 	com.liferay.portal.kernel.test.util,\
+	com.liferay.portal.kernel.upgrade.test,\
 	com.liferay.portal.test.log,\
 	com.liferay.portal.test.mail,\
 	com.liferay.portal.test.randomizerbumpers,\
@@ -19,7 +20,6 @@ Export-Package:\
 	com.liferay.portlet.asset.service.persistence.test,\
 	com.liferay.portlet.passwordpoliciesadmin.util.test,\
 	com.liferay.portlet.test,\
-	com.liferay.portletmvc4spring.test.mock.web.portlet,\
 	\
 	junit.*,\
 	\
@@ -42,15 +42,17 @@ Include-Resource:\
 	@${project.dir}/../lib/development/osgi-service-cm.jar,\
 	@${project.dir}/../lib/development/osgi-service-component.jar,\
 	@${project.dir}/../lib/development/osgi-service-log.jar,\
-	@${project.dir}/../lib/development/portletmvc4spring-test.jar,\
 	@${project.dir}/../lib/development/reflections.jar,\
 	@${project.dir}/../lib/development/sling-commons-osgi.jar,\
 	@${project.dir}/../lib/development/sling-testing-osgi-mock-core.jar,\
 	@${project.dir}/../lib/development/spring-test.jar
 Require-Capability:\
+	osgi.ee;\
+		filter:="(&(osgi.ee=JavaSE)(version=${ant.build.javac.target}))",\
 	osgi.extender;\
-		filter := "(&(osgi.extender=osgi.configurator)(version>=1.0)(!(version>=2.0)))"
--include ../common.bnd
+		filter:="(&(osgi.extender=osgi.configurator)(version>=1.0)(!(version>=2.0)))"
+-include ~../common.bnd
+-fixupmessages.directory: Classes found in the wrong directory: ...;is:=ignore
 -removeheaders:\
 	Bnd-LastModified,\
 	DSTAMP,\

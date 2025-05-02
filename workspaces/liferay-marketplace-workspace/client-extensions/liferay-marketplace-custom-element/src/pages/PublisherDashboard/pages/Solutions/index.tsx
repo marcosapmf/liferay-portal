@@ -11,13 +11,13 @@ import {useNavigate, useOutletContext} from 'react-router-dom';
 import useSWR from 'swr';
 
 import {DashboardTable} from '../../../../components/DashboardTable/DashboardTable';
-import {getSiteURL} from '../../../../components/InviteMemberModal/services';
 import Page from '../../../../components/Page';
 import {useMarketplaceContext} from '../../../../context/MarketplaceContext';
 import SearchBuilder from '../../../../core/SearchBuilder';
 import {useAccount} from '../../../../hooks/data/useAccounts';
 import {Liferay} from '../../../../liferay/liferay';
-import HeadlessCommerceAdminCatalogImpl from '../../../../services/rest/HeadlessCommerceAdminCatalog';
+import HeadlessCommerceAdminCatalog from '../../../../services/rest/HeadlessCommerceAdminCatalog';
+import {getSiteURL} from '../../../../utils/site';
 import PublishedSolutionsTable from './PublishedSolutionsTable';
 
 const SOLUTION_PUBLISHER_ROLE = 'Solution Publisher';
@@ -26,7 +26,7 @@ const Solutions = () => {
 	const [page, setPage] = useState(1);
 	const {catalogId} = useOutletContext<any>();
 	const {data: supplierAccount} = useAccount();
-	const {myUserAccount, properties} = useMarketplaceContext();
+	const {myUserAccount} = useMarketplaceContext();
 	const navigate = useNavigate();
 
 	const supplierAccountRoleBriefs =
@@ -37,9 +37,6 @@ const Solutions = () => {
 	const isSolutionPublisher = supplierAccountRoleBriefs.find(
 		({name}) => name === SOLUTION_PUBLISHER_ROLE
 	);
-
-	const canPublishSolution =
-		isSolutionPublisher && properties.featureFlags?.includes('LPD-20220');
 
 	const {
 		data: publishedSolutionsTable = {},
@@ -53,7 +50,7 @@ const Solutions = () => {
 				return {items: [], totalCount: 0};
 			}
 
-			return HeadlessCommerceAdminCatalogImpl.getProducts(
+			return HeadlessCommerceAdminCatalog.getProducts(
 				new URLSearchParams({
 					'accountId': '-1',
 					'attachments.accountId': '-1',
@@ -64,7 +61,7 @@ const Solutions = () => {
 						.build(),
 					'images.accountId': '-1',
 					'nestedFields':
-						'attachments,images,productChannels,productSpecifications,skus',
+						'attachments,images,productSpecifications,skus',
 					'page': page.toString(),
 					'skus.accountId': '-1',
 				})
@@ -79,7 +76,7 @@ const Solutions = () => {
 			description="Manage and publish solutions on the Marketplace"
 			pageRendererProps={{error, isLoading}}
 			rightButton={
-				canPublishSolution && (
+				isSolutionPublisher && (
 					<ClayButton
 						disabled={!(catalogId && catalogId > 0)}
 						onClick={() => navigate('/solutions/publisher')}

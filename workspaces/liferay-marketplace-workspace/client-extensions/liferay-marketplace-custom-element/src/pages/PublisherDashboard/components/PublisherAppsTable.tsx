@@ -8,6 +8,9 @@ import {useNavigate} from 'react-router-dom';
 import {DashboardEmptyTable} from '../../../components/DashboardTable/DashboardEmptyTable';
 import OrderStatus from '../../../components/OrderStatus';
 import Table from '../../../components/Table/Table';
+import TableKebabButton from '../../../components/Table/TableButtons/TableKebabButton';
+import {useMarketplaceContext} from '../../../context/MarketplaceContext';
+import {ProductWorkflowStatusCode} from '../../../enums/Product';
 import i18n from '../../../i18n';
 import {
 	getProductVersionFromSpecifications,
@@ -24,6 +27,7 @@ type PublisherAppsTableProps = {
 };
 
 const PublisherAppsTable: React.FC<PublisherAppsTableProps> = ({items}) => {
+	const {properties} = useMarketplaceContext();
 	const navigate = useNavigate();
 
 	if (!items?.length) {
@@ -41,6 +45,27 @@ const PublisherAppsTable: React.FC<PublisherAppsTableProps> = ({items}) => {
 
 	return (
 		<Table
+			Actions={
+				properties.featureFlags.includes('LPD-24546')
+					? ({row}) => (
+							<TableKebabButton
+								items={[
+									{
+										disabled:
+											row.workflowStatusInfo.code ===
+											ProductWorkflowStatusCode.PENDING,
+										icon: 'pencil',
+										label: i18n.translate('edit'),
+										onClick: () =>
+											navigate(
+												`newapp/${row.productId}/publisher/profile`
+											),
+									},
+								]}
+							/>
+						)
+					: () => null
+			}
 			columns={[
 				{
 					key: 'name',
@@ -90,6 +115,7 @@ const PublisherAppsTable: React.FC<PublisherAppsTableProps> = ({items}) => {
 					title: i18n.translate('status'),
 				},
 			]}
+			hasKebabButton
 			onClickRow={({id}) => navigate(`/app/${id}`)}
 			rows={items}
 		/>

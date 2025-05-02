@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Portal Store Azure
 Bundle-SymbolicName: com.liferay.portal.store.azure
-Bundle-Version: 5.0.9
+Bundle-Version: 5.0.15
 Import-Package:\
 	!com.aayushatharva.brotli4j.*,\
 	\
@@ -11,10 +11,13 @@ Import-Package:\
 	\
 	!com.jcraft.jzlib,\
 	\
+	!com.microsoft.*,\
+	\
 	!com.ning.compress.*,\
 	\
 	!com.oracle.svm.core.annotate,\
 	\
+	!com.sun.jna.*,\
 	!com.sun.net.httpserver,\
 	\
 	!io.micrometer.context.*,\

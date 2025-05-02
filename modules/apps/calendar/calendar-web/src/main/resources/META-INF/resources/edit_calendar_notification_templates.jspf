@@ -24,12 +24,13 @@ String notificationTemplateBody = BeanPropertiesUtil.getString(calendarNotificat
 
 <liferay-ui:header
 	backURL="<%= backURL %>"
-	cssClass="container-fluid container-fluid-max-xl"
+	cssClass="container-fluid container-fluid-max-xxxl"
 	localizeTitle="<%= false %>"
 	title="<%= calendarName %>"
 />
 
 <clay:navigation-bar
+	cssClass="container-fluid-max-xxxl"
 	navigationItems='<%=
 		new JSPNavigationItemList(pageContext) {
 			{
@@ -107,19 +108,19 @@ String notificationTemplateBody = BeanPropertiesUtil.getString(calendarNotificat
 				[$EVENT_LOCATION$]
 			</dt>
 			<dd>
-				<liferay-ui:message key="the-calendar-booking-location" />
+				<liferay-ui:message key="the-event-location" />
 			</dd>
 			<dt>
 				[$EVENT_START_DATE$]
 			</dt>
 			<dd>
-				<liferay-ui:message key="the-calendar-booking-start-date" />
+				<liferay-ui:message key="the-event-start-date" />
 			</dd>
 			<dt>
 				[$EVENT_TITLE$]
 			</dt>
 			<dd>
-				<liferay-ui:message key="the-calendar-booking-title" />
+				<liferay-ui:message key="the-event-title" />
 			</dd>
 
 			<c:if test="<%= notificationTemplateType == NotificationTemplateType.INVITE %>">

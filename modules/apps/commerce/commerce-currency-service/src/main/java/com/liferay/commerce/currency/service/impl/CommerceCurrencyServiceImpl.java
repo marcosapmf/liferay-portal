@@ -6,8 +6,8 @@
 package com.liferay.commerce.currency.service.impl;
 
 import com.liferay.commerce.currency.constants.CommerceCurrencyActionKeys;
+import com.liferay.commerce.currency.constants.CommerceCurrencyConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
-import com.liferay.commerce.currency.model.CommerceCurrencyConstants;
 import com.liferay.commerce.currency.service.base.CommerceCurrencyServiceBaseImpl;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -43,10 +43,11 @@ public class CommerceCurrencyServiceImpl
 
 	@Override
 	public CommerceCurrency addCommerceCurrency(
-			String code, Map<Locale, String> nameMap, String symbol,
-			BigDecimal rate, Map<Locale, String> formatPatternMap,
-			int maxFractionDigits, int minFractionDigits, String roundingMode,
-			boolean primary, double priority, boolean active)
+			String externalReferenceCode, String code,
+			Map<Locale, String> nameMap, String symbol, BigDecimal rate,
+			Map<Locale, String> formatPatternMap, int maxFractionDigits,
+			int minFractionDigits, String roundingMode, boolean primary,
+			double priority, boolean active)
 		throws PortalException {
 
 		_portletResourcePermission.check(
@@ -54,9 +55,9 @@ public class CommerceCurrencyServiceImpl
 			CommerceCurrencyActionKeys.MANAGE_COMMERCE_CURRENCIES);
 
 		return commerceCurrencyLocalService.addCommerceCurrency(
-			getUserId(), code, nameMap, symbol, rate, formatPatternMap,
-			maxFractionDigits, minFractionDigits, roundingMode, primary,
-			priority, active);
+			externalReferenceCode, getUserId(), code, nameMap, symbol, rate,
+			formatPatternMap, maxFractionDigits, minFractionDigits,
+			roundingMode, primary, priority, active);
 	}
 
 	@Override
@@ -68,6 +69,20 @@ public class CommerceCurrencyServiceImpl
 			CommerceCurrencyActionKeys.MANAGE_COMMERCE_CURRENCIES);
 
 		commerceCurrencyLocalService.deleteCommerceCurrency(commerceCurrencyId);
+	}
+
+	@Override
+	public CommerceCurrency fetchCommerceCurrencyByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		_portletResourcePermission.check(
+			getPermissionChecker(), null,
+			CommerceCurrencyActionKeys.MANAGE_COMMERCE_CURRENCIES);
+
+		return commerceCurrencyLocalService.
+			fetchCommerceCurrencyByExternalReferenceCode(
+				externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -194,11 +209,11 @@ public class CommerceCurrencyServiceImpl
 
 	@Override
 	public CommerceCurrency updateCommerceCurrency(
-			long commerceCurrencyId, Map<Locale, String> nameMap, String symbol,
-			BigDecimal rate, Map<Locale, String> formatPatternMap,
-			int maxFractionDigits, int minFractionDigits, String roundingMode,
-			boolean primary, double priority, boolean active,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long commerceCurrencyId,
+			Map<Locale, String> nameMap, String symbol, BigDecimal rate,
+			Map<Locale, String> formatPatternMap, int maxFractionDigits,
+			int minFractionDigits, String roundingMode, boolean primary,
+			double priority, boolean active, ServiceContext serviceContext)
 		throws PortalException {
 
 		_portletResourcePermission.check(
@@ -206,9 +221,9 @@ public class CommerceCurrencyServiceImpl
 			CommerceCurrencyActionKeys.MANAGE_COMMERCE_CURRENCIES);
 
 		return commerceCurrencyLocalService.updateCommerceCurrency(
-			commerceCurrencyId, nameMap, symbol, rate, formatPatternMap,
-			maxFractionDigits, minFractionDigits, roundingMode, primary,
-			priority, active, serviceContext);
+			externalReferenceCode, commerceCurrencyId, nameMap, symbol, rate,
+			formatPatternMap, maxFractionDigits, minFractionDigits,
+			roundingMode, primary, priority, active, serviceContext);
 	}
 
 	@Override

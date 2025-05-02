@@ -81,6 +81,11 @@ public class SiteNavigationMenuLocalServiceImpl
 			siteNavigationMenu.getUserId(), SiteNavigationMenu.class.getName(),
 			siteNavigationMenu.getSiteNavigationMenuId(), false, true, true);
 
+		if (serviceContext.getModelPermissions() != null) {
+			_resourceLocalService.updateModelResources(
+				siteNavigationMenu, serviceContext);
+		}
+
 		_updateOldSiteNavigationMenuType(siteNavigationMenu, type);
 
 		return siteNavigationMenu;
@@ -290,6 +295,11 @@ public class SiteNavigationMenuLocalServiceImpl
 
 		SiteNavigationMenu siteNavigationMenu = getSiteNavigationMenu(
 			siteNavigationMenuId);
+
+		if (serviceContext.getModelPermissions() != null) {
+			_resourceLocalService.updateModelResources(
+				siteNavigationMenu, serviceContext);
+		}
 
 		if (Objects.equals(siteNavigationMenu.getName(), name)) {
 			return siteNavigationMenu;

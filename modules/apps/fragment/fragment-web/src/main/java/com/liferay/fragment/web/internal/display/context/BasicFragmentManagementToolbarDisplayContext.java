@@ -5,10 +5,13 @@
 
 package com.liferay.fragment.web.internal.display.context;
 
-import com.liferay.fragment.collection.item.selector.criterion.FragmentCollectionItemSelectorCriterion;
+import com.liferay.fragment.collection.item.selector.FragmentCollectionItemSelectorCriterion;
 import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.web.internal.info.field.type.CaptchaInfoFieldType;
+import com.liferay.fragment.web.internal.info.field.type.FormButtonInfoFieldType;
+import com.liferay.fragment.web.internal.info.field.type.LocalizationSelectInfoFieldType;
+import com.liferay.fragment.web.internal.info.field.type.StepperInfoFieldType;
 import com.liferay.fragment.web.internal.security.permission.resource.FragmentPermission;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
@@ -18,6 +21,7 @@ import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.DateInfoFieldType;
 import com.liferay.info.field.type.DateTimeInfoFieldType;
 import com.liferay.info.field.type.FileInfoFieldType;
+import com.liferay.info.field.type.FriendlyURLInfoFieldType;
 import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.field.type.InfoFieldType;
 import com.liferay.info.field.type.LongTextInfoFieldType;
@@ -262,15 +266,9 @@ public class BasicFragmentManagementToolbarDisplayContext
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		if (FragmentPermission.contains(
-				themeDisplay.getPermissionChecker(),
-				themeDisplay.getScopeGroupId(),
-				FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES)) {
-
-			return true;
-		}
-
-		return false;
+		return FragmentPermission.contains(
+			themeDisplay.getPermissionChecker(), themeDisplay.getScopeGroupId(),
+			FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES);
 	}
 
 	private JSONArray _getFieldTypesJSONArray() {
@@ -330,10 +328,13 @@ public class BasicFragmentManagementToolbarDisplayContext
 	private static final InfoFieldType[] _INFO_FIELD_TYPES = {
 		BooleanInfoFieldType.INSTANCE, CaptchaInfoFieldType.INSTANCE,
 		DateInfoFieldType.INSTANCE, DateTimeInfoFieldType.INSTANCE,
-		FileInfoFieldType.INSTANCE, HTMLInfoFieldType.INSTANCE,
+		FileInfoFieldType.INSTANCE, FormButtonInfoFieldType.INSTANCE,
+		FriendlyURLInfoFieldType.INSTANCE, HTMLInfoFieldType.INSTANCE,
+		LocalizationSelectInfoFieldType.INSTANCE,
 		LongTextInfoFieldType.INSTANCE, MultiselectInfoFieldType.INSTANCE,
 		NumberInfoFieldType.INSTANCE, RelationshipInfoFieldType.INSTANCE,
-		SelectInfoFieldType.INSTANCE, TextInfoFieldType.INSTANCE
+		SelectInfoFieldType.INSTANCE, StepperInfoFieldType.INSTANCE,
+		TextInfoFieldType.INSTANCE
 	};
 
 	private final ItemSelector _itemSelector;

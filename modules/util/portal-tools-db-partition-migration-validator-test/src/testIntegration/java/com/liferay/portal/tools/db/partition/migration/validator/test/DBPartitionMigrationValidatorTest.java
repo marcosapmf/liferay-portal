@@ -10,23 +10,24 @@ import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.db.partition.test.util.BaseDBPartitionTestCase;
+import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
-import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.tools.db.partition.migration.validator.DBPartitionMigrationValidator;
 import com.liferay.portal.tools.db.partition.migration.validator.LiferayDatabase;
+import com.liferay.portal.tools.db.partition.migration.validator.Recorder;
 import com.liferay.portal.tools.db.partition.migration.validator.util.DatabaseUtil;
+import com.liferay.portal.tools.db.partition.migration.validator.util.ValidatorUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
-
-import java.security.Permission;
 
 import java.util.Arrays;
 
@@ -60,7 +61,6 @@ public class DBPartitionMigrationValidatorTest extends BaseDBPartitionTestCase {
 	public void setUp() throws Exception {
 		System.setErr(new PrintStream(_errByteArrayOutputStream));
 		System.setOut(new PrintStream(_outByteArrayOutputStream));
-		System.setSecurityManager(new DisallowExitSecurityManager());
 
 		if (_company == null) {
 			_company = CompanyTestUtil.addCompany();
@@ -80,9 +80,11 @@ public class DBPartitionMigrationValidatorTest extends BaseDBPartitionTestCase {
 	}
 
 	@Test
+	@TestInfo("LPD-6742")
 	public void testValidateFailure() throws Exception {
 		String sourceFileName = _testExport(_company.getCompanyId());
-		String targetFileName = _testExport(TestPropsValues.getCompanyId());
+		String targetFileName = _testExport(
+			PortalInstancePool.getDefaultCompanyId());
 
 		File[] files = _outputDirectory.listFiles();
 
@@ -95,16 +97,16 @@ public class DBPartitionMigrationValidatorTest extends BaseDBPartitionTestCase {
 			_company.getName() +
 				" already exists in the target database. You must set a " +
 					"different value in " +
-						"DBPartitionInsertVirtualInstanceConfiguration.config.",
+						"InsertPortalInstanceConfiguration.config.",
 			"[WARN] Virtual host " + _company.getVirtualHostname() +
 				" already exists in the target database. You must set a " +
 					"different value in " +
-						"DBPartitionInsertVirtualInstanceConfiguration.config.",
+						"InsertPortalInstanceConfiguration.config.",
 			"[WARN] Web ID ",
 			_company.getWebId() +
 				" already exists in the target database. You must set a " +
 					"different value in " +
-						"DBPartitionInsertVirtualInstanceConfiguration.config."
+						"InsertPortalInstanceConfiguration.config."
 		};
 
 		_testValidate(
@@ -121,12 +123,14 @@ public class DBPartitionMigrationValidatorTest extends BaseDBPartitionTestCase {
 	}
 
 	@Test
+	@TestInfo("LPD-6742")
 	public void testValidateSuccess() throws Exception {
 		String sourceFileName = _testExport(_company.getCompanyId());
 
 		_deleteCompany();
 
-		String targetFileName = _testExport(TestPropsValues.getCompanyId());
+		String targetFileName = _testExport(
+			PortalInstancePool.getDefaultCompanyId());
 
 		File[] files = _outputDirectory.listFiles();
 
@@ -156,12 +160,12 @@ public class DBPartitionMigrationValidatorTest extends BaseDBPartitionTestCase {
 
 	private String _testExport(long companyId) throws Exception {
 		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setWithSafeCloseable(companyId)) {
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(companyId)) {
 
 			return ReflectionTestUtil.invoke(
 				DBPartitionMigrationValidator.class, "_write",
 				new Class<?>[] {LiferayDatabase.class, String.class},
-				DatabaseUtil.exportLiferayDatabase(connection),
+				DatabaseUtil.exportLiferayDatabase(connection, companyId),
 				_outputDirectory.getAbsolutePath());
 		}
 	}
@@ -173,11 +177,17 @@ public class DBPartitionMigrationValidatorTest extends BaseDBPartitionTestCase {
 		throws Exception {
 
 		try {
-			DBPartitionMigrationValidator.main(
-				new String[] {
-					"validate", "--source-file", sourceFileName,
-					"--target-file", targetFileName
-				});
+			LiferayDatabase sourceLiferayDatabase = ReflectionTestUtil.invoke(
+				DBPartitionMigrationValidator.class, "_read",
+				new Class<?>[] {String.class}, sourceFileName);
+			LiferayDatabase targetLiferayDatabase = ReflectionTestUtil.invoke(
+				DBPartitionMigrationValidator.class, "_read",
+				new Class<?>[] {String.class}, targetFileName);
+
+			Recorder recorder = ValidatorUtil.validateDatabases(
+				sourceLiferayDatabase, targetLiferayDatabase);
+
+			recorder.printMessages();
 		}
 		catch (RuntimeException runtimeException) {
 			unsafeConsumer.accept(runtimeException);
@@ -199,20 +209,5 @@ public class DBPartitionMigrationValidatorTest extends BaseDBPartitionTestCase {
 	private final PrintStream _originalOutPrintStream = System.out;
 	private final ByteArrayOutputStream _outByteArrayOutputStream =
 		new ByteArrayOutputStream();
-
-	private class DisallowExitSecurityManager extends SecurityManager {
-
-		@Override
-		public void checkExit(int status) {
-			super.checkExit(status);
-
-			throw new RuntimeException(String.valueOf(status));
-		}
-
-		@Override
-		public void checkPermission(Permission perm) {
-		}
-
-	}
 
 }

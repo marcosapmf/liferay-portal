@@ -4,7 +4,7 @@ definition {
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Depot";
+	property testray.main.component.name = "Asset Libraries";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -207,7 +207,7 @@ definition {
 			webContentText = "Text",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		DepotNavigator.openDepotAdmin();
 
@@ -350,7 +350,7 @@ definition {
 			webContentTitle = "WC WebContent Title",
 			webContentWebContent = "WC Depot WebContent");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		JSONLayout.addWidgetToPublicLayout(
 			groupName = "Site Name",
@@ -460,7 +460,7 @@ definition {
 			pageName = "Display Page Name",
 			pageType = "Display Page Templates");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Navigator.openWithAppendToBaseURL(urlAppend = "web/site-name/w/webcontent-title");
 
@@ -616,6 +616,10 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Page Name");
@@ -674,7 +678,7 @@ definition {
 				webContentText = "Text${count}",
 				webContentTitle = "Web Content Title${count}");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		JSONLayout.addWidgetToPublicLayout(
@@ -749,7 +753,7 @@ definition {
 			webContentText = "Web Content Text",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		JSONLayout.addWidgetToPublicLayout(
 			groupName = "Site Name",

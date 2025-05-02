@@ -16,6 +16,7 @@ LayoutClassedModelUsagesDisplayContext layoutClassedModelUsagesDisplayContext = 
 
 <clay:container-fluid
 	cssClass="container-form-lg"
+	size="xxxl"
 >
 	<clay:row>
 		<clay:col
@@ -67,7 +68,7 @@ LayoutClassedModelUsagesDisplayContext layoutClassedModelUsagesDisplayContext = 
 						<liferay-ui:search-container-column-text
 							cssClass="table-cell-expand table-cell-minw-200 table-title"
 							name="name"
-							value="<%= layoutClassedModelUsagesDisplayContext.getLayoutClassedModelUsageName(layoutClassedModelUsage) %>"
+							value="<%= HtmlUtil.escape(layoutClassedModelUsagesDisplayContext.getLayoutClassedModelUsageName(layoutClassedModelUsage)) %>"
 						/>
 
 						<liferay-ui:search-container-column-text

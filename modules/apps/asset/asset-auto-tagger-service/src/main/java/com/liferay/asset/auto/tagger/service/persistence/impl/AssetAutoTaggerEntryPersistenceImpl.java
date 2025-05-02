@@ -1134,7 +1134,6 @@ public class AssetAutoTaggerEntryPersistenceImpl
 		"assetAutoTaggerEntry.assetTagId = ?";
 
 	private FinderPath _finderPathFetchByA_A;
-	private FinderPath _finderPathCountByA_A;
 
 	/**
 	 * Returns the asset auto tagger entry where assetEntryId = &#63; and assetTagId = &#63; or throws a <code>NoSuchEntryException</code> if it could not be found.
@@ -1309,55 +1308,14 @@ public class AssetAutoTaggerEntryPersistenceImpl
 	 */
 	@Override
 	public int countByA_A(long assetEntryId, long assetTagId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					AssetAutoTaggerEntry.class)) {
+		AssetAutoTaggerEntry assetAutoTaggerEntry = fetchByA_A(
+			assetEntryId, assetTagId);
 
-			FinderPath finderPath = _finderPathCountByA_A;
-
-			Object[] finderArgs = new Object[] {assetEntryId, assetTagId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_ASSETAUTOTAGGERENTRY_WHERE);
-
-				sb.append(_FINDER_COLUMN_A_A_ASSETENTRYID_2);
-
-				sb.append(_FINDER_COLUMN_A_A_ASSETTAGID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(assetEntryId);
-
-					queryPos.add(assetTagId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (assetAutoTaggerEntry == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_A_A_ASSETENTRYID_2 =
@@ -1493,7 +1451,6 @@ public class AssetAutoTaggerEntryPersistenceImpl
 				assetAutoTaggerEntryModelImpl.getAssetTagId()
 			};
 
-			finderCache.putResult(_finderPathCountByA_A, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByA_A, args, assetAutoTaggerEntryModelImpl);
 		}
@@ -2177,6 +2134,7 @@ public class AssetAutoTaggerEntryPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -2185,13 +2143,14 @@ public class AssetAutoTaggerEntryPersistenceImpl
 		ctStrictColumnNames.add("companyId");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("assetEntryId");
-		ctStrictColumnNames.add("assetTagId");
+		ctMergeColumnNames.add("assetEntryId");
+		ctMergeColumnNames.add("assetTagId");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("assetAutoTaggerEntryId"));
@@ -2262,11 +2221,6 @@ public class AssetAutoTaggerEntryPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByA_A",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"assetEntryId", "assetTagId"}, true);
-
-		_finderPathCountByA_A = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByA_A",
-			new String[] {Long.class.getName(), Long.class.getName()},
-			new String[] {"assetEntryId", "assetTagId"}, false);
 
 		AssetAutoTaggerEntryUtil.setPersistence(this);
 	}

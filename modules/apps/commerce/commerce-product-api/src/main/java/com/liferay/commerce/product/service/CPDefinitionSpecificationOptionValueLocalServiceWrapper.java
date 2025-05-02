@@ -59,16 +59,19 @@ public class CPDefinitionSpecificationOptionValueLocalServiceWrapper
 	@Override
 	public CPDefinitionSpecificationOptionValue
 			addCPDefinitionSpecificationOptionValue(
-				long cpDefinitionId, long cpSpecificationOptionId,
-				long cpOptionCategoryId, double priority,
+				String externalReferenceCode, long cpDefinitionId,
+				long cpSpecificationOptionId, long cpOptionCategoryId,
+				double priority,
 				java.util.Map<java.util.Locale, String> valueMap,
+				boolean visible,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDefinitionSpecificationOptionValueLocalService.
 			addCPDefinitionSpecificationOptionValue(
-				cpDefinitionId, cpSpecificationOptionId, cpOptionCategoryId,
-				priority, valueMap, serviceContext);
+				externalReferenceCode, cpDefinitionId, cpSpecificationOptionId,
+				cpOptionCategoryId, priority, valueMap, visible,
+				serviceContext);
 	}
 
 	/**
@@ -333,6 +336,16 @@ public class CPDefinitionSpecificationOptionValueLocalServiceWrapper
 			fetchCPDefinitionSpecificationOptionValue(cpDefinitionId, key);
 	}
 
+	@Override
+	public CPDefinitionSpecificationOptionValue
+		fetchCPDefinitionSpecificationOptionValueByExternalReferenceCode(
+			String externalReferenceCode, long companyId) {
+
+		return _cpDefinitionSpecificationOptionValueLocalService.
+			fetchCPDefinitionSpecificationOptionValueByExternalReferenceCode(
+				externalReferenceCode, companyId);
+	}
+
 	/**
 	 * Returns the cp definition specification option value matching the UUID and group.
 	 *
@@ -374,6 +387,17 @@ public class CPDefinitionSpecificationOptionValueLocalServiceWrapper
 		return _cpDefinitionSpecificationOptionValueLocalService.
 			getCPDefinitionSpecificationOptionValue(
 				CPDefinitionSpecificationOptionValueId);
+	}
+
+	@Override
+	public CPDefinitionSpecificationOptionValue
+			getCPDefinitionSpecificationOptionValueByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpDefinitionSpecificationOptionValueLocalService.
+			getCPDefinitionSpecificationOptionValueByExternalReferenceCode(
+				externalReferenceCode, companyId);
 	}
 
 	/**
@@ -425,6 +449,18 @@ public class CPDefinitionSpecificationOptionValueLocalServiceWrapper
 	@Override
 	public java.util.List<CPDefinitionSpecificationOptionValue>
 		getCPDefinitionSpecificationOptionValues(
+			long cpDefinitionId, Boolean visible, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator
+				<CPDefinitionSpecificationOptionValue> orderByComparator) {
+
+		return _cpDefinitionSpecificationOptionValueLocalService.
+			getCPDefinitionSpecificationOptionValues(
+				cpDefinitionId, visible, start, end, orderByComparator);
+	}
+
+	@Override
+	public java.util.List<CPDefinitionSpecificationOptionValue>
+		getCPDefinitionSpecificationOptionValues(
 			long cpSpecificationOptionId, int start, int end) {
 
 		return _cpDefinitionSpecificationOptionValueLocalService.
@@ -435,23 +471,11 @@ public class CPDefinitionSpecificationOptionValueLocalServiceWrapper
 	@Override
 	public java.util.List<CPDefinitionSpecificationOptionValue>
 		getCPDefinitionSpecificationOptionValues(
-			long cpDefinitionId, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<CPDefinitionSpecificationOptionValue> orderByComparator) {
+			long cpDefinitionId, long cpOptionCategoryId, Boolean visible) {
 
 		return _cpDefinitionSpecificationOptionValueLocalService.
 			getCPDefinitionSpecificationOptionValues(
-				cpDefinitionId, start, end, orderByComparator);
-	}
-
-	@Override
-	public java.util.List<CPDefinitionSpecificationOptionValue>
-		getCPDefinitionSpecificationOptionValues(
-			long cpDefinitionId, long cpOptionCategoryId) {
-
-		return _cpDefinitionSpecificationOptionValueLocalService.
-			getCPDefinitionSpecificationOptionValues(
-				cpDefinitionId, cpOptionCategoryId);
+				cpDefinitionId, cpOptionCategoryId, visible);
 	}
 
 	@Override
@@ -516,10 +540,11 @@ public class CPDefinitionSpecificationOptionValueLocalServiceWrapper
 
 	@Override
 	public int getCPDefinitionSpecificationOptionValuesCount(
-		long cpDefinitionId) {
+		long cpDefinitionId, Boolean visible) {
 
 		return _cpDefinitionSpecificationOptionValueLocalService.
-			getCPDefinitionSpecificationOptionValuesCount(cpDefinitionId);
+			getCPDefinitionSpecificationOptionValuesCount(
+				cpDefinitionId, visible);
 	}
 
 	@Override
@@ -596,16 +621,19 @@ public class CPDefinitionSpecificationOptionValueLocalServiceWrapper
 	@Override
 	public CPDefinitionSpecificationOptionValue
 			updateCPDefinitionSpecificationOptionValue(
+				String externalReferenceCode,
 				long cpDefinitionSpecificationOptionValueId,
 				long cpOptionCategoryId, String key, double priority,
 				java.util.Map<java.util.Locale, String> valueMap,
+				boolean visible,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDefinitionSpecificationOptionValueLocalService.
 			updateCPDefinitionSpecificationOptionValue(
-				cpDefinitionSpecificationOptionValueId, cpOptionCategoryId, key,
-				priority, valueMap, serviceContext);
+				externalReferenceCode, cpDefinitionSpecificationOptionValueId,
+				cpOptionCategoryId, key, priority, valueMap, visible,
+				serviceContext);
 	}
 
 	@Override

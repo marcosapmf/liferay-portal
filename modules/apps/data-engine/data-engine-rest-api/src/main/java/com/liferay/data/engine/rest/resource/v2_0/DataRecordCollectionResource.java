@@ -6,8 +6,6 @@
 package com.liferay.data.engine.rest.resource.v2_0;
 
 import com.liferay.data.engine.rest.dto.v2_0.DataRecordCollection;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,6 +46,13 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface DataRecordCollectionResource {
 
+	public void deleteDataRecordCollection(Long dataRecordCollectionId)
+		throws Exception;
+
+	public Response deleteDataRecordCollectionBatch(
+			String callbackURL, Object object)
+		throws Exception;
+
 	public DataRecordCollection getDataDefinitionDataRecordCollection(
 			Long dataDefinitionId)
 		throws Exception;
@@ -57,9 +62,22 @@ public interface DataRecordCollectionResource {
 				Long dataDefinitionId, String keywords, Pagination pagination)
 		throws Exception;
 
-	public Response postDataDefinitionDataRecordCollectionsPageExportBatch(
-			Long dataDefinitionId, String keywords, String callbackURL,
-			String contentType, String fieldNames)
+	public DataRecordCollection getDataRecordCollection(
+			Long dataRecordCollectionId)
+		throws Exception;
+
+	public String getDataRecordCollectionPermissionByCurrentUser(
+			Long dataRecordCollectionId)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getDataRecordCollectionPermissionsPage(
+				Long dataRecordCollectionId, String roleNames)
+		throws Exception;
+
+	public DataRecordCollection
+			getSiteDataRecordCollectionByDataRecordCollectionKey(
+				Long siteId, String dataRecordCollectionKey)
 		throws Exception;
 
 	public DataRecordCollection postDataDefinitionDataRecordCollection(
@@ -70,15 +88,9 @@ public interface DataRecordCollectionResource {
 			Long dataDefinitionId, String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteDataRecordCollection(Long dataRecordCollectionId)
-		throws Exception;
-
-	public Response deleteDataRecordCollectionBatch(
-			String callbackURL, Object object)
-		throws Exception;
-
-	public DataRecordCollection getDataRecordCollection(
-			Long dataRecordCollectionId)
+	public Response postDataDefinitionDataRecordCollectionsPageExportBatch(
+			Long dataDefinitionId, String keywords, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public DataRecordCollection putDataRecordCollection(
@@ -91,23 +103,9 @@ public interface DataRecordCollectionResource {
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getDataRecordCollectionPermissionsPage(
-				Long dataRecordCollectionId, String roleNames)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
 			putDataRecordCollectionPermissionsPage(
 				Long dataRecordCollectionId,
 				com.liferay.portal.vulcan.permission.Permission[] permissions)
-		throws Exception;
-
-	public String getDataRecordCollectionPermissionByCurrentUser(
-			Long dataRecordCollectionId)
-		throws Exception;
-
-	public DataRecordCollection
-			getSiteDataRecordCollectionByDataRecordCollectionKey(
-				Long siteId, String dataRecordCollectionKey)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -132,7 +130,8 @@ public interface DataRecordCollectionResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -157,19 +156,23 @@ public interface DataRecordCollectionResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

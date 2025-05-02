@@ -33,7 +33,6 @@ import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.comment.Discussion;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -639,8 +638,7 @@ public class GetEntryRenderDataMVCResourceCommand
 		}
 
 		if (_ctDisplayRendererRegistry.isWorkflowEnabled(ctEntry, rightModel) &&
-			(ctEntry.getChangeType() != CTConstants.CT_CHANGE_TYPE_DELETION) &&
-			FeatureFlagManagerUtil.isEnabled("LPD-10703")) {
+			(ctEntry.getChangeType() != CTConstants.CT_CHANGE_TYPE_DELETION)) {
 
 			if (ctCollection.getStatus() == WorkflowConstants.STATUS_DRAFT) {
 				JSONArray workflowActionsJSONArray =
@@ -1187,7 +1185,11 @@ public class GetEntryRenderDataMVCResourceCommand
 
 		long safeCloseableCTCollectionId = ctEntry.getCtCollectionId();
 
-		if (ctCollection.getStatus() != WorkflowConstants.STATUS_DRAFT) {
+		if ((ctCollection.getStatus() != WorkflowConstants.STATUS_DRAFT) &&
+			(ctCollection.getStatus() != WorkflowConstants.STATUS_EXPIRED) &&
+			(ctCollection.getStatus() != WorkflowConstants.STATUS_PENDING) &&
+			(ctCollection.getStatus() != WorkflowConstants.STATUS_SCHEDULED)) {
+
 			Map<String, Object> modelAttributes = model.getModelAttributes();
 
 			safeCloseableCTCollectionId = (long)modelAttributes.get(

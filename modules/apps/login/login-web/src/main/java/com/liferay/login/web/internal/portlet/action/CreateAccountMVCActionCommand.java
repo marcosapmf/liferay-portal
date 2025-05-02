@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.exception.AddressZipException;
 import com.liferay.portal.kernel.exception.CompanyMaxUsersException;
 import com.liferay.portal.kernel.exception.ContactBirthdayException;
 import com.liferay.portal.kernel.exception.ContactNameException;
-import com.liferay.portal.kernel.exception.DuplicateOpenIdException;
 import com.liferay.portal.kernel.exception.EmailAddressException;
 import com.liferay.portal.kernel.exception.GroupFriendlyURLException;
 import com.liferay.portal.kernel.exception.NoSuchCountryException;
@@ -207,7 +206,7 @@ public class CreateAccountMVCActionCommand extends BaseMVCActionCommand {
 		try {
 			if (cmd.equals(Constants.ADD)) {
 				CaptchaConfiguration captchaConfiguration =
-					getCaptchaConfiguration();
+					getCaptchaConfiguration(actionRequest);
 
 				if (captchaConfiguration.createAccountCaptchaEnabled()) {
 					CaptchaUtil.check(actionRequest);
@@ -285,6 +284,11 @@ public class CreateAccountMVCActionCommand extends BaseMVCActionCommand {
 				sendRedirect(
 					actionRequest, actionResponse, themeDisplay, user,
 					user.getPasswordUnencrypted());
+
+				_sendCompanySecurityStrangersURLRedirect(
+					actionRequest, actionResponse, themeDisplay);
+
+				return;
 			}
 			else if (exception instanceof
 						UserScreenNameException.MustNotBeDuplicate) {
@@ -314,7 +318,6 @@ public class CreateAccountMVCActionCommand extends BaseMVCActionCommand {
 				exception instanceof CompanyMaxUsersException ||
 				exception instanceof ContactBirthdayException ||
 				exception instanceof ContactNameException ||
-				exception instanceof DuplicateOpenIdException ||
 				exception instanceof EmailAddressException ||
 				exception instanceof GroupFriendlyURLException ||
 				exception instanceof NoSuchCountryException ||
@@ -341,35 +344,18 @@ public class CreateAccountMVCActionCommand extends BaseMVCActionCommand {
 			}
 		}
 
-		if (Validator.isNull(PropsValues.COMPANY_SECURITY_STRANGERS_URL)) {
-			return;
-		}
-
-		try {
-			Layout layout = _layoutLocalService.getFriendlyURLLayout(
-				themeDisplay.getScopeGroupId(), false,
-				PropsValues.COMPANY_SECURITY_STRANGERS_URL);
-
-			String redirect = _portal.getLayoutURL(layout, themeDisplay);
-
-			sendRedirect(actionRequest, actionResponse, redirect);
-		}
-		catch (NoSuchLayoutException noSuchLayoutException) {
-
-			// LPS-52675
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchLayoutException);
-			}
-		}
+		_sendCompanySecurityStrangersURLRedirect(
+			actionRequest, actionResponse, themeDisplay);
 	}
 
-	protected CaptchaConfiguration getCaptchaConfiguration()
+	protected CaptchaConfiguration getCaptchaConfiguration(
+			ActionRequest actionRequest)
 		throws CaptchaConfigurationException {
 
 		try {
-			return _configurationProvider.getSystemConfiguration(
-				CaptchaConfiguration.class);
+			return _configurationProvider.getCompanyConfiguration(
+				CaptchaConfiguration.class,
+				_portal.getCompanyId(actionRequest));
 		}
 		catch (Exception exception) {
 			throw new CaptchaConfigurationException(exception);
@@ -445,14 +431,7 @@ public class CreateAccountMVCActionCommand extends BaseMVCActionCommand {
 		long facebookId = GetterUtil.getLong(
 			httpSession.getAttribute(WebKeys.FACEBOOK_INCOMPLETE_USER_ID));
 
-		String googleUserId = GetterUtil.getString(
-			httpSession.getAttribute(WebKeys.GOOGLE_INCOMPLETE_USER_ID));
-
-		if (Validator.isNotNull(googleUserId)) {
-			autoPassword = false;
-		}
-
-		if ((facebookId > 0) || Validator.isNotNull(googleUserId)) {
+		if (facebookId > 0) {
 			password1 = PwdGenerator.getPassword();
 
 			password2 = password1;
@@ -475,10 +454,6 @@ public class CreateAccountMVCActionCommand extends BaseMVCActionCommand {
 
 		boolean sendEmail = true;
 
-		if (Validator.isNotNull(googleUserId)) {
-			sendEmail = false;
-		}
-
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			User.class.getName(), actionRequest);
 
@@ -492,18 +467,6 @@ public class CreateAccountMVCActionCommand extends BaseMVCActionCommand {
 
 		if (facebookId > 0) {
 			httpSession.removeAttribute(WebKeys.FACEBOOK_INCOMPLETE_USER_ID);
-
-			_updateUserAndSendRedirect(
-				actionRequest, actionResponse, themeDisplay, user, password1);
-
-			return;
-		}
-
-		if (Validator.isNotNull(googleUserId)) {
-			_userLocalService.updateGoogleUserId(
-				user.getUserId(), googleUserId);
-
-			httpSession.removeAttribute(WebKeys.GOOGLE_INCOMPLETE_USER_ID);
 
 			_updateUserAndSendRedirect(
 				actionRequest, actionResponse, themeDisplay, user, password1);
@@ -568,6 +531,34 @@ public class CreateAccountMVCActionCommand extends BaseMVCActionCommand {
 		_userLocalService.deleteUser(anonymousUser.getUserId());
 
 		addUser(actionRequest, actionResponse);
+	}
+
+	private void _sendCompanySecurityStrangersURLRedirect(
+			ActionRequest actionRequest, ActionResponse actionResponse,
+			ThemeDisplay themeDisplay)
+		throws Exception {
+
+		if (Validator.isNull(PropsValues.COMPANY_SECURITY_STRANGERS_URL)) {
+			return;
+		}
+
+		try {
+			Layout layout = _layoutLocalService.getFriendlyURLLayout(
+				themeDisplay.getScopeGroupId(), false,
+				PropsValues.COMPANY_SECURITY_STRANGERS_URL);
+
+			String redirect = _portal.getLayoutURL(layout, themeDisplay);
+
+			sendRedirect(actionRequest, actionResponse, redirect);
+		}
+		catch (NoSuchLayoutException noSuchLayoutException) {
+
+			// LPS-52675
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchLayoutException);
+			}
+		}
 	}
 
 	private void _updateUserAndSendRedirect(

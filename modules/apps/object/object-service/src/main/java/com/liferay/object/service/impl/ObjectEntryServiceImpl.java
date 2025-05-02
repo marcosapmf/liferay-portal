@@ -26,8 +26,8 @@ import com.liferay.object.service.base.ObjectEntryServiceBaseImpl;
 import com.liferay.object.service.persistence.ObjectDefinitionPersistence;
 import com.liferay.object.tree.Edge;
 import com.liferay.object.tree.Node;
+import com.liferay.object.tree.ObjectDefinitionTreeFactory;
 import com.liferay.object.tree.Tree;
-import com.liferay.object.tree.TreeFactory;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
@@ -68,6 +68,7 @@ import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
+import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -108,8 +109,9 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 
 	@Override
 	public ObjectEntry addObjectEntry(
-			long groupId, long objectDefinitionId,
-			Map<String, Serializable> values, ServiceContext serviceContext)
+			long groupId, long objectDefinitionId, long objectEntryFolderId,
+			String defaultLanguageId, Map<String, Serializable> values,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		if (!ObjectEntryThreadLocal.isSkipObjectEntryResourcePermission()) {
@@ -120,13 +122,15 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 		_validateSubmissionLimit(objectDefinitionId, getUser());
 
 		return objectEntryLocalService.addObjectEntry(
-			getUserId(), groupId, objectDefinitionId, values, serviceContext);
+			getUserId(), groupId, objectDefinitionId, objectEntryFolderId,
+			defaultLanguageId, values, serviceContext);
 	}
 
 	@Override
 	public ObjectEntry addOrUpdateObjectEntry(
 			String externalReferenceCode, long groupId, long objectDefinitionId,
-			Map<String, Serializable> values, ServiceContext serviceContext)
+			long objectEntryFolderId, Map<String, Serializable> values,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		ObjectEntry objectEntry = objectEntryPersistence.fetchByERC_C_ODI(
@@ -145,10 +149,11 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 
 		return objectEntryLocalService.addOrUpdateObjectEntry(
 			externalReferenceCode, getUserId(), groupId, objectDefinitionId,
-			values, serviceContext);
+			objectEntryFolderId, values, serviceContext);
 	}
 
 	@Override
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public void checkModelResourcePermission(
 			long objectDefinitionId, long objectEntryId, String actionId)
 		throws PortalException {
@@ -291,6 +296,23 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 
 	@Override
 	public ObjectEntry getObjectEntry(
+			String externalReferenceCode, long objectDefinitionId)
+		throws PortalException {
+
+		ObjectEntry objectEntry = objectEntryLocalService.getObjectEntry(
+			externalReferenceCode, objectDefinitionId);
+
+		if (!ObjectEntryThreadLocal.isSkipObjectEntryResourcePermission()) {
+			_checkPermission(
+				ActionKeys.VIEW, objectEntry.getObjectDefinitionId(),
+				objectEntry);
+		}
+
+		return objectEntry;
+	}
+
+	@Override
+	public ObjectEntry getObjectEntry(
 			String externalReferenceCode, long companyId, long groupId)
 		throws PortalException {
 
@@ -406,6 +428,22 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 
 		return objectEntryLocalService.updateObjectEntry(
 			getUserId(), objectEntryId, values, serviceContext);
+	}
+
+	@Override
+	public void validate(
+			long groupId, ObjectEntry objectEntry,
+			List<String> objectValidationRuleExternalReferenceCodes,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		_checkAddObjectEntryPortletResourcePermission(
+			groupId, objectEntry.getObjectDefinitionId(),
+			objectEntry.getValues());
+
+		objectEntryLocalService.validate(
+			groupId, objectEntry, objectValidationRuleExternalReferenceCodes,
+			serviceContext, getUserId());
 	}
 
 	@Activate
@@ -623,7 +661,11 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 			ObjectDefinition objectDefinition, Map<String, Serializable> values)
 		throws PortalException {
 
-		Tree tree = _treeFactory.createObjectDefinitionTree(
+		ObjectDefinitionTreeFactory objectDefinitionTreeFactory =
+			new ObjectDefinitionTreeFactory(
+				_objectDefinitionPersistence, _objectRelationshipLocalService);
+
+		Tree tree = objectDefinitionTreeFactory.create(
 			objectDefinition.getRootObjectDefinitionId());
 
 		Node node = tree.getNode(objectDefinition.getObjectDefinitionId());
@@ -853,9 +895,6 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 
 	@Reference
 	private RoleLocalService _roleLocalService;
-
-	@Reference
-	private TreeFactory _treeFactory;
 
 	@Reference
 	private UserGroupRoleLocalService _userGroupRoleLocalService;

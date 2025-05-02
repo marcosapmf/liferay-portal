@@ -237,8 +237,8 @@ public class AutoSaveArticleMVCResourceCommand extends BaseMVCResourceCommand {
 					new String[] {
 						MapUtil.toString(
 							exportImportContentValidationException.
-								getDlReferenceParameters()),
-						exportImportContentValidationException.getDlReference()
+								getDLReferenceParameters()),
+						exportImportContentValidationException.getDLReference()
 					});
 			}
 			else if (exportImportContentValidationException.getType() ==

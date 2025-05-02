@@ -5,13 +5,14 @@
 
 package com.liferay.layout.admin.kernel.visibility;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * @author Jürgen Kappler
  */
+@ProviderType
 public interface LayoutVisibilityManager {
 
-	public boolean isPrivateLayoutsEnabled();
-
-	public boolean isPrivateLayoutsEnabled(long groupId);
+	public boolean isPrivateLayoutsEnabled(long companyId);
 
 }

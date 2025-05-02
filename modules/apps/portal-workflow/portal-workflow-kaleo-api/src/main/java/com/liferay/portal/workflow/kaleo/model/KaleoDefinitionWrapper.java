@@ -5,6 +5,7 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -37,6 +38,8 @@ public class KaleoDefinitionWrapper
 
 		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("ctCollectionId", getCtCollectionId());
+		attributes.put("uuid", getUuid());
+		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("kaleoDefinitionId", getKaleoDefinitionId());
 		attributes.put("groupId", getGroupId());
 		attributes.put("companyId", getCompanyId());
@@ -67,6 +70,19 @@ public class KaleoDefinitionWrapper
 
 		if (ctCollectionId != null) {
 			setCtCollectionId(ctCollectionId);
+		}
+
+		String uuid = (String)attributes.get("uuid");
+
+		if (uuid != null) {
+			setUuid(uuid);
+		}
+
+		String externalReferenceCode = (String)attributes.get(
+			"externalReferenceCode");
+
+		if (externalReferenceCode != null) {
+			setExternalReferenceCode(externalReferenceCode);
 		}
 
 		Long kaleoDefinitionId = (Long)attributes.get("kaleoDefinitionId");
@@ -232,6 +248,16 @@ public class KaleoDefinitionWrapper
 	@Override
 	public String getDescription() {
 		return model.getDescription();
+	}
+
+	/**
+	 * Returns the external reference code of this kaleo definition.
+	 *
+	 * @return the external reference code of this kaleo definition
+	 */
+	@Override
+	public String getExternalReferenceCode() {
+		return model.getExternalReferenceCode();
 	}
 
 	/**
@@ -418,6 +444,16 @@ public class KaleoDefinitionWrapper
 	}
 
 	/**
+	 * Returns the uuid of this kaleo definition.
+	 *
+	 * @return the uuid of this kaleo definition
+	 */
+	@Override
+	public String getUuid() {
+		return model.getUuid();
+	}
+
+	/**
 	 * Returns the version of this kaleo definition.
 	 *
 	 * @return the version of this kaleo definition
@@ -515,6 +551,16 @@ public class KaleoDefinitionWrapper
 	@Override
 	public void setDescription(String description) {
 		model.setDescription(description);
+	}
+
+	/**
+	 * Sets the external reference code of this kaleo definition.
+	 *
+	 * @param externalReferenceCode the external reference code of this kaleo definition
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		model.setExternalReferenceCode(externalReferenceCode);
 	}
 
 	/**
@@ -682,6 +728,16 @@ public class KaleoDefinitionWrapper
 	}
 
 	/**
+	 * Sets the uuid of this kaleo definition.
+	 *
+	 * @param uuid the uuid of this kaleo definition
+	 */
+	@Override
+	public void setUuid(String uuid) {
+		model.setUuid(uuid);
+	}
+
+	/**
 	 * Sets the version of this kaleo definition.
 	 *
 	 * @param version the version of this kaleo definition
@@ -708,6 +764,11 @@ public class KaleoDefinitionWrapper
 		getAttributeSetterBiConsumers() {
 
 		return model.getAttributeSetterBiConsumers();
+	}
+
+	@Override
+	public StagedModelType getStagedModelType() {
+		return model.getStagedModelType();
 	}
 
 	@Override

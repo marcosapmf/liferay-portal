@@ -59,13 +59,13 @@ public class CPSpecificationOptionTableReferenceDefinitionTest
 		_cpSpecificationOption =
 			_cpSpecificationOptionLocalService.addCPSpecificationOption(
 				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
-				_cpOptionCategory.getCPOptionCategoryId(), 0,
+				_cpOptionCategory.getCPOptionCategoryId(), null,
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomBoolean(),
 				CPSpecificationOptionTableReferenceDefinitionTest.class.
 					getSimpleName(),
-				RandomTestUtil.randomDouble(),
+				RandomTestUtil.randomDouble(), true,
 				ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 
 		return _cpSpecificationOption;

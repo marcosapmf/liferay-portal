@@ -5,15 +5,12 @@
 
 package com.liferay.partner;
 
-import com.liferay.client.extension.util.spring.boot.LiferayOAuth2AccessTokenManager;
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
+import com.liferay.client.extension.util.spring.boot3.client.LiferayOAuth2AccessTokenManager;
 import com.liferay.petra.string.StringBundler;
-
-import java.net.URI;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-
-import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,37 +19,37 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.ExchangeStrategies;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriBuilder;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 /**
  * @author Jair Medeiros
  */
 @Component
-public class PartnerCommandLineRunner implements CommandLineRunner {
+public class PartnerCommandLineRunner
+	extends BaseRestController implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
 		ZonedDateTime zonedDateTime = ZonedDateTime.now();
 
-		JSONObject responseJSONObject = _get(
-			uriBuilder -> uriBuilder.path(
-				"/o/c/activities"
-			).queryParam(
-				"filter",
-				"activityStatus eq 'active' and endDate lt " +
-					_toString(zonedDateTime.minusDays(_EXPIRATION_DAYS))
-			).queryParam(
-				"page", "1"
-			).queryParam(
-				"pageSize", "-1"
-			).build());
+		JSONObject responseJSONObject = new JSONObject(
+			get(
+				_getAuthorization(),
+				_defaultUriBuilderFactory.builder(
+				).path(
+					"/o/c/activities"
+				).queryParam(
+					"filter",
+					"activityStatus eq 'active' and endDate lt " +
+						_toString(zonedDateTime.minusDays(_EXPIRATION_DAYS))
+				).queryParam(
+					"page", "1"
+				).queryParam(
+					"pageSize", "-1"
+				).build(
+				).toString()));
 
 		if (responseJSONObject.getInt("totalCount") > 0) {
 			JSONArray itemsJSONArray = responseJSONObject.getJSONArray("items");
@@ -78,30 +75,37 @@ public class PartnerCommandLineRunner implements CommandLineRunner {
 			}
 
 			try {
-				_put(itemsJSONArray.toString(), "/o/c/activities/batch");
+				put(
+					_getAuthorization(), itemsJSONArray.toString(),
+					"/o/c/activities/batch");
 			}
 			catch (Exception exception) {
 				_log.error(exception);
 			}
 		}
 
-		responseJSONObject = _get(
-			uriBuilder -> uriBuilder.path(
-				"/o/c/activities"
-			).queryParam(
-				"filter",
-				StringBundler.concat(
-					"submitted eq true and activityStatus eq 'active' and ",
-					"endDate le ",
-					_toString(zonedDateTime.minusDays(_EXPIRATION_DAYS - 15)),
-					" and mdfReqToActs/mdfRequestStatus eq 'approved'")
-			).queryParam(
-				"nestedFields", "actToMDFClmActs"
-			).queryParam(
-				"page", "1"
-			).queryParam(
-				"pageSize", "-1"
-			).build());
+		responseJSONObject = new JSONObject(
+			get(
+				_getAuthorization(),
+				_defaultUriBuilderFactory.builder(
+				).path(
+					"/o/c/activities"
+				).queryParam(
+					"filter",
+					StringBundler.concat(
+						"submitted eq true and activityStatus eq 'active' and ",
+						"endDate le ",
+						_toString(
+							zonedDateTime.minusDays(_EXPIRATION_DAYS - 15)),
+						" and mdfReqToActs/mdfRequestStatus eq 'approved'")
+				).queryParam(
+					"nestedFields", "actToMDFClmActs"
+				).queryParam(
+					"page", "1"
+				).queryParam(
+					"pageSize", "-1"
+				).build(
+				).toString()));
 
 		if (responseJSONObject.getInt("totalCount") > 0) {
 			JSONArray itemsJSONArray = responseJSONObject.getJSONArray("items");
@@ -141,10 +145,14 @@ public class PartnerCommandLineRunner implements CommandLineRunner {
 								mdfClaimActivityJSONObject.getLong(
 									"r_mdfClmToMDFClmActs_c_mdfClaimId");
 
-							responseJSONObject = _get(
-								uriBuilder -> uriBuilder.path(
-									"/o/c/mdfclaims/" + mdfClaimId
-								).build());
+							responseJSONObject = new JSONObject(
+								get(
+									_getAuthorization(),
+									_defaultUriBuilderFactory.builder(
+									).path(
+										"/o/c/mdfclaims/" + mdfClaimId
+									).build(
+									).toString()));
 
 							JSONObject mdfClaimStatusJSONObject =
 								responseJSONObject.getJSONObject(
@@ -177,61 +185,9 @@ public class PartnerCommandLineRunner implements CommandLineRunner {
 		}
 	}
 
-	private JSONObject _get(Function<UriBuilder, URI> uriFunction) {
-		return new JSONObject(
-			_getWebClient(
-			).get(
-			).uri(
-				uriBuilder -> uriFunction.apply(uriBuilder)
-			).accept(
-				MediaType.APPLICATION_JSON
-			).header(
-				HttpHeaders.AUTHORIZATION, _getAuthorization()
-			).retrieve(
-			).bodyToMono(
-				String.class
-			).block());
-	}
-
 	private String _getAuthorization() {
 		return _liferayOAuth2AccessTokenManager.getAuthorization(
-			"liferay-partner-etc-cron-oauth-application-headless-server");
-	}
-
-	private WebClient _getWebClient() {
-		return WebClient.builder(
-		).baseUrl(
-			_lxcDXPServerProtocol + "://" + _lxcDXPMainDomain
-		).exchangeStrategies(
-			ExchangeStrategies.builder(
-			).codecs(
-				clientCodecConfigurer -> clientCodecConfigurer.defaultCodecs(
-				).maxInMemorySize(
-					5 * 1024 * 1024
-				)
-			).build()
-		).build();
-	}
-
-	private void _put(String bodyValue, String path) {
-		_getWebClient(
-		).put(
-		).uri(
-			uriBuilder -> uriBuilder.path(
-				path
-			).build()
-		).accept(
-			MediaType.APPLICATION_JSON
-		).contentType(
-			MediaType.APPLICATION_JSON
-		).header(
-			HttpHeaders.AUTHORIZATION, _getAuthorization()
-		).bodyValue(
-			bodyValue
-		).retrieve(
-		).bodyToMono(
-			Void.class
-		).block();
+			"liferay-partner-etc-cron-oahs");
 	}
 
 	private void _sendNotification(
@@ -266,7 +222,7 @@ public class PartnerCommandLineRunner implements CommandLineRunner {
 
 			sb.append("TemplateAction");
 
-			_put("", sb.toString());
+			put(_getAuthorization(), "", sb.toString());
 
 			if (_log.isInfoEnabled()) {
 				_log.info(
@@ -304,13 +260,10 @@ public class PartnerCommandLineRunner implements CommandLineRunner {
 	private static final Log _log = LogFactory.getLog(
 		PartnerCommandLineRunner.class);
 
+	private final DefaultUriBuilderFactory _defaultUriBuilderFactory =
+		new DefaultUriBuilderFactory();
+
 	@Autowired
 	private LiferayOAuth2AccessTokenManager _liferayOAuth2AccessTokenManager;
-
-	@Value("${com.liferay.lxc.dxp.mainDomain}")
-	private String _lxcDXPMainDomain;
-
-	@Value("${com.liferay.lxc.dxp.server.protocol}")
-	private String _lxcDXPServerProtocol;
 
 }

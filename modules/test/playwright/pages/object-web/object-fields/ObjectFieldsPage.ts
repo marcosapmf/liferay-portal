@@ -5,11 +5,14 @@
 
 import {Locator, Page} from '@playwright/test';
 
+import {CreateObjectField} from '../../../helpers/ObjectAdminApiHelper';
 import {ViewObjectDefinitionsPage} from '../ViewObjectDefinitionsPage';
 
 export class ObjectFieldsPage {
 	readonly addObjectFieldButton: Locator;
 	readonly deleteObjectFieldOption: Locator;
+	readonly editFieldSaveButton: Locator;
+	readonly externalReferenceCodeField: Locator;
 	readonly fieldsTabItem: Locator;
 	readonly page: Page;
 	readonly viewObjectDefinitionsPage: ViewObjectDefinitionsPage;
@@ -22,9 +25,15 @@ export class ObjectFieldsPage {
 		this.deleteObjectFieldOption = page.getByRole('menuitem', {
 			name: 'Delete',
 		});
-		this.fieldsTabItem = page.locator('.navbar-text-truncate').filter({
+		this.fieldsTabItem = page.locator('.nav-item .nav-link').filter({
 			hasText: 'Fields',
 		});
+		this.editFieldSaveButton = page
+			.frameLocator('iframe')
+			.getByRole('button', {name: 'Save'});
+		this.externalReferenceCodeField = page
+			.frameLocator('iframe')
+			.locator('[name="externalReferenceCode"]');
 		this.page = page;
 		this.objectFieldLabelInput = page.locator('input[name="label"]');
 		this.objectFieldOptionsDropdown = page.getByText('Select an Option');
@@ -71,10 +80,10 @@ export class ObjectFieldsPage {
 	}
 
 	async deleteObjectField(nth: number) {
-		await this.page.locator('.dnd-td.item-actions').nth(nth).waitFor();
+		await this.page.locator('.cell-item-actions').nth(nth).waitFor();
 
 		await this.page
-			.locator('.dnd-td.item-actions')
+			.locator('.cell-item-actions')
 			.nth(nth)
 			.locator('.dropdown-toggle')
 			.click();
@@ -90,5 +99,13 @@ export class ObjectFieldsPage {
 		);
 
 		await this.fieldsTabItem.click();
+	}
+
+	async openObjectField(fieldLabel: string) {
+		await this.page
+			.getByRole('cell')
+			.getByRole('link')
+			.filter({hasText: fieldLabel})
+			.click();
 	}
 }

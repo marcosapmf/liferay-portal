@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
+import DropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
 import classNames from 'classnames';
@@ -13,6 +15,7 @@ import React, {useContext, useEffect, useState} from 'react';
 import FrontendDataSetContext from '../../FrontendDataSetContext';
 import {OPEN_SIDE_PANEL} from '../../utils/eventsDefinitions';
 import {getOpenedSidePanel} from '../../utils/sidePanels';
+import SelectionCheckbox from './SelectionCheckbox';
 
 function getQueryString(key, values = []) {
 	return `?${key}=${values.join(',')}`;
@@ -30,15 +33,24 @@ function getRichPayload(payload, key, values = []) {
 function BulkActions({
 	bulkActions,
 	fluid,
-	selectAllItems,
+	handleCheckboxClick,
+	handleSelectAll,
+	items,
+	onClear,
+	pageSelectedItemsValue,
 	selectedItems,
 	selectedItemsKey,
 	selectedItemsValue,
+	showSelectAll,
 	total,
 }) {
-	const {actionParameterName, onBulkActionItemClick} = useContext(
-		FrontendDataSetContext
-	);
+	const {
+		actionParameterName,
+		allItemsSelectedActive,
+		onBulkActionItemClick,
+		showBulkActionsManagementBar,
+		showBulkActionsManagementBarActions,
+	} = useContext(FrontendDataSetContext);
 
 	const [currentSidePanelActionPayload, setCurrentSidePanelActionPayload] =
 		useState(null);
@@ -52,7 +64,6 @@ function BulkActions({
 		sidePanelId
 	) {
 		const {data, href, slug, target} = actionDefinition;
-
 		if (target === 'sidePanel') {
 			const sidePanelActionPayload = {
 				baseURL: href,
@@ -75,10 +86,14 @@ function BulkActions({
 		else if (onBulkActionItemClick) {
 			onBulkActionItemClick({
 				action: actionDefinition,
+				formId,
+				formName,
 				loadData,
+				namespace,
 				selectedData: {
-					items: selectedItems,
-					keyValues: selectedItemsValue,
+					items: allItemsSelectedActive ? [] : selectedItems,
+					keyValues: allItemsSelectedActive ? [] : selectedItemsValue,
+					selectAll: allItemsSelectedActive,
 				},
 			});
 		}
@@ -92,7 +107,10 @@ function BulkActions({
 					data: {
 						...data,
 						[`${actionParameterName || selectedItemsKey}`]:
-							selectedItemsValue.join(','),
+							allItemsSelectedActive
+								? []
+								: selectedItemsValue.join(','),
+						selectAll: allItemsSelectedActive,
 					},
 					url: href || form.action,
 				});
@@ -129,26 +147,56 @@ function BulkActions({
 		[selectedItemsValue]
 	);
 
-	return selectedItemsValue.length ? (
+	return showBulkActionsManagementBar && selectedItemsValue.length ? (
 		<FrontendDataSetContext.Consumer>
-			{({formId, formName, loadData, namespace, sidePanelId}) => (
-				<nav className="management-bar management-bar-primary navbar navbar-expand-md pb-2 pt-2 subnav-tbar">
+			{({
+				formId,
+				formName,
+				loadData,
+				namespace,
+				selectable,
+				sidePanelId,
+			}) => (
+				<nav className="management-bar management-bar-primary navbar navbar-expand-md">
 					<div
 						className={classNames(
-							'container-fluid container-fluid-max-xl py-1',
+							'container-fluid',
 							!fluid && 'px-0'
 						)}
 					>
 						<ul className="navbar-nav">
+							{!!total && selectable && (
+								<li className="nav-item">
+									<SelectionCheckbox
+										handleCheckboxClick={
+											handleCheckboxClick
+										}
+										items={items}
+										selectedItemsValue={
+											pageSelectedItemsValue
+										}
+									/>
+								</li>
+							)}
+
 							<li className="nav-item">
 								<span className="text-truncate">
-									{sub(
-										Liferay.Language.get(
-											'x-of-x-items-selected'
-										),
-										selectedItemsValue.length,
-										total
-									)}
+									{selectedItemsValue.length === total ||
+									allItemsSelectedActive
+										? sub(
+												Liferay.Language.get(
+													'all-selected-x-of-x-items'
+												),
+												total,
+												total
+											)
+										: sub(
+												Liferay.Language.get(
+													'x-of-x-items-selected'
+												),
+												selectedItemsValue.length,
+												total
+											)}
 								</span>
 
 								<ClayLink
@@ -156,38 +204,130 @@ function BulkActions({
 									href="#"
 									onClick={(event) => {
 										event.preventDefault();
-										selectAllItems();
+										onClear();
 									}}
 								>
-									{Liferay.Language.get('select-all')}
+									{Liferay.Language.get('clear')}
 								</ClayLink>
+
+								{pageSelectedItemsValue.length ===
+									items.length &&
+									showSelectAll &&
+									!allItemsSelectedActive && (
+										<ClayLink
+											className="ml-3"
+											href="#"
+											onClick={(event) => {
+												event.preventDefault();
+												handleSelectAll(true);
+											}}
+										>
+											{Liferay.Language.get('select-all')}
+										</ClayLink>
+									)}
 							</li>
 						</ul>
 
-						<div className="bulk-actions">
-							{bulkActions.map((actionDefinition, i) => (
-								<button
-									className={classNames(
-										'btn btn-monospaced btn-link',
-										i > 0 && 'ml-1'
-									)}
-									key={actionDefinition.label}
-									onClick={() =>
-										handleActionClick(
-											actionDefinition,
-											formId,
-											formName,
-											loadData,
-											namespace,
-											sidePanelId
+						{showBulkActionsManagementBarActions && (
+							<ul className="bulk-actions navbar-nav">
+								{!!bulkActions.length &&
+									bulkActions
+										.filter(
+											(bulkAction) =>
+												bulkAction.data?.highlighted
 										)
-									}
-									type="button"
-								>
-									<ClayIcon symbol={actionDefinition.icon} />
-								</button>
-							))}
-						</div>
+										.map((highlightedBulkAction) => {
+											return (
+												<li
+													className="nav-item"
+													key={
+														highlightedBulkAction
+															.data?.id
+													}
+												>
+													<ClayButton
+														className="bulk-action-btn nav-link"
+														displayType="unstyled"
+														onClick={() =>
+															handleActionClick(
+																highlightedBulkAction,
+																formId,
+																formName,
+																loadData,
+																namespace,
+																sidePanelId
+															)
+														}
+													>
+														<span className="bulk-action-btn-icon inline-item inline-item-before">
+															<ClayIcon
+																symbol={
+																	highlightedBulkAction.icon
+																}
+															/>
+														</span>
+
+														<span className="bulk-action-btn-text">
+															{
+																highlightedBulkAction.label
+															}
+														</span>
+													</ClayButton>
+												</li>
+											);
+										})}
+
+								{!!bulkActions.length && (
+									<li className="nav-item">
+										<DropDown
+											hasLeftSymbols
+											trigger={
+												<ClayButtonWithIcon
+													aria-label={Liferay.Language.get(
+														'actions'
+													)}
+													className="nav-link nav-link-monospaced"
+													displayType="unstyled"
+													symbol="ellipsis-v"
+													title={Liferay.Language.get(
+														'actions'
+													)}
+												/>
+											}
+										>
+											<DropDown.ItemList>
+												{bulkActions.map(
+													(actionDefinition) => (
+														<DropDown.Item
+															key={
+																actionDefinition.label
+															}
+															onClick={() =>
+																handleActionClick(
+																	actionDefinition,
+																	formId,
+																	formName,
+																	loadData,
+																	namespace,
+																	sidePanelId
+																)
+															}
+															symbolLeft={
+																actionDefinition.icon
+															}
+														>
+															{
+																actionDefinition.label
+															}
+														</DropDown.Item>
+													)
+												)}
+											</DropDown.ItemList>
+										</DropDown>
+									</li>
+								)}
+							</ul>
+						)}
 					</div>
 				</nav>
 			)}
@@ -196,6 +336,7 @@ function BulkActions({
 }
 
 BulkActions.propTypes = {
+	allItemsSelectedActive: PropTypes.bool.isRequired,
 	bulkActions: PropTypes.arrayOf(
 		PropTypes.shape({
 			href: PropTypes.string.isRequired,
@@ -205,9 +346,17 @@ BulkActions.propTypes = {
 			target: PropTypes.oneOf(['sidePanel', 'modal']),
 		})
 	),
+	deselectItems: PropTypes.func.isRequired,
+	fluid: PropTypes.bool.isRequired,
+	handleCheckboxClick: PropTypes.func.isRequired,
+	handleSelectAll: PropTypes.func.isRequired,
+	items: PropTypes.array.isRequired,
+	onClear: PropTypes.func.isRequired,
+	pageSelectedItemsValue: PropTypes.array.isRequired,
 	selectedItemsKey: PropTypes.string.isRequired,
 	selectedItemsValue: PropTypes.array.isRequired,
-	total: PropTypes.number.isRequired,
+	showSelectAll: PropTypes.bool.isRequired,
+	total: PropTypes.number,
 };
 
 export default BulkActions;

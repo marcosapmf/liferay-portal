@@ -63,8 +63,7 @@ const TriggerButton = React.forwardRef(
 			selectedItem.displayName
 		);
 
-		return Liferay.FeatureFlags['LPS-114700'] &&
-			displayType === DISPLAY_TYPE.HORIZONTAL ? (
+		return displayType === DISPLAY_TYPE.HORIZONTAL ? (
 			<ClayButton
 				{...props}
 				aria-label={ariaLabelButton}
@@ -175,7 +174,25 @@ export default function TranslationAdminSelector({
 		setSelectedLanguageId(initialSelectedLanguageId);
 	}, [initialSelectedLanguageId]);
 
-	if (Liferay.FeatureFlags['LPS-114700'] && !adminMode) {
+	useEffect(() => {
+		const handleUpdateSelectedLanguage = (event: any) => {
+			const selectedLanguageId = event.item.getAttribute('data-value');
+			setSelectedLanguageId(selectedLanguageId);
+		};
+		Liferay.on(
+			'journal:updateSelectedLanguage',
+			handleUpdateSelectedLanguage
+		);
+
+		return () => {
+			Liferay.detach(
+				'journal:updateSelectedLanguage',
+				handleUpdateSelectedLanguage as () => void
+			);
+		};
+	}, [initialSelectedLanguageId]);
+
+	if (!adminMode) {
 		return (
 			<Picker
 				active={selectorDropdownActive}
@@ -192,6 +209,12 @@ export default function TranslationAdminSelector({
 				}}
 				onSelectionChange={(id: React.Key) => {
 					setSelectedLanguageId(id as Liferay.Language.Locale);
+
+					Liferay.fire('journal:localeChanged', {
+						item: document.querySelector(
+							`[data-languageid="${id}"][data-value="${id}"]`
+						),
+					});
 				}}
 				selectedItem={activeLocales.find(
 					(locale) => locale.id === selectedLanguageId

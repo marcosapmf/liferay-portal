@@ -4,7 +4,14 @@ Bundle-Version: 1.0.0
 Import-Package:\
 	!javax.cache.*,\
 	\
+	!org.apache.abdera.*,\
+	!org.apache.cxf.aegis.*,\
+	\
 	!org.bouncycastle.*,\
+	\
+	!org.codehaus.jettison.*,\
+	\
+	!sun.net.www.protocol.http.*,\
 	\
 	*
 Private-Package: com.liferay.oauth2.provider.internal.test.*

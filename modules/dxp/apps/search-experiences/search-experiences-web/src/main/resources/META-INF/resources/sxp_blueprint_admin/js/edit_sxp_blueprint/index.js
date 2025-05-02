@@ -17,6 +17,7 @@ import EditSXPBlueprintForm from './EditSXPBlueprintForm';
 
 export default function ({
 	defaultLocale,
+	getAssetSubtypesURL,
 	isCompanyAdmin,
 	learnMessages,
 	locale,
@@ -49,6 +50,7 @@ export default function ({
 			value={{
 				availableLanguages: Liferay.Language.available,
 				defaultLocale,
+				getAssetSubtypesURL,
 				isCompanyAdmin,
 				learnMessages,
 				locale,

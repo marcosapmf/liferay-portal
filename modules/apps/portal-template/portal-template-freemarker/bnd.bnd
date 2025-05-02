@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Portal Template FreeMarker
 Bundle-SymbolicName: com.liferay.portal.template.freemarker
-Bundle-Version: 7.0.55
+Bundle-Version: 7.0.61
 Import-Package:\
 	!com.sun.javadoc,\
 	!com.sun.org.apache.xml.internal.utils,\
@@ -26,13 +26,19 @@ Import-Package:\
 	\
 	!org.zeroturnaround.javarebel,\
 	\
+	jakarta.el;resolution:=optional,\
+	\
+	jakarta.servlet;resolution:=optional,\
+	jakarta.servlet.http;resolution:=optional,\
+	jakarta.servlet.jsp;resolution:=optional,\
+	jakarta.servlet.jsp.el;resolution:=optional,\
+	jakarta.servlet.jsp.tagext;resolution:=optional,\
+	\
 	org.apache.taglibs.standard;version='[1.2.3,2.0)',\
 	org.apache.taglibs.standard.extra.spath;version='[1.2.3,2.0)',\
 	org.apache.taglibs.standard.functions;version='[1.2.3,2.0)',\
 	org.apache.taglibs.standard.lang.jstl;version='[1.2.3,2.0)',\
 	org.apache.taglibs.standard.lang.jstl.parser;version='[1.2.3,2.0)',\
-	org.apache.taglibs.standard.lang.jstl.test;version='[1.2.3,2.0)',\
-	org.apache.taglibs.standard.lang.jstl.test.beans;version='[1.2.3,2.0)',\
 	org.apache.taglibs.standard.lang.support;version='[1.2.3,2.0)',\
 	org.apache.taglibs.standard.resources;version='[1.2.3,2.0)',\
 	org.apache.taglibs.standard.tag.common.core;version='[1.2.3,2.0)',\
@@ -52,3 +58,4 @@ Import-Package:\
 	\
 	*
 -includeresource: @javax.servlet.jsp.jstl-[0-9.]*.jar!/META-INF/*.tld
+-noee: true

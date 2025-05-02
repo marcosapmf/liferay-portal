@@ -124,6 +124,12 @@ public interface PropsKeys {
 	public static final String ANALYTICS_CLOUD_CLIENT_JS_VERSION =
 		"analytics.cloud.client.js.version";
 
+	public static final String ANALYTICS_CLOUD_DOMAIN_ALLOWED =
+		"analytics.cloud.domain.allowed";
+
+	public static final String ANALYTICS_CLOUD_MOCK_ENABLED =
+		"analytics.cloud.mock.enabled";
+
 	public static final String ANNOUNCEMENTS_EMAIL_BODY =
 		"announcements.email.body";
 
@@ -251,9 +257,6 @@ public interface PropsKeys {
 
 	public static final String AUTH_VERIFIER_PIPELINE =
 		"auth.verifier.pipeline";
-
-	public static final String AUTO_DEPLOY_CUSTOM_PORTLET_XML =
-		"auto.deploy.custom.portlet.xml";
 
 	public static final String AUTO_DEPLOY_DEPLOY_DIR =
 		"auto.deploy.deploy.dir";
@@ -432,6 +435,9 @@ public interface PropsKeys {
 	public static final String COMBO_ALLOWED_FILE_EXTENSIONS =
 		"combo.allowed.file.extensions";
 
+	public static final String COMBO_ALLOWED_FILE_MAX_SIZE =
+		"combo.allowed.file.max.size";
+
 	public static final String COMBO_CHECK_TIMESTAMP = "combo.check.timestamp";
 
 	public static final String COMBO_CHECK_TIMESTAMP_INTERVAL =
@@ -478,6 +484,9 @@ public interface PropsKeys {
 
 	public static final String COMPANY_LOGIN_PREPOPULATE_DOMAIN =
 		"company.login.prepopulate.domain";
+
+	public static final String COMPANY_PREDICTABLE_COMPANY_IDS_ENABLED =
+		"company.predictable.company.ids.enabled";
 
 	public static final String COMPANY_SECURITY_AUTH_TYPE =
 		"company.security.auth.type";
@@ -1248,6 +1257,9 @@ public interface PropsKeys {
 
 	public static final String JDBC_DEFAULT_USERNAME = "jdbc.default.username";
 
+	public static final String JDBC_READ_DATA_SOURCE_UNAVAILABLE_TIMEOUT =
+		"jdbc.read.data.source.unavailable.timeout";
+
 	public static final String JNDI_ENVIRONMENT = "jndi.environment.";
 
 	public static final String JSON_DESERIALIZATION_WHITELIST_CLASS_NAMES =
@@ -1555,6 +1567,12 @@ public interface PropsKeys {
 
 	public static final String MAIL_THROWS_EXCEPTION_ON_FAILURE =
 		"mail.throws.exception.on.failure";
+
+	public static final String MARKETPLACE_CLIENT_ID = "marketplace.client.id";
+
+	public static final String MARKETPLACE_REDIRECT = "marketplace.redirect";
+
+	public static final String MARKETPLACE_URL = "marketplace.url";
 
 	public static final String MEMBERSHIP_POLICY_AUTO_VERIFY =
 		"membership.policy.auto.verify";
@@ -2069,19 +2087,19 @@ public interface PropsKeys {
 		"portal.instance.protocol";
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String PORTAL_JAAS_AUTH_TYPE = "portal.jaas.auth.type";
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String PORTAL_JAAS_ENABLE = "portal.jaas.enable";
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String PORTAL_JAAS_PLAIN_PASSWORD =
@@ -2561,10 +2579,6 @@ public interface PropsKeys {
 
 	public static final String SPRING_CONFIGS = "spring.configs";
 
-	public static final String
-		SPRING_HIBERNATE_CONFIGURATION_PROXY_FACTORY_PRELOAD_CLASSLOADER_CLASSES =
-			"spring.hibernate.configuration.proxy.factory.preload.classloader.classes";
-
 	public static final String SPRING_HIBERNATE_SESSION_DELEGATED =
 		"spring.hibernate.session.delegated";
 
@@ -2582,9 +2596,6 @@ public interface PropsKeys {
 	public static final String
 		STAGING_DRAFT_EXPORT_IMPORT_CONFIGURATION_CLEAN_UP_COUNT =
 			"staging.draft.export.import.configuration.clean.up.count";
-
-	public static final String STAGING_GROUPS_IN_MEMORY_FILTER_LIMIT =
-		"staging.groups.in.memory.filter.limit";
 
 	public static final String STAGING_LIVE_GROUP_LOCKING_ENABLED =
 		"staging.live.group.locking.enabled";
@@ -2625,6 +2636,9 @@ public interface PropsKeys {
 
 	public static final String TEMPLATE_ENGINE_CACHE_ENABLED =
 		"template.engine.cache.enabled";
+
+	public static final String TEMPLATE_ENGINE_FREEMARKER_COMPANY_RESTRICT =
+		"template.engine.freemarker.company.restrict";
 
 	public static final String
 		TEMPLATE_ENGINE_FREEMARKER_TRANSACTION_READ_ONLY =
@@ -2733,6 +2747,12 @@ public interface PropsKeys {
 	public static final String UPGRADE_REPORT_ENABLED =
 		"upgrade.report.enabled";
 
+	public static final String UPGRADE_REPORT_SQL_STATEMENT_THRESHOLD =
+		"upgrade.report.sql.statement.threshold";
+
+	public static final String UPGRADE_REPORT_UPGRADE_PROCESS_THRESHOLD =
+		"upgrade.report.upgrade.process.threshold";
+
 	public static final String USER_GROUPS_NAME_ALLOW_NUMERIC =
 		"user.groups.name.allow.numeric";
 
@@ -2839,6 +2859,12 @@ public interface PropsKeys {
 	public static final String USERS_UPDATE_LAST_LOGIN =
 		"users.update.last.login";
 
+	public static final String USERS_UPDATE_LAST_LOGIN_BATCH_INTERVAL =
+		"users.update.last.login.batch.interval";
+
+	public static final String USERS_UPDATE_LAST_LOGIN_BATCH_SIZE =
+		"users.update.last.login.batch.size";
+
 	public static final String USERS_UPDATE_USER_NAME =
 		"users.update.user.name.";
 
@@ -2876,10 +2902,6 @@ public interface PropsKeys {
 
 	public static final String VIRTUAL_HOSTS_IGNORE_PATHS =
 		"virtual.hosts.ignore.paths";
-
-	public static final String
-		VIRTUAL_HOSTS_PER_COMPANY_IN_MEMORY_FILTER_LIMIT =
-			"virtual.hosts.per.company.in.memory.filter.limit";
 
 	public static final String VIRTUAL_HOSTS_STRICT_ACCESS =
 		"virtual.hosts.strict.access";
@@ -2951,9 +2973,6 @@ public interface PropsKeys {
 	public static final String WIDGET_SERVLET_MAPPING =
 		"widget.servlet.mapping";
 
-	public static final String WORK_DIR_OVERRIDE_ENABLED =
-		"work.dir.override.enabled";
-
 	public static final String WORKFLOW_EMAIL_FROM_ADDRESS =
 		"workflow.email.from.address";
 
@@ -2964,9 +2983,6 @@ public interface PropsKeys {
 		"xml.rpc.max.parameters";
 
 	public static final String XML_SECURITY_ENABLED = "xml.security.enabled";
-
-	public static final String XML_SITEMAP_INDEX_ENABLED =
-		"xml.sitemap.index.enabled";
 
 	public static final String XML_VALIDATION_ENABLED =
 		"xml.validation.enabled";

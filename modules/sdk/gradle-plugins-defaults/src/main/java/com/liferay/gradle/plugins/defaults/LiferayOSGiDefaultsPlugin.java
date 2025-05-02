@@ -245,9 +245,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 	public static final String COMMIT_CACHE_TASK_NAME = "commitCache";
 
-	public static final String COMPILE_INCLUDE_PLATFORM_CONFIGURATION_NAME =
-		"compileIncludePlatform";
-
 	public static final String COPY_LIBS_TASK_NAME = "copyLibs";
 
 	public static final String DEFAULT_REPOSITORY_URL =
@@ -323,6 +320,8 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		boolean syncReleaseVersions = _syncReleaseVersions(
 			project, portalRootDir, versionOverrideFile, testProject);
 
+		_applyDependencyVersionOverrides(project, portalRootDir);
+
 		_applyVersionOverrides(project, bundleExtension, versionOverrideFile);
 
 		Gradle gradle = project.getGradle();
@@ -348,8 +347,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		_applyPlugins(project, bundleExtension);
 
 		_applyConfigScripts(project);
-
-		_addConfigurationCompileIncludePlatform(project);
 
 		_addDependenciesPmd(project);
 
@@ -448,7 +445,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		_configureDeployDir(
 			project, liferayExtension, deployToAppServerLibs, deployToTools);
 		_configureEclipse(project);
-		_configureJavaPlugin(project);
+		_configureJavaPlugin(project, portalRootDir);
 		_configureLocalPortalTool(
 			project, portalRootDir, LangBuilderPlugin.CONFIGURATION_NAME,
 			_LANG_BUILDER_PORTAL_TOOL_NAME);
@@ -562,8 +559,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 				@Override
 				public void execute(Project project) {
-					_addDependenciesCompileIncludePlatform(project);
-
 					_configureArtifacts(
 						project, jarJSDocTask, jarJSPsTask, jarJavadocTask,
 						jarSourcesTask, jarTLDDocTask);
@@ -620,21 +615,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			});
 	}
 
-	private Configuration _addConfigurationCompileIncludePlatform(
-		Project project) {
-
-		ConfigurationContainer configurationContainer =
-			project.getConfigurations();
-
-		Configuration compileIncludePlatformConfiguration =
-			configurationContainer.maybeCreate(
-				COMPILE_INCLUDE_PLATFORM_CONFIGURATION_NAME);
-
-		compileIncludePlatformConfiguration.setVisible(false);
-
-		return compileIncludePlatformConfiguration;
-	}
-
 	private Configuration _addConfigurationPortalTest(Project project) {
 		Configuration configuration = GradleUtil.addConfiguration(
 			project, PORTAL_TEST_CONFIGURATION_NAME);
@@ -657,25 +637,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		configuration.setVisible(false);
 
 		return configuration;
-	}
-
-	private void _addDependenciesCompileIncludePlatform(Project project) {
-		ConfigurationContainer configurationContainer =
-			project.getConfigurations();
-
-		Configuration compileIncludePlatformConfiguration =
-			configurationContainer.findByName(
-				COMPILE_INCLUDE_PLATFORM_CONFIGURATION_NAME);
-
-		if (compileIncludePlatformConfiguration == null) {
-			return;
-		}
-
-		DependencyHandler dependencyHandler = project.getDependencies();
-
-		dependencyHandler.add(
-			LiferayOSGiPlugin.COMPILE_INCLUDE_CONFIGURATION_NAME,
-			project.files(compileIncludePlatformConfiguration.resolve()));
 	}
 
 	private void _addDependenciesPmd(Project project) {
@@ -755,11 +716,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 				project, JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME,
 				"junit", "junit", "4.12");
 		}
-
-		GradleUtil.addDependency(
-			project, JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME,
-			"com.liferay.portletmvc4spring",
-			"com.liferay.portletmvc4spring.test", "5.2.1");
 
 		GradleUtil.addDependency(
 			project, JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME,
@@ -1579,6 +1535,68 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			"com/liferay/gradle/plugins/defaults/dependencies" +
 				"/config-maven-publish.gradle",
 			project);
+	}
+
+	private void _applyDependencyVersionOverrides(
+		Project project, File portalRootDir) {
+
+		if (portalRootDir == null) {
+			return;
+		}
+
+		File file = new File(
+			portalRootDir, "modules/.dependency-version-overrides.properties");
+
+		if (!file.exists()) {
+			return;
+		}
+
+		Properties properties = GUtil.loadProperties(file);
+
+		String dependencies = properties.getProperty("dependencies");
+
+		if (Validator.isNull(dependencies)) {
+			return;
+		}
+
+		String includeDirs = properties.getProperty("include.dirs");
+
+		if (!_containsProject(project, includeDirs, portalRootDir)) {
+			return;
+		}
+
+		ConfigurationContainer configurationContainer =
+			project.getConfigurations();
+
+		Action<Configuration> action = new Action<Configuration>() {
+
+			@Override
+			public void execute(Configuration configuration) {
+				ResolutionStrategy resolutionStrategy =
+					configuration.getResolutionStrategy();
+
+				DependencySubstitutions dependencySubstitutions =
+					resolutionStrategy.getDependencySubstitution();
+
+				for (String dependency : dependencies.split(",")) {
+					String[] tokens = dependency.split("->");
+
+					if (tokens.length != 2) {
+						continue;
+					}
+
+					DependencySubstitutions.Substitution substitution =
+						dependencySubstitutions.substitute(
+							dependencySubstitutions.module(tokens[0]));
+
+					substitution.using(
+						dependencySubstitutions.module(tokens[1]));
+				}
+			}
+
+		};
+
+		configurationContainer.all(action);
 	}
 
 	private void _applyPlugins(
@@ -2734,12 +2752,24 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		plusConfigurations.add(portalTestConfiguration);
 	}
 
-	private void _configureJavaPlugin(Project project) {
+	private void _configureJavaPlugin(Project project, File portalRootDir) {
 		JavaPluginConvention javaPluginConvention = GradleUtil.getConvention(
 			project, JavaPluginConvention.class);
 
-		if (project.hasProperty("java.version.source.compatibility") ||
-			project.hasProperty("java.version.target.compatibility")) {
+		String javaVersionOverride = GradleUtil.getProperty(
+			project, "java.version.override", (String)null);
+		String javaVersionOverrideIncludeDirs = GradleUtil.getProperty(
+			project, "java.version.override.include.dirs", (String)null);
+
+		if (Validator.isNotNull(javaVersionOverride) &&
+			_containsProject(
+				project, javaVersionOverrideIncludeDirs, portalRootDir)) {
+
+			javaPluginConvention.setSourceCompatibility(javaVersionOverride);
+			javaPluginConvention.setTargetCompatibility(javaVersionOverride);
+		}
+		else if (project.hasProperty("java.version.source.compatibility") ||
+				 project.hasProperty("java.version.target.compatibility")) {
 
 			javaPluginConvention.setSourceCompatibility(
 				GradleUtil.getProperty(
@@ -4182,8 +4212,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 		args.put("excludes", excludes);
 		args.put(
-			"includes",
-			Arrays.asList("**/*.gradle", "**/sdk/*/README.markdown"));
+			"includes", Arrays.asList("**/*.gradle", "**/sdk/*/README.md"));
 
 		updateFileVersionsTask.match(regex, project.fileTree(args));
 	}
@@ -4218,6 +4247,30 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 				project, TestIntegrationTomcatExtension.class);
 
 		testIntegrationTomcatExtension.setOverwriteCopyTestModules(false);
+	}
+
+	private boolean _containsProject(
+		Project project, String dirNames, File portalRootDir) {
+
+		if (Validator.isNull(dirNames) || (portalRootDir == null)) {
+			return false;
+		}
+
+		File portalModulesDir = new File(portalRootDir, "modules");
+
+		Path portalModulesPath = portalModulesDir.toPath();
+
+		File projectDir = project.getProjectDir();
+
+		Path projectPath = projectDir.toPath();
+
+		for (String dirName : dirNames.split(",")) {
+			if (projectPath.startsWith(portalModulesPath.resolve(dirName))) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private void _copyCompileIncludeSources(Project project, File outputDir) {

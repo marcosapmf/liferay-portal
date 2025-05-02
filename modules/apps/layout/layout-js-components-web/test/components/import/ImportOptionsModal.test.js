@@ -4,94 +4,81 @@
  */
 
 import '@testing-library/jest-dom/extend-expect';
-import {act, fireEvent, render, screen} from '@testing-library/react';
+import {render, waitFor} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 
-import {
-	ImportOptionsModal,
-	checkAccessibility,
-} from '../../../src/main/resources/META-INF/resources/js';
-import {ModalContent} from '../../../src/main/resources/META-INF/resources/js/components/import/ImportOptionsModal';
+import ImportOptionsModal, {
+	IMPORT_OPTIONS,
+	ModalContent,
+} from '../../../src/main/resources/META-INF/resources/js/components/import/ImportOptionsModal';
+import checkAccessibility from '../../__lib__/checkAccessibility';
 
 const renderComponent = async ({
 	onCloseModal = () => null,
 	onImport = () => null,
 } = {}) => {
-	await act(async () => {
-		render(
-			<ImportOptionsModal
-				onCloseModal={onCloseModal}
-				onImport={onImport}
-			/>
-		);
-
-		jest.advanceTimersByTime(1000);
-	});
+	return render(
+		<ImportOptionsModal onCloseModal={onCloseModal} onImport={onImport} />
+	);
 };
 
 describe('ImportOptionsModal', () => {
-	afterAll(() => {
-		jest.useRealTimers();
-	});
-
-	beforeAll(() => {
-		jest.useFakeTimers();
-	});
-
-	it('renders text informing the user that some items already exist', () => {
-		renderComponent();
+	it('renders text informing the user that some items already exist', async () => {
+		const {findByText} = await renderComponent();
 
 		expect(
-			screen.getByText(
+			await findByText(
 				'one-or-more-items-from-the-zip-already-exist-in-this-location'
 			)
 		).toBeInTheDocument();
 	});
 
-	it('renders a radio button with 3 options', () => {
-		renderComponent();
+	it('renders a radio button with 3 options', async () => {
+		const {findAllByRole, findByRole} = await renderComponent();
 
-		expect(screen.getAllByRole('radio').length).toBe(3);
+		expect((await findAllByRole('radio')).length).toBe(3);
 		expect(
-			screen.getByRole('radio', {name: /do-not-import-existing-items/i})
+			await findByRole('radio', {name: /do-not-import-existing-items/i})
 		).toBeInTheDocument();
 		expect(
-			screen.getByRole('radio', {name: /overwrite-existing-items/i})
+			await findByRole('radio', {name: /overwrite-existing-items/i})
 		).toBeInTheDocument();
 		expect(
-			screen.getByRole('radio', {name: /keep-both/i})
+			await findByRole('radio', {name: /keep-both/i})
 		).toBeInTheDocument();
 	});
 
-	it('renders cancel and import buttons', () => {
+	it('renders cancel and import buttons', async () => {
 		const onImport = jest.fn();
 		const onCloseModal = jest.fn();
 
-		renderComponent({onCloseModal, onImport});
+		const {findByRole} = await renderComponent({onCloseModal, onImport});
 
-		const cancelButton = screen.getByRole('button', {name: /cancel/i});
-		const importButton = screen.getByRole('button', {name: /import/i});
+		const cancelButton = await findByRole('button', {name: /cancel/i});
+		const importButton = await findByRole('button', {name: /import/i});
 
 		expect(cancelButton).toBeInTheDocument();
 		expect(importButton).toBeInTheDocument();
 
-		fireEvent.click(cancelButton);
-		fireEvent.click(importButton);
+		userEvent.click(cancelButton);
+		userEvent.click(importButton);
 
-		jest.advanceTimersByTime(1000);
-
-		expect(onCloseModal).toHaveBeenCalled();
-		expect(onImport).toHaveBeenCalled();
+		await waitFor(() => {
+			expect(onCloseModal).toHaveBeenCalled();
+			expect(onImport).toHaveBeenCalled();
+		});
 	});
 });
 
 describe('ImportOptionsModal Accessibility', () => {
-	it('checks accesibility of modal content', async () => {
+	it('checks accessibility of modal content', async () => {
 		const {container} = render(
 			<ModalContent
-				onClickImport={jest.fn()}
 				onClose={jest.fn()}
-				onRadioChange={jest.fn()}
+				onImport={jest.fn()}
+				onOptionChange={jest.fn()}
+				selectedOption={IMPORT_OPTIONS[0]}
 			/>
 		);
 

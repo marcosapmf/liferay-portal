@@ -15,11 +15,11 @@ import {ReviewAndSubmitAppPage} from './AppCreationFlow/ReviewAndSubmitAppPage/R
 
 import './App.scss';
 import {useMarketplaceContext} from '../../../../context/MarketplaceContext';
-import {PRODUCT_WORKFLOW_STATUS_CODE} from '../../../../enums/Product';
-import useMarketplaceSpringBootOAuth2 from '../../../../hooks/useMarketplaceSpringBootOAuth2';
+import {ProductWorkflowStatusCode} from '../../../../enums/Product';
 import i18n from '../../../../i18n';
 import {Liferay} from '../../../../liferay/liferay';
-import HeadlessCommerceAdminCatalogImpl from '../../../../services/rest/HeadlessCommerceAdminCatalog';
+import koroneikiOAuth2 from '../../../../services/oauth/Koroneiki';
+import HeadlessCommerceAdminCatalog from '../../../../services/rest/HeadlessCommerceAdminCatalog';
 import {
 	getProductVersionFromSpecifications,
 	getThumbnailByProductAttachment,
@@ -42,17 +42,15 @@ const AdministratorButtons: React.FC<AdministratorButtons> = ({
 	selectedApp,
 }) => {
 	const [loading, setLoading] = useState(false);
-	const marketplaceSpringBootOAuth2 = useMarketplaceSpringBootOAuth2();
 
 	const isDraft =
-		selectedApp.workflowStatusInfo.code ===
-		PRODUCT_WORKFLOW_STATUS_CODE.DRAFT;
+		selectedApp.workflowStatusInfo.code === ProductWorkflowStatusCode.DRAFT;
 
 	const onUpdateRequestStatus = async (
-		workflowStatus: PRODUCT_WORKFLOW_STATUS_CODE
+		workflowStatus: ProductWorkflowStatusCode
 	) => {
 		try {
-			await HeadlessCommerceAdminCatalogImpl.updateProductByExternalReferenceCode(
+			await HeadlessCommerceAdminCatalog.updateProductByExternalReferenceCode(
 				selectedApp.externalReferenceCode,
 				{workflowStatusInfo: workflowStatus}
 			);
@@ -64,7 +62,7 @@ const AdministratorButtons: React.FC<AdministratorButtons> = ({
 				type: 'success',
 			});
 		}
-		catch (error) {
+		catch {
 			Liferay.Util.openToast({
 				message: i18n.translate('an-unexpected-error-occurred'),
 				type: 'danger',
@@ -81,8 +79,8 @@ const AdministratorButtons: React.FC<AdministratorButtons> = ({
 				onClick={() => {
 					setLoading(true);
 
-					marketplaceSpringBootOAuth2
-						.syncKoroneikiProduct(productId)
+					koroneikiOAuth2
+						.syncProduct(productId)
 						.then(() =>
 							Liferay.Util.openToast({
 								message: 'Koroneiki Sync Successfully',
@@ -109,7 +107,7 @@ const AdministratorButtons: React.FC<AdministratorButtons> = ({
 					displayType="primary"
 					onClick={() =>
 						onUpdateRequestStatus(
-							PRODUCT_WORKFLOW_STATUS_CODE.APPROVED
+							ProductWorkflowStatusCode.APPROVED
 						)
 					}
 				>
@@ -132,7 +130,7 @@ const App: React.FC<AppProps> = ({isAdministratorDashboard}) => {
 		isLoading,
 		mutate,
 	} = useSWR(`/published-app/${productId}`, () =>
-		HeadlessCommerceAdminCatalogImpl.getProduct(
+		HeadlessCommerceAdminCatalog.getProduct(
 			productId,
 			new URLSearchParams({
 				nestedFields: 'attachments,images,productSpecifications',
@@ -200,7 +198,10 @@ const App: React.FC<AppProps> = ({isAdministratorDashboard}) => {
 					</div>
 
 					<div>
-						<span className="app-details-page-app-info-title">
+						<span
+							className="app-details-page-app-info-title d-block text-truncate"
+							title={selectedApp.name?.en_US}
+						>
 							{selectedApp.name?.en_US}
 						</span>
 
@@ -238,7 +239,7 @@ const App: React.FC<AppProps> = ({isAdministratorDashboard}) => {
 				</div>
 
 				{isAdministratorDashboard &&
-					myUserAccount.roleBriefs.some(
+					myUserAccount?.roleBriefs.some(
 						({name}) => name === 'Administrator'
 					) && (
 						<div className="app-details-page-app-info-buttons-container">

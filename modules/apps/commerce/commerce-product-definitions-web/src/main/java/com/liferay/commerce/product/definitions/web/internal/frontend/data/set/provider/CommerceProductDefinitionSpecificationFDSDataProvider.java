@@ -16,6 +16,7 @@ import com.liferay.commerce.product.service.CPOptionCategoryService;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -25,8 +26,8 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -50,40 +51,33 @@ public class CommerceProductDefinitionSpecificationFDSDataProvider
 			HttpServletRequest httpServletRequest, Sort sort)
 		throws PortalException {
 
-		List<ProductSpecification> productSpecifications = new ArrayList<>();
-
 		String languageId = LocaleUtil.toLanguageId(
 			_portal.getLocale(httpServletRequest));
 
 		long cpDefinitionId = ParamUtil.getLong(
 			httpServletRequest, "cpDefinitionId");
 
-		List<CPDefinitionSpecificationOptionValue>
-			cpDefinitionSpecificationOptionValues =
-				_cpDefinitionSpecificationOptionValueService.
-					getCPDefinitionSpecificationOptionValues(
-						cpDefinitionId, fdsPagination.getStartPosition(),
-						fdsPagination.getEndPosition(), null);
+		return TransformUtil.transform(
+			_cpDefinitionSpecificationOptionValueService.
+				getCPDefinitionSpecificationOptionValues(
+					cpDefinitionId, null, fdsPagination.getStartPosition(),
+					fdsPagination.getEndPosition(), null),
+			cpDefinitionSpecificationOptionValue -> {
+				CPSpecificationOption cpSpecificationOption =
+					cpDefinitionSpecificationOptionValue.
+						getCPSpecificationOption();
 
-		for (CPDefinitionSpecificationOptionValue
-				cpDefinitionSpecificationOptionValue :
-					cpDefinitionSpecificationOptionValues) {
-
-			CPSpecificationOption cpSpecificationOption =
-				cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
-
-			productSpecifications.add(
-				new ProductSpecification(
+				return new ProductSpecification(
 					cpDefinitionSpecificationOptionValue.
 						getCPDefinitionSpecificationOptionValueId(),
-					cpSpecificationOption.getTitle(languageId),
-					cpDefinitionSpecificationOptionValue.getValue(languageId),
+					_getCPSpecificationOptionTitle(
+						cpSpecificationOption, languageId),
+					_getLocalizedSpecificationOptionValue(
+						cpDefinitionSpecificationOptionValue, languageId),
 					_getCPOptionCategoryTitle(
 						cpDefinitionSpecificationOptionValue, languageId),
-					cpDefinitionSpecificationOptionValue.getPriority()));
-		}
-
-		return productSpecifications;
+					cpDefinitionSpecificationOptionValue.getPriority());
+			});
 	}
 
 	@Override
@@ -95,7 +89,7 @@ public class CommerceProductDefinitionSpecificationFDSDataProvider
 			httpServletRequest, "cpDefinitionId");
 
 		return _cpDefinitionSpecificationOptionValueService.
-			getCPDefinitionSpecificationOptionValuesCount(cpDefinitionId);
+			getCPDefinitionSpecificationOptionValuesCount(cpDefinitionId, null);
 	}
 
 	private String _getCPOptionCategoryTitle(
@@ -127,6 +121,47 @@ public class CommerceProductDefinitionSpecificationFDSDataProvider
 		}
 
 		return StringPool.BLANK;
+	}
+
+	private String _getCPSpecificationOptionTitle(
+		CPSpecificationOption cpSpecificationOption, String languageId) {
+
+		String[] availableLanguageIds =
+			cpSpecificationOption.getAvailableLanguageIds();
+
+		if (availableLanguageIds.length == 1) {
+			return cpSpecificationOption.getTitle(availableLanguageIds[0]);
+		}
+
+		if (Validator.isBlank(cpSpecificationOption.getTitle(languageId))) {
+			return cpSpecificationOption.getTitle(
+				cpSpecificationOption.getDefaultLanguageId());
+		}
+
+		return cpSpecificationOption.getTitle(languageId);
+	}
+
+	private String _getLocalizedSpecificationOptionValue(
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue,
+		String languageId) {
+
+		String[] availableLanguageIds =
+			cpDefinitionSpecificationOptionValue.getAvailableLanguageIds();
+
+		if (availableLanguageIds.length == 1) {
+			return cpDefinitionSpecificationOptionValue.getValue(
+				availableLanguageIds[0]);
+		}
+
+		if (Validator.isBlank(
+				cpDefinitionSpecificationOptionValue.getValue(languageId))) {
+
+			return cpDefinitionSpecificationOptionValue.getValue(
+				cpDefinitionSpecificationOptionValue.getDefaultLanguageId());
+		}
+
+		return cpDefinitionSpecificationOptionValue.getValue(languageId);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

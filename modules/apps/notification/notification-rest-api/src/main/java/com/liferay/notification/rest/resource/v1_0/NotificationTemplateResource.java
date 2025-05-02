@@ -6,8 +6,6 @@
 package com.liferay.notification.rest.resource.v1_0;
 
 import com.liferay.notification.rest.dto.v1_0.NotificationTemplate;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,34 +46,6 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface NotificationTemplateResource {
 
-	public Page<NotificationTemplate> getNotificationTemplatesPage(
-			String search,
-			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public Response postNotificationTemplatesPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
-			String contentType, String fieldNames)
-		throws Exception;
-
-	public NotificationTemplate postNotificationTemplate(
-			NotificationTemplate notificationTemplate)
-		throws Exception;
-
-	public Response postNotificationTemplateBatch(
-			String callbackURL, Object object)
-		throws Exception;
-
-	public NotificationTemplate getNotificationTemplateByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public NotificationTemplate putNotificationTemplateByExternalReferenceCode(
-			String externalReferenceCode,
-			NotificationTemplate notificationTemplate)
-		throws Exception;
-
 	public void deleteNotificationTemplate(Long notificationTemplateId)
 		throws Exception;
 
@@ -87,9 +57,40 @@ public interface NotificationTemplateResource {
 			Long notificationTemplateId)
 		throws Exception;
 
+	public NotificationTemplate getNotificationTemplateByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Page<NotificationTemplate> getNotificationTemplatesPage(
+			String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
 	public NotificationTemplate patchNotificationTemplate(
 			Long notificationTemplateId,
 			NotificationTemplate notificationTemplate)
+		throws Exception;
+
+	public NotificationTemplate postNotificationTemplate(
+			NotificationTemplate notificationTemplate)
+		throws Exception;
+
+	public Response postNotificationTemplateBatch(
+			String callbackURL, Object object)
+		throws Exception;
+
+	public NotificationTemplate postNotificationTemplateCopy(
+			Long notificationTemplateId)
+		throws Exception;
+
+	public Response postNotificationTemplatesPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public NotificationTemplate putNotificationTemplate(
@@ -101,8 +102,9 @@ public interface NotificationTemplateResource {
 			String callbackURL, Object object)
 		throws Exception;
 
-	public NotificationTemplate postNotificationTemplateCopy(
-			Long notificationTemplateId)
+	public NotificationTemplate putNotificationTemplateByExternalReferenceCode(
+			String externalReferenceCode,
+			NotificationTemplate notificationTemplate)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -127,7 +129,8 @@ public interface NotificationTemplateResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -152,19 +155,23 @@ public interface NotificationTemplateResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

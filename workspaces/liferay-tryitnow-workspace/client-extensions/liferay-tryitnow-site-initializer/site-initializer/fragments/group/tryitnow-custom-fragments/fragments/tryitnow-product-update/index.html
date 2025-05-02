@@ -1,6 +1,24 @@
-<div class="fragment_549">
-	<div class="border-neutral-2 product-update-container" style="min-height:${configuration.minHeight}">
-		<div class="icon-container rounded-lg" style="background-color:${configuration.separatorColor}; height: ${configuration.iconWidthAndHeight}; width: ${configuration.iconWidthAndHeight}">
+[@liferay_aui.style]
+	.${fragmentEntryLinkNamespace}-fragment-product-update-container .min-height{
+		min-height:${configuration.minHeight};
+	}
+
+	.${fragmentEntryLinkNamespace}-fragment-product-update-container .separator-color {
+		background-color:${configuration.separatorColor};
+	}
+
+	.${fragmentEntryLinkNamespace}-fragment-product-update-container .icon-width{
+		width: ${configuration.iconWidthAndHeight};
+	}
+
+	.${fragmentEntryLinkNamespace}-fragment-product-update-container .icon-height{
+		height: ${configuration.iconWidthAndHeight};
+	}
+[/@]
+
+<div class="${fragmentEntryLinkNamespace}-fragment-product-update-container fragmentcss-product-update-container">
+	<div class="border-neutral-2 min-height product-update-container">
+		<div class="icon-container icon-height icon-width rounded-lg separator-color">
 			<lfr-drop-zone data-lfr-drop-zone-id="1"></lfr-drop-zone>
 		</div>
 

@@ -362,11 +362,7 @@ export default function ChangeTrackingChangeView({
 
 	const getMoveChangesURL = useCallback(
 		(node) => {
-			if (
-				!Liferay.FeatureFlags['LPS-171364'] ||
-				!node.movable ||
-				!moveChangesURL
-			) {
+			if (!moveChangesURL) {
 				return null;
 			}
 
@@ -383,7 +379,7 @@ export default function ChangeTrackingChangeView({
 
 	const renderMainContent = () => {
 		return (
-			<div className="container-fluid container-fluid-max-xl">
+			<div>
 				<div className="publications-changes-content row">
 					<div className="col-md-12">
 						{initialNode.modelClassNameId ? (

@@ -9,7 +9,6 @@ import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.MissingFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -53,10 +52,10 @@ public class CommerceOrderModelPreFilterContributor
 		BooleanFilter nestedBooleanFilter = new BooleanFilter();
 
 		for (int i = 0; i < commerceAccountIds.length; i++) {
-			Filter termFilter = new TermFilter(
-				"commerceAccountId", String.valueOf(commerceAccountIds[i]));
-
-			nestedBooleanFilter.add(termFilter, BooleanClauseOccur.SHOULD);
+			nestedBooleanFilter.add(
+				new TermFilter(
+					"commerceAccountId", String.valueOf(commerceAccountIds[i])),
+				BooleanClauseOccur.SHOULD);
 
 			if (((i + 1) % _MAX_CLAUSES_COUNT) == 0) {
 				commerceAccountIdBooleanFilter.add(
@@ -100,11 +99,9 @@ public class CommerceOrderModelPreFilterContributor
 		BooleanFilter orderStatusesBooleanFilter = new BooleanFilter();
 
 		for (long orderStatus : orderStatuses) {
-			Filter termFilter = new TermFilter(
-				"orderStatus", String.valueOf(orderStatus));
-
 			orderStatusesBooleanFilter.add(
-				termFilter, BooleanClauseOccur.SHOULD);
+				new TermFilter("orderStatus", String.valueOf(orderStatus)),
+				BooleanClauseOccur.SHOULD);
 		}
 
 		orderStatusesBooleanFilter.add(

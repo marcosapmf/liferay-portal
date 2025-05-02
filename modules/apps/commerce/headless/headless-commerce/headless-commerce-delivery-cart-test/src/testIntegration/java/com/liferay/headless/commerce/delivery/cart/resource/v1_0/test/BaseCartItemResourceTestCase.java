@@ -13,12 +13,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.delivery.cart.client.dto.v1_0.CartItem;
 import com.liferay.headless.commerce.delivery.cart.client.http.HttpInvoker;
 import com.liferay.headless.commerce.delivery.cart.client.pagination.Page;
 import com.liferay.headless.commerce.delivery.cart.client.pagination.Pagination;
 import com.liferay.headless.commerce.delivery.cart.client.resource.v1_0.CartItemResource;
 import com.liferay.headless.commerce.delivery.cart.client.serdes.v1_0.CartItemSerDes;
+import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
@@ -28,23 +31,37 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.net.URI;
+
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,13 +70,20 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.servlet.http.HttpServletRequest;
+
 import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -68,6 +92,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Andrea Sbarra
@@ -78,12 +105,14 @@ public abstract class BaseCartItemResourceTestCase {
 
 	@ClassRule
 	@Rule
-	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
-		new LiferayIntegrationTestRule();
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -97,10 +126,25 @@ public abstract class BaseCartItemResourceTestCase {
 
 		_cartItemResource.setContextCompany(testCompany);
 
-		CartItemResource.Builder builder = CartItemResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		cartItemResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		cartItemResource = CartItemResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -114,7 +158,32 @@ public abstract class BaseCartItemResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CartItem cartItem1 = randomCartItem();
+
+		String json = objectMapper.writeValueAsString(cartItem1);
+
+		CartItem cartItem2 = CartItemSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(cartItem1, cartItem2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CartItem cartItem = randomCartItem();
+
+		String json1 = objectMapper.writeValueAsString(cartItem);
+		String json2 = CartItemSerDes.toJSON(cartItem);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -129,40 +198,6 @@ public abstract class BaseCartItemResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		CartItem cartItem1 = randomCartItem();
-
-		String json = objectMapper.writeValueAsString(cartItem1);
-
-		CartItem cartItem2 = CartItemSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(cartItem1, cartItem2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		CartItem cartItem = randomCartItem();
-
-		String json1 = objectMapper.writeValueAsString(cartItem);
-		String json2 = CartItemSerDes.toJSON(cartItem);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -172,12 +207,17 @@ public abstract class BaseCartItemResourceTestCase {
 		CartItem cartItem = randomCartItem();
 
 		cartItem.setAdaptiveMediaImageHTMLTag(regex);
+		cartItem.setDeliveryGroup(regex);
+		cartItem.setDeliveryGroupName(regex);
 		cartItem.setExternalReferenceCode(regex);
 		cartItem.setName(regex);
 		cartItem.setOptions(regex);
 		cartItem.setReplacedSku(regex);
+		cartItem.setReplacedSkuExternalReferenceCode(regex);
+		cartItem.setShippingAddressExternalReferenceCode(regex);
 		cartItem.setSku(regex);
 		cartItem.setThumbnail(regex);
+		cartItem.setUnitOfMeasure(regex);
 
 		String json = CartItemSerDes.toJSON(cartItem);
 
@@ -186,12 +226,177 @@ public abstract class BaseCartItemResourceTestCase {
 		cartItem = CartItemSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, cartItem.getAdaptiveMediaImageHTMLTag());
+		Assert.assertEquals(regex, cartItem.getDeliveryGroup());
+		Assert.assertEquals(regex, cartItem.getDeliveryGroupName());
 		Assert.assertEquals(regex, cartItem.getExternalReferenceCode());
 		Assert.assertEquals(regex, cartItem.getName());
 		Assert.assertEquals(regex, cartItem.getOptions());
 		Assert.assertEquals(regex, cartItem.getReplacedSku());
+		Assert.assertEquals(
+			regex, cartItem.getReplacedSkuExternalReferenceCode());
+		Assert.assertEquals(
+			regex, cartItem.getShippingAddressExternalReferenceCode());
 		Assert.assertEquals(regex, cartItem.getSku());
 		Assert.assertEquals(regex, cartItem.getThumbnail());
+		Assert.assertEquals(regex, cartItem.getUnitOfMeasure());
+	}
+
+	@Test
+	public void testDeleteCartItem() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		CartItem cartItem = testDeleteCartItem_addCartItem();
+
+		assertHttpResponseStatusCode(
+			204, cartItemResource.deleteCartItemHttpResponse(cartItem.getId()));
+
+		assertHttpResponseStatusCode(
+			404, cartItemResource.getCartItemHttpResponse(cartItem.getId()));
+		assertHttpResponseStatusCode(
+			404, cartItemResource.getCartItemHttpResponse(0L));
+	}
+
+	protected CartItem testDeleteCartItem_addCartItem() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteCartItem() throws Exception {
+
+		// No namespace
+
+		CartItem cartItem1 = testGraphQLDeleteCartItem_addCartItem();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteCartItem",
+						new HashMap<String, Object>() {
+							{
+								put("cartItemId", cartItem1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteCartItem"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"cartItem",
+					new HashMap<String, Object>() {
+						{
+							put("cartItemId", cartItem1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceDeliveryCart_v1_0
+
+		CartItem cartItem2 = testGraphQLDeleteCartItem_addCartItem();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceDeliveryCart_v1_0",
+						new GraphQLField(
+							"deleteCartItem",
+							new HashMap<String, Object>() {
+								{
+									put("cartItemId", cartItem2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceDeliveryCart_v1_0",
+				"Object/deleteCartItem"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceDeliveryCart_v1_0",
+					new GraphQLField(
+						"cartItem",
+						new HashMap<String, Object>() {
+							{
+								put("cartItemId", cartItem2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected CartItem testGraphQLDeleteCartItem_addCartItem()
+		throws Exception {
+
+		return testGraphQLCartItem_addCartItem();
+	}
+
+	@Test
+	public void testDeleteCartItemBatch() throws Exception {
+		CartItem cartItem1 = testDeleteCartItemBatch_addCartItem();
+
+		testDeleteCartItemBatch_deleteCartItem(
+			"COMPLETED", null, cartItem1.getId());
+
+		assertHttpResponseStatusCode(
+			404, cartItemResource.getCartItemHttpResponse(cartItem1.getId()));
+
+		CartItem cartItem2 = testDeleteCartItemBatch_addCartItem();
+
+		testDeleteCartItemBatch_deleteCartItem(
+			"COMPLETED", cartItem2.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404, cartItemResource.getCartItemHttpResponse(cartItem2.getId()));
+
+		cartItem1 = testDeleteCartItemBatch_addCartItem();
+		cartItem2 = testDeleteCartItemBatch_addCartItem();
+
+		testDeleteCartItemBatch_deleteCartItem(
+			"COMPLETED", cartItem2.getExternalReferenceCode(),
+			cartItem1.getId());
+
+		assertHttpResponseStatusCode(
+			404, cartItemResource.getCartItemHttpResponse(cartItem1.getId()));
+		assertHttpResponseStatusCode(
+			200, cartItemResource.getCartItemHttpResponse(cartItem2.getId()));
+
+		testDeleteCartItemBatch_deleteCartItem(
+			"COMPLETED", cartItem2.getExternalReferenceCode(),
+			cartItem1.getId());
+
+		assertHttpResponseStatusCode(
+			404, cartItemResource.getCartItemHttpResponse(cartItem2.getId()));
+	}
+
+	protected CartItem testDeleteCartItemBatch_addCartItem() throws Exception {
+		return testDeleteCartItem_addCartItem();
+	}
+
+	protected void testDeleteCartItemBatch_deleteCartItem(
+			String expectedExecuteStatus, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			cartItemResource.deleteCartItemBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(202, httpResponse.getStatusCode());
+
+		waitForFinish(
+			expectedExecuteStatus,
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -209,11 +414,10 @@ public abstract class BaseCartItemResourceTestCase {
 			404,
 			cartItemResource.getCartItemByExternalReferenceCodeHttpResponse(
 				cartItem.getExternalReferenceCode()));
-
 		assertHttpResponseStatusCode(
 			404,
 			cartItemResource.getCartItemByExternalReferenceCodeHttpResponse(
-				cartItem.getExternalReferenceCode()));
+				"-"));
 	}
 
 	protected CartItem testDeleteCartItemByExternalReferenceCode_addCartItem()
@@ -221,6 +425,482 @@ public abstract class BaseCartItemResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetCartByExternalReferenceCodeItemsPage() throws Exception {
+		String externalReferenceCode =
+			testGetCartByExternalReferenceCodeItemsPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetCartByExternalReferenceCodeItemsPage_getIrrelevantExternalReferenceCode();
+
+		Page<CartItem> page =
+			cartItemResource.getCartByExternalReferenceCodeItemsPage(
+				externalReferenceCode, null, null, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			CartItem irrelevantCartItem =
+				testGetCartByExternalReferenceCodeItemsPage_addCartItem(
+					irrelevantExternalReferenceCode,
+					randomIrrelevantCartItem());
+
+			page = cartItemResource.getCartByExternalReferenceCodeItemsPage(
+				irrelevantExternalReferenceCode, null, null,
+				Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantCartItem, (List<CartItem>)page.getItems());
+			assertValid(
+				page,
+				testGetCartByExternalReferenceCodeItemsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		CartItem cartItem1 =
+			testGetCartByExternalReferenceCodeItemsPage_addCartItem(
+				externalReferenceCode, randomCartItem());
+
+		CartItem cartItem2 =
+			testGetCartByExternalReferenceCodeItemsPage_addCartItem(
+				externalReferenceCode, randomCartItem());
+
+		page = cartItemResource.getCartByExternalReferenceCodeItemsPage(
+			externalReferenceCode, null, null, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(cartItem1, (List<CartItem>)page.getItems());
+		assertContains(cartItem2, (List<CartItem>)page.getItems());
+		assertValid(
+			page,
+			testGetCartByExternalReferenceCodeItemsPage_getExpectedActions(
+				externalReferenceCode));
+
+		cartItemResource.deleteCartItem(cartItem1.getId());
+
+		cartItemResource.deleteCartItem(cartItem2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetCartByExternalReferenceCodeItemsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetCartByExternalReferenceCodeItemsPageWithPagination()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetCartByExternalReferenceCodeItemsPage_getExternalReferenceCode();
+
+		Page<CartItem> cartItemsPage =
+			cartItemResource.getCartByExternalReferenceCodeItemsPage(
+				externalReferenceCode, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(cartItemsPage.getTotalCount());
+
+		CartItem cartItem1 =
+			testGetCartByExternalReferenceCodeItemsPage_addCartItem(
+				externalReferenceCode, randomCartItem());
+
+		CartItem cartItem2 =
+			testGetCartByExternalReferenceCodeItemsPage_addCartItem(
+				externalReferenceCode, randomCartItem());
+
+		CartItem cartItem3 =
+			testGetCartByExternalReferenceCodeItemsPage_addCartItem(
+				externalReferenceCode, randomCartItem());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<CartItem> page1 =
+				cartItemResource.getCartByExternalReferenceCodeItemsPage(
+					externalReferenceCode, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(cartItem1, (List<CartItem>)page1.getItems());
+
+			Page<CartItem> page2 =
+				cartItemResource.getCartByExternalReferenceCodeItemsPage(
+					externalReferenceCode, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(cartItem2, (List<CartItem>)page2.getItems());
+
+			Page<CartItem> page3 =
+				cartItemResource.getCartByExternalReferenceCodeItemsPage(
+					externalReferenceCode, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(cartItem3, (List<CartItem>)page3.getItems());
+		}
+		else {
+			Page<CartItem> page1 =
+				cartItemResource.getCartByExternalReferenceCodeItemsPage(
+					externalReferenceCode, null, null,
+					Pagination.of(1, totalCount + 2));
+
+			List<CartItem> cartItems1 = (List<CartItem>)page1.getItems();
+
+			Assert.assertEquals(
+				cartItems1.toString(), totalCount + 2, cartItems1.size());
+
+			Page<CartItem> page2 =
+				cartItemResource.getCartByExternalReferenceCodeItemsPage(
+					externalReferenceCode, null, null,
+					Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<CartItem> cartItems2 = (List<CartItem>)page2.getItems();
+
+			Assert.assertEquals(cartItems2.toString(), 1, cartItems2.size());
+
+			Page<CartItem> page3 =
+				cartItemResource.getCartByExternalReferenceCodeItemsPage(
+					externalReferenceCode, null, null,
+					Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(cartItem1, (List<CartItem>)page3.getItems());
+			assertContains(cartItem2, (List<CartItem>)page3.getItems());
+			assertContains(cartItem3, (List<CartItem>)page3.getItems());
+		}
+	}
+
+	protected CartItem testGetCartByExternalReferenceCodeItemsPage_addCartItem(
+			String externalReferenceCode, CartItem cartItem)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetCartByExternalReferenceCodeItemsPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetCartByExternalReferenceCodeItemsPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetCartItem() throws Exception {
+		CartItem postCartItem = testGetCartItem_addCartItem();
+
+		CartItem getCartItem = cartItemResource.getCartItem(
+			postCartItem.getId());
+
+		assertEquals(postCartItem, getCartItem);
+		assertValid(getCartItem);
+	}
+
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		CartItem postCartItem = testGetCartItem_addCartItem();
+
+		CartItem getCartItem = cartItemResource.getCartItem(
+			postCartItem.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.headless.commerce.delivery.cart.dto.v1_0.CartItem"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(postCartItem.getId());
+
+		assertEquals(getCartItem, CartItemSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
+	}
+
+	protected CartItem testGetCartItem_addCartItem() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetCartItem() throws Exception {
+		CartItem cartItem = testGraphQLGetCartItem_addCartItem();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				cartItem,
+				CartItemSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"cartItem",
+								new HashMap<String, Object>() {
+									{
+										put("cartItemId", cartItem.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/cartItem"))));
+
+		// Using the namespace headlessCommerceDeliveryCart_v1_0
+
+		Assert.assertTrue(
+			equals(
+				cartItem,
+				CartItemSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceDeliveryCart_v1_0",
+								new GraphQLField(
+									"cartItem",
+									new HashMap<String, Object>() {
+										{
+											put("cartItemId", cartItem.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceDeliveryCart_v1_0",
+						"Object/cartItem"))));
+	}
+
+	@Test
+	public void testGraphQLGetCartItemNotFound() throws Exception {
+		Long irrelevantCartItemId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"cartItem",
+						new HashMap<String, Object>() {
+							{
+								put("cartItemId", irrelevantCartItemId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceDeliveryCart_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceDeliveryCart_v1_0",
+						new GraphQLField(
+							"cartItem",
+							new HashMap<String, Object>() {
+								{
+									put("cartItemId", irrelevantCartItemId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected CartItem testGraphQLGetCartItem_addCartItem() throws Exception {
+		return testGraphQLCartItem_addCartItem();
 	}
 
 	@Test
@@ -358,549 +1038,12 @@ public abstract class BaseCartItemResourceTestCase {
 	}
 
 	@Test
-	public void testPatchCartItemByExternalReferenceCode() throws Exception {
-		CartItem postCartItem =
-			testPatchCartItemByExternalReferenceCode_addCartItem();
-
-		CartItem randomPatchCartItem = randomPatchCartItem();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		CartItem patchCartItem =
-			cartItemResource.patchCartItemByExternalReferenceCode(
-				postCartItem.getExternalReferenceCode(), randomPatchCartItem);
-
-		CartItem expectedPatchCartItem = postCartItem.clone();
-
-		BeanTestUtil.copyProperties(randomPatchCartItem, expectedPatchCartItem);
-
-		CartItem getCartItem =
-			cartItemResource.getCartItemByExternalReferenceCode(
-				patchCartItem.getExternalReferenceCode());
-
-		assertEquals(expectedPatchCartItem, getCartItem);
-		assertValid(getCartItem);
-	}
-
-	protected CartItem testPatchCartItemByExternalReferenceCode_addCartItem()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutCartItemByExternalReferenceCode() throws Exception {
-		CartItem postCartItem =
-			testPutCartItemByExternalReferenceCode_addCartItem();
-
-		CartItem randomCartItem = randomCartItem();
-
-		CartItem putCartItem =
-			cartItemResource.putCartItemByExternalReferenceCode(
-				postCartItem.getExternalReferenceCode(), randomCartItem);
-
-		assertEquals(randomCartItem, putCartItem);
-		assertValid(putCartItem);
-
-		CartItem getCartItem =
-			cartItemResource.getCartItemByExternalReferenceCode(
-				putCartItem.getExternalReferenceCode());
-
-		assertEquals(randomCartItem, getCartItem);
-		assertValid(getCartItem);
-
-		CartItem newCartItem =
-			testPutCartItemByExternalReferenceCode_createCartItem();
-
-		putCartItem = cartItemResource.putCartItemByExternalReferenceCode(
-			newCartItem.getExternalReferenceCode(), newCartItem);
-
-		assertEquals(newCartItem, putCartItem);
-		assertValid(putCartItem);
-
-		getCartItem = cartItemResource.getCartItemByExternalReferenceCode(
-			putCartItem.getExternalReferenceCode());
-
-		assertEquals(newCartItem, getCartItem);
-
-		Assert.assertEquals(
-			newCartItem.getExternalReferenceCode(),
-			putCartItem.getExternalReferenceCode());
-	}
-
-	protected CartItem testPutCartItemByExternalReferenceCode_createCartItem()
-		throws Exception {
-
-		return randomCartItem();
-	}
-
-	protected CartItem testPutCartItemByExternalReferenceCode_addCartItem()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteCartItem() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		CartItem cartItem = testDeleteCartItem_addCartItem();
-
-		assertHttpResponseStatusCode(
-			204, cartItemResource.deleteCartItemHttpResponse(cartItem.getId()));
-
-		assertHttpResponseStatusCode(
-			404, cartItemResource.getCartItemHttpResponse(cartItem.getId()));
-
-		assertHttpResponseStatusCode(
-			404, cartItemResource.getCartItemHttpResponse(0L));
-	}
-
-	protected CartItem testDeleteCartItem_addCartItem() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteCartItem() throws Exception {
-
-		// No namespace
-
-		CartItem cartItem1 = testGraphQLDeleteCartItem_addCartItem();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteCartItem",
-						new HashMap<String, Object>() {
-							{
-								put("cartItemId", cartItem1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteCartItem"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"cartItem",
-					new HashMap<String, Object>() {
-						{
-							put("cartItemId", cartItem1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessCommerceDeliveryCart_v1_0
-
-		CartItem cartItem2 = testGraphQLDeleteCartItem_addCartItem();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessCommerceDeliveryCart_v1_0",
-						new GraphQLField(
-							"deleteCartItem",
-							new HashMap<String, Object>() {
-								{
-									put("cartItemId", cartItem2.getId());
-								}
-							}))),
-				"JSONObject/data",
-				"JSONObject/headlessCommerceDeliveryCart_v1_0",
-				"Object/deleteCartItem"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessCommerceDeliveryCart_v1_0",
-					new GraphQLField(
-						"cartItem",
-						new HashMap<String, Object>() {
-							{
-								put("cartItemId", cartItem2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected CartItem testGraphQLDeleteCartItem_addCartItem()
-		throws Exception {
-
-		return testGraphQLCartItem_addCartItem();
-	}
-
-	@Test
-	public void testGetCartItem() throws Exception {
-		CartItem postCartItem = testGetCartItem_addCartItem();
-
-		CartItem getCartItem = cartItemResource.getCartItem(
-			postCartItem.getId());
-
-		assertEquals(postCartItem, getCartItem);
-		assertValid(getCartItem);
-	}
-
-	protected CartItem testGetCartItem_addCartItem() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetCartItem() throws Exception {
-		CartItem cartItem = testGraphQLGetCartItem_addCartItem();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				cartItem,
-				CartItemSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"cartItem",
-								new HashMap<String, Object>() {
-									{
-										put("cartItemId", cartItem.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/cartItem"))));
-
-		// Using the namespace headlessCommerceDeliveryCart_v1_0
-
-		Assert.assertTrue(
-			equals(
-				cartItem,
-				CartItemSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceDeliveryCart_v1_0",
-								new GraphQLField(
-									"cartItem",
-									new HashMap<String, Object>() {
-										{
-											put("cartItemId", cartItem.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceDeliveryCart_v1_0",
-						"Object/cartItem"))));
-	}
-
-	@Test
-	public void testGraphQLGetCartItemNotFound() throws Exception {
-		Long irrelevantCartItemId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"cartItem",
-						new HashMap<String, Object>() {
-							{
-								put("cartItemId", irrelevantCartItemId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceDeliveryCart_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceDeliveryCart_v1_0",
-						new GraphQLField(
-							"cartItem",
-							new HashMap<String, Object>() {
-								{
-									put("cartItemId", irrelevantCartItemId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected CartItem testGraphQLGetCartItem_addCartItem() throws Exception {
-		return testGraphQLCartItem_addCartItem();
-	}
-
-	@Test
-	public void testPatchCartItem() throws Exception {
-		CartItem postCartItem = testPatchCartItem_addCartItem();
-
-		CartItem randomPatchCartItem = randomPatchCartItem();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		CartItem patchCartItem = cartItemResource.patchCartItem(
-			postCartItem.getId(), randomPatchCartItem);
-
-		CartItem expectedPatchCartItem = postCartItem.clone();
-
-		BeanTestUtil.copyProperties(randomPatchCartItem, expectedPatchCartItem);
-
-		CartItem getCartItem = cartItemResource.getCartItem(
-			patchCartItem.getId());
-
-		assertEquals(expectedPatchCartItem, getCartItem);
-		assertValid(getCartItem);
-	}
-
-	protected CartItem testPatchCartItem_addCartItem() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutCartItem() throws Exception {
-		CartItem postCartItem = testPutCartItem_addCartItem();
-
-		CartItem randomCartItem = randomCartItem();
-
-		CartItem putCartItem = cartItemResource.putCartItem(
-			postCartItem.getId(), randomCartItem);
-
-		assertEquals(randomCartItem, putCartItem);
-		assertValid(putCartItem);
-
-		CartItem getCartItem = cartItemResource.getCartItem(
-			putCartItem.getId());
-
-		assertEquals(randomCartItem, getCartItem);
-		assertValid(getCartItem);
-	}
-
-	protected CartItem testPutCartItem_addCartItem() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetCartByExternalReferenceCodeItemsPage() throws Exception {
-		String externalReferenceCode =
-			testGetCartByExternalReferenceCodeItemsPage_getExternalReferenceCode();
-		String irrelevantExternalReferenceCode =
-			testGetCartByExternalReferenceCodeItemsPage_getIrrelevantExternalReferenceCode();
-
-		Page<CartItem> page =
-			cartItemResource.getCartByExternalReferenceCodeItemsPage(
-				externalReferenceCode, null, Pagination.of(1, 10));
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantExternalReferenceCode != null) {
-			CartItem irrelevantCartItem =
-				testGetCartByExternalReferenceCodeItemsPage_addCartItem(
-					irrelevantExternalReferenceCode,
-					randomIrrelevantCartItem());
-
-			page = cartItemResource.getCartByExternalReferenceCodeItemsPage(
-				irrelevantExternalReferenceCode, null,
-				Pagination.of(1, (int)totalCount + 1));
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(irrelevantCartItem, (List<CartItem>)page.getItems());
-			assertValid(
-				page,
-				testGetCartByExternalReferenceCodeItemsPage_getExpectedActions(
-					irrelevantExternalReferenceCode));
-		}
-
-		CartItem cartItem1 =
-			testGetCartByExternalReferenceCodeItemsPage_addCartItem(
-				externalReferenceCode, randomCartItem());
-
-		CartItem cartItem2 =
-			testGetCartByExternalReferenceCodeItemsPage_addCartItem(
-				externalReferenceCode, randomCartItem());
-
-		page = cartItemResource.getCartByExternalReferenceCodeItemsPage(
-			externalReferenceCode, null, Pagination.of(1, 10));
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(cartItem1, (List<CartItem>)page.getItems());
-		assertContains(cartItem2, (List<CartItem>)page.getItems());
-		assertValid(
-			page,
-			testGetCartByExternalReferenceCodeItemsPage_getExpectedActions(
-				externalReferenceCode));
-
-		cartItemResource.deleteCartItem(cartItem1.getId());
-
-		cartItemResource.deleteCartItem(cartItem2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetCartByExternalReferenceCodeItemsPage_getExpectedActions(
-				String externalReferenceCode)
-		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetCartByExternalReferenceCodeItemsPageWithPagination()
-		throws Exception {
-
-		String externalReferenceCode =
-			testGetCartByExternalReferenceCodeItemsPage_getExternalReferenceCode();
-
-		Page<CartItem> cartItemPage =
-			cartItemResource.getCartByExternalReferenceCodeItemsPage(
-				externalReferenceCode, null, null);
-
-		int totalCount = GetterUtil.getInteger(cartItemPage.getTotalCount());
-
-		CartItem cartItem1 =
-			testGetCartByExternalReferenceCodeItemsPage_addCartItem(
-				externalReferenceCode, randomCartItem());
-
-		CartItem cartItem2 =
-			testGetCartByExternalReferenceCodeItemsPage_addCartItem(
-				externalReferenceCode, randomCartItem());
-
-		CartItem cartItem3 =
-			testGetCartByExternalReferenceCodeItemsPage_addCartItem(
-				externalReferenceCode, randomCartItem());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<CartItem> page1 =
-				cartItemResource.getCartByExternalReferenceCodeItemsPage(
-					externalReferenceCode, null,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(cartItem1, (List<CartItem>)page1.getItems());
-
-			Page<CartItem> page2 =
-				cartItemResource.getCartByExternalReferenceCodeItemsPage(
-					externalReferenceCode, null,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			assertContains(cartItem2, (List<CartItem>)page2.getItems());
-
-			Page<CartItem> page3 =
-				cartItemResource.getCartByExternalReferenceCodeItemsPage(
-					externalReferenceCode, null,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			assertContains(cartItem3, (List<CartItem>)page3.getItems());
-		}
-		else {
-			Page<CartItem> page1 =
-				cartItemResource.getCartByExternalReferenceCodeItemsPage(
-					externalReferenceCode, null,
-					Pagination.of(1, totalCount + 2));
-
-			List<CartItem> cartItems1 = (List<CartItem>)page1.getItems();
-
-			Assert.assertEquals(
-				cartItems1.toString(), totalCount + 2, cartItems1.size());
-
-			Page<CartItem> page2 =
-				cartItemResource.getCartByExternalReferenceCodeItemsPage(
-					externalReferenceCode, null,
-					Pagination.of(2, totalCount + 2));
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<CartItem> cartItems2 = (List<CartItem>)page2.getItems();
-
-			Assert.assertEquals(cartItems2.toString(), 1, cartItems2.size());
-
-			Page<CartItem> page3 =
-				cartItemResource.getCartByExternalReferenceCodeItemsPage(
-					externalReferenceCode, null,
-					Pagination.of(1, (int)totalCount + 3));
-
-			assertContains(cartItem1, (List<CartItem>)page3.getItems());
-			assertContains(cartItem2, (List<CartItem>)page3.getItems());
-			assertContains(cartItem3, (List<CartItem>)page3.getItems());
-		}
-	}
-
-	protected CartItem testGetCartByExternalReferenceCodeItemsPage_addCartItem(
-			String externalReferenceCode, CartItem cartItem)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetCartByExternalReferenceCodeItemsPage_getExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetCartByExternalReferenceCodeItemsPage_getIrrelevantExternalReferenceCode()
-		throws Exception {
-
-		return null;
-	}
-
-	@Test
-	public void testPostCartByExternalReferenceCodeItem() throws Exception {
-		CartItem randomCartItem = randomCartItem();
-
-		CartItem postCartItem =
-			testPostCartByExternalReferenceCodeItem_addCartItem(randomCartItem);
-
-		assertEquals(randomCartItem, postCartItem);
-		assertValid(postCartItem);
-	}
-
-	protected CartItem testPostCartByExternalReferenceCodeItem_addCartItem(
-			CartItem cartItem)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetCartItemsPage() throws Exception {
 		Long cartId = testGetCartItemsPage_getCartId();
 		Long irrelevantCartId = testGetCartItemsPage_getIrrelevantCartId();
 
 		Page<CartItem> page = cartItemResource.getCartItemsPage(
-			cartId, null, Pagination.of(1, 10));
+			cartId, null, null, Pagination.of(1, 10));
 
 		long totalCount = page.getTotalCount();
 
@@ -909,7 +1052,8 @@ public abstract class BaseCartItemResourceTestCase {
 				irrelevantCartId, randomIrrelevantCartItem());
 
 			page = cartItemResource.getCartItemsPage(
-				irrelevantCartId, null, Pagination.of(1, (int)totalCount + 1));
+				irrelevantCartId, null, null,
+				Pagination.of(1, (int)totalCount + 1));
 
 			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
@@ -926,7 +1070,7 @@ public abstract class BaseCartItemResourceTestCase {
 			cartId, randomCartItem());
 
 		page = cartItemResource.getCartItemsPage(
-			cartId, null, Pagination.of(1, 10));
+			cartId, null, null, Pagination.of(1, 10));
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
@@ -952,10 +1096,10 @@ public abstract class BaseCartItemResourceTestCase {
 	public void testGetCartItemsPageWithPagination() throws Exception {
 		Long cartId = testGetCartItemsPage_getCartId();
 
-		Page<CartItem> cartItemPage = cartItemResource.getCartItemsPage(
-			cartId, null, null);
+		Page<CartItem> cartItemsPage = cartItemResource.getCartItemsPage(
+			cartId, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(cartItemPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(cartItemsPage.getTotalCount());
 
 		CartItem cartItem1 = testGetCartItemsPage_addCartItem(
 			cartId, randomCartItem());
@@ -972,7 +1116,7 @@ public abstract class BaseCartItemResourceTestCase {
 
 		if (totalCount >= (pageSizeLimit - 2)) {
 			Page<CartItem> page1 = cartItemResource.getCartItemsPage(
-				cartId, null,
+				cartId, null, null,
 				Pagination.of(
 					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
 					pageSizeLimit));
@@ -982,7 +1126,7 @@ public abstract class BaseCartItemResourceTestCase {
 			assertContains(cartItem1, (List<CartItem>)page1.getItems());
 
 			Page<CartItem> page2 = cartItemResource.getCartItemsPage(
-				cartId, null,
+				cartId, null, null,
 				Pagination.of(
 					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
 					pageSizeLimit));
@@ -990,7 +1134,7 @@ public abstract class BaseCartItemResourceTestCase {
 			assertContains(cartItem2, (List<CartItem>)page2.getItems());
 
 			Page<CartItem> page3 = cartItemResource.getCartItemsPage(
-				cartId, null,
+				cartId, null, null,
 				Pagination.of(
 					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
 					pageSizeLimit));
@@ -999,7 +1143,7 @@ public abstract class BaseCartItemResourceTestCase {
 		}
 		else {
 			Page<CartItem> page1 = cartItemResource.getCartItemsPage(
-				cartId, null, Pagination.of(1, totalCount + 2));
+				cartId, null, null, Pagination.of(1, totalCount + 2));
 
 			List<CartItem> cartItems1 = (List<CartItem>)page1.getItems();
 
@@ -1007,7 +1151,7 @@ public abstract class BaseCartItemResourceTestCase {
 				cartItems1.toString(), totalCount + 2, cartItems1.size());
 
 			Page<CartItem> page2 = cartItemResource.getCartItemsPage(
-				cartId, null, Pagination.of(2, totalCount + 2));
+				cartId, null, null, Pagination.of(2, totalCount + 2));
 
 			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
@@ -1016,7 +1160,7 @@ public abstract class BaseCartItemResourceTestCase {
 			Assert.assertEquals(cartItems2.toString(), 1, cartItems2.size());
 
 			Page<CartItem> page3 = cartItemResource.getCartItemsPage(
-				cartId, null, Pagination.of(1, (int)totalCount + 3));
+				cartId, null, null, Pagination.of(1, (int)totalCount + 3));
 
 			assertContains(cartItem1, (List<CartItem>)page3.getItems());
 			assertContains(cartItem2, (List<CartItem>)page3.getItems());
@@ -1114,6 +1258,82 @@ public abstract class BaseCartItemResourceTestCase {
 	}
 
 	@Test
+	public void testPatchCartItem() throws Exception {
+		CartItem postCartItem = testPatchCartItem_addCartItem();
+
+		CartItem randomPatchCartItem = randomPatchCartItem();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		CartItem patchCartItem = cartItemResource.patchCartItem(
+			postCartItem.getId(), randomPatchCartItem);
+
+		CartItem expectedPatchCartItem = postCartItem.clone();
+
+		BeanTestUtil.copyProperties(randomPatchCartItem, expectedPatchCartItem);
+
+		CartItem getCartItem = cartItemResource.getCartItem(
+			patchCartItem.getId());
+
+		assertEquals(expectedPatchCartItem, getCartItem);
+		assertValid(getCartItem);
+	}
+
+	protected CartItem testPatchCartItem_addCartItem() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchCartItemByExternalReferenceCode() throws Exception {
+		CartItem postCartItem =
+			testPatchCartItemByExternalReferenceCode_addCartItem();
+
+		CartItem randomPatchCartItem = randomPatchCartItem();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		CartItem patchCartItem =
+			cartItemResource.patchCartItemByExternalReferenceCode(
+				postCartItem.getExternalReferenceCode(), randomPatchCartItem);
+
+		CartItem expectedPatchCartItem = postCartItem.clone();
+
+		BeanTestUtil.copyProperties(randomPatchCartItem, expectedPatchCartItem);
+
+		CartItem getCartItem =
+			cartItemResource.getCartItemByExternalReferenceCode(
+				patchCartItem.getExternalReferenceCode());
+
+		assertEquals(expectedPatchCartItem, getCartItem);
+		assertValid(getCartItem);
+	}
+
+	protected CartItem testPatchCartItemByExternalReferenceCode_addCartItem()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostCartByExternalReferenceCodeItem() throws Exception {
+		CartItem randomCartItem = randomCartItem();
+
+		CartItem postCartItem =
+			testPostCartByExternalReferenceCodeItem_addCartItem(randomCartItem);
+
+		assertEquals(randomCartItem, postCartItem);
+		assertValid(postCartItem);
+	}
+
+	protected CartItem testPostCartByExternalReferenceCodeItem_addCartItem(
+			CartItem cartItem)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostCartItem() throws Exception {
 		CartItem randomCartItem = randomCartItem();
 
@@ -1124,6 +1344,83 @@ public abstract class BaseCartItemResourceTestCase {
 	}
 
 	protected CartItem testPostCartItem_addCartItem(CartItem cartItem)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutCartItem() throws Exception {
+		CartItem postCartItem = testPutCartItem_addCartItem();
+
+		CartItem randomCartItem = randomCartItem();
+
+		CartItem putCartItem = cartItemResource.putCartItem(
+			postCartItem.getId(), randomCartItem);
+
+		assertEquals(randomCartItem, putCartItem);
+		assertValid(putCartItem);
+
+		CartItem getCartItem = cartItemResource.getCartItem(
+			putCartItem.getId());
+
+		assertEquals(randomCartItem, getCartItem);
+		assertValid(getCartItem);
+	}
+
+	protected CartItem testPutCartItem_addCartItem() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutCartItemByExternalReferenceCode() throws Exception {
+		CartItem postCartItem =
+			testPutCartItemByExternalReferenceCode_addCartItem();
+
+		CartItem randomCartItem = randomCartItem();
+
+		CartItem putCartItem =
+			cartItemResource.putCartItemByExternalReferenceCode(
+				postCartItem.getExternalReferenceCode(), randomCartItem);
+
+		assertEquals(randomCartItem, putCartItem);
+		assertValid(putCartItem);
+
+		CartItem getCartItem =
+			cartItemResource.getCartItemByExternalReferenceCode(
+				putCartItem.getExternalReferenceCode());
+
+		assertEquals(randomCartItem, getCartItem);
+		assertValid(getCartItem);
+
+		CartItem newCartItem =
+			testPutCartItemByExternalReferenceCode_createCartItem();
+
+		putCartItem = cartItemResource.putCartItemByExternalReferenceCode(
+			newCartItem.getExternalReferenceCode(), newCartItem);
+
+		assertEquals(newCartItem, putCartItem);
+		assertValid(putCartItem);
+
+		getCartItem = cartItemResource.getCartItemByExternalReferenceCode(
+			putCartItem.getExternalReferenceCode());
+
+		assertEquals(newCartItem, getCartItem);
+
+		Assert.assertEquals(
+			newCartItem.getExternalReferenceCode(),
+			putCartItem.getExternalReferenceCode());
+	}
+
+	protected CartItem testPutCartItemByExternalReferenceCode_createCartItem()
+		throws Exception {
+
+		return randomCartItem();
+	}
+
+	protected CartItem testPutCartItemByExternalReferenceCode_addCartItem()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1234,6 +1531,24 @@ public abstract class BaseCartItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("deliveryGroup", additionalAssertFieldName)) {
+				if (cartItem.getDeliveryGroup() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"deliveryGroupName", additionalAssertFieldName)) {
+
+				if (cartItem.getDeliveryGroupName() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("errorMessages", additionalAssertFieldName)) {
 				if (cartItem.getErrorMessages() == null) {
 					valid = false;
@@ -1316,6 +1631,17 @@ public abstract class BaseCartItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"replacedSkuExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (cartItem.getReplacedSkuExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("replacedSkuId", additionalAssertFieldName)) {
 				if (cartItem.getReplacedSkuId() == null) {
 					valid = false;
@@ -1324,8 +1650,49 @@ public abstract class BaseCartItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"requestedDeliveryDate", additionalAssertFieldName)) {
+
+				if (cartItem.getRequestedDeliveryDate() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("settings", additionalAssertFieldName)) {
 				if (cartItem.getSettings() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("shippingAddress", additionalAssertFieldName)) {
+				if (cartItem.getShippingAddress() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"shippingAddressExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (cartItem.getShippingAddressExternalReferenceCode() ==
+						null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"shippingAddressId", additionalAssertFieldName)) {
+
+				if (cartItem.getShippingAddressId() == null) {
 					valid = false;
 				}
 
@@ -1366,6 +1733,14 @@ public abstract class BaseCartItemResourceTestCase {
 
 			if (Objects.equals("thumbnail", additionalAssertFieldName)) {
 				if (cartItem.getThumbnail() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("unitOfMeasure", additionalAssertFieldName)) {
+				if (cartItem.getUnitOfMeasure() == null) {
 					valid = false;
 				}
 
@@ -1530,6 +1905,30 @@ public abstract class BaseCartItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("deliveryGroup", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						cartItem1.getDeliveryGroup(),
+						cartItem2.getDeliveryGroup())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"deliveryGroupName", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						cartItem1.getDeliveryGroupName(),
+						cartItem2.getDeliveryGroupName())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("errorMessages", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						cartItem1.getErrorMessages(),
@@ -1645,6 +2044,20 @@ public abstract class BaseCartItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"replacedSkuExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						cartItem1.getReplacedSkuExternalReferenceCode(),
+						cartItem2.getReplacedSkuExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("replacedSkuId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						cartItem1.getReplacedSkuId(),
@@ -1656,9 +2069,60 @@ public abstract class BaseCartItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"requestedDeliveryDate", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						cartItem1.getRequestedDeliveryDate(),
+						cartItem2.getRequestedDeliveryDate())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("settings", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						cartItem1.getSettings(), cartItem2.getSettings())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("shippingAddress", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						cartItem1.getShippingAddress(),
+						cartItem2.getShippingAddress())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"shippingAddressExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						cartItem1.getShippingAddressExternalReferenceCode(),
+						cartItem2.getShippingAddressExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"shippingAddressId", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						cartItem1.getShippingAddressId(),
+						cartItem2.getShippingAddressId())) {
 
 					return false;
 				}
@@ -1711,6 +2175,17 @@ public abstract class BaseCartItemResourceTestCase {
 			if (Objects.equals("thumbnail", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						cartItem1.getThumbnail(), cartItem2.getThumbnail())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("unitOfMeasure", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						cartItem1.getUnitOfMeasure(),
+						cartItem2.getUnitOfMeasure())) {
 
 					return false;
 				}
@@ -1889,6 +2364,98 @@ public abstract class BaseCartItemResourceTestCase {
 		if (entityFieldName.equals("customFields")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("deliveryGroup")) {
+			Object object = cartItem.getDeliveryGroup();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("deliveryGroupName")) {
+			Object object = cartItem.getDeliveryGroupName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("errorMessages")) {
@@ -2110,12 +2677,143 @@ public abstract class BaseCartItemResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("replacedSkuExternalReferenceCode")) {
+			Object object = cartItem.getReplacedSkuExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("replacedSkuId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("requestedDeliveryDate")) {
+			if (operator.equals("between")) {
+				Date date = cartItem.getRequestedDeliveryDate();
+
+				sb = new StringBundler();
+
+				sb.append("(");
+				sb.append(entityFieldName);
+				sb.append(" gt ");
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(" and ");
+				sb.append(entityFieldName);
+				sb.append(" lt ");
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(")");
+			}
+			else {
+				sb.append(entityFieldName);
+
+				sb.append(" ");
+				sb.append(operator);
+				sb.append(" ");
+
+				sb.append(_format.format(cartItem.getRequestedDeliveryDate()));
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("settings")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("shippingAddress")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("shippingAddressExternalReferenceCode")) {
+			Object object = cartItem.getShippingAddressExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("shippingAddressId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -2227,6 +2925,52 @@ public abstract class BaseCartItemResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("unitOfMeasure")) {
+			Object object = cartItem.getUnitOfMeasure();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("valid")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -2279,6 +3023,10 @@ public abstract class BaseCartItemResourceTestCase {
 			{
 				adaptiveMediaImageHTMLTag = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				deliveryGroup = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				deliveryGroupName = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
@@ -2288,11 +3036,19 @@ public abstract class BaseCartItemResourceTestCase {
 				productId = RandomTestUtil.randomLong();
 				replacedSku = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				replacedSkuExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				replacedSkuId = RandomTestUtil.randomLong();
+				requestedDeliveryDate = RandomTestUtil.nextDate();
+				shippingAddressExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				shippingAddressId = RandomTestUtil.randomLong();
 				sku = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				skuId = RandomTestUtil.randomLong();
 				subscription = RandomTestUtil.randomBoolean();
 				thumbnail = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				unitOfMeasure = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				valid = RandomTestUtil.randomBoolean();
 			}
@@ -2309,7 +3065,30 @@ public abstract class BaseCartItemResourceTestCase {
 		return randomCartItem();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected CartItemResource cartItemResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -2319,12 +3098,12 @@ public abstract class BaseCartItemResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2333,11 +3112,16 @@ public abstract class BaseCartItemResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2369,6 +3153,24 @@ public abstract class BaseCartItemResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2390,16 +3192,6 @@ public abstract class BaseCartItemResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -2497,11 +3289,35 @@ public abstract class BaseCartItemResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseCartItemResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private
 		com.liferay.headless.commerce.delivery.cart.resource.v1_0.
 			CartItemResource _cartItemResource;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private ScopeChecker _scopeChecker;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	@Inject
+	private VulcanCRUDItemDelegateBuilderRegistry
+		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }

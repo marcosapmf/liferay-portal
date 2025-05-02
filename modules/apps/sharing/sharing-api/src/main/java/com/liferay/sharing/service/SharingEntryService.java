@@ -12,12 +12,14 @@ import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.transaction.Isolation;
+import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.sharing.model.SharingEntry;
 import com.liferay.sharing.security.permission.SharingEntryAction;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -65,8 +67,8 @@ public interface SharingEntryService extends BaseService {
 	 the expiration date is a past value
 	 */
 	public SharingEntry addOrUpdateSharingEntry(
-			long toUserId, long classNameId, long classPK, long groupId,
-			boolean shareable,
+			String externalReferenceCode, long toUserGroupId, long toUserId,
+			long classNameId, long classPK, long groupId, boolean shareable,
 			Collection<SharingEntryAction> sharingEntryActions,
 			Date expirationDate, ServiceContext serviceContext)
 		throws PortalException;
@@ -92,8 +94,8 @@ public interface SharingEntryService extends BaseService {
 	 expiration date is a past value
 	 */
 	public SharingEntry addSharingEntry(
-			long toUserId, long classNameId, long classPK, long groupId,
-			boolean shareable,
+			String externalReferenceCode, long toUserGroupId, long toUserId,
+			long classNameId, long classPK, long groupId, boolean shareable,
 			Collection<SharingEntryAction> sharingEntryActions,
 			Date expirationDate, ServiceContext serviceContext)
 		throws PortalException;
@@ -102,12 +104,38 @@ public interface SharingEntryService extends BaseService {
 			long sharingEntryId, ServiceContext serviceContext)
 		throws PortalException;
 
+	public SharingEntry deleteSharingEntry(SharingEntry sharingEntry)
+		throws PortalException;
+
+	public SharingEntry deleteSharingEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public SharingEntry fetchSharingEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException;
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
 	 * @return the OSGi service identifier
 	 */
 	public String getOSGiServiceIdentifier();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<SharingEntry> getSharingEntries(
+			long classNameId, long classPK, long groupId, int start, int end)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public SharingEntry getSharingEntry(long sharingEntryId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public SharingEntry getSharingEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException;
 
 	/**
 	 * Updates the sharing entry in the database.

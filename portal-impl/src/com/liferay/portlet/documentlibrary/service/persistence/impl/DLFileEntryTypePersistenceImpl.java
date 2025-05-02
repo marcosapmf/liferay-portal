@@ -649,7 +649,6 @@ public class DLFileEntryTypePersistenceImpl
 		"(dlFileEntryType.uuid IS NULL OR dlFileEntryType.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the document library file entry type where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchFileEntryTypeException</code> if it could not be found.
@@ -834,68 +833,13 @@ public class DLFileEntryTypePersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		try (SafeCloseable safeCloseable =
-				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
-					DLFileEntryType.class)) {
+		DLFileEntryType dlFileEntryType = fetchByUUID_G(uuid, groupId);
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUUID_G;
-
-			Object[] finderArgs = new Object[] {uuid, groupId};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_DLFILEENTRYTYPE_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (dlFileEntryType == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -2858,8 +2802,518 @@ public class DLFileEntryTypePersistenceImpl
 	private static final String _FINDER_COLUMN_GROUPID_GROUPID_7 =
 		"dlFileEntryType.groupId IN (";
 
+	private FinderPath _finderPathWithPaginationFindByCompanyId;
+	private FinderPath _finderPathWithoutPaginationFindByCompanyId;
+	private FinderPath _finderPathCountByCompanyId;
+
+	/**
+	 * Returns all the document library file entry types where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching document library file entry types
+	 */
+	@Override
+	public List<DLFileEntryType> findByCompanyId(long companyId) {
+		return findByCompanyId(
+			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the document library file entry types where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DLFileEntryTypeModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of document library file entry types
+	 * @param end the upper bound of the range of document library file entry types (not inclusive)
+	 * @return the range of matching document library file entry types
+	 */
+	@Override
+	public List<DLFileEntryType> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return findByCompanyId(companyId, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the document library file entry types where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DLFileEntryTypeModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of document library file entry types
+	 * @param end the upper bound of the range of document library file entry types (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching document library file entry types
+	 */
+	@Override
+	public List<DLFileEntryType> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<DLFileEntryType> orderByComparator) {
+
+		return findByCompanyId(companyId, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the document library file entry types where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DLFileEntryTypeModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of document library file entry types
+	 * @param end the upper bound of the range of document library file entry types (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching document library file entry types
+	 */
+	@Override
+	public List<DLFileEntryType> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<DLFileEntryType> orderByComparator,
+		boolean useFinderCache) {
+
+		try (SafeCloseable safeCloseable =
+				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
+					DLFileEntryType.class)) {
+
+			FinderPath finderPath = null;
+			Object[] finderArgs = null;
+
+			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
+
+				if (useFinderCache) {
+					finderPath = _finderPathWithoutPaginationFindByCompanyId;
+					finderArgs = new Object[] {companyId};
+				}
+			}
+			else if (useFinderCache) {
+				finderPath = _finderPathWithPaginationFindByCompanyId;
+				finderArgs = new Object[] {
+					companyId, start, end, orderByComparator
+				};
+			}
+
+			List<DLFileEntryType> list = null;
+
+			if (useFinderCache) {
+				list = (List<DLFileEntryType>)FinderCacheUtil.getResult(
+					finderPath, finderArgs, this);
+
+				if ((list != null) && !list.isEmpty()) {
+					for (DLFileEntryType dlFileEntryType : list) {
+						if (companyId != dlFileEntryType.getCompanyId()) {
+							list = null;
+
+							break;
+						}
+					}
+				}
+			}
+
+			if (list == null) {
+				StringBundler sb = null;
+
+				if (orderByComparator != null) {
+					sb = new StringBundler(
+						3 + (orderByComparator.getOrderByFields().length * 2));
+				}
+				else {
+					sb = new StringBundler(3);
+				}
+
+				sb.append(_SQL_SELECT_DLFILEENTRYTYPE_WHERE);
+
+				sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+
+				if (orderByComparator != null) {
+					appendOrderByComparator(
+						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+				}
+				else {
+					sb.append(DLFileEntryTypeModelImpl.ORDER_BY_JPQL);
+				}
+
+				String sql = sb.toString();
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					queryPos.add(companyId);
+
+					list = (List<DLFileEntryType>)QueryUtil.list(
+						query, getDialect(), start, end);
+
+					cacheResult(list);
+
+					if (useFinderCache) {
+						FinderCacheUtil.putResult(finderPath, finderArgs, list);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
+			}
+
+			return list;
+		}
+	}
+
+	/**
+	 * Returns the first document library file entry type in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching document library file entry type
+	 * @throws NoSuchFileEntryTypeException if a matching document library file entry type could not be found
+	 */
+	@Override
+	public DLFileEntryType findByCompanyId_First(
+			long companyId,
+			OrderByComparator<DLFileEntryType> orderByComparator)
+		throws NoSuchFileEntryTypeException {
+
+		DLFileEntryType dlFileEntryType = fetchByCompanyId_First(
+			companyId, orderByComparator);
+
+		if (dlFileEntryType != null) {
+			return dlFileEntryType;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("companyId=");
+		sb.append(companyId);
+
+		sb.append("}");
+
+		throw new NoSuchFileEntryTypeException(sb.toString());
+	}
+
+	/**
+	 * Returns the first document library file entry type in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching document library file entry type, or <code>null</code> if a matching document library file entry type could not be found
+	 */
+	@Override
+	public DLFileEntryType fetchByCompanyId_First(
+		long companyId, OrderByComparator<DLFileEntryType> orderByComparator) {
+
+		List<DLFileEntryType> list = findByCompanyId(
+			companyId, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last document library file entry type in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching document library file entry type
+	 * @throws NoSuchFileEntryTypeException if a matching document library file entry type could not be found
+	 */
+	@Override
+	public DLFileEntryType findByCompanyId_Last(
+			long companyId,
+			OrderByComparator<DLFileEntryType> orderByComparator)
+		throws NoSuchFileEntryTypeException {
+
+		DLFileEntryType dlFileEntryType = fetchByCompanyId_Last(
+			companyId, orderByComparator);
+
+		if (dlFileEntryType != null) {
+			return dlFileEntryType;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("companyId=");
+		sb.append(companyId);
+
+		sb.append("}");
+
+		throw new NoSuchFileEntryTypeException(sb.toString());
+	}
+
+	/**
+	 * Returns the last document library file entry type in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching document library file entry type, or <code>null</code> if a matching document library file entry type could not be found
+	 */
+	@Override
+	public DLFileEntryType fetchByCompanyId_Last(
+		long companyId, OrderByComparator<DLFileEntryType> orderByComparator) {
+
+		int count = countByCompanyId(companyId);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<DLFileEntryType> list = findByCompanyId(
+			companyId, count - 1, count, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the document library file entry types before and after the current document library file entry type in the ordered set where companyId = &#63;.
+	 *
+	 * @param fileEntryTypeId the primary key of the current document library file entry type
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next document library file entry type
+	 * @throws NoSuchFileEntryTypeException if a document library file entry type with the primary key could not be found
+	 */
+	@Override
+	public DLFileEntryType[] findByCompanyId_PrevAndNext(
+			long fileEntryTypeId, long companyId,
+			OrderByComparator<DLFileEntryType> orderByComparator)
+		throws NoSuchFileEntryTypeException {
+
+		DLFileEntryType dlFileEntryType = findByPrimaryKey(fileEntryTypeId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			DLFileEntryType[] array = new DLFileEntryTypeImpl[3];
+
+			array[0] = getByCompanyId_PrevAndNext(
+				session, dlFileEntryType, companyId, orderByComparator, true);
+
+			array[1] = dlFileEntryType;
+
+			array[2] = getByCompanyId_PrevAndNext(
+				session, dlFileEntryType, companyId, orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected DLFileEntryType getByCompanyId_PrevAndNext(
+		Session session, DLFileEntryType dlFileEntryType, long companyId,
+		OrderByComparator<DLFileEntryType> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(3);
+		}
+
+		sb.append(_SQL_SELECT_DLFILEENTRYTYPE_WHERE);
+
+		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(DLFileEntryTypeModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(companyId);
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						dlFileEntryType)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<DLFileEntryType> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the document library file entry types where companyId = &#63; from the database.
+	 *
+	 * @param companyId the company ID
+	 */
+	@Override
+	public void removeByCompanyId(long companyId) {
+		for (DLFileEntryType dlFileEntryType :
+				findByCompanyId(
+					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
+			remove(dlFileEntryType);
+		}
+	}
+
+	/**
+	 * Returns the number of document library file entry types where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the number of matching document library file entry types
+	 */
+	@Override
+	public int countByCompanyId(long companyId) {
+		try (SafeCloseable safeCloseable =
+				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
+					DLFileEntryType.class)) {
+
+			FinderPath finderPath = _finderPathCountByCompanyId;
+
+			Object[] finderArgs = new Object[] {companyId};
+
+			Long count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+
+			if (count == null) {
+				StringBundler sb = new StringBundler(2);
+
+				sb.append(_SQL_COUNT_DLFILEENTRYTYPE_WHERE);
+
+				sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+
+				String sql = sb.toString();
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					queryPos.add(companyId);
+
+					count = (Long)query.uniqueResult();
+
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
+			}
+
+			return count.intValue();
+		}
+	}
+
+	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 =
+		"dlFileEntryType.companyId = ?";
+
 	private FinderPath _finderPathFetchByG_DDI;
-	private FinderPath _finderPathCountByG_DDI;
 
 	/**
 	 * Returns the document library file entry type where groupId = &#63; and dataDefinitionId = &#63; or throws a <code>NoSuchFileEntryTypeException</code> if it could not be found.
@@ -3034,55 +3488,14 @@ public class DLFileEntryTypePersistenceImpl
 	 */
 	@Override
 	public int countByG_DDI(long groupId, long dataDefinitionId) {
-		try (SafeCloseable safeCloseable =
-				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
-					DLFileEntryType.class)) {
+		DLFileEntryType dlFileEntryType = fetchByG_DDI(
+			groupId, dataDefinitionId);
 
-			FinderPath finderPath = _finderPathCountByG_DDI;
-
-			Object[] finderArgs = new Object[] {groupId, dataDefinitionId};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_DLFILEENTRYTYPE_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_DDI_GROUPID_2);
-
-				sb.append(_FINDER_COLUMN_G_DDI_DATADEFINITIONID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					queryPos.add(dataDefinitionId);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (dlFileEntryType == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_G_DDI_GROUPID_2 =
@@ -3092,7 +3505,6 @@ public class DLFileEntryTypePersistenceImpl
 		"dlFileEntryType.dataDefinitionId = ?";
 
 	private FinderPath _finderPathFetchByG_F;
-	private FinderPath _finderPathCountByG_F;
 
 	/**
 	 * Returns the document library file entry type where groupId = &#63; and fileEntryTypeKey = &#63; or throws a <code>NoSuchFileEntryTypeException</code> if it could not be found.
@@ -3279,68 +3691,13 @@ public class DLFileEntryTypePersistenceImpl
 	 */
 	@Override
 	public int countByG_F(long groupId, String fileEntryTypeKey) {
-		try (SafeCloseable safeCloseable =
-				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
-					DLFileEntryType.class)) {
+		DLFileEntryType dlFileEntryType = fetchByG_F(groupId, fileEntryTypeKey);
 
-			fileEntryTypeKey = Objects.toString(fileEntryTypeKey, "");
-
-			FinderPath finderPath = _finderPathCountByG_F;
-
-			Object[] finderArgs = new Object[] {groupId, fileEntryTypeKey};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_DLFILEENTRYTYPE_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_F_GROUPID_2);
-
-				boolean bindFileEntryTypeKey = false;
-
-				if (fileEntryTypeKey.isEmpty()) {
-					sb.append(_FINDER_COLUMN_G_F_FILEENTRYTYPEKEY_3);
-				}
-				else {
-					bindFileEntryTypeKey = true;
-
-					sb.append(_FINDER_COLUMN_G_F_FILEENTRYTYPEKEY_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					if (bindFileEntryTypeKey) {
-						queryPos.add(fileEntryTypeKey);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (dlFileEntryType == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_G_F_GROUPID_2 =
@@ -3353,7 +3710,6 @@ public class DLFileEntryTypePersistenceImpl
 		"(dlFileEntryType.fileEntryTypeKey IS NULL OR dlFileEntryType.fileEntryTypeKey = '')";
 
 	private FinderPath _finderPathFetchByERC_G;
-	private FinderPath _finderPathCountByERC_G;
 
 	/**
 	 * Returns the document library file entry type where externalReferenceCode = &#63; and groupId = &#63; or throws a <code>NoSuchFileEntryTypeException</code> if it could not be found.
@@ -3546,68 +3902,14 @@ public class DLFileEntryTypePersistenceImpl
 	 */
 	@Override
 	public int countByERC_G(String externalReferenceCode, long groupId) {
-		try (SafeCloseable safeCloseable =
-				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
-					DLFileEntryType.class)) {
+		DLFileEntryType dlFileEntryType = fetchByERC_G(
+			externalReferenceCode, groupId);
 
-			externalReferenceCode = Objects.toString(externalReferenceCode, "");
-
-			FinderPath finderPath = _finderPathCountByERC_G;
-
-			Object[] finderArgs = new Object[] {externalReferenceCode, groupId};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_DLFILEENTRYTYPE_WHERE);
-
-				boolean bindExternalReferenceCode = false;
-
-				if (externalReferenceCode.isEmpty()) {
-					sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_3);
-				}
-				else {
-					bindExternalReferenceCode = true;
-
-					sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_2);
-				}
-
-				sb.append(_FINDER_COLUMN_ERC_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindExternalReferenceCode) {
-						queryPos.add(externalReferenceCode);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (dlFileEntryType == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_2 =
@@ -3771,8 +4073,6 @@ public class DLFileEntryTypePersistenceImpl
 			};
 
 			FinderCacheUtil.putResult(
-				_finderPathCountByUUID_G, args, Long.valueOf(1));
-			FinderCacheUtil.putResult(
 				_finderPathFetchByUUID_G, args, dlFileEntryTypeModelImpl);
 
 			args = new Object[] {
@@ -3780,8 +4080,6 @@ public class DLFileEntryTypePersistenceImpl
 				dlFileEntryTypeModelImpl.getDataDefinitionId()
 			};
 
-			FinderCacheUtil.putResult(
-				_finderPathCountByG_DDI, args, Long.valueOf(1));
 			FinderCacheUtil.putResult(
 				_finderPathFetchByG_DDI, args, dlFileEntryTypeModelImpl);
 
@@ -3791,8 +4089,6 @@ public class DLFileEntryTypePersistenceImpl
 			};
 
 			FinderCacheUtil.putResult(
-				_finderPathCountByG_F, args, Long.valueOf(1));
-			FinderCacheUtil.putResult(
 				_finderPathFetchByG_F, args, dlFileEntryTypeModelImpl);
 
 			args = new Object[] {
@@ -3800,8 +4096,6 @@ public class DLFileEntryTypePersistenceImpl
 				dlFileEntryTypeModelImpl.getGroupId()
 			};
 
-			FinderCacheUtil.putResult(
-				_finderPathCountByERC_G, args, Long.valueOf(1));
 			FinderCacheUtil.putResult(
 				_finderPathFetchByERC_G, args, dlFileEntryTypeModelImpl);
 		}
@@ -4895,6 +5189,7 @@ public class DLFileEntryTypePersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -4907,18 +5202,19 @@ public class DLFileEntryTypePersistenceImpl
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("dataDefinitionId");
-		ctStrictColumnNames.add("fileEntryTypeKey");
-		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("description");
-		ctStrictColumnNames.add("scope");
-		ctStrictColumnNames.add("lastPublishDate");
-		ctStrictColumnNames.add("folders");
+		ctMergeColumnNames.add("dataDefinitionId");
+		ctMergeColumnNames.add("fileEntryTypeKey");
+		ctMergeColumnNames.add("name");
+		ctMergeColumnNames.add("description");
+		ctMergeColumnNames.add("scope");
+		ctMergeColumnNames.add("lastPublishDate");
+		ctMergeColumnNames.add("folders");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("fileEntryTypeId"));
@@ -4986,11 +5282,6 @@ public class DLFileEntryTypePersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
 
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
-
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
@@ -5033,35 +5324,38 @@ public class DLFileEntryTypePersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			false);
 
+		_finderPathWithPaginationFindByCompanyId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			},
+			new String[] {"companyId"}, true);
+
+		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			true);
+
+		_finderPathCountByCompanyId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			false);
+
 		_finderPathFetchByG_DDI = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_DDI",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"groupId", "dataDefinitionId"}, true);
-
-		_finderPathCountByG_DDI = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_DDI",
-			new String[] {Long.class.getName(), Long.class.getName()},
-			new String[] {"groupId", "dataDefinitionId"}, false);
 
 		_finderPathFetchByG_F = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_F",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "fileEntryTypeKey"}, true);
 
-		_finderPathCountByG_F = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_F",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"groupId", "fileEntryTypeKey"}, false);
-
 		_finderPathFetchByERC_G = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByERC_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "groupId"}, true);
-
-		_finderPathCountByERC_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"externalReferenceCode", "groupId"}, false);
 
 		DLFileEntryTypeUtil.setPersistence(this);
 	}

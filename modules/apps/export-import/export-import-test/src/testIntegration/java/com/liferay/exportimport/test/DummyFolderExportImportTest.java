@@ -7,9 +7,11 @@ package com.liferay.exportimport.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
+import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepositoryRegistryUtil;
 import com.liferay.exportimport.test.util.constants.DummyFolderPortletKeys;
+import com.liferay.exportimport.test.util.exportimport.data.handler.DummyFolderStagedModelDataHandler;
 import com.liferay.exportimport.test.util.lar.BasePortletExportImportTestCase;
 import com.liferay.exportimport.test.util.model.DummyFolder;
 import com.liferay.exportimport.test.util.model.util.DummyFolderTestUtil;
@@ -60,6 +62,13 @@ public class DummyFolderExportImportTest
 			(StagedModelRepository<DummyFolder>)
 				StagedModelRepositoryRegistryUtil.getStagedModelRepository(
 					DummyFolder.class.getName());
+
+		_dummyFolderStagedModelDataHandler =
+			(DummyFolderStagedModelDataHandler)
+				StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
+					DummyFolder.class.getName());
+
+		_dummyFolderStagedModelDataHandler.setEnabled(true);
 
 		DynamicQueryFactoryUtil dynamicQueryFactoryUtil =
 			new DynamicQueryFactoryUtil();
@@ -139,5 +148,8 @@ public class DummyFolderExportImportTest
 	}
 
 	protected StagedModelRepository<DummyFolder> stagedModelRepository;
+
+	private static DummyFolderStagedModelDataHandler
+		_dummyFolderStagedModelDataHandler;
 
 }

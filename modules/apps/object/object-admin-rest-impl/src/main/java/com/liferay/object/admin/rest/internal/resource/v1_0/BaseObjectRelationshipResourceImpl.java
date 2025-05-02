@@ -12,8 +12,6 @@ import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -34,10 +32,12 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -67,7 +67,84 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BaseObjectRelationshipResourceImpl
 	implements EntityModelResource, ObjectRelationshipResource,
-			   VulcanBatchEngineTaskItemDelegate<ObjectRelationship> {
+			   VulcanBatchEngineTaskItemDelegate<ObjectRelationship>,
+			   VulcanCRUDItemDelegate<ObjectRelationship> {
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/object-admin/v1.0/object-relationships/{objectRelationshipId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "objectRelationshipId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectRelationship")
+		}
+	)
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/object-relationships/{objectRelationshipId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public void deleteObjectRelationship(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("objectRelationshipId")
+			Long objectRelationshipId)
+		throws Exception {
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'DELETE' 'http://localhost:8080/o/object-admin/v1.0/object-relationships/batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectRelationship")
+		}
+	)
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/object-relationships/batch")
+	@javax.ws.rs.Produces("application/json")
+	@Override
+	public Response deleteObjectRelationshipBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			Object object)
+		throws Exception {
+
+		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineImportTaskResource.deleteImportTask(
+				ObjectRelationship.class.getName(), callbackURL, object)
+		).build();
+	}
 
 	/**
 	 * Invoke this method with the command line:
@@ -122,49 +199,14 @@ public abstract class BaseObjectRelationshipResourceImpl
 				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 				@javax.ws.rs.QueryParam("search")
 				String search,
-				@javax.ws.rs.core.Context Filter filter,
+				@javax.ws.rs.core.Context
+					com.liferay.portal.kernel.search.filter.Filter filter,
 				@javax.ws.rs.core.Context Pagination pagination,
-				@javax.ws.rs.core.Context Sort[] sorts)
+				@javax.ws.rs.core.Context
+					com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/by-external-reference-code/{externalReferenceCode}/object-relationships' -d $'{"deletionType": ___, "edge": ___, "externalReferenceCode": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionModifiable2": ___, "objectDefinitionName2": ___, "objectDefinitionSystem2": ___, "objectField": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "system": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectRelationship")
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/object-definitions/by-external-reference-code/{externalReferenceCode}/object-relationships"
-	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public ObjectRelationship
-			postObjectDefinitionByExternalReferenceCodeObjectRelationship(
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.validation.constraints.NotNull
-				@javax.ws.rs.PathParam("externalReferenceCode")
-				String externalReferenceCode,
-				ObjectRelationship objectRelationship)
-		throws Exception {
-
-		return new ObjectRelationship();
 	}
 
 	/**
@@ -219,9 +261,11 @@ public abstract class BaseObjectRelationshipResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
 			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -230,37 +274,13 @@ public abstract class BaseObjectRelationshipResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}/object-relationships/export-batch'  -u 'test@liferay.com:test'
+	 * curl -X 'GET' 'http://localhost:8080/o/object-admin/v1.0/object-relationships/{objectRelationshipId}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "objectDefinitionId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "filter"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "search"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "sort"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "contentType"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "fieldNames"
+				name = "objectRelationshipId"
 			)
 		}
 	)
@@ -269,58 +289,61 @@ public abstract class BaseObjectRelationshipResourceImpl
 			@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectRelationship")
 		}
 	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path(
-		"/object-definitions/{objectDefinitionId}/object-relationships/export-batch"
-	)
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/json")
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/object-relationships/{objectRelationshipId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Response postObjectDefinitionObjectRelationshipsPageExportBatch(
+	public ObjectRelationship getObjectRelationship(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("objectDefinitionId")
-			Long objectDefinitionId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("search")
-			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.DefaultValue("JSON")
-			@javax.ws.rs.QueryParam("contentType")
-			String contentType,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("fieldNames")
-			String fieldNames)
+			@javax.ws.rs.PathParam("objectRelationshipId")
+			Long objectRelationshipId)
 		throws Exception {
 
-		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
-		vulcanBatchEngineExportTaskResource.setGroupLocalService(
-			groupLocalService);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineExportTaskResource.postExportTask(
-				ObjectRelationship.class.getName(), callbackURL, contentType,
-				fieldNames)
-		).build();
+		return new ObjectRelationship();
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}/object-relationships' -d $'{"deletionType": ___, "edge": ___, "externalReferenceCode": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionModifiable2": ___, "objectDefinitionName2": ___, "objectDefinitionSystem2": ___, "objectField": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "system": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/by-external-reference-code/{externalReferenceCode}/object-relationships' -d $'{"deletionType": ___, "edge": ___, "externalReferenceCode": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionModifiable2": ___, "objectDefinitionName2": ___, "objectDefinitionScope2": ___, "objectDefinitionSystem2": ___, "objectField": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "system": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectRelationship")
+		}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path(
+		"/object-definitions/by-external-reference-code/{externalReferenceCode}/object-relationships"
+	)
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public ObjectRelationship
+			postObjectDefinitionByExternalReferenceCodeObjectRelationship(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("externalReferenceCode")
+				String externalReferenceCode,
+				ObjectRelationship objectRelationship)
+		throws Exception {
+
+		return new ObjectRelationship();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}/object-relationships' -d $'{"deletionType": ___, "edge": ___, "externalReferenceCode": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionModifiable2": ___, "objectDefinitionName2": ___, "objectDefinitionScope2": ___, "objectDefinitionSystem2": ___, "objectField": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "system": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -412,79 +435,37 @@ public abstract class BaseObjectRelationshipResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-relationships/by-external-reference-code/{externalReferenceCode}' -d $'{"deletionType": ___, "edge": ___, "externalReferenceCode": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionModifiable2": ___, "objectDefinitionName2": ___, "objectDefinitionSystem2": ___, "objectField": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "system": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}/object-relationships/export-batch'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectRelationship")
-		}
-	)
-	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path(
-		"/object-relationships/by-external-reference-code/{externalReferenceCode}"
-	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@javax.ws.rs.PUT
-	@Override
-	public ObjectRelationship putObjectRelationshipByExternalReferenceCode(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode,
-			ObjectRelationship objectRelationship)
-		throws Exception {
-
-		return new ObjectRelationship();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/object-admin/v1.0/object-relationships/{objectRelationshipId}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
+				name = "objectDefinitionId"
+			),
 			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "objectRelationshipId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectRelationship")
-		}
-	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/object-relationships/{objectRelationshipId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public void deleteObjectRelationship(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("objectRelationshipId")
-			Long objectRelationshipId)
-		throws Exception {
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/object-admin/v1.0/object-relationships/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "filter"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
+			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "contentType"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fieldNames"
 			)
 		}
 	)
@@ -494,69 +475,59 @@ public abstract class BaseObjectRelationshipResourceImpl
 		}
 	)
 	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/object-relationships/batch")
+	@javax.ws.rs.Path(
+		"/object-definitions/{objectDefinitionId}/object-relationships/export-batch"
+	)
+	@javax.ws.rs.POST
 	@javax.ws.rs.Produces("application/json")
 	@Override
-	public Response deleteObjectRelationshipBatch(
+	public Response postObjectDefinitionObjectRelationshipsPageExportBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("objectDefinitionId")
+			Long objectDefinitionId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("search")
+			String search,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
-			Object object)
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.DefaultValue("JSON")
+			@javax.ws.rs.QueryParam("contentType")
+			String contentType,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("fieldNames")
+			String fieldNames)
 		throws Exception {
 
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
+		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
 			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
+		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
 			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setGroupLocalService(
+			groupLocalService);
 
 		Response.ResponseBuilder responseBuilder = Response.accepted();
 
 		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.deleteImportTask(
-				ObjectRelationship.class.getName(), callbackURL, object)
+			vulcanBatchEngineExportTaskResource.postExportTask(
+				ObjectRelationship.class.getName(), callbackURL, contentType,
+				fieldNames)
 		).build();
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/object-admin/v1.0/object-relationships/{objectRelationshipId}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "objectRelationshipId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectRelationship")
-		}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/object-relationships/{objectRelationshipId}")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public ObjectRelationship getObjectRelationship(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("objectRelationshipId")
-			Long objectRelationshipId)
-		throws Exception {
-
-		return new ObjectRelationship();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-relationships/{objectRelationshipId}' -d $'{"deletionType": ___, "edge": ___, "externalReferenceCode": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionModifiable2": ___, "objectDefinitionName2": ___, "objectDefinitionSystem2": ___, "objectField": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "system": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-relationships/{objectRelationshipId}' -d $'{"deletionType": ___, "edge": ___, "externalReferenceCode": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionModifiable2": ___, "objectDefinitionName2": ___, "objectDefinitionScope2": ___, "objectDefinitionSystem2": ___, "objectField": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "system": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -633,6 +604,42 @@ public abstract class BaseObjectRelationshipResourceImpl
 		).build();
 	}
 
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-relationships/by-external-reference-code/{externalReferenceCode}' -d $'{"deletionType": ___, "edge": ___, "externalReferenceCode": ___, "label": ___, "name": ___, "objectDefinitionExternalReferenceCode1": ___, "objectDefinitionExternalReferenceCode2": ___, "objectDefinitionId1": ___, "objectDefinitionId2": ___, "objectDefinitionModifiable2": ___, "objectDefinitionName2": ___, "objectDefinitionScope2": ___, "objectDefinitionSystem2": ___, "objectField": ___, "parameterObjectFieldId": ___, "parameterObjectFieldName": ___, "system": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectRelationship")
+		}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path(
+		"/object-relationships/by-external-reference-code/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public ObjectRelationship putObjectRelationshipByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			ObjectRelationship objectRelationship)
+		throws Exception {
+
+		return new ObjectRelationship();
+	}
+
 	@Override
 	@SuppressWarnings("PMD.UnusedLocalVariable")
 	public void create(
@@ -706,8 +713,25 @@ public abstract class BaseObjectRelationshipResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (ObjectRelationship objectRelationship : objectRelationships) {
-			deleteObjectRelationship(objectRelationship.getId());
+		UnsafeFunction<ObjectRelationship, ObjectRelationship, Exception>
+			objectRelationshipUnsafeFunction = objectRelationship -> {
+				deleteObjectRelationship(objectRelationship.getId());
+
+				return objectRelationship;
+			};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				objectRelationships, objectRelationshipUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				objectRelationships, objectRelationshipUnsafeFunction::apply);
+		}
+		else {
+			for (ObjectRelationship objectRelationship : objectRelationships) {
+				objectRelationshipUnsafeFunction.apply(objectRelationship);
+			}
 		}
 	}
 
@@ -744,7 +768,9 @@ public abstract class BaseObjectRelationshipResourceImpl
 
 	@Override
 	public Page<ObjectRelationship> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -832,6 +858,11 @@ public abstract class BaseObjectRelationshipResourceImpl
 		return null;
 	}
 
+	@Override
+	public ObjectRelationship getItem(Long id) throws Exception {
+		return getObjectRelationship(id);
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
 	}
@@ -873,7 +904,8 @@ public abstract class BaseObjectRelationshipResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -883,7 +915,8 @@ public abstract class BaseObjectRelationshipResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -918,6 +951,10 @@ public abstract class BaseObjectRelationshipResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "object-admin";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -935,7 +972,7 @@ public abstract class BaseObjectRelationshipResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -960,7 +997,7 @@ public abstract class BaseObjectRelationshipResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -978,13 +1015,13 @@ public abstract class BaseObjectRelationshipResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -995,7 +1032,7 @@ public abstract class BaseObjectRelationshipResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1122,7 +1159,8 @@ public abstract class BaseObjectRelationshipResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

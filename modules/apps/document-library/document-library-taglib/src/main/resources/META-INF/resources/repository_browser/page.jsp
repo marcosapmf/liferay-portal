@@ -25,7 +25,7 @@ RepositoryBrowserTagDisplayContext repositoryBrowserTagDisplayContext = (Reposit
 		breadcrumbEntries="<%= repositoryBrowserTagDisplayContext.getBreadcrumbEntries() %>"
 	/>
 
-	<input id="<portlet:namespace />file" style="display: none;" type="file" />
+	<input class="hide" id="<portlet:namespace />file" type="file" />
 
 	<liferay-ui:search-container
 		id="repositoryEntries"
@@ -70,7 +70,7 @@ RepositoryBrowserTagDisplayContext repositoryBrowserTagDisplayContext = (Reposit
 						</c:choose>
 
 						<span class="text-default">
-							<liferay-ui:message arguments="<%= new String[] {repositoryEntry.getUserName(), repositoryBrowserTagDisplayContext.getRepositoryEntryModifiedDateDescription(repositoryEntry)} %>" key="x-modified-x-ago" />
+							<liferay-ui:message arguments="<%= repositoryBrowserTagDisplayContext.getRepositoryEntryModifiedDateDescription(repositoryEntry) %>" key="modified-x-ago" />
 						</span>
 					</liferay-ui:search-container-column-text>
 
@@ -117,7 +117,7 @@ RepositoryBrowserTagDisplayContext repositoryBrowserTagDisplayContext = (Reposit
 						cssClass="table-cell-expand-smaller table-cell-minw-150"
 						name="modified-date"
 					>
-						<liferay-ui:message arguments="<%= new String[] {repositoryEntry.getUserName(), repositoryBrowserTagDisplayContext.getRepositoryEntryModifiedDateDescription(repositoryEntry)} %>" key="x-modified-x-ago" />
+						<liferay-ui:message arguments="<%= repositoryBrowserTagDisplayContext.getRepositoryEntryModifiedDateDescription(repositoryEntry) %>" key="modified-x-ago" />
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text>

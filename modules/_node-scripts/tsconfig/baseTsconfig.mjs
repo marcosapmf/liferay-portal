@@ -7,12 +7,11 @@ export default {
 	'@readonly': '** AUTO-GENERATED: DO NOT EDIT **',
 	'compilerOptions': {
 		allowSyntheticDefaultImports: true,
-		baseUrl: '.',
 		checkJs: false,
 		composite: true,
 		emitDeclarationOnly: true,
 		jsx: 'react',
-		module: 'es6',
+		module: 'es2022',
 		moduleResolution: 'node',
 		skipLibCheck: true,
 		sourceMap: false,

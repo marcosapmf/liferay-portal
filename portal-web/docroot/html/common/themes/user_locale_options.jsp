@@ -37,12 +37,12 @@ String currentURL = PortalUtil.getCurrentURL(request);
 		</aui:a>
 	</div>
 
-	<aui:script use="aui-base,liferay-store">
+	<aui:script use="aui-base">
 		var ignoreUserLocaleOptionsNode = A.one('#ignoreUserLocaleOptions');
 
 		ignoreUserLocaleOptionsNode.on(
 			'click',
-			function() {
+			function () {
 				Liferay.Util.Session.set('ignoreUserLocaleOptions', true, {
 					useHttpSession: true
 				});

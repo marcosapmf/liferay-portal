@@ -21,11 +21,13 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterRegistry;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesMerger;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationException;
 import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
@@ -224,8 +226,9 @@ public class DDMFormPortlet extends MVCPortlet {
 			_configurationProvider.getCompanyConfiguration(
 				DDMFormWebConfiguration.class,
 				CompanyThreadLocal.getCompanyId()),
-			_ddmStorageAdapterRegistry, _groupLocalService, _jsonFactory,
-			_npmResolver, _objectFieldLocalService,
+			_ddmStorageAdapterRegistry, _ddmStructureLocalService,
+			_groupLocalService, _jsonFactory, _npmResolver,
+			_objectDefinitionLocalService, _objectFieldLocalService,
 			_objectFieldSettingLocalService, _objectRelationshipLocalService,
 			_portal, renderRequest, renderResponse, _roleLocalService,
 			_userLocalService, _workflowDefinitionLinkLocalService);
@@ -310,6 +313,9 @@ public class DDMFormPortlet extends MVCPortlet {
 	private DDMStorageAdapterRegistry _ddmStorageAdapterRegistry;
 
 	@Reference
+	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
@@ -317,6 +323,9 @@ public class DDMFormPortlet extends MVCPortlet {
 
 	@Reference
 	private NPMResolver _npmResolver;
+
+	@Reference
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Reference
 	private ObjectFieldLocalService _objectFieldLocalService;

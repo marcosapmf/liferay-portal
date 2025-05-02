@@ -3,12 +3,14 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {FrameLocator, Locator, Page, expect} from '@playwright/test';
+import {FrameLocator, Locator, Page} from '@playwright/test';
 
 import {ProductMenuPage} from '../product-navigation-control-menu-web/ProductMenuPage';
 
 export class PortletConfigurationPermissionsPage {
 	readonly clearLink: Locator;
+	readonly editPageLink: Locator;
+	readonly editPageOptionsMenu: Locator;
 	readonly ownerRoleCell: Locator;
 	readonly page: Page;
 	readonly pageOptionsMenu: Locator;
@@ -22,6 +24,13 @@ export class PortletConfigurationPermissionsPage {
 	readonly successMessage: Locator;
 
 	constructor(page: Page) {
+		this.editPageLink = page.locator(
+			'.control-menu-nav-item .lfr-portal-tooltip[title="Edit"] a'
+		);
+		this.editPageOptionsMenu = page.getByRole('button', {
+			exact: true,
+			name: 'Options',
+		});
 		this.page = page;
 		this.pageOptionsMenu = page.getByTitle('Open Page Options Menu');
 		this.permissionsFrame = page.frameLocator(
@@ -36,8 +45,7 @@ export class PortletConfigurationPermissionsPage {
 		this.ownerRoleCell = this.permissionsFrame.getByRole('cell', {
 			name: 'Owner',
 		});
-		this.resultsBanner =
-			this.permissionsFrame.getByText('Results Found for');
+		this.resultsBanner = this.permissionsFrame.getByText('Found for');
 		this.saveButton = this.permissionsFrame.getByRole('button', {
 			name: 'Save',
 		});
@@ -57,15 +65,10 @@ export class PortletConfigurationPermissionsPage {
 		await this.permissionsMenuItem.click();
 	}
 
-	async changePagination(startValue: number, endValue: number) {
-		await this.permissionsFrame
-			.getByText(startValue + ' Entries', {exact: true})
-			.click();
-		await this.permissionsFrame
-			.getByRole('link', {name: endValue + ' Entries'})
-			.click();
-		await expect(
-			this.permissionsFrame.getByText('Showing 1 to ' + endValue)
-		).toBeVisible();
+	async goToEditPagePermissions() {
+		const editPageLink = await this.editPageLink.getAttribute('href');
+		await this.page.goto(editPageLink);
+		await this.editPageOptionsMenu.click();
+		await this.permissionsMenuItem.click();
 	}
 }

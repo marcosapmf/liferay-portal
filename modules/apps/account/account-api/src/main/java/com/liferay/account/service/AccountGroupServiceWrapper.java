@@ -27,12 +27,13 @@ public class AccountGroupServiceWrapper
 
 	@Override
 	public com.liferay.account.model.AccountGroup addAccountGroup(
-			long userId, String description, String name,
+			String externalReferenceCode, long userId, String description,
+			String name,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _accountGroupService.addAccountGroup(
-			userId, description, name, serviceContext);
+			externalReferenceCode, userId, description, name, serviceContext);
 	}
 
 	@Override
@@ -51,6 +52,14 @@ public class AccountGroupServiceWrapper
 	}
 
 	@Override
+	public com.liferay.account.model.AccountGroup fetchAccountGroup(
+			long accountGroupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _accountGroupService.fetchAccountGroup(accountGroupId);
+	}
+
+	@Override
 	public com.liferay.account.model.AccountGroup
 			fetchAccountGroupByExternalReferenceCode(
 				String externalReferenceCode, long companyId)
@@ -66,6 +75,16 @@ public class AccountGroupServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _accountGroupService.getAccountGroup(accountGroupId);
+	}
+
+	@Override
+	public com.liferay.account.model.AccountGroup
+			getAccountGroupByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _accountGroupService.getAccountGroupByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -110,12 +129,14 @@ public class AccountGroupServiceWrapper
 
 	@Override
 	public com.liferay.account.model.AccountGroup updateAccountGroup(
-			long accountGroupId, String description, String name,
+			String externalReferenceCode, long accountGroupId,
+			String description, String name,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _accountGroupService.updateAccountGroup(
-			accountGroupId, description, name, serviceContext);
+			externalReferenceCode, accountGroupId, description, name,
+			serviceContext);
 	}
 
 	@Override

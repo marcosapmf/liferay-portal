@@ -20,8 +20,6 @@ import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.WishListItem
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.WishListResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -143,6 +141,7 @@ public class Mutation {
 				@GraphQLName("productOptionExternalReferenceCode") String
 					productOptionExternalReferenceCode,
 				@GraphQLName("accountId") Long accountId,
+				@GraphQLName("currencyCode") String currencyCode,
 				@GraphQLName("productOptionValueId") Long productOptionValueId,
 				@GraphQLName("skuId") Long skuId,
 				@GraphQLName("pageSize") int pageSize,
@@ -160,7 +159,7 @@ public class Mutation {
 							channelExternalReferenceCode,
 							productExternalReferenceCode,
 							productOptionExternalReferenceCode, accountId,
-							productOptionValueId, skuId,
+							currencyCode, productOptionValueId, skuId,
 							Pagination.of(page, pageSize), skuOptions);
 
 				return paginationPage.getItems();
@@ -176,6 +175,7 @@ public class Mutation {
 				@GraphQLName("productId") Long productId,
 				@GraphQLName("productOptionId") Long productOptionId,
 				@GraphQLName("accountId") Long accountId,
+				@GraphQLName("currencyCode") String currencyCode,
 				@GraphQLName("productOptionValueId") Long productOptionValueId,
 				@GraphQLName("skuId") Long skuId,
 				@GraphQLName("pageSize") int pageSize,
@@ -191,7 +191,7 @@ public class Mutation {
 					productOptionValueResource.
 						postChannelProductProductOptionProductOptionValuesPage(
 							channelId, productId, productOptionId, accountId,
-							productOptionValueId, skuId,
+							currencyCode, productOptionValueId, skuId,
 							Pagination.of(page, pageSize), skuOptions);
 
 				return paginationPage.getItems();
@@ -232,6 +232,7 @@ public class Mutation {
 				@GraphQLName("productExternalReferenceCode") String
 					productExternalReferenceCode,
 				@GraphQLName("accountId") Long accountId,
+				@GraphQLName("currencyCode") String currencyCode,
 				@GraphQLName("quantity") java.math.BigDecimal quantity,
 				@GraphQLName("skuUnitOfMeasureKey") String skuUnitOfMeasureKey,
 				@GraphQLName("skuOptions") SkuOption[] skuOptions)
@@ -243,8 +244,8 @@ public class Mutation {
 				skuResource.
 					postChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuBySkuOption(
 						channelExternalReferenceCode,
-						productExternalReferenceCode, accountId, quantity,
-						skuUnitOfMeasureKey, skuOptions));
+						productExternalReferenceCode, accountId, currencyCode,
+						quantity, skuUnitOfMeasureKey, skuOptions));
 	}
 
 	@GraphQLField(
@@ -271,6 +272,7 @@ public class Mutation {
 			@GraphQLName("channelId") Long channelId,
 			@GraphQLName("productId") Long productId,
 			@GraphQLName("accountId") Long accountId,
+			@GraphQLName("currencyCode") String currencyCode,
 			@GraphQLName("quantity") java.math.BigDecimal quantity,
 			@GraphQLName("skuUnitOfMeasureKey") String skuUnitOfMeasureKey,
 			@GraphQLName("skuOptions") SkuOption[] skuOptions)
@@ -279,37 +281,8 @@ public class Mutation {
 		return _applyComponentServiceObjects(
 			_skuResourceComponentServiceObjects, this::_populateResourceContext,
 			skuResource -> skuResource.postChannelProductSkuBySkuOption(
-				channelId, productId, accountId, quantity, skuUnitOfMeasureKey,
-				skuOptions));
-	}
-
-	@GraphQLField
-	public WishList createChannelByExternalReferenceCodeWishList(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("accountId") Long accountId,
-			@GraphQLName("wishList") WishList wishList)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_wishListResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			wishListResource ->
-				wishListResource.postChannelByExternalReferenceCodeWishList(
-					externalReferenceCode, accountId, wishList));
-	}
-
-	@GraphQLField
-	public WishList createChannelWishList(
-			@GraphQLName("channelId") Long channelId,
-			@GraphQLName("accountId") Long accountId,
-			@GraphQLName("wishList") WishList wishList)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_wishListResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			wishListResource -> wishListResource.postChannelWishList(
-				channelId, accountId, wishList));
+				channelId, productId, accountId, currencyCode, quantity,
+				skuUnitOfMeasureKey, skuOptions));
 	}
 
 	@GraphQLField(description = "Deletes a wishlist by wishListId.")
@@ -340,6 +313,7 @@ public class Mutation {
 	@GraphQLField
 	public WishList patchWishList(
 			@GraphQLName("wishListId") Long wishListId,
+			@GraphQLName("accountId") Long accountId,
 			@GraphQLName("wishList") WishList wishList)
 		throws Exception {
 
@@ -347,7 +321,36 @@ public class Mutation {
 			_wishListResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			wishListResource -> wishListResource.patchWishList(
-				wishListId, wishList));
+				wishListId, accountId, wishList));
+	}
+
+	@GraphQLField
+	public WishList createChannelByExternalReferenceCodeWishList(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("accountId") Long accountId,
+			@GraphQLName("wishList") WishList wishList)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_wishListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			wishListResource ->
+				wishListResource.postChannelByExternalReferenceCodeWishList(
+					externalReferenceCode, accountId, wishList));
+	}
+
+	@GraphQLField
+	public WishList createChannelWishList(
+			@GraphQLName("channelId") Long channelId,
+			@GraphQLName("accountId") Long accountId,
+			@GraphQLName("wishList") WishList wishList)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_wishListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			wishListResource -> wishListResource.postChannelWishList(
+				channelId, accountId, wishList));
 	}
 
 	@GraphQLField(description = "Deletes a wishlist item by wishListItemId.")
@@ -565,12 +568,15 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

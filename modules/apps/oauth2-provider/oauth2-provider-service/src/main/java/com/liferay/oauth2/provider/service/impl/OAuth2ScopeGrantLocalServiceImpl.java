@@ -116,8 +116,37 @@ public class OAuth2ScopeGrantLocalServiceImpl
 		long companyId, String applicationName, String bundleSymbolicName,
 		String accessTokenContent) {
 
-		return oAuth2ScopeGrantFinder.findByC_A_B_A(
-			companyId, applicationName, bundleSymbolicName, accessTokenContent);
+		List<OAuth2ScopeGrant> oAuth2ScopeGrants = new ArrayList<>();
+
+		for (OAuth2Authorization oAuth2Authorization :
+				oAuth2AuthorizationPersistence.findByC_ATCH(
+					companyId, accessTokenContent.hashCode())) {
+
+			if (!Objects.equals(
+					accessTokenContent,
+					oAuth2Authorization.getAccessTokenContent())) {
+
+				continue;
+			}
+
+			for (OAuth2ScopeGrant oAuth2ScopeGrant :
+					oAuth2ScopeGrantPersistence.
+						getOAuth2AuthorizationOAuth2ScopeGrants(
+							oAuth2Authorization.getPrimaryKey())) {
+
+				if (Objects.equals(
+						applicationName,
+						oAuth2ScopeGrant.getApplicationName()) &&
+					Objects.equals(
+						bundleSymbolicName,
+						oAuth2ScopeGrant.getBundleSymbolicName())) {
+
+					oAuth2ScopeGrants.add(oAuth2ScopeGrant);
+				}
+			}
+		}
+
+		return oAuth2ScopeGrants;
 	}
 
 	@Override
@@ -174,13 +203,8 @@ public class OAuth2ScopeGrantLocalServiceImpl
 
 		String bundleSymbolicName = bundle.getSymbolicName();
 
-		if (!Objects.equals(
-				oAuth2ScopeGrant.getBundleSymbolicName(), bundleSymbolicName)) {
-
-			return false;
-		}
-
-		return true;
+		return Objects.equals(
+			oAuth2ScopeGrant.getBundleSymbolicName(), bundleSymbolicName);
 	}
 
 }

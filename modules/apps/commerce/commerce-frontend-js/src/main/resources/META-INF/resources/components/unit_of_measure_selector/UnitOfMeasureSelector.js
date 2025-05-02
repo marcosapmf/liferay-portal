@@ -4,7 +4,7 @@
  */
 
 import {ClaySelectWithOption} from '@clayui/form';
-import {useLiferayState} from '@liferay/frontend-js-state-web';
+import {useLiferayState} from '@liferay/frontend-js-state-web/react';
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useState} from 'react';
@@ -36,6 +36,7 @@ function UnitOfMeasureSelector({
 	productId,
 	resetQuantity,
 	size,
+	useQuantity,
 	value,
 }) {
 	const [inputProperties, setInputProperties] = useState({
@@ -57,6 +58,9 @@ function UnitOfMeasureSelector({
 				channelId,
 				productId,
 				accountId,
+				Liferay.CommerceContext
+					? Liferay.CommerceContext.currency.currencyCode
+					: '',
 				quantity,
 				skuUnitOfMeasureKey,
 				options || skuOptionsAtomState.skuOptions
@@ -87,7 +91,10 @@ function UnitOfMeasureSelector({
 				channelId,
 				productId,
 				cpInstanceId,
-				accountId
+				accountId,
+				Liferay.CommerceContext
+					? Liferay.CommerceContext.currency.currencyCode
+					: ''
 			).then((cpInstance) => {
 				const skuUnitOfMeasures = cpInstance.skuUnitOfMeasures || [];
 
@@ -121,7 +128,9 @@ function UnitOfMeasureSelector({
 
 				if (skuUnitOfMeasure?.key) {
 					postChannelProductSkuBySkuOption(
-						quantity,
+						(useQuantity
+							? quantity
+							: skuUnitOfMeasure?.incrementalOrderQuantity) || 1,
 						skuUnitOfMeasure?.key
 					);
 				}
@@ -252,12 +261,15 @@ function UnitOfMeasureSelector({
 							);
 
 						postChannelProductSkuBySkuOption(
-							getMinQuantity(
-								productConfiguration?.minOrderQuantity,
-								selectedUnitOfMeasure?.incrementalOrderQuantity ||
-									1,
-								selectedUnitOfMeasure?.precision || 0
-							),
+							(useQuantity
+								? getMinQuantity(
+										productConfiguration?.minOrderQuantity,
+										selectedUnitOfMeasure?.incrementalOrderQuantity ||
+											1,
+										selectedUnitOfMeasure?.precision || 0
+									)
+								: selectedUnitOfMeasure?.incrementalOrderQuantity) ||
+								1,
 							target.value
 						);
 					}}
@@ -279,6 +291,7 @@ UnitOfMeasureSelector.defaultProps = {
 	loadFinalPrice: false,
 	resetQuantity: true,
 	size: 'lg',
+	useQuantity: false,
 };
 
 UnitOfMeasureSelector.propTypes = {
@@ -300,6 +313,7 @@ UnitOfMeasureSelector.propTypes = {
 	productId: PropTypes.number.isRequired,
 	resetQuantity: PropTypes.bool,
 	size: PropTypes.oneOf(['lg', 'md', 'sm']),
+	useQuantity: PropTypes.bool,
 	value: PropTypes.string,
 };
 

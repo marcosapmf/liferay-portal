@@ -2,7 +2,9 @@
 definition {
 
 	property ci.retries.disabled = "true";
-	property portal.release = "true";
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Staging";
 
@@ -12,6 +14,12 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
+		WikiPortlet.enableWiki();
 
 		HeadlessSite.addSite(siteName = "Site Name");
 
@@ -88,9 +96,12 @@ definition {
 
 	@priority = 3
 	test ActivateStagingPageVersioningWithCustomDefaultLanguage {
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		JSONLayout.addPrivateLayout(
 			groupName = "Site Name",
@@ -109,55 +120,6 @@ definition {
 			groupName = "Site Name");
 	}
 
-	@description = "This is a use case for LPS-83147."
-	@priority = 3
-	test ActivateStagingWithPageScopedWebContent {
-		JSONLayout.addWidgetToPublicLayout(
-			groupName = "Site Name",
-			layoutName = "Staging Test Page",
-			widgetName = "Web Content Display");
-
-		Navigator.openSiteURL(siteName = "Site Name");
-
-		MouseOver(locator1 = "Portlet#PORTLET_CONTENT");
-
-		WebContentDisplayPortlet.configureScope(scopeSelection = "Staging Test Page");
-
-		Navigator.openSiteURL(siteName = "Site Name");
-
-		MouseOver(locator1 = "Portlet#PORTLET_CONTENT");
-
-		WebContentDisplayPortlet.viewConfigureScope(scopeSelection = "Staging Test Page");
-
-		var pageScopeId = JSONLayout.getPageScopeIdByGroupName(groupName = "Site Name");
-
-		echo("Page Scope ID is: ${pageScopeId}");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = ${pageScopeId});
-
-		WebContentNavigator.gotoAddCP();
-
-		WebContent.addCP(
-			webContentContent = "WC WebContent Content",
-			webContentTitle = "WC WebContent Title");
-
-		PortletEntry.publish();
-
-		JSONStaging.enableLocalStaging(groupName = "Site Name");
-
-		AssertConsoleTextNotPresent(value1 = "DataIntegrityViolationException");
-
-		AssertConsoleTextNotPresent(value1 = "SystemException");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = ${pageScopeId});
-
-		var key_webContentTitle = "WC WebContent Title";
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "WC#ENTRY_LIST_TITLE_ON_LIVE",
-			value1 = "WC WebContent Title");
-	}
-
 	@description = "This is a use case for LPS-94325."
 	@priority = 3
 	test ActivateStagingWithWCDOnFragment {
@@ -165,21 +127,12 @@ definition {
 			groupName = "Site Name",
 			name = "Collection Name");
 
-		FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "site-name");
-
-		FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
-
-		FragmentsAdmin.addFragment(fragmentName = "Fragment Name");
-
-		var fragmentHtml = '''<lfr-widget-web-content>''';
-		var htmlSnippet = '''<lfr-''';
-
-		FragmentsEditor.autocompleteFragmentHTML(
-			autocompleteField = "lfr-widget-web-content",
-			fragmentHtml = ${fragmentHtml},
-			htmlSnippet = ${htmlSnippet});
-
-		PortletEntry.publish();
+		JSONFragment.addSection(
+			collectionName = "Collection Name",
+			fragmentStatus = "Approved",
+			groupName = "Site Name",
+			html = "<lfr-widget-web-content></lfr-widget-web-content>",
+			name = "Fragment Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
 
@@ -189,7 +142,7 @@ definition {
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
 
@@ -407,7 +360,7 @@ definition {
 	@description = "This is a test for LPS-189238 TC-9. Verify can enable advanced staging configuration checkbox for remote staging."
 	@priority = 3
 	test CanEnableAdvancedStagingConfigurationForRemoteStaging {
-		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}tunneling.servlet.shared.secret=1234567890123456";
+		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}feature.flag.LPD-35013=true${line.separator}tunneling.servlet.shared.secret=1234567890123456";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -661,7 +614,7 @@ definition {
 	@priority = 3
 	test CanPublishWCWithURLReferenceViaRemoteStaging {
 		property app.server.bundles.size = "1";
-		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}tunneling.servlet.shared.secret=1234567890123456";
+		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}feature.flag.LPD-35013=true${line.separator}tunneling.servlet.shared.secret=1234567890123456";
 		property databases.size = "1";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -764,7 +717,7 @@ definition {
 					value = "/web/site-name/page-${num}");
 			}
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("And: Add another structure and template with 2 text fields and create 10 WC articles for their pages using the created structure 2") {
@@ -809,7 +762,7 @@ definition {
 					fieldLabel = "Content",
 					value = "Text Content-${num}");
 
-				PortletEntry.publish();
+				WebContent.publishWithPermissions();
 			}
 		}
 
@@ -893,7 +846,6 @@ definition {
 	test ConfigureDDMStructureViaAPWhenNotStagedAssets {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.name = "Data Engine";
 
 		Navigator.openSiteURL(siteName = "Site Name");
 
@@ -1100,7 +1052,7 @@ definition {
 					webContentContent = "Quality Content",
 					webContentTitle = ${webContentTitle});
 
-				PortletEntry.publish();
+				WebContent.publishWithPermissions();
 			}
 
 			Staging.openStagingAdmin(siteURLKey = ${randomSiteURLKey});
@@ -1119,7 +1071,7 @@ definition {
 				webContentContent = "Quality Content",
 				webContentTitle = "Vader");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 
 			WebContentNavigator.gotoEditCP(webContentTitle = "Palpatine");
 
@@ -1302,7 +1254,7 @@ definition {
 			webContentTitle = "WC Title 2",
 			webContentWebContent = "WC Title 1");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		JSONGroup.deleteGroupByName(groupName = "Site Name");
 
@@ -1408,7 +1360,7 @@ definition {
 					webContentContent = "Quality Content",
 					webContentTitle = ${webContentTitle});
 
-				PortletEntry.publish();
+				WebContent.publishWithPermissions();
 			}
 		}
 
@@ -1519,12 +1471,11 @@ definition {
 	@priority = 3
 	test PublishChildSiteViaRemoteStagingWithParentStructure {
 		property app.server.bundles.size = "1";
-		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}tunneling.servlet.shared.secret=1234567890123456";
+		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}feature.flag.LPD-35013=true${line.separator}tunneling.servlet.shared.secret=1234567890123456";
 		property databases.size = "1";
 		property minimum.slave.ram = "24";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.name = "Data Engine";
 
 		HeadlessSite.addSite(
 			parentSiteName = "Site Name",
@@ -1586,7 +1537,7 @@ definition {
 			webContentText = "Web Content Content",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewTitle(webContentTitle = "Web Content Title");
 
@@ -1821,7 +1772,9 @@ definition {
 			menuItem = "Edit Web Content",
 			webContentTitle = "WebContent Title");
 
-		WebContentDisplayPortlet.addTag(tagNameList = "tag name");
+		WebContentDisplayPortlet.addTag(
+			edit = "true",
+			tagNameList = "tag name");
 
 		JSONStaging.enableLocalStaging(groupName = "Site Name");
 
@@ -1955,6 +1908,10 @@ definition {
 			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea1@liferay.com");
 
+		Navigator.gotoStagedSitePage(
+			pageName = "Staging Test Page",
+			siteName = "Site Name");
+
 		for (var pageCount : list "1,2,3") {
 			Navigator.gotoStagedSitePage(
 				pageName = "Staging Test Page ${pageCount}",
@@ -1962,11 +1919,25 @@ definition {
 
 			Portlet.addPG(portletName = "Web Content Display");
 
+			WaitForElementNotPresent(locator1 = "Message#SUCCESS_DISMISSIBLE");
+
 			Portlet.viewPG(portletName = "Web Content Display");
 
-			Navigator.gotoStagedSitePage(
-				pageName = "Staging Test Page ${pageCount}",
-				siteName = "Site Name");
+			var count = 0;
+
+			while (${count} != 10) {
+				Refresh();
+
+				WaitForPageLoad();
+
+				WaitForElementPresent(locator1 = "Message#WORKFLOW_STATUS");
+
+				var count = ${count} + 1;
+			}
+
+			AssertTextEquals(
+				locator1 = "Message#WORKFLOW_STATUS",
+				value1 = "Draft");
 
 			Staging.submitForWorkflowPageRevision();
 		}
@@ -2074,9 +2045,12 @@ definition {
 
 	@priority = 3
 	test PublishTemplateWithPages {
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		JSONLayout.addPrivateLayout(
 			groupName = "Site Name",
@@ -2129,7 +2103,7 @@ definition {
 				webContentContent = "Web Content Content",
 				webContentTitle = "Web Content Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 
 			FormsAdminNavigator.openFormsAdmin(siteURLKey = "site-name-staging");
 
@@ -2310,7 +2284,7 @@ definition {
 	@priority = 3
 	test PublishVocabularyDeletionViaRemoteStagingOnGlobalSite {
 		property app.server.bundles.size = "1";
-		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}tunneling.servlet.shared.secret=1234567890123456";
+		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}feature.flag.LPD-35013=true${line.separator}tunneling.servlet.shared.secret=1234567890123456";
 		property databases.size = "1";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -2458,7 +2432,7 @@ definition {
 			imageSourceURL = ${dmDocumentURL},
 			navTab = "URL");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Navigator.gotoSitePage(
 			pageName = "Staging Test Page",
@@ -2553,7 +2527,7 @@ definition {
 				webContentContent = "Quality Content",
 				webContentTitle = "Mirage");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 
 			WebContent.moveToFolderCP(
 				folderName = "AC",
@@ -2593,7 +2567,7 @@ definition {
 				webContentContent = "Web Content - Content",
 				webContentTitle = "Web Content - Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("When: The new Web Content is Published to Live") {
@@ -2722,7 +2696,6 @@ definition {
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.names = "Training";
 
 		JSONLayout.addWidgetToPublicLayout(
 			groupName = "Site Name",
@@ -2780,7 +2753,6 @@ definition {
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.names = "Training";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -2947,7 +2919,7 @@ definition {
 	@priority = 3
 	test StagingRemoteWithDynamicExportLimit {
 		property app.server.bundles.size = "1";
-		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}tunneling.servlet.shared.secret=1234567890123456";
+		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}feature.flag.LPD-35013=true${line.separator}tunneling.servlet.shared.secret=1234567890123456";
 		property databases.size = "1";
 		property minimum.slave.ram = "24";
 		property test.liferay.virtual.instance = "false";
@@ -3211,7 +3183,7 @@ definition {
 			webContentContent = "Web Content Content 1",
 			webContentTitle = "Web Content Title 1");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoAddCP();
 
@@ -3219,7 +3191,7 @@ definition {
 			webContentContent = "Web Content Content 2",
 			webContentTitle = "Web Content Title 2");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		JSONStaging.enableLocalStaging(groupName = "Site Name");
 
@@ -3324,7 +3296,7 @@ definition {
 			webContentContent = "Web Content Content",
 			webContentTitle = '''Special Char aŐb''');
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewTitle(webContentTitle = '''Special Char aŐb''');
 
@@ -3612,7 +3584,7 @@ definition {
 			pageName = "Child Page A",
 			siteName = "Site Name Staging");
 
-		Page.viewWithWorkflowPG(workflowStatus = "Pending (Review)");
+		Page.viewWithWorkflowPG(workflowStatus = "Pending");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging Page Edit",
@@ -3808,6 +3780,7 @@ definition {
 
 		WebContent.addWithCategoryCP(
 			categoryName = "Category Name",
+			edit = "true",
 			vocabularyName = "Vocabulary Name",
 			webContentContent = "Web Content With Category",
 			webContentTitle = "Web Content Title 2");
@@ -3903,7 +3876,9 @@ definition {
 	@description = "This is a use case for LPS-143852."
 	@priority = 3
 	test ViewVirtualHostStagingPublicPageAsGuest {
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Delete Staging Test Page") {
 			JSONLayout.deletePublicLayout(

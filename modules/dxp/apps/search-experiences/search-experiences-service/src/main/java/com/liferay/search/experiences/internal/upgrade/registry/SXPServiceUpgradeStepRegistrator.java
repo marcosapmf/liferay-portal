@@ -5,10 +5,13 @@
 
 package com.liferay.search.experiences.internal.upgrade.registry;
 
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
+import com.liferay.search.experiences.internal.upgrade.v3_1_4.SXPBlueprintAndSXPElementUpgradeProcess;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -48,7 +51,7 @@ public class SXPServiceUpgradeStepRegistrator
 		registry.register(
 			"1.2.0", "1.3.0",
 			new com.liferay.search.experiences.internal.upgrade.v1_3_0.
-				SXPBlueprintUpgradeProcess());
+				SXPBlueprintAndSXPElementUpgradeProcess());
 
 		registry.register(
 			"1.3.0", "1.3.1",
@@ -78,12 +81,12 @@ public class SXPServiceUpgradeStepRegistrator
 		registry.register(
 			"2.0.1", "2.0.2",
 			new com.liferay.search.experiences.internal.upgrade.v2_0_2.
-				SXPBlueprintUpgradeProcess());
+				SXPBlueprintAndSXPElementUpgradeProcess());
 
 		registry.register(
 			"2.0.2", "2.0.3",
 			new com.liferay.search.experiences.internal.upgrade.v2_0_3.
-				SXPBlueprintUpgradeProcess());
+				SXPElementUpgradeProcess());
 
 		registry.register(
 			"2.0.3", "3.0.0",
@@ -93,18 +96,35 @@ public class SXPServiceUpgradeStepRegistrator
 		registry.register(
 			"3.0.0", "3.1.0",
 			new com.liferay.search.experiences.internal.upgrade.v3_1_0.
-				SXPBlueprintUpgradeProcess());
+				SXPBlueprintAndSXPElementUpgradeProcess());
 
 		registry.register(
 			"3.1.0", "3.1.1",
 			new com.liferay.search.experiences.internal.upgrade.v3_1_1.
-				SXPBlueprintUpgradeProcess());
+				SXPBlueprintAndSXPElementUpgradeProcess());
 
 		registry.register(
 			"3.1.1", "3.1.2",
 			new com.liferay.search.experiences.internal.upgrade.v3_1_2.
 				SXPBlueprintUpgradeProcess(_jsonFactory));
+
+		registry.register(
+			"3.1.2", "3.1.3",
+			new com.liferay.search.experiences.internal.upgrade.v3_1_3.
+				SXPBlueprintAndSXPElementUpgradeProcess(
+					_groupLocalService, _jsonFactory));
+
+		registry.register(
+			"3.1.3", "3.1.4",
+			new SXPBlueprintAndSXPElementUpgradeProcess(
+				_assetCategoryLocalService, _groupLocalService, _jsonFactory));
 	}
+
+	@Reference
+	private AssetCategoryLocalService _assetCategoryLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private JSONFactory _jsonFactory;

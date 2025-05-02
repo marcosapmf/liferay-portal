@@ -8,7 +8,7 @@ dependencies {
 	compileInclude group: "edu.ucar", name: "netcdf", version: "4.3.23"
 	compileInclude group: "net.java.dev.jna", name: "jna", version: "4.1.0"
 	compileInclude group: "org.apache.commons", name: "commons-exec", version: "1.3"
-	compileInclude group: "org.apache.commons", name: "commons-lang3", version: "3.12.0"
+	compileInclude group: "org.apache.commons", name: "commons-lang3", version: "3.17.0"
 	compileInclude group: "org.apache.james", name: "apache-mime4j-core", version: "0.8.11"
 	compileInclude group: "org.apache.james", name: "apache-mime4j-dom", version: "0.8.11"
 	compileInclude group: "org.apache.poi", name: "poi-scratchpad", version: "5.2.2"
@@ -17,7 +17,6 @@ dependencies {
 	compileInclude group: "org.ccil.cowan.tagsoup", name: "tagsoup", version: "1.2.1"
 	compileInclude group: "org.gagravarr", name: "vorbis-java-core", version: "0.8"
 	compileInclude group: "org.tallison", name: "jmatio", version: "1.5"
-
 	compileOnly group: "com.adobe.xmp", name: "xmpcore", version: "6.1.11"
 	compileOnly group: "com.liferay", name: "biz.aQute.bnd.annotation", version: "4.2.0.LIFERAY-PATCHED-2"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
@@ -28,7 +27,7 @@ dependencies {
 	compileOnly group: "org.apache.poi", name: "poi", version: "5.2.2"
 	compileOnly group: "org.apache.poi", name: "poi-ooxml", version: "5.2.2"
 	compileOnly group: "org.apache.poi", name: "poi-ooxml-lite", version: "5.2.2"
-	compileOnly group: "org.apache.xmlbeans", name: "xmlbeans", version: "5.0.3"
+	compileOnly group: "org.apache.xmlbeans", name: "xmlbeans", version: "5.3.0"
 	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations", version: "1.4.0"
 	compileOnly group: "org.osgi", name: "osgi.core", version: "6.0.0"
 	compileOnly project(":apps:static:portal-configuration:portal-configuration-metatype-api")

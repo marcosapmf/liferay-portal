@@ -36,6 +36,9 @@ public class SamlSpAuthRequestTable extends BaseTable<SamlSpAuthRequestTable> {
 		createColumn(
 			"samlIdpEntityId", String.class, Types.VARCHAR,
 			Column.FLAG_DEFAULT);
+	public final Column<SamlSpAuthRequestTable, String> samlRelayState =
+		createColumn(
+			"samlRelayState", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<SamlSpAuthRequestTable, String> samlSpAuthRequestKey =
 		createColumn(
 			"samlSpAuthRequestKey", String.class, Types.VARCHAR,

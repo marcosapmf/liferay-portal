@@ -10,20 +10,25 @@ import com.liferay.commerce.price.list.model.CommercePriceEntry;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
 import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
+import com.liferay.commerce.product.configuration.CProductVersionConfiguration;
 import com.liferay.commerce.product.constants.CPInstanceConstants;
 import com.liferay.commerce.product.model.CPDefinition;
+import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPOption;
+import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
+import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CPOptionLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogLocalServiceUtil;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.product.type.simple.constants.SimpleCPTypeConstants;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
@@ -36,6 +41,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Time;
@@ -508,6 +514,61 @@ public class CPDefinitionLocalServiceTest {
 	}
 
 	@Test
+	public void testCopyCPDefinition() throws PortalException {
+		frutillaRule.scenario(
+			"Copy a product"
+		).given(
+			"A product definition"
+		).when(
+			"the copy method is run"
+		).then(
+			"the copy is created without exception"
+		).and(
+			"ERCs of specification values are different"
+		);
+
+		CPDefinition cpDefinition1 = CPTestUtil.addCPDefinitionFromCatalog(
+			_commerceCatalog.getGroupId(), SimpleCPTypeConstants.NAME, true,
+			true);
+
+		CPSpecificationOption cpSpecificationOption =
+			CPTestUtil.addCPSpecificationOption(
+				_commerceCatalog.getGroupId(), false);
+
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue1 =
+				_cpDefinitionSpecificationOptionValueLocalService.
+					addCPDefinitionSpecificationOptionValue(
+						RandomTestUtil.randomString(),
+						cpDefinition1.getCPDefinitionId(),
+						cpSpecificationOption.getCPSpecificationOptionId(),
+						cpSpecificationOption.getCPOptionCategoryId(),
+						RandomTestUtil.randomDouble(),
+						RandomTestUtil.randomLocaleStringMap(), true,
+						ServiceContextTestUtil.getServiceContext(
+							_commerceCatalog.getGroupId()));
+
+		CPDefinition cpDefinition2 = _cpDefinitionLocalService.copyCPDefinition(
+			cpDefinition1.getCPDefinitionId());
+
+		Assert.assertNotNull(cpDefinition2);
+
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue2 =
+				_cpDefinitionSpecificationOptionValueLocalService.
+					getCPDefinitionSpecificationOptionValues(
+						cpDefinition2.getCPDefinitionId(), null,
+						QueryUtil.ALL_POS, QueryUtil.ALL_POS, null
+					).get(
+						0
+					);
+
+		Assert.assertNotEquals(
+			cpDefinitionSpecificationOptionValue1.getExternalReferenceCode(),
+			cpDefinitionSpecificationOptionValue2.getExternalReferenceCode());
+	}
+
+	@Test
 	public void testDeleteCPDefinitionWithIgnoreSKUCombinationsAndDefaultInstance()
 		throws Exception {
 
@@ -574,6 +635,106 @@ public class CPDefinitionLocalServiceTest {
 		CProduct cProduct = cpDefinition.getCProduct();
 
 		Assert.assertEquals("ERC", cProduct.getExternalReferenceCode());
+	}
+
+	@Test
+	public void testUpdateCPDefinitionWithVersioningEnabled() throws Exception {
+		frutillaRule.scenario(
+			"Update product definition with versioning enabled"
+		).given(
+			"I add a product definition"
+		).when(
+			"the product versioning is enabled"
+		).and(
+			"the product is updated"
+		).then(
+			"the product should have a new version with the product change"
+		);
+
+		CPDefinition cpDefinition = CPTestUtil.addCPDefinitionFromCatalog(
+			_commerceCatalog.getGroupId(), SimpleCPTypeConstants.NAME, false,
+			false);
+
+		Date displayDate = cpDefinition.getDisplayDate();
+		Date expirationDate = cpDefinition.getExpirationDate();
+
+		cpDefinition = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition.getCPDefinitionId(), cpDefinition.getNameMap(),
+			cpDefinition.getShortDescriptionMap(),
+			cpDefinition.getDescriptionMap(), cpDefinition.getUrlTitleMap(),
+			cpDefinition.getMetaTitleMap(),
+			cpDefinition.getMetaDescriptionMap(),
+			cpDefinition.getMetaKeywordsMap(),
+			cpDefinition.isIgnoreSKUCombinations(), true, true, true,
+			cpDefinition.getShippingExtraPrice(), cpDefinition.getWidth(),
+			cpDefinition.getHeight(), cpDefinition.getDepth(),
+			cpDefinition.getWeight(), cpDefinition.getCPTaxCategoryId(),
+			cpDefinition.isTaxExempt(), cpDefinition.isTelcoOrElectronics(),
+			cpDefinition.getDDMStructureKey(), cpDefinition.isPublished(),
+			displayDate.getMonth(), displayDate.getDate(),
+			displayDate.getYear(), displayDate.getHours(),
+			displayDate.getMinutes(), expirationDate.getMonth(),
+			expirationDate.getDate(), expirationDate.getYear(),
+			expirationDate.getHours(), expirationDate.getMinutes(), true,
+			ServiceContextTestUtil.getServiceContext());
+
+		cpDefinition = _cpDefinitionLocalService.updateCPDefinition(
+			cpDefinition.getCPDefinitionId(), cpDefinition.getNameMap(),
+			cpDefinition.getShortDescriptionMap(),
+			cpDefinition.getDescriptionMap(), cpDefinition.getUrlTitleMap(),
+			cpDefinition.getMetaTitleMap(),
+			cpDefinition.getMetaDescriptionMap(),
+			cpDefinition.getMetaKeywordsMap(),
+			cpDefinition.isIgnoreSKUCombinations(), true, true, true,
+			cpDefinition.getShippingExtraPrice(), cpDefinition.getWidth(),
+			cpDefinition.getHeight(), cpDefinition.getDepth(),
+			cpDefinition.getWeight(), cpDefinition.getCPTaxCategoryId(),
+			cpDefinition.isTaxExempt(), cpDefinition.isTelcoOrElectronics(),
+			cpDefinition.getDDMStructureKey(), cpDefinition.isPublished(),
+			displayDate.getMonth(), displayDate.getDate(),
+			displayDate.getYear(), displayDate.getHours(),
+			displayDate.getMinutes(), expirationDate.getMonth(),
+			expirationDate.getDate(), expirationDate.getYear(),
+			expirationDate.getHours(), expirationDate.getMinutes(), true,
+			ServiceContextTestUtil.getServiceContext());
+
+		CProduct cProduct1 = cpDefinition.getCProduct();
+
+		Assert.assertEquals(1, cProduct1.getLatestVersion());
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						_company.getCompanyId(),
+						CProductVersionConfiguration.class.getName(),
+						HashMapDictionaryBuilder.<String, Object>put(
+							"enabled", true
+						).build())) {
+
+			cpDefinition = _cpDefinitionLocalService.updateCPDefinition(
+				cpDefinition.getCPDefinitionId(), cpDefinition.getNameMap(),
+				cpDefinition.getShortDescriptionMap(),
+				cpDefinition.getDescriptionMap(), cpDefinition.getUrlTitleMap(),
+				cpDefinition.getMetaTitleMap(),
+				cpDefinition.getMetaDescriptionMap(),
+				cpDefinition.getMetaKeywordsMap(),
+				cpDefinition.isIgnoreSKUCombinations(), true, true, true,
+				cpDefinition.getShippingExtraPrice(), cpDefinition.getWidth(),
+				cpDefinition.getHeight(), cpDefinition.getDepth(),
+				cpDefinition.getWeight(), cpDefinition.getCPTaxCategoryId(),
+				cpDefinition.isTaxExempt(), cpDefinition.isTelcoOrElectronics(),
+				cpDefinition.getDDMStructureKey(), cpDefinition.isPublished(),
+				displayDate.getMonth(), displayDate.getDate(),
+				displayDate.getYear(), displayDate.getHours(),
+				displayDate.getMinutes(), expirationDate.getMonth(),
+				expirationDate.getDate(), expirationDate.getYear(),
+				expirationDate.getHours(), expirationDate.getMinutes(), true,
+				ServiceContextTestUtil.getServiceContext());
+
+			CProduct cProduct2 = cpDefinition.getCProduct();
+
+			Assert.assertEquals(2, cProduct2.getLatestVersion());
+		}
 	}
 
 	@Test
@@ -716,6 +877,10 @@ public class CPDefinitionLocalServiceTest {
 	@Inject
 	private CPDefinitionOptionRelLocalService
 		_cpDefinitionOptionRelLocalService;
+
+	@Inject
+	private CPDefinitionSpecificationOptionValueLocalService
+		_cpDefinitionSpecificationOptionValueLocalService;
 
 	@Inject
 	private CPInstanceLocalService _cpInstanceLocalService;

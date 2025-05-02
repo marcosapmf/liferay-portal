@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -72,9 +73,9 @@ public class APIEndpointRelevantObjectEntryModelListener
 				originalObjectEntry.getValues(), objectEntry.getValues(),
 				"httpMethod", "path", "pathParameter",
 				"pathParameterDescription", "retrieveType",
-				"r_apiApplicationToAPIEndpoints_c_apiApplicationId",
-				"r_requestAPISchemaToAPIEndpoints_c_apiSchemaId",
-				"r_responseAPISchemaToAPIEndpoints_c_apiSchemaId")) {
+				"r_apiApplicationToAPIEndpoints_l_apiApplicationId",
+				"r_requestAPISchemaToAPIEndpoints_l_apiSchemaId",
+				"r_responseAPISchemaToAPIEndpoints_l_apiSchemaId")) {
 
 			_validate(objectEntry);
 		}
@@ -115,19 +116,16 @@ public class APIEndpointRelevantObjectEntryModelListener
 			_objectEntryHelper.getUniqueObjectFieldNames(
 				companyId, (String)values.get("mainObjectDefinitionERC"));
 
-		if (uniqueObjectFields.contains(pathParameter)) {
-			return true;
-		}
-
-		return false;
+		return uniqueObjectFields.contains(pathParameter);
 	}
 
 	private void _validate(ObjectEntry objectEntry) {
 		try {
 			Map<String, Serializable> values = objectEntry.getValues();
 
-			long apiApplicationId = (long)values.get(
-				"r_apiApplicationToAPIEndpoints_c_apiApplicationId");
+			long apiApplicationId = GetterUtil.getLong(
+				values.get(
+					"r_apiApplicationToAPIEndpoints_l_apiApplicationId"));
 
 			if (!_validationHelper.isValidObjectEntry(
 					"L_API_APPLICATION", apiApplicationId)) {
@@ -138,8 +136,8 @@ public class APIEndpointRelevantObjectEntryModelListener
 					"an-api-endpoint-must-be-related-to-an-api-application");
 			}
 
-			long responseAPISchemaId = (long)values.get(
-				"r_responseAPISchemaToAPIEndpoints_c_apiSchemaId");
+			long responseAPISchemaId = GetterUtil.getLong(
+				values.get("r_responseAPISchemaToAPIEndpoints_l_apiSchemaId"));
 
 			APIApplication.Endpoint.Scope scope =
 				APIApplication.Endpoint.Scope.parse(
@@ -150,8 +148,8 @@ public class APIEndpointRelevantObjectEntryModelListener
 					apiApplicationId, responseAPISchemaId, scope);
 			}
 
-			long requestAPISchemaId = (long)values.get(
-				"r_requestAPISchemaToAPIEndpoints_c_apiSchemaId");
+			long requestAPISchemaId = GetterUtil.getLong(
+				values.get("r_requestAPISchemaToAPIEndpoints_l_apiSchemaId"));
 
 			if (requestAPISchemaId != 0) {
 				_validateAPISchema(apiApplicationId, requestAPISchemaId, scope);
@@ -185,24 +183,21 @@ public class APIEndpointRelevantObjectEntryModelListener
 				"id ne '", objectEntry.getObjectEntryId(),
 				"' and httpMethod eq '", values.get("httpMethod"),
 				"' and path eq '", values.get("path"),
-				"' and r_apiApplicationToAPIEndpoints_c_apiApplicationId eq '",
-				values.get("r_apiApplicationToAPIEndpoints_c_apiApplicationId"),
+				"' and r_apiApplicationToAPIEndpoints_l_apiApplicationId eq '",
+				values.get("r_apiApplicationToAPIEndpoints_l_apiApplicationId"),
 				"'");
 			ObjectDefinition apiEndpointObjectDefinition =
 				_objectDefinitionLocalService.getObjectDefinition(
 					objectEntry.getObjectDefinitionId());
 
-			Predicate predicate = _filterFactory.create(
-				filterString, apiEndpointObjectDefinition);
+			int count = _objectEntryLocalService.getValuesListCount(
+				objectEntry.getGroupId(), objectEntry.getCompanyId(),
+				objectEntry.getUserId(), objectEntry.getObjectDefinitionId(),
+				_filterFactory.create(
+					filterString, apiEndpointObjectDefinition),
+				null);
 
-			List<Map<String, Serializable>> valuesList =
-				_objectEntryLocalService.getValuesList(
-					objectEntry.getGroupId(), objectEntry.getCompanyId(),
-					objectEntry.getUserId(),
-					objectEntry.getObjectDefinitionId(), null, predicate, null,
-					-1, -1, null);
-
-			if (!valuesList.isEmpty()) {
+			if (count > 0) {
 				throw new ObjectEntryValuesException.InvalidObjectField(
 					null,
 					"There is an API endpoint with the same HTTP method and " +
@@ -247,7 +242,7 @@ public class APIEndpointRelevantObjectEntryModelListener
 		if (!Objects.equals(
 				apiApplicationId,
 				apiSchemaValues.get(
-					"r_apiApplicationToAPISchemas_c_apiApplicationId"))) {
+					"r_apiApplicationToAPISchemas_l_apiApplicationId"))) {
 
 			throw new ObjectEntryValuesException.InvalidObjectField(
 				null,

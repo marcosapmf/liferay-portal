@@ -6,8 +6,8 @@
 package com.liferay.portal.search.similar.results.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
-import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.search.similar.results.web.internal.constants.SimilarResultsPortletKeys;
+import com.liferay.portlet.display.template.portlet.action.BaseConfigurationAction;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -21,7 +21,7 @@ import org.osgi.service.component.annotations.Component;
 	service = ConfigurationAction.class
 )
 public class SimilarResultsPortletConfigurationAction
-	extends DefaultConfigurationAction {
+	extends BaseConfigurationAction {
 
 	@Override
 	public String getJspPath(HttpServletRequest httpServletRequest) {

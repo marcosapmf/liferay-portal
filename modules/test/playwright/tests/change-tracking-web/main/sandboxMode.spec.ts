@@ -1,0 +1,130 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import {expect, mergeTests} from '@playwright/test';
+
+import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
+import {changeTrackingPagesTest} from '../../../fixtures/changeTrackingPagesTest';
+import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
+import getRandomString from '../../../utils/getRandomString';
+import {performLoginViaApi, performLogout} from '../../../utils/performLogin';
+import {waitForAlert} from '../../../utils/waitForAlert';
+import {journalPagesTest} from '../../journal-web/main/fixtures/journalPagesTest';
+
+export const test = mergeTests(
+	featureFlagsTest({
+		'LPD-20556': {enabled: true},
+	}),
+	apiHelpersTest,
+	changeTrackingPagesTest,
+	journalPagesTest
+);
+
+test.beforeEach(async ({changeTrackingPage}) => {
+	await changeTrackingPage.toggleSandboxConfiguration(true);
+});
+
+test.afterEach(async ({changeTrackingPage}) => {
+	await changeTrackingPage.toggleSandboxConfiguration(false);
+});
+
+test('LPD-34602 Add view-only mode for production when using Publications sandbox', async ({
+	apiHelpers,
+	changeTrackingPage,
+	page,
+}) => {
+	const user = await changeTrackingPage.addUserWithPublicationsUserRole();
+
+	await performLogout(page);
+
+	await performLoginViaApi(page, user.alternateName);
+
+	const changeTrackingIndicatorButton = page.locator(
+		'.change-tracking-indicator-button'
+	);
+
+	await changeTrackingIndicatorButton.click();
+
+	const viewInProductionMenuItem = page.getByRole('menuitem', {
+		name: 'View On Production',
+	});
+
+	await expect(viewInProductionMenuItem).toBeVisible();
+
+	await viewInProductionMenuItem.click();
+
+	const viewingProductionMenuItem = page.getByText('Viewing Production');
+
+	await expect(viewingProductionMenuItem).toBeVisible();
+
+	await viewingProductionMenuItem.click();
+
+	const workOnUserMenuItem = page.getByText('Work on user');
+
+	await expect(workOnUserMenuItem).toBeVisible();
+
+	await workOnUserMenuItem.click();
+
+	await performLogout(page);
+
+	await performLoginViaApi(page, 'test');
+
+	await changeTrackingPage.workOnProduction();
+
+	await apiHelpers.headlessAdminUser.deleteUserAccount(Number(user.id));
+});
+
+test('LPD-39341 Sandbox mode allows users to work on production without permissions', async ({
+	apiHelpers,
+	changeTrackingPage,
+	journalEditArticlePage,
+	page,
+}) => {
+	const user = await changeTrackingPage.addUserWithPublicationsUserRole();
+
+	await performLogout(page);
+
+	await performLoginViaApi(page, user.alternateName);
+
+	const sandboxPublication = await page.getByText(user.alternateName + ' - ');
+
+	await expect(sandboxPublication).toBeVisible();
+
+	await journalEditArticlePage.goto();
+
+	const title = getRandomString();
+
+	await journalEditArticlePage.fillTitle(title);
+
+	await journalEditArticlePage.publishArticle();
+
+	await waitForAlert(page, `Success:${title} was created successfully.`);
+
+	await performLogout(page);
+
+	await performLoginViaApi(page, 'test');
+
+	await changeTrackingPage.publishSandboxPublication(user.alternateName);
+
+	await performLogout(page);
+
+	await performLoginViaApi(page, user.alternateName);
+
+	const newSandboxPublication = await page.getByText(
+		user.alternateName + ' - '
+	);
+
+	await expect(sandboxPublication).not.toBe(newSandboxPublication);
+
+	await expect(newSandboxPublication).toBeVisible();
+
+	await performLogout(page);
+
+	await performLoginViaApi(page, 'test');
+
+	await changeTrackingPage.workOnProduction();
+
+	await apiHelpers.headlessAdminUser.deleteUserAccount(Number(user.id));
+});

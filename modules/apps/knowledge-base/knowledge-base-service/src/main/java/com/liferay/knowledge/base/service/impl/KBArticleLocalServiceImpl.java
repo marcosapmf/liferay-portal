@@ -82,6 +82,7 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
+import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
@@ -111,6 +112,7 @@ import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
@@ -142,6 +144,7 @@ import com.liferay.trash.service.TrashEntryLocalService;
 import com.liferay.trash.service.TrashVersionLocalService;
 
 import java.io.InputStream;
+import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -181,9 +184,9 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 
 		return _portletFileRepository.addPortletFileEntry(
 			null, kbArticle.getGroupId(), userId, KBArticle.class.getName(),
-			kbArticle.getClassPK(), KBConstants.SERVICE_NAME,
+			resourcePrimKey, KBConstants.SERVICE_NAME,
 			kbArticle.getAttachmentsFolderId(), inputStream, fileName, mimeType,
-			false);
+			true);
 	}
 
 	@Override
@@ -370,9 +373,7 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 
 		long userId = _userLocalService.getGuestUserId(company.getCompanyId());
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-188058")) {
-			_checkKBArticlesByDisplayDate(company, date, userId);
-		}
+		_checkKBArticlesByDisplayDate(company, date, userId);
 
 		_checkKBArticlesByExpirationDate(company, date, userId);
 
@@ -746,6 +747,20 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 		}
 
 		return kbArticles.get(0);
+	}
+
+	@Override
+	public PersistedModel fetchPersistedModel(Serializable primaryKeyObj) {
+		PersistedModel persistedModel = kbArticlePersistence.fetchByPrimaryKey(
+			primaryKeyObj);
+
+		if (persistedModel == null) {
+			persistedModel = fetchLatestKBArticle(
+				GetterUtil.getLong(primaryKeyObj),
+				WorkflowConstants.STATUS_APPROVED);
+		}
+
+		return persistedModel;
 	}
 
 	@Override
@@ -1825,9 +1840,7 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 		if (status == WorkflowConstants.STATUS_APPROVED) {
 			main = true;
 
-			if (FeatureFlagManagerUtil.isEnabled("LPS-188058") &&
-				date.before(kbArticle.getDisplayDate())) {
-
+			if (date.before(kbArticle.getDisplayDate())) {
 				status = WorkflowConstants.STATUS_SCHEDULED;
 			}
 		}

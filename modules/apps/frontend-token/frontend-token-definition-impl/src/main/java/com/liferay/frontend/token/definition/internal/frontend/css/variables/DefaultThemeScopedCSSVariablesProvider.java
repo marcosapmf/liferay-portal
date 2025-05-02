@@ -11,9 +11,11 @@ import com.liferay.frontend.token.definition.FrontendToken;
 import com.liferay.frontend.token.definition.FrontendTokenDefinition;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.frontend.token.definition.FrontendTokenMapping;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -45,13 +47,34 @@ public class DefaultThemeScopedCSSVariablesProvider
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		Group group = themeDisplay.getScopeGroup();
+		FrontendTokenDefinition frontendTokenDefinition = null;
 
-		FrontendTokenDefinition frontendTokenDefinition =
-			_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
-				_layoutSetLocalService.fetchLayoutSet(
-					themeDisplay.getSiteGroupId(),
-					group.isLayoutSetPrototype()));
+		if (FeatureFlagManagerUtil.isEnabled(
+				themeDisplay.getCompanyId(), "LPD-30204")) {
+
+			String styleBookEntryThemeId = ParamUtil.getString(
+				httpServletRequest, "styleBookEntryThemeId");
+
+			if (Validator.isNotNull(styleBookEntryThemeId)) {
+				frontendTokenDefinition =
+					_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
+						themeDisplay.getCompanyId(), styleBookEntryThemeId);
+			}
+			else {
+				frontendTokenDefinition =
+					_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
+						themeDisplay.getLayout());
+			}
+		}
+		else {
+			Group group = themeDisplay.getScopeGroup();
+
+			frontendTokenDefinition =
+				_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
+					_layoutSetLocalService.fetchLayoutSet(
+						themeDisplay.getSiteGroupId(),
+						group.isLayoutSetPrototype()));
+		}
 
 		if (frontendTokenDefinition == null) {
 			return Collections.emptyList();

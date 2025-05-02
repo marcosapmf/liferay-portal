@@ -12,6 +12,7 @@ import AttributesStep from './AttributesStep';
 import ConnectStep from './ConnectStep';
 import PeopleStep from './PeopleStep';
 import PropertyStep from './PropertyStep';
+import RecommendationsStep from './RecommendationsStep';
 
 export interface IGenericStepProps {
 	onCancel: () => void;
@@ -23,6 +24,7 @@ export enum ESteps {
 	Property = 1,
 	People = 2,
 	Attributes = 3,
+	Recommendations = 4,
 }
 
 interface IStepProps<T, K> extends IPages<T, K> {
@@ -55,6 +57,15 @@ const STEPS: IStepProps<IGenericStepProps, ESteps>[] = [
 		title: Liferay.Language.get('attributes'),
 	},
 ];
+
+if (Liferay.FeatureFlags['LPD-20640']) {
+	STEPS.push({
+		Component: RecommendationsStep,
+		available: false,
+		key: ESteps.Recommendations,
+		title: Liferay.Language.get('recommendations'),
+	});
+}
 
 const WizardPage: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 	const [step, setStep] = useState<ESteps>(ESteps.ConnectAC);

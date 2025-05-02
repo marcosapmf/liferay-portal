@@ -53,7 +53,7 @@ public class CPDefinitionLocalServiceUtil {
 	}
 
 	public static CPDefinition addCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> shortDescriptionMap,
 			Map<java.util.Locale, String> descriptionMap,
@@ -84,7 +84,7 @@ public class CPDefinitionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().addCPDefinition(
-			externalReferenceCode, groupId, userId, nameMap,
+			externalReferenceCode, userId, groupId, nameMap,
 			shortDescriptionMap, descriptionMap, urlTitleMap, metaTitleMap,
 			metaDescriptionMap, metaKeywordsMap, productTypeName,
 			ignoreSKUCombinations, shippable, freeShipping, shipSeparately,
@@ -102,7 +102,7 @@ public class CPDefinitionLocalServiceUtil {
 	}
 
 	public static CPDefinition addCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> shortDescriptionMap,
 			Map<java.util.Locale, String> descriptionMap,
@@ -129,7 +129,7 @@ public class CPDefinitionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().addCPDefinition(
-			externalReferenceCode, groupId, userId, nameMap,
+			externalReferenceCode, userId, groupId, nameMap,
 			shortDescriptionMap, descriptionMap, urlTitleMap, metaTitleMap,
 			metaDescriptionMap, metaKeywordsMap, productTypeName,
 			ignoreSKUCombinations, shippable, freeShipping, shipSeparately,
@@ -144,7 +144,7 @@ public class CPDefinitionLocalServiceUtil {
 	}
 
 	public static CPDefinition addOrUpdateCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> shortDescriptionMap,
 			Map<java.util.Locale, String> descriptionMap,
@@ -175,7 +175,7 @@ public class CPDefinitionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().addOrUpdateCPDefinition(
-			externalReferenceCode, groupId, userId, nameMap,
+			externalReferenceCode, userId, groupId, nameMap,
 			shortDescriptionMap, descriptionMap, urlTitleMap, metaTitleMap,
 			metaDescriptionMap, metaKeywordsMap, productTypeName,
 			ignoreSKUCombinations, shippable, freeShipping, shipSeparately,
@@ -193,7 +193,7 @@ public class CPDefinitionLocalServiceUtil {
 	}
 
 	public static CPDefinition addOrUpdateCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> shortDescriptionMap,
 			Map<java.util.Locale, String> descriptionMap,
@@ -220,7 +220,7 @@ public class CPDefinitionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().addOrUpdateCPDefinition(
-			externalReferenceCode, groupId, userId, nameMap,
+			externalReferenceCode, userId, groupId, nameMap,
 			shortDescriptionMap, descriptionMap, urlTitleMap, metaTitleMap,
 			metaDescriptionMap, metaKeywordsMap, productTypeName,
 			ignoreSKUCombinations, shippable, freeShipping, shipSeparately,
@@ -442,6 +442,13 @@ public class CPDefinitionLocalServiceUtil {
 
 	public static CPDefinition fetchCPDefinitionByCProductId(long cProductId) {
 		return getService().fetchCPDefinitionByCProductId(cProductId);
+	}
+
+	public static CPDefinition fetchCPDefinitionByFriendlyURL(
+		long groupId, String friendlyURL) {
+
+		return getService().fetchCPDefinitionByFriendlyURL(
+			groupId, friendlyURL);
 	}
 
 	/**
@@ -778,10 +785,10 @@ public class CPDefinitionLocalServiceUtil {
 		return getService().isVersionable(cpDefinitionId, httpServletRequest);
 	}
 
-	public static void maintainVersionThreshold(long cProductId)
+	public static void maintainVersionThreshold(long companyId, long cProductId)
 		throws PortalException {
 
-		getService().maintainVersionThreshold(cProductId);
+		getService().maintainVersionThreshold(companyId, cProductId);
 	}
 
 	public static com.liferay.portal.kernel.search.BaseModelSearchResult

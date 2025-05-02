@@ -1,0 +1,65 @@
+import com.liferay.portal.tools.jakarta.ee.transformer.JarTransformer
+
+import org.eclipse.transformer.cli.JakartaTransformerCLI
+
+buildscript {
+	dependencies {
+		classpath group: "com.liferay", name: "com.liferay.portal.tools.jakarta.ee.transformer", version: "1.0.0"
+		classpath group: "org.eclipse.transformer", name: "org.eclipse.transformer.cli", version: "1.0.0"
+	}
+
+	repositories {
+		if (!Boolean.getBoolean("maven.local.ignore")) {
+			mavenLocal()
+
+			File tmpMavenRepositoryDir = null
+
+			if (hasProperty("tmp.maven.repository.dir")) {
+				tmpMavenRepositoryDir = file(properties["tmp.maven.repository.dir"])
+			}
+			else {
+				tmpMavenRepositoryDir = new File(rootProject.projectDir, "../.m2-tmp")
+			}
+
+			if (tmpMavenRepositoryDir.exists()) {
+				maven {
+					url tmpMavenRepositoryDir
+				}
+			}
+		}
+
+		maven {
+			url System.properties["repository.url"] ?: "https://repository-cdn.liferay.com/nexus/content/groups/public"
+		}
+	}
+}
+
+task jarTransformed
+
+jar {
+	setActions([])
+
+	finalizedBy jarTransformed
+}
+
+jarTransformed {
+	doLast {
+		JakartaTransformerCLI jakartaTransformerCLI = new JakartaTransformerCLI(System.out, System.out, new String[] {configurations.compileOnly.singleFile, jar.archivePath})
+
+		Map<String, String> optionDefaults = jakartaTransformerCLI.getOptionDefaults()
+
+		File file = new File(rootDir, "liferay-jakarta-renames.properties")
+
+		optionDefaults.put("renames", String.valueOf(file.toURI()))
+
+		file = new File(rootDir, "liferay-jakarta-versions.properties")
+
+		optionDefaults.put("versions", String.valueOf(file.toURI()))
+
+		JakartaTransformerCLI.runWith(jakartaTransformerCLI)
+
+		JarTransformer.transform(jar.archivePath)
+	}
+
+	mustRunAfter generatePomFileForMavenPublication
+}

@@ -21,11 +21,13 @@ import com.liferay.portal.search.web.internal.facet.display.context.BucketDispla
 import com.liferay.portal.search.web.internal.facet.display.context.FolderSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.FolderTitleLookup;
 import com.liferay.portal.search.web.internal.folder.facet.configuration.FolderFacetPortletInstanceConfiguration;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
 import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayContextComparatorFactoryUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import javax.portlet.RenderRequest;
 
@@ -90,6 +92,10 @@ public class FolderSearchFacetDisplayContextBuilder {
 		_frequencyThreshold = frequencyThreshold;
 	}
 
+	public void setLocale(Locale locale) {
+		_locale = locale;
+	}
+
 	public void setMaxTerms(int maxTerms) {
 		_maxTerms = maxTerms;
 	}
@@ -127,14 +133,10 @@ public class FolderSearchFacetDisplayContextBuilder {
 	}
 
 	protected long getDisplayStyleGroupId() {
-		long displayStyleGroupId =
-			_folderFacetPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = _themeDisplay.getScopeGroupId();
-		}
-
-		return displayStyleGroupId;
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			_folderFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			_themeDisplay);
 	}
 
 	protected String getFirstParameterValueString() {
@@ -164,11 +166,7 @@ public class FolderSearchFacetDisplayContextBuilder {
 	}
 
 	protected boolean isNothingSelected() {
-		if (_selectedFolderIds.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return _selectedFolderIds.isEmpty();
 	}
 
 	protected boolean isRenderNothing(
@@ -185,11 +183,7 @@ public class FolderSearchFacetDisplayContextBuilder {
 	}
 
 	protected boolean isSelected(long folderId) {
-		if (_selectedFolderIds.contains(folderId)) {
-			return true;
-		}
-
-		return false;
+		return _selectedFolderIds.contains(folderId);
 	}
 
 	private BucketDisplayContext _buildBucketDisplayContext(
@@ -201,6 +195,7 @@ public class FolderSearchFacetDisplayContextBuilder {
 		bucketDisplayContext.setFilterValue(String.valueOf(folderId));
 		bucketDisplayContext.setFrequency(frequency);
 		bucketDisplayContext.setFrequencyVisible(_frequenciesVisible);
+		bucketDisplayContext.setLocale(_locale);
 		bucketDisplayContext.setSelected(selected);
 
 		return bucketDisplayContext;
@@ -288,6 +283,7 @@ public class FolderSearchFacetDisplayContextBuilder {
 	private FolderTitleLookup _folderTitleLookup;
 	private boolean _frequenciesVisible;
 	private int _frequencyThreshold;
+	private Locale _locale;
 	private int _maxTerms;
 	private String _order;
 	private String _paginationStartParameterName;

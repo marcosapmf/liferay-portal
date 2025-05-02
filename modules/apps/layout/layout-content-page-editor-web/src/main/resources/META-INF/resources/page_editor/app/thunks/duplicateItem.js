@@ -6,17 +6,16 @@
 import duplicateItemAction from '../actions/duplicateItem';
 import {ITEM_ACTIVATION_ORIGINS} from '../config/constants/itemActivationOrigins';
 import FragmentService from '../services/FragmentService';
-import getFirstControlsId from '../utils/getFirstControlsId';
 import filterSelectedItems from './filterSelectedItems';
 
 export default function duplicateItem({itemIds, selectItems = () => {}}) {
 	return (dispatch, getState) => {
-		const {layoutData} = getState();
+		const {layoutData, segmentsExperienceId} = getState();
 
 		FragmentService.duplicateItem({
-			itemIds: filterSelectedItems(itemIds, layoutData),
+			itemIds: filterSelectedItems(itemIds, layoutData.items),
 			onNetworkStatus: dispatch,
-			segmentsExperienceId: getState().segmentsExperienceId,
+			segmentsExperienceId,
 		}).then(
 			({
 				duplicatedFragmentEntryLinks,
@@ -34,21 +33,9 @@ export default function duplicateItem({itemIds, selectItems = () => {}}) {
 				);
 
 				if (duplicatedItemIds) {
-					const itemIds = duplicatedItemIds.map((itemId) =>
-						getFirstControlsId({
-							item: nextLayoutData.items[itemId],
-							layoutData: nextLayoutData,
-						})
-					);
-
-					selectItems(
-						Liferay.FeatureFlags['LPD-18221']
-							? itemIds
-							: itemIds[0],
-						{
-							origin: ITEM_ACTIVATION_ORIGINS.itemActions,
-						}
-					);
+					selectItems(duplicatedItemIds, {
+						origin: ITEM_ACTIVATION_ORIGINS.itemActions,
+					});
 				}
 			}
 		);

@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,12 +52,64 @@ public class ReinvokeRule {
 		return new ArrayList<>(_reinvokeRules);
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		if (!(object instanceof ReinvokeRule)) {
+			return false;
+		}
+
+		ReinvokeRule reinvokeRule = (ReinvokeRule)object;
+
+		if (Objects.equals(getName(), reinvokeRule.getName())) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public int getMaximumInvocationCount() {
+		if (maximumInvocationCount != null) {
+			return maximumInvocationCount;
+		}
+
+		try {
+			Properties properties =
+				JenkinsResultsParserUtil.getBuildProperties();
+
+			String propertyName = "reinvoke.rule.max.invocation.count";
+
+			if (properties.containsKey(propertyName)) {
+				maximumInvocationCount = Integer.parseInt(
+					properties.getProperty(propertyName));
+
+				return maximumInvocationCount;
+			}
+		}
+		catch (IOException ioException) {
+			System.out.println(
+				"Unable to load reinvoke.rule.max.invocation.count");
+		}
+
+		maximumInvocationCount = _MAXIMUM_INVOCATION_COUNT;
+
+		return maximumInvocationCount;
+	}
+
 	public String getName() {
 		return name;
 	}
 
 	public String getNotificationRecipients() {
 		return notificationRecipients;
+	}
+
+	public String getReinvokeBuildPriority() {
+		return reinvokeBuildPriority;
+	}
+
+	@Override
+	public int hashCode() {
+		return name.hashCode();
 	}
 
 	public boolean matches(Build build) {
@@ -201,8 +254,10 @@ public class ReinvokeRule {
 	protected Pattern axisVariablePattern;
 	protected Pattern consolePattern;
 	protected Pattern jobVariantPattern;
+	protected Integer maximumInvocationCount;
 	protected String name;
 	protected String notificationRecipients;
+	protected String reinvokeBuildPriority;
 	protected Pattern testSuiteNamePattern;
 	protected Pattern topLevelBuildJobNamePattern;
 
@@ -222,8 +277,20 @@ public class ReinvokeRule {
 				continue;
 			}
 
+			if (name.equals("maximumInvocationCount")) {
+				maximumInvocationCount = Integer.valueOf(value);
+
+				continue;
+			}
+
 			if (name.equals("notificationRecipients")) {
 				notificationRecipients = value;
+
+				continue;
+			}
+
+			if (name.equals("reinvokeBuildPriority")) {
+				reinvokeBuildPriority = value;
 
 				continue;
 			}
@@ -257,6 +324,8 @@ public class ReinvokeRule {
 			}
 		}
 	}
+
+	private static final int _MAXIMUM_INVOCATION_COUNT = 1;
 
 	private static List<ReinvokeRule> _reinvokeRules;
 

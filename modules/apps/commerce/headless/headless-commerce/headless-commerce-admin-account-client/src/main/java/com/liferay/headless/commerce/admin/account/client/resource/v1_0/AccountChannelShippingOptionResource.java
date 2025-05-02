@@ -49,11 +49,31 @@ public interface AccountChannelShippingOptionResource {
 				String callbackURL, Object object)
 		throws Exception;
 
+	public Page<AccountChannelShippingOption>
+			getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
+				String externalReferenceCode, Pagination pagination)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getAccountByExternalReferenceCodeAccountChannelShippingOptionPageHttpResponse(
+				String externalReferenceCode, Pagination pagination)
+		throws Exception;
+
 	public AccountChannelShippingOption getAccountChannelShippingOption(Long id)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse getAccountChannelShippingOptionHttpResponse(
 			Long id)
+		throws Exception;
+
+	public Page<AccountChannelShippingOption>
+			getAccountIdAccountChannelShippingOptionPage(
+				Long id, Pagination pagination)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getAccountIdAccountChannelShippingOptionPageHttpResponse(
+				Long id, Pagination pagination)
 		throws Exception;
 
 	public AccountChannelShippingOption patchAccountChannelShippingOption(
@@ -66,16 +86,6 @@ public interface AccountChannelShippingOptionResource {
 				AccountChannelShippingOption accountChannelShippingOption)
 		throws Exception;
 
-	public Page<AccountChannelShippingOption>
-			getAccountByExternalReferenceCodeAccountChannelShippingOptionPage(
-				String externalReferenceCode, Pagination pagination)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			getAccountByExternalReferenceCodeAccountChannelShippingOptionPageHttpResponse(
-				String externalReferenceCode, Pagination pagination)
-		throws Exception;
-
 	public AccountChannelShippingOption
 			postAccountByExternalReferenceCodeAccountChannelShippingOption(
 				String externalReferenceCode,
@@ -86,16 +96,6 @@ public interface AccountChannelShippingOptionResource {
 			postAccountByExternalReferenceCodeAccountChannelShippingOptionHttpResponse(
 				String externalReferenceCode,
 				AccountChannelShippingOption accountChannelShippingOption)
-		throws Exception;
-
-	public Page<AccountChannelShippingOption>
-			getAccountIdAccountChannelShippingOptionPage(
-				Long id, Pagination pagination)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			getAccountIdAccountChannelShippingOptionPageHttpResponse(
-				Long id, Pagination pagination)
 		throws Exception;
 
 	public AccountChannelShippingOption
@@ -217,8 +217,8 @@ public interface AccountChannelShippingOptionResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -325,8 +325,10 @@ public interface AccountChannelShippingOptionResource {
 
 			httpInvoker.path("id", id);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -425,223 +427,10 @@ public interface AccountChannelShippingOptionResource {
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-account/v1.0/account-channel-shipping-options/batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public AccountChannelShippingOption getAccountChannelShippingOption(
-				Long id)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				getAccountChannelShippingOptionHttpResponse(id);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return AccountChannelShippingOptionSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				getAccountChannelShippingOptionHttpResponse(Long id)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-commerce-admin-account/v1.0/account-channel-shipping-options/{id}");
-
-			httpInvoker.path("id", id);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public AccountChannelShippingOption patchAccountChannelShippingOption(
-				Long id,
-				AccountChannelShippingOption accountChannelShippingOption)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				patchAccountChannelShippingOptionHttpResponse(
-					id, accountChannelShippingOption);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return AccountChannelShippingOptionSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				patchAccountChannelShippingOptionHttpResponse(
-					Long id,
-					AccountChannelShippingOption accountChannelShippingOption)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(
-				accountChannelShippingOption.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PATCH);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-commerce-admin-account/v1.0/account-channel-shipping-options/{id}");
-
-			httpInvoker.path("id", id);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}
@@ -755,21 +544,20 @@ public interface AccountChannelShippingOptionResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public AccountChannelShippingOption
-				postAccountByExternalReferenceCodeAccountChannelShippingOption(
-					String externalReferenceCode,
-					AccountChannelShippingOption accountChannelShippingOption)
+		public AccountChannelShippingOption getAccountChannelShippingOption(
+				Long id)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postAccountByExternalReferenceCodeAccountChannelShippingOptionHttpResponse(
-					externalReferenceCode, accountChannelShippingOption);
+				getAccountChannelShippingOptionHttpResponse(id);
 
 			String content = httpResponse.getContent();
 
@@ -831,15 +619,10 @@ public interface AccountChannelShippingOptionResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				postAccountByExternalReferenceCodeAccountChannelShippingOptionHttpResponse(
-					String externalReferenceCode,
-					AccountChannelShippingOption accountChannelShippingOption)
+				getAccountChannelShippingOptionHttpResponse(Long id)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(
-				accountChannelShippingOption.toString(), "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(
@@ -858,17 +641,19 @@ public interface AccountChannelShippingOptionResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-commerce-admin-account/v1.0/accounts/by-externalReferenceCode/{externalReferenceCode}/account-channel-shipping-option");
+						"/o/headless-commerce-admin-account/v1.0/account-channel-shipping-options/{id}");
 
-			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+			httpInvoker.path("id", id);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -982,8 +767,237 @@ public interface AccountChannelShippingOptionResource {
 
 			httpInvoker.path("id", id);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public AccountChannelShippingOption patchAccountChannelShippingOption(
+				Long id,
+				AccountChannelShippingOption accountChannelShippingOption)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				patchAccountChannelShippingOptionHttpResponse(
+					id, accountChannelShippingOption);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return AccountChannelShippingOptionSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				patchAccountChannelShippingOptionHttpResponse(
+					Long id,
+					AccountChannelShippingOption accountChannelShippingOption)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(
+				accountChannelShippingOption.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PATCH);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-commerce-admin-account/v1.0/account-channel-shipping-options/{id}");
+
+			httpInvoker.path("id", id);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public AccountChannelShippingOption
+				postAccountByExternalReferenceCodeAccountChannelShippingOption(
+					String externalReferenceCode,
+					AccountChannelShippingOption accountChannelShippingOption)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postAccountByExternalReferenceCodeAccountChannelShippingOptionHttpResponse(
+					externalReferenceCode, accountChannelShippingOption);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return AccountChannelShippingOptionSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postAccountByExternalReferenceCodeAccountChannelShippingOptionHttpResponse(
+					String externalReferenceCode,
+					AccountChannelShippingOption accountChannelShippingOption)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(
+				accountChannelShippingOption.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-commerce-admin-account/v1.0/accounts/by-externalReferenceCode/{externalReferenceCode}/account-channel-shipping-option");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1094,8 +1108,10 @@ public interface AccountChannelShippingOptionResource {
 
 			httpInvoker.path("id", id);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1194,8 +1210,10 @@ public interface AccountChannelShippingOptionResource {
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-account/v1.0/accounts/account-channel-shipping-option/batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

@@ -78,6 +78,7 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 					defaultLogoURL="<%= UserConstants.getPortraitURL(themeDisplay.getPathImage(), selUser.isMale(), 0, null) %>"
 					label='<%= LanguageUtil.get(request, "image") %>'
 					preserveRatio="<%= true %>"
+					type="user_portrait"
 				/>
 			</c:when>
 			<c:otherwise>
@@ -92,6 +93,7 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 			defaultLogoURL='<%= themeDisplay.getPathImage() + "/user_portrait?img_id=0" %>'
 			label='<%= LanguageUtil.get(request, "image") %>'
 			preserveRatio="<%= true %>"
+			type="user_portrait"
 		/>
 	</c:otherwise>
 </c:choose>
@@ -155,7 +157,7 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 	<liferay-ui:error exception="<%= UserIdException.MustNotBeNull.class %>" message="please-enter-a-user-id" />
 	<liferay-ui:error exception="<%= UserIdException.MustNotBeReserved.class %>" message="the-user-id-you-requested-is-reserved" />
 
-	<aui:input cssClass="disabled" name="userId" readonly="true" type="text" value="<%= String.valueOf(selUser.getUserId()) %>" />
+	<aui:input name="userId" readonly="true" type="text" value="<%= String.valueOf(selUser.getUserId()) %>" />
 </c:if>
 
 <portlet:renderURL var="verifyPasswordURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">

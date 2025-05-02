@@ -26,6 +26,27 @@ public class ProductSpecification implements Cloneable, Serializable {
 		return ProductSpecificationSerDes.toDTO(json);
 	}
 
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String externalReferenceCode;
+
 	public Long getId() {
 		return id;
 	}
@@ -84,6 +105,32 @@ public class ProductSpecification implements Cloneable, Serializable {
 	}
 
 	protected Map<String, String> label;
+
+	public String getOptionCategoryExternalReferenceCode() {
+		return optionCategoryExternalReferenceCode;
+	}
+
+	public void setOptionCategoryExternalReferenceCode(
+		String optionCategoryExternalReferenceCode) {
+
+		this.optionCategoryExternalReferenceCode =
+			optionCategoryExternalReferenceCode;
+	}
+
+	public void setOptionCategoryExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			optionCategoryExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			optionCategoryExternalReferenceCode =
+				optionCategoryExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String optionCategoryExternalReferenceCode;
 
 	public Long getOptionCategoryId() {
 		return optionCategoryId;
@@ -147,6 +194,32 @@ public class ProductSpecification implements Cloneable, Serializable {
 	}
 
 	protected Long productId;
+
+	public String getSpecificationExternalReferenceCode() {
+		return specificationExternalReferenceCode;
+	}
+
+	public void setSpecificationExternalReferenceCode(
+		String specificationExternalReferenceCode) {
+
+		this.specificationExternalReferenceCode =
+			specificationExternalReferenceCode;
+	}
+
+	public void setSpecificationExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			specificationExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			specificationExternalReferenceCode =
+				specificationExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String specificationExternalReferenceCode;
 
 	public Long getSpecificationId() {
 		return specificationId;
@@ -231,6 +304,27 @@ public class ProductSpecification implements Cloneable, Serializable {
 	}
 
 	protected Map<String, String> value;
+
+	public Boolean getVisible() {
+		return visible;
+	}
+
+	public void setVisible(Boolean visible) {
+		this.visible = visible;
+	}
+
+	public void setVisible(
+		UnsafeSupplier<Boolean, Exception> visibleUnsafeSupplier) {
+
+		try {
+			visible = visibleUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean visible;
 
 	@Override
 	public ProductSpecification clone() throws CloneNotSupportedException {

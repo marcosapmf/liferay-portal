@@ -5,6 +5,7 @@
 
 package com.liferay.content.dashboard.document.library.internal.item.filter;
 
+import com.liferay.content.dashboard.document.library.internal.constants.ContentDashboardConstants;
 import com.liferay.content.dashboard.item.filter.ContentDashboardItemFilter;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemBuilder;
@@ -12,10 +13,8 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuil
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.search.BooleanClauseOccur;
-import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
-import com.liferay.portal.kernel.search.filter.RangeTermFilter;
+import com.liferay.portal.kernel.search.filter.TermsFilter;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -51,11 +50,11 @@ public class FileResolutionContentDashboardItemFilter
 	public DropdownItem getDropdownItem() {
 		return DropdownItemBuilder.setDropdownItems(
 			DropdownItemListBuilder.add(
-				_getDropdownItem(Resolution.SMALL)
+				_getDropdownItem(ContentDashboardConstants.Resolution.SMALL)
 			).add(
-				_getDropdownItem(Resolution.MEDIUM)
+				_getDropdownItem(ContentDashboardConstants.Resolution.MEDIUM)
 			).add(
-				_getDropdownItem(Resolution.LARGE)
+				_getDropdownItem(ContentDashboardConstants.Resolution.LARGE)
 			).build()
 		).setLabel(
 			_language.get(_httpServletRequest, "resolution")
@@ -72,31 +71,20 @@ public class FileResolutionContentDashboardItemFilter
 			return null;
 		}
 
-		BooleanFilter booleanFilter = new BooleanFilter();
+		TermsFilter termsFilter = new TermsFilter("resolution");
 
 		if (ListUtil.isEmpty(parameterValues)) {
-			return booleanFilter;
+			return termsFilter;
 		}
 
-		Resolution resolution = Resolution.parse(parameterValues.get(0));
+		ContentDashboardConstants.Resolution resolution =
+			ContentDashboardConstants.Resolution.parse(parameterValues.get(0));
 
 		if (resolution != null) {
-			booleanFilter.add(
-				new RangeTermFilter(
-					"imageLength_sortable", true, true,
-					String.valueOf(resolution.getStartLengthValue()),
-					String.valueOf(resolution.getEndLengthValue())),
-				BooleanClauseOccur.MUST);
-
-			booleanFilter.add(
-				new RangeTermFilter(
-					"imageWidth_sortable", true, true,
-					String.valueOf(resolution.getStartWidthValue()),
-					String.valueOf(resolution.getEndWidthValue())),
-				BooleanClauseOccur.MUST);
+			termsFilter.addValue(resolution.getType());
 		}
 
-		return booleanFilter;
+		return termsFilter;
 	}
 
 	@Override
@@ -140,7 +128,9 @@ public class FileResolutionContentDashboardItemFilter
 		return null;
 	}
 
-	private DropdownItem _getDropdownItem(Resolution resolution) {
+	private DropdownItem _getDropdownItem(
+		ContentDashboardConstants.Resolution resolution) {
+
 		return DropdownItemBuilder.setActive(
 			_isSelected(resolution)
 		).setHref(
@@ -150,47 +140,47 @@ public class FileResolutionContentDashboardItemFilter
 		).build();
 	}
 
-	private String _getLabel(Resolution resolution) {
+	private String _getLabel(ContentDashboardConstants.Resolution resolution) {
 		StringBundler sb = new StringBundler(5);
 
 		sb.append(_language.get(_httpServletRequest, resolution.getType()));
 		sb.append(StringPool.SPACE);
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		if (resolution == Resolution.LARGE) {
+		if (resolution == ContentDashboardConstants.Resolution.LARGE) {
 			sb.append(
 				StringUtil.toLowerCase(
 					_language.format(
 						_httpServletRequest, "from-x",
 						new Object[] {
 							_getResolutionLabel(
-								resolution._startLengthValue,
-								resolution._startWidthValue)
+								resolution.getStartLengthValue(),
+								resolution.getStartWidthValue())
 						})));
 		}
-		else if (resolution == Resolution.MEDIUM) {
+		else if (resolution == ContentDashboardConstants.Resolution.MEDIUM) {
 			sb.append(
 				StringUtil.toLowerCase(
 					_language.format(
 						_httpServletRequest, "from-x-to-x",
 						new Object[] {
 							_getResolutionLabel(
-								resolution._startLengthValue,
-								resolution._startWidthValue),
+								resolution.getStartLengthValue(),
+								resolution.getStartWidthValue()),
 							_getResolutionLabel(
-								resolution._endLengthValue,
-								resolution._endWidthValue)
+								resolution.getEndLengthValue(),
+								resolution.getEndWidthValue())
 						})));
 		}
-		else if (resolution == Resolution.SMALL) {
+		else if (resolution == ContentDashboardConstants.Resolution.SMALL) {
 			sb.append(
 				StringUtil.toLowerCase(
 					_language.format(
 						_httpServletRequest, "up-to-x",
 						new Object[] {
 							_getResolutionLabel(
-								resolution._endLengthValue,
-								resolution._endWidthValue)
+								resolution.getEndLengthValue(),
+								resolution.getEndWidthValue())
 						})));
 		}
 
@@ -209,7 +199,7 @@ public class FileResolutionContentDashboardItemFilter
 		return sb.toString();
 	}
 
-	private String _getURL(Resolution resolution) {
+	private String _getURL(ContentDashboardConstants.Resolution resolution) {
 		PortletResponse portletResponse =
 			(PortletResponse)_httpServletRequest.getAttribute(
 				JavaConstants.JAVAX_PORTLET_RESPONSE);
@@ -223,7 +213,9 @@ public class FileResolutionContentDashboardItemFilter
 			resolution.getType());
 	}
 
-	private boolean _isSelected(Resolution resolution) {
+	private boolean _isSelected(
+		ContentDashboardConstants.Resolution resolution) {
+
 		List<String> parameterValues = getParameterValues();
 
 		if (ListUtil.isEmpty(parameterValues)) {
@@ -236,64 +228,5 @@ public class FileResolutionContentDashboardItemFilter
 	private final HttpServletRequest _httpServletRequest;
 	private final Language _language;
 	private final Portal _portal;
-
-	private enum Resolution {
-
-		LARGE(Long.MAX_VALUE, Long.MAX_VALUE, 769, 1025, "large"),
-		MEDIUM(768, 1024, 301, 401, "medium"), SMALL(300, 400, 0, 0, "small");
-
-		public static Resolution parse(String type) {
-			for (Resolution resolution : values()) {
-				if (Objects.equals(resolution.getType(), type)) {
-					return resolution;
-				}
-			}
-
-			return null;
-		}
-
-		public long getEndLengthValue() {
-			return _endLengthValue;
-		}
-
-		public long getEndWidthValue() {
-			return _endWidthValue;
-		}
-
-		public long getStartLengthValue() {
-			return _startLengthValue;
-		}
-
-		public long getStartWidthValue() {
-			return _startWidthValue;
-		}
-
-		public String getType() {
-			return _type;
-		}
-
-		@Override
-		public String toString() {
-			return _type;
-		}
-
-		private Resolution(
-			long endLengthValue, long endWidthValue, long startLengthValue,
-			long startWidthValue, String type) {
-
-			_endLengthValue = endLengthValue;
-			_endWidthValue = endWidthValue;
-			_startLengthValue = startLengthValue;
-			_startWidthValue = startWidthValue;
-			_type = type;
-		}
-
-		private final long _endLengthValue;
-		private final long _endWidthValue;
-		private final long _startLengthValue;
-		private final long _startWidthValue;
-		private final String _type;
-
-	}
 
 }

@@ -6,6 +6,7 @@
 package com.liferay.portal.servlet;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.log.Log;
@@ -102,14 +103,18 @@ public class NetvibesServlet extends HttpServlet {
 			PropsValues.WIDGET_SERVLET_MAPPING);
 		widgetURL = HtmlUtil.escapeJS(widgetURL);
 
-		StringBundler sb = new StringBundler(28);
+		StringBundler sb = new StringBundler(30);
 
 		sb.append("<!DOCTYPE html>");
 		sb.append("<html>");
 		sb.append("<head>");
 		sb.append("<link href=\"");
 		sb.append(_NETVIBES_CSS);
-		sb.append("\" rel=\"stylesheet\" type=\"text/css\" ");
+		sb.append(StringPool.QUOTE);
+		sb.append(
+			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+				httpServletRequest));
+		sb.append(" rel=\"stylesheet\" type=\"text/css\" ");
 		sb.append("/>");
 		sb.append("<script");
 		sb.append(

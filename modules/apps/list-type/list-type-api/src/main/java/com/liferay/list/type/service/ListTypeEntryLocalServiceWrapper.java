@@ -352,6 +352,14 @@ public class ListTypeEntryLocalServiceWrapper
 			listTypeDefinitionId, start, end, orderByComparator);
 	}
 
+	@Override
+	public java.util.List<com.liferay.list.type.model.ListTypeEntry>
+		getListTypeEntries(long[] listTypeDefinitionIds) {
+
+		return _listTypeEntryLocalService.getListTypeEntries(
+			listTypeDefinitionIds);
+	}
+
 	/**
 	 * Returns the number of list type entries.
 	 *
@@ -467,6 +475,14 @@ public class ListTypeEntryLocalServiceWrapper
 
 		return _listTypeEntryLocalService.updateListTypeEntry(
 			externalReferenceCode, listTypeEntryId, nameMap);
+	}
+
+	@Override
+	public void updateUserId(long companyId, long oldUserId, long newUserId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_listTypeEntryLocalService.updateUserId(
+			companyId, oldUserId, newUserId);
 	}
 
 	@Override

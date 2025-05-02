@@ -76,11 +76,15 @@ public class PortalTestSuiteUpstreamControllerSingleSuiteBuildRunner
 
 	@Override
 	protected void invokeTestSuiteBuilds() {
-		String jobURL = getJobURL();
+		S buildData = getBuildData();
+
+		String testSuiteName = buildData.getTestSuiteName();
+
+		String invocationJobURL = getInvocationJobURL(testSuiteName);
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(jobURL);
+		sb.append(invocationJobURL);
 
 		sb.append("/buildWithParameters?");
 
@@ -100,14 +104,11 @@ public class PortalTestSuiteUpstreamControllerSingleSuiteBuildRunner
 		sb.append("token=");
 		sb.append(jenkinsAuthenticationToken);
 
-		S buildData = getBuildData();
-
 		Map<String, String> invocationParameters = new HashMap<>();
 
-		String testSuiteName = buildData.getTestSuiteName();
+		invocationParameters.putAll(buildData.getBuildParameters());
 
 		invocationParameters.put("CI_TEST_SUITE", testSuiteName);
-
 		invocationParameters.put(
 			"CONTROLLER_BUILD_URL", buildData.getBuildURL());
 		invocationParameters.put(
@@ -131,6 +132,7 @@ public class PortalTestSuiteUpstreamControllerSingleSuiteBuildRunner
 		invocationParameters.put(
 			"PORTAL_UPSTREAM_BRANCH_NAME",
 			buildData.getPortalUpstreamBranchName());
+		invocationParameters.put("SLAVE_LABEL", getSlaveLabel(testSuiteName));
 		invocationParameters.put(
 			"TEST_PORTAL_BUILD_PROFILE",
 			getTestPortalBuildProfile(testSuiteName));
@@ -153,8 +155,6 @@ public class PortalTestSuiteUpstreamControllerSingleSuiteBuildRunner
 			getTestraySlackIconEmoji(testSuiteName));
 		invocationParameters.put(
 			"TESTRAY_SLACK_USERNAME", getTestraySlackUsername(testSuiteName));
-
-		invocationParameters.putAll(buildData.getBuildParameters());
 
 		for (Map.Entry<String, String> invocationParameter :
 				invocationParameters.entrySet()) {
@@ -185,7 +185,7 @@ public class PortalTestSuiteUpstreamControllerSingleSuiteBuildRunner
 		sb = new StringBuilder();
 
 		sb.append("<a href=\"");
-		sb.append(JenkinsResultsParserUtil.getRemoteURL(jobURL));
+		sb.append(JenkinsResultsParserUtil.getRemoteURL(invocationJobURL));
 		sb.append("\"><strong>IN QUEUE</strong></a>");
 		sb.append("<ul><li><strong>Git ID:</strong> ");
 		sb.append("<a href=\"https://github.com/");
@@ -222,11 +222,7 @@ public class PortalTestSuiteUpstreamControllerSingleSuiteBuildRunner
 		allowConcurrentBuildsString = allowConcurrentBuildsString.toLowerCase();
 		allowConcurrentBuildsString = allowConcurrentBuildsString.trim();
 
-		if (!allowConcurrentBuildsString.equals("true")) {
-			return false;
-		}
-
-		return true;
+		return allowConcurrentBuildsString.equals("true");
 	}
 
 	private boolean _expirePreviousBuild() {

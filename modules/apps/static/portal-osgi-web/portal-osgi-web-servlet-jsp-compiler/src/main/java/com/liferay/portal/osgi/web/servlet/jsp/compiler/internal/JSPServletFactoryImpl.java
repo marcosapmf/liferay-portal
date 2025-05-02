@@ -11,11 +11,14 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.osgi.web.servlet.JSPServletFactory;
 import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
+
+import java.lang.reflect.Method;
 
 import java.net.URL;
 
@@ -24,8 +27,11 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import javax.servlet.Servlet;
+
+import org.apache.jasper.compiler.Compiler;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -70,6 +76,24 @@ public class JSPServletFactoryImpl implements JSPServletFactory {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		JSPServletFactoryImpl.class);
+
+	static {
+		try {
+			ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
+
+			Class<?> clazz = classLoader.loadClass(
+				"com.liferay.portal.jsp.engine.internal.compiler." +
+					"BridgeCompiler");
+
+			Method initMethod = clazz.getMethod("init", Supplier.class);
+
+			initMethod.invoke(
+				null, (Supplier<Compiler>)() -> new CompilerWrapper());
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new ExceptionInInitializerError(reflectiveOperationException);
+		}
+	}
 
 	private BundleTracker<Tracked> _bundleTracker;
 	private final Map<String, AtomicInteger> _fragmentCounts = new HashMap<>();
@@ -188,13 +212,7 @@ public class JSPServletFactoryImpl implements JSPServletFactory {
 					_WORK_DIR, bundle.getSymbolicName(), StringPool.DASH,
 					bundle.getVersion());
 
-				if (PropsValues.WORK_DIR_OVERRIDE_ENABLED &&
-					_log.isInfoEnabled()) {
-
-					_log.info(
-						"Deleting JSP class files from ".concat(scratchDir));
-				}
-				else if (_log.isDebugEnabled()) {
+				if (_log.isDebugEnabled()) {
 					_log.debug(
 						"Deleting JSP class files from ".concat(scratchDir));
 				}

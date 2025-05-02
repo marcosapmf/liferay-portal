@@ -25,22 +25,24 @@ response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
 		<meta content="0" http-equiv="Expires" />
 		<meta content="1; url=<%= redirect %>" http-equiv="refresh" />
 
-		<link class="lfr-css-file" href="<%= HtmlUtil.escapeAttribute(themeDisplay.getClayCSSURL()) %>" rel="stylesheet" type="text/css" />
+		<aui:link cssClass="lfr-css-file" href="<%= HtmlUtil.escapeAttribute(themeDisplay.getClayCSSURL()) %>" rel="stylesheet" type="text/css" />
 	</head>
 
-	<body onLoad="javascript:location.replace('<%= redirect %>')">
-		<center>
-			<table border="0" cellpadding="0" cellspacing="0" height="100%" width="600">
-				<tr>
-					<td align="center" valign="middle">
-						<strong><liferay-ui:message key="processing-login" /></strong>
+	<liferay-ui:csp>
+		<body onload="window.location.replace('<%= redirect %>');">
+			<center>
+				<table border="0" cellpadding="0" cellspacing="0" height="100%" width="600">
+					<tr>
+						<td align="center" valign="middle">
+							<strong><liferay-ui:message key="processing-login" /></strong>
 
-						<br /><br />
+							<br /><br />
 
-						<span aria-hidden="true" class="loading-animation loading-animation-sm"></span>
-					</td>
-				</tr>
-			</table>
-		</center>
-	</body>
+							<span aria-hidden="true" class="loading-animation loading-animation-sm"></span>
+						</td>
+					</tr>
+				</table>
+			</center>
+		</body>
+	</liferay-ui:csp>
 </html>

@@ -17,8 +17,15 @@ import com.liferay.batch.engine.service.BatchEngineExportTaskLocalService;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.petra.io.unsync.UnsyncBufferedReader;
 import com.liferay.petra.string.CharPool;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.test.AssertUtils;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.transaction.Propagation;
+import com.liferay.portal.kernel.transaction.TransactionConfig;
+import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -31,16 +38,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 
+import java.sql.Blob;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.zip.ZipInputStream;
 
@@ -254,6 +261,105 @@ public class BatchEngineExportTaskExecutorTest
 			true);
 	}
 
+	@Test
+	@TestInfo("LPD-50699")
+	public void testExportBlogPostingsWithoutPersistingContent()
+		throws Throwable {
+
+		List<BlogsEntry> blogsEntries = addBlogsEntries();
+
+		_batchEngineExportTask =
+			_batchEngineExportTaskLocalService.addBatchEngineExportTask(
+				null, user.getCompanyId(), user.getUserId(), null,
+				BlogPosting.class.getName(), "JSON",
+				BatchEngineTaskExecuteStatus.INITIAL.name(), null, _parameters,
+				null);
+
+		TransactionInvokerUtil.invoke(
+			TransactionConfig.Factory.create(
+				Propagation.REQUIRED, new Class<?>[] {Exception.class}),
+			() -> {
+				BatchEngineExportTaskExecutor.Result result =
+					_batchEngineExportTaskExecutor.execute(
+						_batchEngineExportTask,
+						new BatchEngineExportTaskExecutor.Settings() {
+
+							@Override
+							public boolean isCompressContent() {
+								return false;
+							}
+
+							@Override
+							public boolean isPersistContent() {
+								return false;
+							}
+
+						});
+
+				JSONArray jsonArray = JSONFactoryUtil.createJSONArray(
+					StringUtil.read(result.getInputStream()));
+
+				Assert.assertTrue(jsonArray.length() >= blogsEntries.size());
+
+				_batchEngineExportTask =
+					_batchEngineExportTaskLocalService.getBatchEngineExportTask(
+						_batchEngineExportTask.getBatchEngineExportTaskId());
+
+				BatchEngineExportTask resultBatchEngineExportTask =
+					result.getBatchEngineExportTask();
+
+				Assert.assertEquals(
+					_batchEngineExportTask, resultBatchEngineExportTask);
+				Assert.assertEquals(
+					_batchEngineExportTask.getMvccVersion(),
+					resultBatchEngineExportTask.getMvccVersion());
+
+				Assert.assertEquals(
+					BatchEngineTaskExecuteStatus.COMPLETED.toString(),
+					_batchEngineExportTask.getExecuteStatus());
+				Assert.assertEquals(
+					blogsEntries.size(),
+					_batchEngineExportTask.getProcessedItemsCount());
+				Assert.assertEquals(
+					blogsEntries.size(),
+					_batchEngineExportTask.getTotalItemsCount());
+
+				Blob content = _batchEngineExportTask.getContent();
+
+				if (content != null) {
+					Assert.assertEquals(0, content.length());
+				}
+
+				return null;
+			});
+	}
+
+	@Test
+	public void testExportBlogPostingsWithUncompressedContent() {
+		AssertUtils.assertFailure(
+			IllegalArgumentException.class,
+			"Uncompressed content cannot be stored in the database",
+			() -> _batchEngineExportTaskExecutor.execute(
+				_batchEngineExportTaskLocalService.addBatchEngineExportTask(
+					null, user.getCompanyId(), user.getUserId(), null,
+					BlogPosting.class.getName(), "JSON",
+					BatchEngineTaskExecuteStatus.INITIAL.name(), null,
+					_parameters, null),
+				new BatchEngineExportTaskExecutor.Settings() {
+
+					@Override
+					public boolean isCompressContent() {
+						return false;
+					}
+
+					@Override
+					public boolean isPersistContent() {
+						return true;
+					}
+
+				}));
+	}
+
 	public abstract class BlogPostingMixin {
 
 		@JsonProperty(access = JsonProperty.Access.READ_WRITE)
@@ -286,19 +392,17 @@ public class BatchEngineExportTaskExecutorTest
 			BlogsEntry blogsEntry, List<String> fieldNames, Object[] rowValues)
 		throws Exception {
 
-		Set<String> fieldNamesSet = new HashSet<>(fieldNames);
-
 		int index = 0;
 
-		if (fieldNamesSet.isEmpty() || fieldNamesSet.contains(FIELD_NAMES[0])) {
+		if (fieldNames.isEmpty() || fieldNames.contains(FIELD_NAMES[0])) {
 			Assert.assertEquals(blogsEntry.getSubtitle(), rowValues[index++]);
 		}
 
-		if (fieldNamesSet.isEmpty() || fieldNamesSet.contains(FIELD_NAMES[1])) {
+		if (fieldNames.isEmpty() || fieldNames.contains(FIELD_NAMES[1])) {
 			Assert.assertEquals(blogsEntry.getContent(), rowValues[index++]);
 		}
 
-		if (fieldNamesSet.isEmpty() || fieldNamesSet.contains(FIELD_NAMES[2])) {
+		if (fieldNames.isEmpty() || fieldNames.contains(FIELD_NAMES[2])) {
 			Object value = rowValues[index++];
 
 			if (value instanceof String) {
@@ -308,11 +412,11 @@ public class BatchEngineExportTaskExecutorTest
 			Assert.assertEquals(blogsEntry.getDisplayDate(), value);
 		}
 
-		if (fieldNamesSet.isEmpty() || fieldNamesSet.contains(FIELD_NAMES[3])) {
+		if (fieldNames.isEmpty() || fieldNames.contains(FIELD_NAMES[3])) {
 			Assert.assertEquals(blogsEntry.getTitle(), rowValues[index++]);
 		}
 
-		if (fieldNamesSet.isEmpty() || fieldNamesSet.contains("id")) {
+		if (fieldNames.isEmpty() || fieldNames.contains("id")) {
 			Object value = rowValues[index++];
 
 			if (value instanceof String) {
@@ -328,7 +432,7 @@ public class BatchEngineExportTaskExecutorTest
 			Assert.assertEquals(blogsEntry.getEntryId(), value);
 		}
 
-		if (fieldNamesSet.isEmpty() || fieldNamesSet.contains("siteId")) {
+		if (fieldNames.isEmpty() || fieldNames.contains("siteId")) {
 			Object value = rowValues[index];
 
 			if (value instanceof String) {
@@ -436,13 +540,13 @@ public class BatchEngineExportTaskExecutorTest
 		unsyncBufferedReader.readLine();
 
 		String line = null;
-		List<Object[]> rowValuesList = new ArrayList<>();
+		List<Object[]> rowValues = new ArrayList<>();
 
 		while ((line = unsyncBufferedReader.readLine()) != null) {
-			rowValuesList.add(filterFunction.apply(line));
+			rowValues.add(filterFunction.apply(line));
 		}
 
-		return rowValuesList;
+		return rowValues;
 	}
 
 	private void _testExportBlogPostingsToCSVFile(
@@ -498,13 +602,13 @@ public class BatchEngineExportTaskExecutorTest
 			new TypeReference<List<BlogPosting>>() {
 			});
 
-		List<Object[]> rowValuesList = new ArrayList<>();
+		List<Object[]> rowValues = new ArrayList<>();
 
 		for (BlogPosting blogPosting : blogPostings) {
-			rowValuesList.add(filterFunction.apply(blogPosting));
+			rowValues.add(filterFunction.apply(blogPosting));
 		}
 
-		_assertExportedValues(blogsEntries, fieldNames, rowValuesList);
+		_assertExportedValues(blogsEntries, fieldNames, rowValues);
 	}
 
 	private void _testExportBlogPostingsToJSONLFile(
@@ -542,13 +646,13 @@ public class BatchEngineExportTaskExecutorTest
 					}));
 		}
 
-		List<Object[]> rowValuesList = new ArrayList<>();
+		List<Object[]> rowValues = new ArrayList<>();
 
 		for (BlogPosting blogPosting : blogPostings) {
-			rowValuesList.add(filterFunction.apply(blogPosting));
+			rowValues.add(filterFunction.apply(blogPosting));
 		}
 
-		_assertExportedValues(blogsEntries, fieldNames, rowValuesList);
+		_assertExportedValues(blogsEntries, fieldNames, rowValues);
 	}
 
 	private void _testExportBlogPostingsToXLSFile(
@@ -586,34 +690,34 @@ public class BatchEngineExportTaskExecutorTest
 
 		rowIterator.next();
 
-		List<Object[]> rowValuesList = new ArrayList<>();
+		List<Object[]> rowValues = new ArrayList<>();
 
 		while (rowIterator.hasNext()) {
 			Row row = rowIterator.next();
 
-			List<Object> rowValues = new ArrayList<>();
+			List<Object> values = new ArrayList<>();
 
 			for (Cell cell : row) {
 				if (CellType.BOOLEAN == cell.getCellType()) {
-					rowValues.add(cell.getBooleanCellValue());
+					values.add(cell.getBooleanCellValue());
 				}
 				else if (CellType.NUMERIC == cell.getCellType()) {
 					if (DateUtil.isCellDateFormatted(cell)) {
-						rowValues.add(cell.getDateCellValue());
+						values.add(cell.getDateCellValue());
 					}
 					else {
-						rowValues.add(cell.getNumericCellValue());
+						values.add(cell.getNumericCellValue());
 					}
 				}
 				else {
-					rowValues.add(cell.getStringCellValue());
+					values.add(cell.getStringCellValue());
 				}
 			}
 
-			rowValuesList.add(filterFunction.apply(rowValues.toArray()));
+			rowValues.add(filterFunction.apply(values.toArray()));
 		}
 
-		_assertExportedValues(blogsEntries, fieldNames, rowValuesList);
+		_assertExportedValues(blogsEntries, fieldNames, rowValues);
 	}
 
 	private static final String

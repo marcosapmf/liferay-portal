@@ -7,6 +7,7 @@ package com.liferay.journal.service.impl;
 
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureLink;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLinkLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLinkService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
 import com.liferay.dynamic.data.mapping.util.comparator.StructureLinkStructureModifiedDateComparator;
@@ -21,6 +22,7 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -256,6 +258,21 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 	}
 
 	@Override
+	public List<Object> getFoldersAndArticles(
+		long groupId, long userId, long folderId, long ddmStructureId,
+		int status, Locale locale, int[] excludedStatuses, int start, int end,
+		OrderByComparator<?> orderByComparator) {
+
+		QueryDefinition<?> queryDefinition = new QueryDefinition<>(
+			status, userId, true, start, end,
+			(OrderByComparator<Object>)orderByComparator);
+
+		return journalFolderFinder.filterFindF_A_ByG_F_DDMSI_L_NotS(
+			groupId, folderId, ddmStructureId, locale, excludedStatuses,
+			queryDefinition);
+	}
+
+	@Override
 	public int getFoldersAndArticlesCount(
 		long groupId, List<Long> folderIds, int status) {
 
@@ -316,6 +333,19 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 
 		return journalFolderFinder.filterCountF_A_ByG_F_DDMSI(
 			groupId, folderId, ddmStructureId, queryDefinition);
+	}
+
+	@Override
+	public int getFoldersAndArticlesCount(
+		long groupId, long userId, long folderId, long ddmStructureId,
+		int[] excludedStatuses, int status) {
+
+		QueryDefinition<Object> queryDefinition = new QueryDefinition<>(
+			status, userId, true);
+
+		return journalFolderFinder.filterCountF_A_ByG_F_DDMSI_NotS(
+			groupId, folderId, ddmStructureId, excludedStatuses,
+			queryDefinition);
 	}
 
 	@Override
@@ -509,13 +539,16 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		_journalFolderModelResourcePermission.check(
-			getPermissionChecker(),
-			journalFolderLocalService.getFolder(folderId), ActionKeys.UPDATE);
+		JournalFolder folder = getFolder(folderId);
 
-		return journalFolderLocalService.updateFolder(
-			getUserId(), groupId, folderId, parentFolderId, name, description,
-			mergeWithParentFolder, serviceContext);
+		return updateFolder(
+			groupId, folderId, parentFolderId, name, description,
+			TransformUtil.transformToLongArray(
+				_ddmStructureLinkLocalService.getStructureLinks(
+					_classNameLocalService.getClassNameId(JournalFolder.class),
+					folderId),
+				ddmStructureLink -> ddmStructureLink.getStructureId()),
+			folder.getRestrictionType(), mergeWithParentFolder, serviceContext);
 	}
 
 	@Override
@@ -525,14 +558,59 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 			boolean mergeWithParentFolder, ServiceContext serviceContext)
 		throws PortalException {
 
-		ModelResourcePermissionUtil.check(
-			_journalFolderModelResourcePermission, getPermissionChecker(),
-			groupId, folderId, ActionKeys.UPDATE);
+		PermissionChecker permissionChecker = getPermissionChecker();
 
-		return journalFolderLocalService.updateFolder(
-			getUserId(), groupId, folderId, parentFolderId, name, description,
-			ddmStructureIds, restrictionType, mergeWithParentFolder,
-			serviceContext);
+		if (ModelResourcePermissionUtil.contains(
+				_journalFolderModelResourcePermission, permissionChecker,
+				groupId, folderId, ActionKeys.ADVANCED_UPDATE) ||
+			ModelResourcePermissionUtil.contains(
+				_journalFolderModelResourcePermission, permissionChecker,
+				groupId, folderId, ActionKeys.UPDATE)) {
+
+			if (folderId == JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
+				return journalFolderLocalService.updateFolder(
+					getUserId(), groupId, folderId, parentFolderId, name,
+					description, ddmStructureIds, restrictionType,
+					mergeWithParentFolder, serviceContext);
+			}
+
+			JournalFolder folder = getFolder(folderId);
+
+			if (!ModelResourcePermissionUtil.contains(
+					_journalFolderModelResourcePermission, permissionChecker,
+					groupId, folderId, ActionKeys.ADVANCED_UPDATE)) {
+
+				ddmStructureIds = TransformUtil.transformToLongArray(
+					_ddmStructureLinkLocalService.getStructureLinks(
+						_classNameLocalService.getClassNameId(
+							JournalFolder.class),
+						folderId),
+					ddmStructureLink -> ddmStructureLink.getStructureId());
+
+				restrictionType = folder.getRestrictionType();
+
+				serviceContext.setAttribute(
+					"updateWorkflowDefinitionLinks", Boolean.FALSE);
+			}
+
+			if (!ModelResourcePermissionUtil.contains(
+					_journalFolderModelResourcePermission, permissionChecker,
+					groupId, folderId, ActionKeys.UPDATE)) {
+
+				parentFolderId = folder.getParentFolderId();
+				name = folder.getName();
+				description = folder.getDescription();
+			}
+
+			return journalFolderLocalService.updateFolder(
+				getUserId(), groupId, folderId, parentFolderId, name,
+				description, ddmStructureIds, restrictionType,
+				mergeWithParentFolder, serviceContext);
+		}
+
+		throw new PrincipalException.MustHavePermission(
+			permissionChecker, JournalFolder.class.getName(), folderId,
+			ActionKeys.ADVANCED_UPDATE, ActionKeys.UPDATE);
 	}
 
 	private List<DDMStructure> _filterStructures(
@@ -573,16 +651,19 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 				orderByComparator.isAscending());
 		}
 
-		if (ArrayUtil.contains(orderByComparator.getOrderByFields(), "name")) {
-			return new StructureLinkStructureNameComparator(
-				orderByComparator.isAscending());
+		if (!ArrayUtil.contains(orderByComparator.getOrderByFields(), "name")) {
+			return null;
 		}
 
-		return null;
+		return new StructureLinkStructureNameComparator(
+			orderByComparator.isAscending());
 	}
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private DDMStructureLinkLocalService _ddmStructureLinkLocalService;
 
 	@Reference
 	private DDMStructureLinkService _ddmStructureLinkService;

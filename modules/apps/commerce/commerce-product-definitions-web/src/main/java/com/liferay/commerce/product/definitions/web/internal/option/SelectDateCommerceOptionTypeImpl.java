@@ -8,8 +8,8 @@ package com.liferay.commerce.product.definitions.web.internal.option;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.frontend.helper.ProductHelper;
 import com.liferay.commerce.frontend.model.ProductSettingsModel;
-import com.liferay.commerce.frontend.util.ProductHelper;
 import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.model.CPDefinition;
@@ -122,7 +122,7 @@ public class SelectDateCommerceOptionTypeImpl implements CommerceOptionType {
 		else {
 			ProductSettingsModel productSettingsModel =
 				_productHelper.getProductSettingsModel(
-					cpDefinition.getCPDefinitionId());
+					cpDefinition.getCPDefinitionId(), commerceContext);
 
 			minQuantity = productSettingsModel.getMinQuantity();
 

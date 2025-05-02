@@ -33,6 +33,10 @@ export const phones = [
 		flag: 'da-dk',
 	},
 	{
+		code: '+41',
+		flag: 'de-ch',
+	},
+	{
 		code: '+49',
 		flag: 'de-de',
 	},
@@ -179,6 +183,10 @@ export const phones = [
 	{
 		code: '+7',
 		flag: 'ru-ru',
+	},
+	{
+		code: '+250',
+		flag: 'rw-rw',
 	},
 	{
 		code: '+421',

@@ -57,14 +57,12 @@ if (wikiPage != null) {
 		var viewRemovedAttachmentsLink = A.one('#view-removed-attachments-link');
 
 		viewRemovedAttachmentsLink.on('click', (event) => {
-			Liferay.Util.openWindow({
-				dialog: {
-					destroyOnHide: true,
-					modal: true,
-				},
+			Liferay.Util.openModal({
+				containerProps: {},
 				id: '<portlet:namespace />openRemovedPageAttachments',
+				iframeBodyCssClass: '',
 				title: '<%= LanguageUtil.get(request, "removed-attachments") %>',
-				uri: '<%= viewTrashAttachmentsURL %>',
+				url: '<%= viewTrashAttachmentsURL %>',
 			});
 		});
 	</aui:script>

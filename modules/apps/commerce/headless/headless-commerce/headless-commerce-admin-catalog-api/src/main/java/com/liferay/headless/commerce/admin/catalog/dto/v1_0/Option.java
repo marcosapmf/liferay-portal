@@ -19,8 +19,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -44,8 +42,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Generated("")
 @GraphQLName("Option")
+@io.swagger.v3.oas.annotations.media.Schema(
+	requiredProperties = {"fieldType", "key", "name"}
+)
 @JsonFilter("Liferay.Vulcan")
-@Schema(requiredProperties = {"fieldType", "key", "name"})
 @XmlRootElement(name = "Option")
 public class Option implements Serializable {
 
@@ -57,7 +57,7 @@ public class Option implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Option.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
 		if (_actionsSupplier != null) {
@@ -100,7 +100,7 @@ public class Option implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getCatalogId() {
 		if (_catalogIdSupplier != null) {
 			catalogId = _catalogIdSupplier.get();
@@ -141,9 +141,11 @@ public class Option implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _catalogIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
-	public CustomField[] getCustomFields() {
+	public com.liferay.portal.vulcan.custom.field.CustomField[]
+		getCustomFields() {
+
 		if (_customFieldsSupplier != null) {
 			customFields = _customFieldsSupplier.get();
 
@@ -153,7 +155,9 @@ public class Option implements Serializable {
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields) {
+
 		this.customFields = customFields;
 
 		_customFieldsSupplier = null;
@@ -161,7 +165,9 @@ public class Option implements Serializable {
 
 	@JsonIgnore
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.custom.field.CustomField[], Exception>
+				customFieldsUnsafeSupplier) {
 
 		_customFieldsSupplier = () -> {
 			try {
@@ -178,13 +184,14 @@ public class Option implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected CustomField[] customFields;
+	protected com.liferay.portal.vulcan.custom.field.CustomField[] customFields;
 
 	@JsonIgnore
-	private Supplier<CustomField[]> _customFieldsSupplier;
+	private Supplier<com.liferay.portal.vulcan.custom.field.CustomField[]>
+		_customFieldsSupplier;
 
-	@Schema(
-		example = "{hu_HU=Description HU, hr_HR=Description HR, en_US=Description}"
+	@io.swagger.v3.oas.annotations.media.Schema(
+		example = "{en_US=Description, hr_HR=Description HR, hu_HU=Description HU}"
 	)
 	@Valid
 	public Map<String, String> getDescription() {
@@ -228,7 +235,7 @@ public class Option implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _descriptionSupplier;
 
-	@Schema(example = "AB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -269,7 +276,7 @@ public class Option implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema(example = "true")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
 	public Boolean getFacetable() {
 		if (_facetableSupplier != null) {
 			facetable = _facetableSupplier.get();
@@ -310,8 +317,8 @@ public class Option implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _facetableSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(example = "select")
 	@JsonGetter("fieldType")
-	@Schema(example = "select")
 	@Valid
 	public FieldType getFieldType() {
 		if (_fieldTypeSupplier != null) {
@@ -366,7 +373,7 @@ public class Option implements Serializable {
 	private Supplier<FieldType> _fieldTypeSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "30130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -405,7 +412,7 @@ public class Option implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(example = "color")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "color")
 	public String getKey() {
 		if (_keySupplier != null) {
 			key = _keySupplier.get();
@@ -445,7 +452,9 @@ public class Option implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _keySupplier;
 
-	@Schema(example = "{en_US=Color, hr_HR=Color HR, hu_HU=Color HU}")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		example = "{en_US=Color, hr_HR=Color HR, hu_HU=Color HU}"
+	)
 	@Valid
 	public Map<String, String> getName() {
 		if (_nameSupplier != null) {
@@ -488,7 +497,7 @@ public class Option implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _nameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public OptionValue[] getOptionValues() {
 		if (_optionValuesSupplier != null) {
@@ -530,7 +539,7 @@ public class Option implements Serializable {
 	@JsonIgnore
 	private Supplier<OptionValue[]> _optionValuesSupplier;
 
-	@Schema(example = "1.2")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "1.2")
 	public Double getPriority() {
 		if (_prioritySupplier != null) {
 			priority = _prioritySupplier.get();
@@ -571,7 +580,7 @@ public class Option implements Serializable {
 	@JsonIgnore
 	private Supplier<Double> _prioritySupplier;
 
-	@Schema(example = "true")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
 	public Boolean getRequired() {
 		if (_requiredSupplier != null) {
 			required = _requiredSupplier.get();
@@ -612,7 +621,7 @@ public class Option implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _requiredSupplier;
 
-	@Schema(example = "true")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
 	public Boolean getSkuContributor() {
 		if (_skuContributorSupplier != null) {
 			skuContributor = _skuContributorSupplier.get();
@@ -704,7 +713,8 @@ public class Option implements Serializable {
 			sb.append(catalogId);
 		}
 
-		CustomField[] customFields = getCustomFields();
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields =
+			getCustomFields();
 
 		if (customFields != null) {
 			if (sb.length() > 1) {
@@ -716,7 +726,7 @@ public class Option implements Serializable {
 			sb.append("[");
 
 			for (int i = 0; i < customFields.length; i++) {
-				sb.append(String.valueOf(customFields[i]));
+				sb.append(customFields[i]);
 
 				if ((i + 1) < customFields.length) {
 					sb.append(", ");
@@ -885,8 +895,8 @@ public class Option implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.catalog.dto.v1_0.Option",
 		name = "x-class-name"
 	)

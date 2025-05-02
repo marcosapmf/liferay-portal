@@ -12,11 +12,14 @@ import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.cache.configuration.PortalCacheManagerConfiguration;
 import com.liferay.portal.kernel.cache.PortalCacheManager;
 import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -30,6 +33,7 @@ import java.io.Serializable;
 
 import java.lang.management.ManagementFactory;
 
+import java.util.function.Consumer;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -76,7 +80,7 @@ public class PortalCacheExtenderTest {
 		_multiVmXML = _generateXMLContent(
 			1,
 			new String[] {_CACHE_NAME_MULTI_ENTITY, _CACHE_NAME_MULTI_FINDER},
-			1001, 51);
+			1001, 51, true);
 
 		_bundle = _installBundle(_BUNDLE_SYMBOLIC_NAME, _multiVmXML, null);
 
@@ -93,7 +97,7 @@ public class PortalCacheExtenderTest {
 		Bundle overridingBundle = null;
 
 		String multiVmXMLUpdated = _generateXMLContent(
-			1, new String[] {_CACHE_NAME_MULTI_ENTITY}, 2001, 101);
+			1, new String[] {_CACHE_NAME_MULTI_ENTITY}, 2001, 101, true);
 
 		try {
 			overridingBundle = _installBundle(
@@ -119,7 +123,7 @@ public class PortalCacheExtenderTest {
 	@Test
 	public void testRecreateMultiVmConfig() throws Exception {
 		_multiVmXML = _generateXMLContent(
-			12, new String[] {_CACHE_NAME_MULTI}, 1001, 51);
+			12, new String[] {_CACHE_NAME_MULTI}, 1001, 51, true);
 
 		for (int i = 10; i <= 12; i++) {
 			_multiVmXML = StringUtil.replace(
@@ -157,11 +161,38 @@ public class PortalCacheExtenderTest {
 	}
 
 	@Test
+	public void testRequireSerializationConfig() throws Exception {
+		String defaultConfigCacheName = RandomTestUtil.randomString();
+		String offHeapConfigCacheName = RandomTestUtil.randomString();
+
+		_multiVmXML = _generateXMLContent(
+			sb -> {
+				sb.append("<cache alias=\"");
+				sb.append(defaultConfigCacheName);
+				sb.append("\"><key-type>java.io.Serializable</key-type>");
+				sb.append("<value-type>java.io.Serializable</value-type>");
+				sb.append("<heap>1000</heap></cache>");
+
+				sb.append("<cache alias=\"");
+				sb.append(offHeapConfigCacheName);
+				sb.append("\"><key-type>java.io.Serializable</key-type>");
+				sb.append("<value-type>java.io.Serializable</value-type>");
+				sb.append("<resources><heap>1000</heap><offheap unit=\"MB\">");
+				sb.append("10</offheap></resources></cache>");
+			});
+
+		_bundle = _installBundle(_BUNDLE_SYMBOLIC_NAME, _multiVmXML, null);
+
+		_assertRequireSerialization(defaultConfigCacheName, false);
+		_assertRequireSerialization(offHeapConfigCacheName, true);
+	}
+
+	@Test
 	public void testUpdateConfig() throws Exception {
 		_multiVmXML = _generateXMLContent(
-			1, new String[] {_CACHE_NAME_MULTI}, 1001, 51);
+			1, new String[] {_CACHE_NAME_MULTI}, 1001, 51, true);
 		_singleVmXML = _generateXMLContent(
-			1, new String[] {_CACHE_NAME_SINGLE}, 1001, 51);
+			1, new String[] {_CACHE_NAME_SINGLE}, 1001, 51, false);
 
 		_bundle = _installBundle(
 			_BUNDLE_SYMBOLIC_NAME, _multiVmXML, _singleVmXML);
@@ -176,9 +207,9 @@ public class PortalCacheExtenderTest {
 		Bundle overridingBundle = null;
 
 		String multiVmXMLUpdated = _generateXMLContent(
-			1, new String[] {_CACHE_NAME_MULTI}, 2001, 101);
+			1, new String[] {_CACHE_NAME_MULTI}, 2001, 101, true);
 		String singleVmXMLUpdated = _generateXMLContent(
-			1, new String[] {_CACHE_NAME_SINGLE}, 2001, 101);
+			1, new String[] {_CACHE_NAME_SINGLE}, 2001, 101, false);
 
 		try {
 			overridingBundle = _installBundle(
@@ -204,9 +235,9 @@ public class PortalCacheExtenderTest {
 	@Test
 	public void testUpdateConfigByExtFile() throws Exception {
 		_multiVmXML = _generateXMLContent(
-			1, new String[] {_CACHE_NAME_MULTI}, 1001, 51);
+			1, new String[] {_CACHE_NAME_MULTI}, 1001, 51, true);
 		_singleVmXML = _generateXMLContent(
-			1, new String[] {_CACHE_NAME_SINGLE}, 1001, 51);
+			1, new String[] {_CACHE_NAME_SINGLE}, 1001, 51, false);
 
 		_bundle = _installBundle(
 			_BUNDLE_SYMBOLIC_NAME, _multiVmXML, _singleVmXML);
@@ -228,14 +259,14 @@ public class PortalCacheExtenderTest {
 				new File(
 					ehcacheFolder, _BUNDLE_SYMBOLIC_NAME + "-multi-vm-ext.xml"),
 				_generateXMLContent(
-					1, new String[] {_CACHE_NAME_MULTI}, 2001, 101));
+					1, new String[] {_CACHE_NAME_MULTI}, 2001, 101, true));
 
 			_file.write(
 				new File(
 					ehcacheFolder,
 					_BUNDLE_SYMBOLIC_NAME + "-single-vm-ext.xml"),
 				_generateXMLContent(
-					1, new String[] {_CACHE_NAME_SINGLE}, 2001, 101));
+					1, new String[] {_CACHE_NAME_SINGLE}, 2001, 101, false));
 
 			_bundle.start();
 
@@ -252,7 +283,7 @@ public class PortalCacheExtenderTest {
 	}
 
 	private void _assertCacheConfig(
-			String cacheManagerName, int maxElementsInMemory, String name,
+			String cacheManagerName, int maxHeapEntries, String name,
 			long timeToIdleSeconds)
 		throws Exception {
 
@@ -260,16 +291,31 @@ public class PortalCacheExtenderTest {
 
 		ObjectName objectName = new ObjectName(
 			StringBundler.concat(
-				"net.sf.ehcache:type=CacheConfiguration,CacheManager=",
-				cacheManagerName, ",name=", name));
+				"org.ehcache:type=Cache,CacheManager=", cacheManagerName,
+				",name=", name));
 
 		Assert.assertEquals(
-			maxElementsInMemory,
-			mBeanServer.getAttribute(objectName, "MaxElementsInMemory"));
+			maxHeapEntries + " entries",
+			mBeanServer.getAttribute(objectName, "HeapSize"));
 		Assert.assertEquals(name, mBeanServer.getAttribute(objectName, "Name"));
 		Assert.assertEquals(
 			timeToIdleSeconds,
-			mBeanServer.getAttribute(objectName, "TimeToIdleSeconds"));
+			mBeanServer.getAttribute(objectName, "TimeToIdle"));
+	}
+
+	private void _assertRequireSerialization(
+		String cacheName, boolean requireSerialization) {
+
+		PortalCacheManagerConfiguration portalCacheManagerConfiguration =
+			ReflectionTestUtil.getFieldValue(
+				_multiVMPortalCacheManager, "_portalCacheManagerConfiguration");
+
+		Assert.assertEquals(
+			requireSerialization,
+			ReflectionTestUtil.getFieldValue(
+				portalCacheManagerConfiguration.getPortalCacheConfiguration(
+					cacheName),
+				"_requireSerialization"));
 	}
 
 	private InputStream _createBundle(
@@ -306,32 +352,52 @@ public class PortalCacheExtenderTest {
 		}
 	}
 
-	private String _generateXMLContent(
-		int cacheEntries, String[] cacheNames, int maxElementsInMemory,
-		int timeToIdleSeconds) {
-
+	private String _generateXMLContent(Consumer<StringBundler> consumer) {
 		StringBundler sb = new StringBundler();
 
-		sb.append("<ehcache dynamicConfig=\"true\" monitoring=\"off\" ");
-		sb.append("updateCheck=\"false\" xmlns:xsi=\"http://www.w3.org/2001");
-		sb.append("/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"");
-		sb.append("http://www.ehcache.org/ehcache.xsd\">");
+		sb.append("<config xmlns=\"http://www.ehcache.org/v3\" ");
+		sb.append("xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ");
+		sb.append("xsi:schemaLocation=\"http://www.ehcache.org/v3 ");
+		sb.append("https://www.ehcache.org/schema/ehcache-core-3.10.xsd\">");
 
-		for (int i = 1; i <= cacheEntries; i++) {
-			for (String cacheName : cacheNames) {
-				sb.append("<cache maxElementsInMemory=\"");
-				sb.append(maxElementsInMemory);
-				sb.append("\" name=\"");
-				sb.append(cacheName + i);
-				sb.append("\" timeToIdleSeconds=\"");
-				sb.append(timeToIdleSeconds);
-				sb.append("\"> </cache>");
-			}
-		}
+		consumer.accept(sb);
 
-		sb.append("\" </ehcache>");
+		sb.append("</config>");
 
 		return sb.toString();
+	}
+
+	private String _generateXMLContent(
+		int cacheEntries, String[] cacheNames, int maxHeapEntries,
+		int timeToIdleSeconds, boolean multiVM) {
+
+		return _generateXMLContent(
+			sb -> {
+				for (int i = 1; i <= cacheEntries; i++) {
+					for (String cacheName : cacheNames) {
+						sb.append("<cache alias=\"");
+						sb.append(cacheName + i);
+						sb.append("\">");
+
+						if (multiVM) {
+							sb.append("<key-type>java.io.Serializable");
+							sb.append("</key-type><value-type>");
+							sb.append("java.io.Serializable</value-type>");
+						}
+						else {
+							sb.append("<key-type>java.io.Serializable");
+							sb.append("</key-type><value-type>");
+							sb.append("java.lang.Object</value-type>");
+						}
+
+						sb.append("<expiry><tti>");
+						sb.append(timeToIdleSeconds);
+						sb.append("</tti></expiry><heap>");
+						sb.append(maxHeapEntries);
+						sb.append("</heap></cache>");
+					}
+				}
+			});
 	}
 
 	private Bundle _installBundle(

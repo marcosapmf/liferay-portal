@@ -12,9 +12,14 @@ import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTProcessLocalService;
+import com.liferay.change.tracking.spi.history.CTCollectionHistoryProvider;
+import com.liferay.change.tracking.spi.history.CTCollectionHistoryProviderRegistry;
+import com.liferay.journal.constants.JournalFolderConstants;
+import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.journal.test.util.JournalFolderFixture;
+import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
@@ -56,6 +61,38 @@ public class CTEntryLocalServiceTest {
 			JournalFolder.class);
 		_journalFolderFixture = new JournalFolderFixture(
 			_journalFolderLocalService);
+	}
+
+	@Test
+	public void testFetchCTEntryWithModelClassPK() throws Exception {
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		CTCollection ctCollection = _createCTCollection();
+
+		JournalArticle modifiedJournalArticle = null;
+
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					ctCollection.getCtCollectionId())) {
+
+			modifiedJournalArticle = JournalTestUtil.updateArticle(
+				journalArticle, RandomTestUtil.randomString());
+		}
+
+		CTCollectionHistoryProvider<?> ctCollectionHistoryProvider =
+			_ctCollectionHistoryProviderRegistry.getCTCollectionHistoryProvider(
+				_classNameLocalService.getClassNameId(JournalArticle.class));
+
+		CTEntry ctEntry = ctCollectionHistoryProvider.getCTEntry(
+			ctCollection.getCtCollectionId(),
+			_classNameLocalService.getClassNameId(JournalArticle.class),
+			journalArticle.getId());
+
+		Assert.assertNotNull(ctEntry);
+		Assert.assertEquals(
+			modifiedJournalArticle.getId(), ctEntry.getModelClassPK());
 	}
 
 	@Test
@@ -216,6 +253,10 @@ public class CTEntryLocalServiceTest {
 
 	@Inject
 	private static JournalFolderLocalService _journalFolderLocalService;
+
+	@Inject
+	private CTCollectionHistoryProviderRegistry
+		_ctCollectionHistoryProviderRegistry;
 
 	@DeleteAfterTestRun
 	private final List<CTCollection> _ctCollections = new ArrayList<>();

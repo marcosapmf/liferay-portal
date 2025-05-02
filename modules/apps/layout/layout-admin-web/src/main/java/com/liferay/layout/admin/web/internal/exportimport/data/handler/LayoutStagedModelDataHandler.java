@@ -5,8 +5,6 @@
 
 package com.liferay.layout.admin.web.internal.exportimport.data.handler;
 
-import com.liferay.asset.list.model.AssetListEntry;
-import com.liferay.asset.list.service.AssetListEntryLocalService;
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.model.ClientExtensionEntryRel;
 import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
@@ -37,7 +35,6 @@ import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.exportimport.lar.PermissionImporter;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
-import com.liferay.item.selector.criteria.InfoListItemSelectorReturnType;
 import com.liferay.layout.configuration.LayoutExportImportConfiguration;
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.layout.friendly.url.LayoutFriendlyURLEntryHelper;
@@ -347,8 +344,6 @@ public class LayoutStagedModelDataHandler
 			}
 		}
 
-		_exportCollectionLayoutCollection(layout, portletDataContext);
-
 		if (_layoutExportImportConfiguration.exportDraftLayout()) {
 			_exportDraftLayout(layout, layoutElement, portletDataContext);
 		}
@@ -487,6 +482,9 @@ public class LayoutStagedModelDataHandler
 		Map<Long, Layout> layouts =
 			(Map<Long, Layout>)portletDataContext.getNewPrimaryKeysMap(
 				Layout.class + ".layout");
+		Map<Long, Long> layoutPlids =
+			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+				Layout.class);
 
 		Layout existingLayout = null;
 
@@ -549,10 +547,6 @@ public class LayoutStagedModelDataHandler
 				uuid, groupId, privateLayout);
 
 			if (existingLayout != null) {
-				Map<Long, Long> layoutPlids =
-					(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
-						Layout.class);
-
 				layoutPlids.put(layout.getPlid(), existingLayout.getPlid());
 			}
 
@@ -600,6 +594,33 @@ public class LayoutStagedModelDataHandler
 			if (existingLayout == null) {
 				existingLayout = _layoutLocalService.fetchLayoutByFriendlyURL(
 					groupId, privateLayout, friendlyURL);
+
+				if ((existingLayout != null) &&
+					!Objects.equals(
+						existingLayout.getType(), layout.getType())) {
+
+					_log.warn(
+						StringBundler.concat(
+							"The layout with friendly URL ", friendlyURL,
+							" and type ", layout.getType(),
+							" has the same friendly URL as an existing layout ",
+							"of type ", existingLayout.getType(),
+							". It will be imported as a new layout modifying ",
+							"its URL to ensure uniqueness."));
+
+					existingLayout = null;
+				}
+			}
+
+			if ((existingLayout == null) && (layout.getClassPK() > 0) &&
+				layoutPlids.containsKey(layout.getClassPK())) {
+
+				Layout curLayout = _layoutLocalService.fetchLayout(
+					layoutPlids.get(layout.getClassPK()));
+
+				if (curLayout != null) {
+					existingLayout = curLayout.fetchDraftLayout();
+				}
 			}
 
 			if (existingLayout == null) {
@@ -677,10 +698,6 @@ public class LayoutStagedModelDataHandler
 			importedLayout = existingLayout;
 		}
 
-		Map<Long, Long> layoutPlids =
-			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
-				Layout.class);
-
 		layoutPlids.put(layout.getPlid(), importedLayout.getPlid());
 
 		layouts.put(oldLayoutId, importedLayout);
@@ -728,8 +745,15 @@ public class LayoutStagedModelDataHandler
 					layout, Layout.class, layout.getGroupId(),
 					masterLayoutUuid);
 
-			StagedModelDataHandlerUtil.importStagedModel(
-				portletDataContext, masterLayoutElement);
+			long originalPlid = portletDataContext.getPlid();
+
+			try {
+				StagedModelDataHandlerUtil.importStagedModel(
+					portletDataContext, masterLayoutElement);
+			}
+			finally {
+				portletDataContext.setPlid(originalPlid);
+			}
 
 			long masterLayoutPlid = GetterUtil.getLong(
 				layoutElement.attributeValue("master-layout-plid"));
@@ -964,9 +988,6 @@ public class LayoutStagedModelDataHandler
 		importedLayout.setStatus(layout.getStatus());
 
 		importedLayout = _layoutLocalService.updateLayout(importedLayout);
-
-		importedLayout = _updateCollectionLayoutTypeSettings(
-			importedLayout, layout, portletDataContext);
 
 		if (existingLayout == null) {
 			_addMasterLayoutRevision(importedLayout);
@@ -1255,47 +1276,6 @@ public class LayoutStagedModelDataHandler
 			StagedModelDataHandlerUtil.exportReferenceStagedModel(
 				portletDataContext, layout, clientExtensionEntryRel,
 				PortletDataContext.REFERENCE_TYPE_STRONG);
-		}
-	}
-
-	private void _exportCollectionLayoutCollection(
-		Layout layout, PortletDataContext portletDataContext) {
-
-		if (!layout.isTypeCollection()) {
-			return;
-		}
-
-		UnicodeProperties typeSettingsUnicodeProperties =
-			layout.getTypeSettingsProperties();
-
-		String collectionType = typeSettingsUnicodeProperties.getProperty(
-			"collectionType", StringPool.BLANK);
-
-		if (!Objects.equals(
-				collectionType,
-				InfoListItemSelectorReturnType.class.getName())) {
-
-			return;
-		}
-
-		long collectionPK = GetterUtil.getLong(
-			typeSettingsUnicodeProperties.getProperty(
-				"collectionPK", StringPool.BLANK));
-
-		if (collectionPK <= 0) {
-			return;
-		}
-
-		try {
-			StagedModelDataHandlerUtil.exportReferenceStagedModel(
-				portletDataContext, layout,
-				_assetListEntryLocalService.getAssetListEntry(collectionPK),
-				PortletDataContext.REFERENCE_TYPE_DEPENDENCY);
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(portalException);
-			}
 		}
 	}
 
@@ -1723,16 +1703,16 @@ public class LayoutStagedModelDataHandler
 			UnicodeProperties typeSettingsUnicodeProperties =
 				layout.getTypeSettingsProperties();
 
-			String javascript = GetterUtil.getString(
+			String javaScript = GetterUtil.getString(
 				typeSettingsUnicodeProperties.getProperty(
 					"javascript", StringPool.BLANK));
 
-			if (Validator.isNotNull(javascript)) {
+			if (Validator.isNotNull(javaScript)) {
 				typeSettingsUnicodeProperties.setProperty(
 					"javascript",
 					_dlReferencesExportImportContentProcessor.
 						replaceExportContentReferences(
-							portletDataContext, layout, javascript, true,
+							portletDataContext, layout, javaScript, true,
 							false));
 
 				layout.setTypeSettingsProperties(typeSettingsUnicodeProperties);
@@ -2133,6 +2113,11 @@ public class LayoutStagedModelDataHandler
 			layout.getPrimaryKey(), importedLayout.getPrimaryKey());
 
 		for (Element friendlyURLEntryElement : friendlyURLEntryElements) {
+			friendlyURLEntryElement.addAttribute(
+				"resource-class-name",
+				_layoutFriendlyURLEntryHelper.getClassName(
+					portletDataContext.isPrivateLayout()));
+
 			StagedModelDataHandlerUtil.importStagedModel(
 				portletDataContext, friendlyURLEntryElement);
 		}
@@ -2247,8 +2232,15 @@ public class LayoutStagedModelDataHandler
 		layoutPageTemplateStructureElement.addAttribute(
 			"classPK", String.valueOf(classPK));
 
-		StagedModelDataHandlerUtil.importStagedModel(
-			portletDataContext, layoutPageTemplateStructureElement);
+		long originalPlid = portletDataContext.getPlid();
+
+		try {
+			StagedModelDataHandlerUtil.importStagedModel(
+				portletDataContext, layoutPageTemplateStructureElement);
+		}
+		finally {
+			portletDataContext.setPlid(originalPlid);
+		}
 
 		Map<Long, Long> layoutPageTemplateStructureIds =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
@@ -2644,11 +2636,11 @@ public class LayoutStagedModelDataHandler
 			UnicodeProperties typeSettingsUnicodeProperties =
 				layout.getTypeSettingsProperties();
 
-			String javascript = GetterUtil.getString(
+			String javaScript = GetterUtil.getString(
 				typeSettingsUnicodeProperties.getProperty(
 					"javascript", StringPool.BLANK));
 
-			if (Validator.isNotNull(javascript)) {
+			if (Validator.isNotNull(javaScript)) {
 				UnicodeProperties importedLayoutTypeSettingsUnicodeProperties =
 					importedLayout.getTypeSettingsProperties();
 
@@ -2656,7 +2648,7 @@ public class LayoutStagedModelDataHandler
 					"javascript",
 					_dlReferencesExportImportContentProcessor.
 						replaceImportContentReferences(
-							portletDataContext, layout, javascript));
+							portletDataContext, layout, javaScript));
 
 				importedLayout.setTypeSettingsProperties(
 					importedLayoutTypeSettingsUnicodeProperties);
@@ -2965,66 +2957,6 @@ public class LayoutStagedModelDataHandler
 		}
 	}
 
-	private Layout _updateCollectionLayoutTypeSettings(
-		Layout importedLayout, Layout layout,
-		PortletDataContext portletDataContext) {
-
-		if (!layout.isTypeCollection()) {
-			return importedLayout;
-		}
-
-		UnicodeProperties typeSettingsUnicodeProperties =
-			importedLayout.getTypeSettingsProperties();
-
-		String collectionType = typeSettingsUnicodeProperties.getProperty(
-			"collectionType", StringPool.BLANK);
-
-		if (!Objects.equals(
-				collectionType,
-				InfoListItemSelectorReturnType.class.getName())) {
-
-			return importedLayout;
-		}
-
-		long collectionPK = GetterUtil.getLong(
-			typeSettingsUnicodeProperties.getProperty(
-				"collectionPK", StringPool.BLANK));
-
-		if (collectionPK <= 0) {
-			return importedLayout;
-		}
-
-		try {
-			StagedModelDataHandlerUtil.importReferenceStagedModel(
-				portletDataContext, layout, AssetListEntry.class, collectionPK);
-
-			Map<Long, Long> assetListEntryIds =
-				(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
-					AssetListEntry.class);
-
-			long assetListEntryId = MapUtil.getLong(
-				assetListEntryIds, collectionPK, collectionPK);
-
-			typeSettingsUnicodeProperties.setProperty(
-				"collectionPK", String.valueOf(assetListEntryId));
-
-			importedLayout = _layoutLocalService.getLayout(
-				importedLayout.getPlid());
-
-			importedLayout.setTypeSettingsProperties(
-				typeSettingsUnicodeProperties);
-
-			importedLayout = _layoutLocalService.updateLayout(importedLayout);
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(portalException);
-			}
-		}
-
-		return importedLayout;
-	}
-
 	private void _updateLastMergeLayoutModifiedTime(
 		Element exportedLayoutElement, Layout importedLayout,
 		PortletDataContext portletDataContext) {
@@ -3133,9 +3065,6 @@ public class LayoutStagedModelDataHandler
 		TransactionConfig.Factory.create(
 			Propagation.SUPPORTS,
 			new Class<?>[] {PortalException.class, SystemException.class});
-
-	@Reference
-	private AssetListEntryLocalService _assetListEntryLocalService;
 
 	@Reference
 	private ClientExtensionEntryRelLocalService

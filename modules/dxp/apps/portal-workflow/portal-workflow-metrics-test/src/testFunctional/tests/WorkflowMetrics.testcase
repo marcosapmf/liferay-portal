@@ -1,10 +1,12 @@
-@component-name = "portal-bpm-ee"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.run.environment = "EE";
 	property testray.main.component.name = "Workflow Metrics";
+
+	static var osgiConfigFileName = "";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -16,6 +18,8 @@ definition {
 		Navigator.openURL();
 
 		Workflow.openWorkflowMetrics();
+
+		var osgiConfigFileName = "com.liferay.portal.workflow.metrics.internal.configuration.WorkflowMetricsConfiguration.config";
 	}
 
 	tearDown {
@@ -36,6 +40,8 @@ definition {
 		WorkflowMetrics.tearDown();
 
 		Workflow.tearDownWorkflowDefinitions();
+
+		AntCommands.runCommand("build-test-workflow-metrics-sla.xml", "clean-workflow-metrics-sla-osgi-configuration -Dosgi.config.file.name=${osgiConfigFileName}");
 
 		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
@@ -710,6 +716,7 @@ definition {
 			Workflow.viewPendingTasks(
 				workflowAssetTitle = "Blogs Entry Title ${blogNumber}",
 				workflowAssetType = "Blogs Entry",
+				workflowNavTab = "Assigned to Me",
 				workflowTask = "Review");
 
 			Workflow.gotoTaskDetails(workflowAssetTitle = "Blogs Entry Title ${blogNumber}");
@@ -847,7 +854,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		Click(
 			key_stepsNumber = 2,
@@ -904,7 +911,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		//Assert default chart ranges and units();
 
@@ -1342,7 +1349,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		Click(
 			key_stepsNumber = 2,
@@ -1400,7 +1407,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		WorkflowMetrics.selectDateRangePerformanceByStep(
 			completionVelocityDateRange = "Custom Range",
@@ -1454,7 +1461,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		Click(
 			key_assigneesNumber = 3,
@@ -1649,7 +1656,7 @@ definition {
 
 		Navigator.gotoBack();
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -1803,7 +1810,7 @@ definition {
 
 		Navigator.gotoBack();
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -2000,6 +2007,7 @@ definition {
 		Workflow.viewPendingTasks(
 			workflowAssetTitle = "Blogs Entry Title",
 			workflowAssetType = "Blogs Entry",
+			workflowNavTab = "Assigned to Me",
 			workflowTask = "Review");
 
 		Workflow.gotoTaskDetails(workflowAssetTitle = "Blogs Entry Title");
@@ -2245,7 +2253,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		WorkflowMetrics.assertChartTotalValue(
 			velocityUnitTotal = "inst / day",
@@ -2283,6 +2291,10 @@ definition {
 		var key_testSlaDefinitionName = "SLA Name";
 		var key_testSlaDefinitionStart = "Process Begins";
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
+
+		task ("Add the OSGI configuration file") {
+			AntCommands.runCommand("build-test-workflow-metrics-sla.xml", "prepare-workflow-metrics-sla-osgi-configuration -Dosgi.config.file.name=${osgiConfigFileName}");
+		}
 
 		WorkflowMetrics.goToWorkflowSLASettings(workflowProcessName = "Single Approver");
 
@@ -2337,7 +2349,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		WorkflowMetrics.waitForCompletedSLA(
 			key_expectedValue = 0,
@@ -2573,7 +2585,7 @@ definition {
 			key_pending = 0,
 			key_untracked = 0);
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		WorkflowMetrics.waitForCompletedSLA(
 			key_expectedValue = 0,
@@ -2734,7 +2746,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		WorkflowMetrics.waitForCompletedSLA(
 			key_expectedValue = 0,
@@ -2856,7 +2868,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		ScrollWebElementIntoView(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_EMPTY_STATE");
 
@@ -2864,7 +2876,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		ScrollWebElementIntoView(
 			key_assigneesNumber = 3,
@@ -3062,7 +3074,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		WorkflowMetrics.viewPerformanceByAssignee(
 			assignee = "Test Test",
@@ -3078,7 +3090,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		AssertElementPresent(
 			key_rowNumber = 10,
@@ -3101,7 +3113,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
+		WorkflowMetrics.goToPerformanceTab();
 
 		WorkflowMetrics.selectStepFilterPerformaceByAssignee(velocityUnit = "REVIEW");
 

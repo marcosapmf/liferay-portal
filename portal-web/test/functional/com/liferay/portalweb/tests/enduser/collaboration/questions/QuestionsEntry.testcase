@@ -1,4 +1,4 @@
-@component-name = "portal-questions"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.release = "true";
@@ -603,8 +603,6 @@ definition {
 	@description = "LPS-137639 - Validate if the user can delete a thread through Activity, it also covers LPS-137639."
 	@priority = 4
 	test CanDeleteThreadThroughMyActivity {
-		property portal.release = "quarantine";
-
 		task ("Given there is a message created") {
 			JSONMBMessage.addMessage(
 				groupName = "Guest",
@@ -621,7 +619,9 @@ definition {
 		task ("Then the user can deletes the question") {
 			Questions.gotoDetails(questionTitle = "MB Thread Message Subject");
 
-			Questions.deleteQuestion(deleteInActivity = "true");
+			Questions.deleteQuestion(
+				deleteInActivity = "true",
+				questionTitle = "MB Thread Message Subject");
 		}
 	}
 
@@ -1294,7 +1294,7 @@ definition {
 		}
 
 		task ("When an anonymous user goes to the most recently created question's detail page") {
-			Navigator.openSpecificURL(url = "${portalURL}/questions-page/questions/category/question-1");
+			Navigator.openSpecificURL(url = "${portalURL}/web/guest/questions-page/questions/category/question-1");
 		}
 
 		task ("Then a he can see the question title on url as 'question-1'") {

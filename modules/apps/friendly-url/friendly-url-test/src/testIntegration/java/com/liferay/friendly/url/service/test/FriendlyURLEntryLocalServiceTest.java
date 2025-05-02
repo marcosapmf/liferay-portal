@@ -15,6 +15,7 @@ import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.friendly.url.exception.DuplicateFriendlyURLEntryException;
 import com.liferay.friendly.url.exception.FriendlyURLCategoryException;
 import com.liferay.friendly.url.exception.FriendlyURLLengthException;
+import com.liferay.friendly.url.exception.FriendlyURLLocalizationUrlTitleException;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
@@ -33,7 +34,6 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -130,7 +130,6 @@ public class FriendlyURLEntryLocalServiceTest {
 		Assert.assertEquals(urlTitle, finalFriendlyURL.getUrlTitle());
 	}
 
-	@FeatureFlags("LPD-11147")
 	@Test
 	public void testAddFriendlyURLEntryWithAssetCategories() throws Exception {
 		ServiceContext serviceContext = _getServiceContext();
@@ -168,7 +167,6 @@ public class FriendlyURLEntryLocalServiceTest {
 				_language.getLanguageId(LocaleUtil.US)));
 	}
 
-	@FeatureFlags("LPD-11147")
 	@Test
 	public void testAddFriendlyURLEntryWithLocalizedAssetCategories()
 		throws Exception {
@@ -200,7 +198,6 @@ public class FriendlyURLEntryLocalServiceTest {
 				_language.getLanguageId(new Locale("es", "ES"))));
 	}
 
-	@FeatureFlags("LPD-11147")
 	@Test(expected = FriendlyURLCategoryException.class)
 	public void testAddFriendlyURLEntryWithSlashAndAssetCategories()
 		throws Exception {
@@ -234,7 +231,6 @@ public class FriendlyURLEntryLocalServiceTest {
 			serviceContext);
 	}
 
-	@FeatureFlags("LPD-11147")
 	@Test
 	public void testAddUnlocalizedFriendlyURLEntryWithLocalizedAssetCategories()
 		throws Exception {
@@ -488,6 +484,16 @@ public class FriendlyURLEntryLocalServiceTest {
 
 		_friendlyURLEntryLocalService.validate(
 			_group.getGroupId(), classNameId, urlTitle);
+	}
+
+	@Test(
+		expected = FriendlyURLLocalizationUrlTitleException.MustNotHaveTrailingSlash.class
+	)
+	public void testValidateUrlTitleWithInvalidSlash() throws Exception {
+		_friendlyURLEntryLocalService.validate(
+			_group.getGroupId(),
+			_classNameLocalService.getClassNameId(User.class),
+			TestPropsValues.getUserId(), "test/");
 	}
 
 	@Test

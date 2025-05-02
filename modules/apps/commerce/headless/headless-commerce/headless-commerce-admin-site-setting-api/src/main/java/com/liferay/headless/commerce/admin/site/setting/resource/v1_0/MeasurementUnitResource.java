@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.site.setting.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.site.setting.dto.v1_0.MeasurementUnit;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,13 +46,47 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface MeasurementUnitResource {
 
-	public Page<MeasurementUnit> getMeasurementUnitsPage(
-			Filter filter, Pagination pagination, Sort[] sorts)
+	public void deleteMeasurementUnit(Long id) throws Exception;
+
+	public Response deleteMeasurementUnitBatch(
+			String callbackURL, Object object)
 		throws Exception;
 
-	public Response postMeasurementUnitsPageExportBatch(
-			Filter filter, Sort[] sorts, String callbackURL, String contentType,
-			String fieldNames)
+	public void deleteMeasurementUnitByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public void deleteMeasurementUnitByKey(String key) throws Exception;
+
+	public MeasurementUnit getMeasurementUnit(Long id) throws Exception;
+
+	public MeasurementUnit getMeasurementUnitByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public MeasurementUnit getMeasurementUnitByKey(String key) throws Exception;
+
+	public Page<MeasurementUnit> getMeasurementUnitsByType(
+			String measurementUnitType, Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Page<MeasurementUnit> getMeasurementUnitsPage(
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Response patchMeasurementUnit(
+			Long id, MeasurementUnit measurementUnit)
+		throws Exception;
+
+	public Response patchMeasurementUnitByExternalReferenceCode(
+			String externalReferenceCode, MeasurementUnit measurementUnit)
+		throws Exception;
+
+	public Response patchMeasurementUnitByKey(
+			String key, MeasurementUnit measurementUnit)
 		throws Exception;
 
 	public MeasurementUnit postMeasurementUnit(MeasurementUnit measurementUnit)
@@ -63,40 +95,14 @@ public interface MeasurementUnitResource {
 	public Response postMeasurementUnitBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteMeasurementUnitByExternalReferenceCode(
-			String externalReferenceCode)
+	public Response postMeasurementUnitsPageExportBatch(
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
-	public MeasurementUnit getMeasurementUnitByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public Response patchMeasurementUnitByExternalReferenceCode(
+	public MeasurementUnit putMeasurementUnitByExternalReferenceCode(
 			String externalReferenceCode, MeasurementUnit measurementUnit)
-		throws Exception;
-
-	public void deleteMeasurementUnitByKey(String key) throws Exception;
-
-	public MeasurementUnit getMeasurementUnitByKey(String key) throws Exception;
-
-	public Response patchMeasurementUnitByKey(
-			String key, MeasurementUnit measurementUnit)
-		throws Exception;
-
-	public Page<MeasurementUnit> getMeasurementUnitsByType(
-			String measurementUnitType, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public void deleteMeasurementUnit(Long id) throws Exception;
-
-	public Response deleteMeasurementUnitBatch(
-			String callbackURL, Object object)
-		throws Exception;
-
-	public MeasurementUnit getMeasurementUnit(Long id) throws Exception;
-
-	public Response patchMeasurementUnit(
-			Long id, MeasurementUnit measurementUnit)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -121,7 +127,8 @@ public interface MeasurementUnitResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -146,19 +153,23 @@ public interface MeasurementUnitResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

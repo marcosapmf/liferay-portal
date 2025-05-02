@@ -93,8 +93,6 @@ public class CPSpecificationOptionCacheModel
 		sb.append(modifiedDate);
 		sb.append(", CPOptionCategoryId=");
 		sb.append(CPOptionCategoryId);
-		sb.append(", listTypeDefinitionId=");
-		sb.append(listTypeDefinitionId);
 		sb.append(", title=");
 		sb.append(title);
 		sb.append(", description=");
@@ -105,6 +103,8 @@ public class CPSpecificationOptionCacheModel
 		sb.append(key);
 		sb.append(", priority=");
 		sb.append(priority);
+		sb.append(", visible=");
+		sb.append(visible);
 		sb.append(", lastPublishDate=");
 		sb.append(lastPublishDate);
 		sb.append("}");
@@ -162,7 +162,6 @@ public class CPSpecificationOptionCacheModel
 		}
 
 		cpSpecificationOptionImpl.setCPOptionCategoryId(CPOptionCategoryId);
-		cpSpecificationOptionImpl.setListTypeDefinitionId(listTypeDefinitionId);
 
 		if (title == null) {
 			cpSpecificationOptionImpl.setTitle("");
@@ -188,6 +187,7 @@ public class CPSpecificationOptionCacheModel
 		}
 
 		cpSpecificationOptionImpl.setPriority(priority);
+		cpSpecificationOptionImpl.setVisible(visible);
 
 		if (lastPublishDate == Long.MIN_VALUE) {
 			cpSpecificationOptionImpl.setLastPublishDate(null);
@@ -220,8 +220,6 @@ public class CPSpecificationOptionCacheModel
 		modifiedDate = objectInput.readLong();
 
 		CPOptionCategoryId = objectInput.readLong();
-
-		listTypeDefinitionId = objectInput.readLong();
 		title = objectInput.readUTF();
 		description = objectInput.readUTF();
 
@@ -229,6 +227,8 @@ public class CPSpecificationOptionCacheModel
 		key = objectInput.readUTF();
 
 		priority = objectInput.readDouble();
+
+		visible = objectInput.readBoolean();
 		lastPublishDate = objectInput.readLong();
 	}
 
@@ -270,8 +270,6 @@ public class CPSpecificationOptionCacheModel
 
 		objectOutput.writeLong(CPOptionCategoryId);
 
-		objectOutput.writeLong(listTypeDefinitionId);
-
 		if (title == null) {
 			objectOutput.writeUTF("");
 		}
@@ -296,6 +294,8 @@ public class CPSpecificationOptionCacheModel
 		}
 
 		objectOutput.writeDouble(priority);
+
+		objectOutput.writeBoolean(visible);
 		objectOutput.writeLong(lastPublishDate);
 	}
 
@@ -310,12 +310,12 @@ public class CPSpecificationOptionCacheModel
 	public long createDate;
 	public long modifiedDate;
 	public long CPOptionCategoryId;
-	public long listTypeDefinitionId;
 	public String title;
 	public String description;
 	public boolean facetable;
 	public String key;
 	public double priority;
+	public boolean visible;
 	public long lastPublishDate;
 
 }

@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.inventory.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.ReplenishmentItem;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,18 +46,6 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ReplenishmentItemResource {
 
-	public void deleteReplenishmentItemByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public ReplenishmentItem getReplenishmentItemByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public ReplenishmentItem patchReplenishmentItemByExternalReferenceCode(
-			String externalReferenceCode, ReplenishmentItem replenishmentItem)
-		throws Exception;
-
 	public void deleteReplenishmentItem(Long replenishmentItemId)
 		throws Exception;
 
@@ -67,24 +53,31 @@ public interface ReplenishmentItemResource {
 			String callbackURL, Object object)
 		throws Exception;
 
+	public void deleteReplenishmentItemByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
 	public ReplenishmentItem getReplenishmentItem(Long replenishmentItemId)
 		throws Exception;
 
-	public ReplenishmentItem patchReplenishmentItem(
-			Long replenishmentItemId, ReplenishmentItem replenishmentItem)
+	public ReplenishmentItem getReplenishmentItemByExternalReferenceCode(
+			String externalReferenceCode)
 		throws Exception;
 
 	public Page<ReplenishmentItem> getReplenishmentItemsPage(
 			String sku, Pagination pagination)
 		throws Exception;
 
-	public Response postReplenishmentItemsPageExportBatch(
-			String sku, String callbackURL, String contentType,
-			String fieldNames)
-		throws Exception;
-
 	public Page<ReplenishmentItem> getWarehouseIdReplenishmentItemsPage(
 			Long warehouseId, Pagination pagination)
+		throws Exception;
+
+	public ReplenishmentItem patchReplenishmentItem(
+			Long replenishmentItemId, ReplenishmentItem replenishmentItem)
+		throws Exception;
+
+	public ReplenishmentItem patchReplenishmentItemByExternalReferenceCode(
+			String externalReferenceCode, ReplenishmentItem replenishmentItem)
 		throws Exception;
 
 	public ReplenishmentItem postReplenishmentItem(
@@ -93,6 +86,15 @@ public interface ReplenishmentItemResource {
 
 	public Response postReplenishmentItemBatch(
 			Long warehouseId, String sku, String callbackURL, Object object)
+		throws Exception;
+
+	public Response postReplenishmentItemsPageExportBatch(
+			String sku, String callbackURL, String contentType,
+			String fieldNames)
+		throws Exception;
+
+	public ReplenishmentItem putReplenishmentItemByExternalReferenceCode(
+			String externalReferenceCode, ReplenishmentItem replenishmentItem)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -117,7 +119,8 @@ public interface ReplenishmentItemResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -142,19 +145,23 @@ public interface ReplenishmentItemResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

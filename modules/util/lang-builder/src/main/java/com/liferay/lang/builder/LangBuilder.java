@@ -153,6 +153,7 @@ public class LangBuilder {
 		_createProperties(content, "ar"); // Arabic
 		_createProperties(content, "eu"); // Basque
 		_createProperties(content, "bg"); // Bulgarian
+		_createProperties(content, "my"); // Burmese (Myanmar)
 		_createProperties(content, "km"); // Cambodian
 		_createProperties(content, "ca"); // Catalan
 		_createProperties(content, "zh_CN"); // Chinese (China)
@@ -168,21 +169,26 @@ public class LangBuilder {
 		_createProperties(content, "et"); // Estonian
 		_createProperties(content, "fi"); // Finnish
 		_createProperties(content, "fr"); // French
+		_createProperties(content, "fr_BE", "fr"); // French (Belgium)
 		_createProperties(content, "fr_CA"); // French (Canada)
 		_createProperties(content, "gl"); // Galician
 		_createProperties(content, "de"); // German
+		_createProperties(content, "de_AT", "de"); // German (Austria)
 		_createProperties(content, "el"); // Greek
 		_createProperties(content, "iw"); // Hebrew
 		_createProperties(content, "hi_IN"); // Hindi (India)
 		_createProperties(content, "hu"); // Hungarian
 		_createProperties(content, "in"); // Indonesian
 		_createProperties(content, "it"); // Italian
+		_createProperties(content, "it_CH", "it"); // Italian (Switzerland)
 		_createProperties(content, "ja"); // Japanese
 		_createProperties(content, "kk"); // Kazakh
 		_createProperties(content, "ko"); // Korean
 		_createProperties(content, "lo"); // Lao
 		_createProperties(content, "lt"); // Lithuanian
+		_createProperties(content, "mk"); // Macedonian
 		_createProperties(content, "ms"); // Malay
+		_createProperties(content, "no", "nb"); // Norwegian
 		_createProperties(content, "nb"); // Norwegian Bokmål
 		_createProperties(content, "fa"); // Persian
 		_createProperties(content, "pl"); // Polish
@@ -199,6 +205,8 @@ public class LangBuilder {
 		_createProperties(content, "es_CO", "es"); // Spanish (Colombia)
 		_createProperties(content, "es_MX", "es"); // Spanish (Mexico)
 		_createProperties(content, "sv"); // Swedish
+		_createProperties(content, "fr_CH", "fr"); // Swiss French
+		_createProperties(content, "de_CH", "de"); // Swiss German
 		_createProperties(content, "ta_IN"); // Tamil
 		_createProperties(content, "th"); // Thai
 		_createProperties(content, "tr"); // Turkish
@@ -336,7 +344,17 @@ public class LangBuilder {
 					translatedText = null;
 				}
 
+				if ((translatedText != null) && (parentProperties != null) &&
+					translatedText.endsWith(
+						LanguageBuilderUtil.AUTOMATIC_COPY)) {
+
+					translatedText = null;
+				}
+
+				boolean inheritedFromParent = false;
+
 				if ((translatedText == null) && (parentProperties != null)) {
+					inheritedFromParent = true;
 					translatedText = parentProperties.getProperty(key);
 				}
 
@@ -349,6 +367,7 @@ public class LangBuilder {
 						if ((translatedText == null) &&
 							(parentProperties != null)) {
 
+							inheritedFromParent = true;
 							translatedText = parentProperties.getProperty(key);
 						}
 					}
@@ -356,7 +375,7 @@ public class LangBuilder {
 
 				boolean automaticCopy = false;
 
-				if ((translatedText != null) &&
+				if (!inheritedFromParent && (translatedText != null) &&
 					translatedText.endsWith(
 						LanguageBuilderUtil.AUTOMATIC_COPY)) {
 

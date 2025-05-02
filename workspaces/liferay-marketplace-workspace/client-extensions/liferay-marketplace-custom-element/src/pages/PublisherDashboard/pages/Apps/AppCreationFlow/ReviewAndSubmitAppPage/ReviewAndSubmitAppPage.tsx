@@ -20,9 +20,12 @@ import {App, supportAndHelpMap} from './ReviewAndSubmitAppPageUtil';
 
 import './ReviewAndSubmitAppPage.scss';
 import {useMarketplaceContext} from '../../../../../../context/MarketplaceContext';
-import {PRODUCT_CATEGORIES} from '../../../../../../enums/Product';
+import {
+	ProductCategoies,
+	ProductSpecificationKey,
+} from '../../../../../../enums/Product';
 import {Liferay} from '../../../../../../liferay/liferay';
-import HeadlessCommerceAdminCatalogImpl from '../../../../../../services/rest/HeadlessCommerceAdminCatalog';
+import HeadlessCommerceAdminCatalog from '../../../../../../services/rest/HeadlessCommerceAdminCatalog';
 import {getProductCategoriesByVocabularyName} from '../../../../../../utils/productUtils';
 
 type ReviewAndSubmitAppPageProps = {
@@ -52,7 +55,7 @@ export function ReviewAndSubmitAppPage({
 			setLoading(true);
 
 			const product =
-				await HeadlessCommerceAdminCatalogImpl.getProductByExternalReferenceCode(
+				await HeadlessCommerceAdminCatalog.getProductByExternalReferenceCode(
 					productERC as string,
 					new URLSearchParams({
 						nestedFields:
@@ -68,18 +71,18 @@ export function ReviewAndSubmitAppPage({
 
 			const productCategories = getProductCategoriesByVocabularyName(
 				categories,
-				PRODUCT_CATEGORIES.MARKETPLACE_APP_CATEGORY
+				ProductCategoies.MARKETPLACE_APP_CATEGORY
 			);
 
 			const productTags = getProductCategoriesByVocabularyName(
 				categories,
-				PRODUCT_CATEGORIES.MARKETPLACE_APP_TAGS
+				ProductCategoies.MARKETPLACE_APP_TAGS
 			);
 
 			const isCloud =
 				productSpecifications.some(
 					({specificationKey, value}) =>
-						specificationKey === 'type' &&
+						specificationKey === ProductSpecificationKey.APP_TYPE &&
 						(value.en_US === 'cloud' ||
 							(value as unknown as string) === 'cloud')
 				) ?? false;

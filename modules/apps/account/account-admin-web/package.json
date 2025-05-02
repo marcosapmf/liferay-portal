@@ -1,13 +1,15 @@
 {
 	"dependencies": {
-		"@clayui/button": "3.116.0",
-		"@clayui/form": "3.116.0",
-		"@clayui/icon": "3.111.0",
-		"@clayui/layout": "3.111.0",
-		"@clayui/multi-select": "3.118.0",
+		"@clayui/autocomplete": "3.135.0",
+		"@clayui/button": "3.128.0",
+		"@clayui/form": "3.132.0",
+		"@clayui/icon": "3.128.0",
+		"@clayui/layout": "3.128.0",
+		"@clayui/multi-select": "3.135.0",
 		"@liferay/address-web": "*",
+		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
-		"react": "16.12.0"
+		"react": "18.2.0"
 	},
 	"main": "js/index.js",
 	"name": "account-admin-web",
@@ -16,5 +18,5 @@
 		"checkFormat": "node-scripts format --check",
 		"format": "node-scripts format"
 	},
-	"version": "2.0.128"
+	"version": "2.0.139"
 }

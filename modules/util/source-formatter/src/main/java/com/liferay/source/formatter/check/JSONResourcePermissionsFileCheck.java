@@ -10,6 +10,7 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.source.formatter.check.util.JsonSourceUtil;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,17 +37,40 @@ public class JSONResourcePermissionsFileCheck extends BaseFileCheck {
 
 		JSONArray jsonArray = new JSONArrayImpl(content);
 
-		List<Object> objectList = JSONUtil.toObjectList(jsonArray);
+		List<Object> objects = JSONUtil.toObjectList(jsonArray);
 
-		Collections.sort(objectList, new ResourceNameComparator());
+		Collections.sort(objects, new ResourceNameComparator());
 
 		jsonArray = new JSONArrayImpl();
 
-		for (Object object : objectList) {
-			jsonArray.put(object);
+		for (Object object : objects) {
+			JSONObject jsonObject = (JSONObject)object;
+
+			JSONArray actionIdsJSONArray = jsonObject.getJSONArray("actionIds");
+
+			if (actionIdsJSONArray != null) {
+				jsonObject.put(
+					"actionIds",
+					JsonSourceUtil.sortJSONArray(
+						actionIdsJSONArray, new ActionIdComparator()));
+			}
+
+			jsonArray.put(jsonObject);
 		}
 
 		return JSONUtil.toString(jsonArray);
+	}
+
+	private class ActionIdComparator implements Comparator<Object> {
+
+		@Override
+		public int compare(Object object1, Object object2) {
+			String actionId1 = object1.toString();
+			String actionId2 = object2.toString();
+
+			return actionId1.compareTo(actionId2);
+		}
+
 	}
 
 	private class ResourceNameComparator implements Comparator<Object> {

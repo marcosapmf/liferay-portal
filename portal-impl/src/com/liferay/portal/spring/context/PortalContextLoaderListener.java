@@ -153,7 +153,8 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 			}
 		}
 
-		closeDataSource("liferayDataSource");
+		DataSource dataSource = (DataSource)PortalBeanLocatorUtil.locate(
+			"liferayDataSource");
 
 		super.contextDestroyed(servletContextEvent);
 
@@ -161,6 +162,8 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 			(SessionFactory)InfrastructureUtil.getSessionFactory();
 
 		sessionFactory.close();
+
+		closeDataSource(dataSource);
 
 		_cleanUpJDBCDrivers();
 
@@ -228,9 +231,7 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 		}
 	}
 
-	protected void closeDataSource(String name) {
-		DataSource dataSource = (DataSource)PortalBeanLocatorUtil.locate(name);
-
+	protected void closeDataSource(DataSource dataSource) {
 		if (dataSource instanceof DelegatingDataSource) {
 			DelegatingDataSource delegatingDataSource =
 				(DelegatingDataSource)dataSource;
@@ -358,7 +359,7 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 		ExecutorService executorService =
 			SystemExecutorServiceUtil.getExecutorService();
 
-		Future<?> future = executorService.submit(
+		Future<Future<?>> future1 = executorService.submit(
 			() -> {
 				DBInitUtil.init();
 
@@ -366,7 +367,7 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 
 				InfrastructureUtil.setDataSource(dataSource);
 
-				executorService.submit(
+				return executorService.submit(
 					() -> {
 						PortalHibernateConfiguration
 							portalHibernateConfiguration =
@@ -387,13 +388,13 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 
 						return null;
 					});
-
-				return null;
 			});
 
 		ModuleFrameworkUtil.initFramework();
 
-		future.get();
+		Future<?> future2 = future1.get();
+
+		future2.get();
 
 		ClassLoader portalClassLoader = PortalClassLoaderUtil.getClassLoader();
 

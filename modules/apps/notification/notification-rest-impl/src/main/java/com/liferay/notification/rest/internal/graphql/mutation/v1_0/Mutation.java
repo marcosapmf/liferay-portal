@@ -11,8 +11,6 @@ import com.liferay.notification.rest.resource.v1_0.NotificationQueueEntryResourc
 import com.liferay.notification.rest.resource.v1_0.NotificationTemplateResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -54,6 +52,36 @@ public class Mutation {
 
 		_notificationTemplateResourceComponentServiceObjects =
 			notificationTemplateResourceComponentServiceObjects;
+	}
+
+	@GraphQLField
+	public boolean deleteNotificationQueueEntry(
+			@GraphQLName("notificationQueueEntryId") Long
+				notificationQueueEntryId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_notificationQueueEntryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			notificationQueueEntryResource ->
+				notificationQueueEntryResource.deleteNotificationQueueEntry(
+					notificationQueueEntryId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteNotificationQueueEntryBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_notificationQueueEntryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			notificationQueueEntryResource ->
+				notificationQueueEntryResource.
+					deleteNotificationQueueEntryBatch(callbackURL, object));
 	}
 
 	@GraphQLField
@@ -109,36 +137,6 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public boolean deleteNotificationQueueEntry(
-			@GraphQLName("notificationQueueEntryId") Long
-				notificationQueueEntryId)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_notificationQueueEntryResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			notificationQueueEntryResource ->
-				notificationQueueEntryResource.deleteNotificationQueueEntry(
-					notificationQueueEntryId));
-
-		return true;
-	}
-
-	@GraphQLField
-	public Response deleteNotificationQueueEntryBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_notificationQueueEntryResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			notificationQueueEntryResource ->
-				notificationQueueEntryResource.
-					deleteNotificationQueueEntryBatch(callbackURL, object));
-	}
-
-	@GraphQLField
 	public boolean updateNotificationQueueEntryResend(
 			@GraphQLName("notificationQueueEntryId") Long
 				notificationQueueEntryId)
@@ -152,76 +150,6 @@ public class Mutation {
 					notificationQueueEntryId));
 
 		return true;
-	}
-
-	@GraphQLField
-	public Response createNotificationTemplatesPageExportBatch(
-			@GraphQLName("search") String search,
-			@GraphQLName("filter") String filterString,
-			@GraphQLName("sort") String sortsString,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("contentType") String contentType,
-			@GraphQLName("fieldNames") String fieldNames)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_notificationTemplateResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			notificationTemplateResource ->
-				notificationTemplateResource.
-					postNotificationTemplatesPageExportBatch(
-						search,
-						_filterBiFunction.apply(
-							notificationTemplateResource, filterString),
-						_sortsBiFunction.apply(
-							notificationTemplateResource, sortsString),
-						callbackURL, contentType, fieldNames));
-	}
-
-	@GraphQLField
-	public NotificationTemplate createNotificationTemplate(
-			@GraphQLName("notificationTemplate") NotificationTemplate
-				notificationTemplate)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_notificationTemplateResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			notificationTemplateResource ->
-				notificationTemplateResource.postNotificationTemplate(
-					notificationTemplate));
-	}
-
-	@GraphQLField
-	public Response createNotificationTemplateBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_notificationTemplateResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			notificationTemplateResource ->
-				notificationTemplateResource.postNotificationTemplateBatch(
-					callbackURL, object));
-	}
-
-	@GraphQLField
-	public NotificationTemplate
-			updateNotificationTemplateByExternalReferenceCode(
-				@GraphQLName("externalReferenceCode") String
-					externalReferenceCode,
-				@GraphQLName("notificationTemplate") NotificationTemplate
-					notificationTemplate)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_notificationTemplateResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			notificationTemplateResource ->
-				notificationTemplateResource.
-					putNotificationTemplateByExternalReferenceCode(
-						externalReferenceCode, notificationTemplate));
 	}
 
 	@GraphQLField
@@ -269,6 +197,71 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public NotificationTemplate createNotificationTemplate(
+			@GraphQLName("notificationTemplate") NotificationTemplate
+				notificationTemplate)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_notificationTemplateResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			notificationTemplateResource ->
+				notificationTemplateResource.postNotificationTemplate(
+					notificationTemplate));
+	}
+
+	@GraphQLField
+	public Response createNotificationTemplateBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_notificationTemplateResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			notificationTemplateResource ->
+				notificationTemplateResource.postNotificationTemplateBatch(
+					callbackURL, object));
+	}
+
+	@GraphQLField
+	public NotificationTemplate createNotificationTemplateCopy(
+			@GraphQLName("notificationTemplateId") Long notificationTemplateId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_notificationTemplateResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			notificationTemplateResource ->
+				notificationTemplateResource.postNotificationTemplateCopy(
+					notificationTemplateId));
+	}
+
+	@GraphQLField
+	public Response createNotificationTemplatesPageExportBatch(
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_notificationTemplateResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			notificationTemplateResource ->
+				notificationTemplateResource.
+					postNotificationTemplatesPageExportBatch(
+						search,
+						_filterBiFunction.apply(
+							notificationTemplateResource, filterString),
+						_sortsBiFunction.apply(
+							notificationTemplateResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
 	public NotificationTemplate updateNotificationTemplate(
 			@GraphQLName("notificationTemplateId") Long notificationTemplateId,
 			@GraphQLName("notificationTemplate") NotificationTemplate
@@ -298,16 +291,21 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public NotificationTemplate createNotificationTemplateCopy(
-			@GraphQLName("notificationTemplateId") Long notificationTemplateId)
+	public NotificationTemplate
+			updateNotificationTemplateByExternalReferenceCode(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("notificationTemplate") NotificationTemplate
+					notificationTemplate)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_notificationTemplateResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			notificationTemplateResource ->
-				notificationTemplateResource.postNotificationTemplateCopy(
-					notificationTemplateId));
+				notificationTemplateResource.
+					putNotificationTemplateByExternalReferenceCode(
+						externalReferenceCode, notificationTemplate));
 	}
 
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R
@@ -400,12 +398,15 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

@@ -5,9 +5,11 @@
 
 package com.liferay.commerce.checkout.web.internal.display.context;
 
+import com.liferay.account.constants.AccountListTypeConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
+import com.liferay.commerce.checkout.web.internal.util.CommerceOrderUtil;
 import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
 import com.liferay.commerce.constants.CommerceOrderActionKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
@@ -15,21 +17,29 @@ import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
+import com.liferay.commerce.product.display.context.helper.CPRequestHelper;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.model.CommerceChannelAccountEntryRel;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.util.comparator.CommerceAddressNameComparator;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.account.configuration.manager.AccountEntryAddressSubtypeConfigurationManagerUtil;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.ListTypeLocalService;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -50,6 +60,7 @@ public abstract class BaseAddressCheckoutStepDisplayContext {
 			commerceChannelAccountEntryRelLocalService,
 		CommerceChannelLocalService commerceChannelLocalService,
 		HttpServletRequest httpServletRequest,
+		ListTypeLocalService listTypeLocalService,
 		PortletResourcePermission portletResourcePermission) {
 
 		this.accountEntryLocalService = accountEntryLocalService;
@@ -60,12 +71,18 @@ public abstract class BaseAddressCheckoutStepDisplayContext {
 		this.commerceChannelAccountEntryRelLocalService =
 			commerceChannelAccountEntryRelLocalService;
 		this.commerceChannelLocalService = commerceChannelLocalService;
+		this.listTypeLocalService = listTypeLocalService;
 		this.portletResourcePermission = portletResourcePermission;
 
 		_commerceContext = (CommerceContext)httpServletRequest.getAttribute(
 			CommerceWebKeys.COMMERCE_CONTEXT);
 		_commerceOrder = (CommerceOrder)httpServletRequest.getAttribute(
 			CommerceCheckoutWebKeys.COMMERCE_ORDER);
+
+		CPRequestHelper cpRequestHelper = new CPRequestHelper(
+			httpServletRequest);
+
+		_liferayPortletResponse = cpRequestHelper.getLiferayPortletResponse();
 	}
 
 	public CommerceAddress getCommerceAddress(long commerceAddressId)
@@ -141,6 +158,71 @@ public abstract class BaseAddressCheckoutStepDisplayContext {
 		return _commerceOrder;
 	}
 
+	public Map<String, Object> getContext(
+		CommerceAddress commerceAddress, int addressType) {
+
+		return HashMapBuilder.<String, Object>put(
+			"addressSubtypeConfiguration",
+			() -> {
+				Portlet portlet = _liferayPortletResponse.getPortlet();
+
+				long companyId = portlet.getCompanyId();
+
+				return HashMapBuilder.<String, Object>put(
+					"billing",
+					AccountEntryAddressSubtypeConfigurationManagerUtil.
+						getAddressSubtypeListTypeDefinitionExternalReferenceCode(
+							companyId,
+							AccountListTypeConstants.
+								ACCOUNT_ENTRY_ADDRESS_TYPE_BILLING)
+				).put(
+					"billingAndShipping",
+					AccountEntryAddressSubtypeConfigurationManagerUtil.
+						getAddressSubtypeListTypeDefinitionExternalReferenceCode(
+							companyId,
+							AccountListTypeConstants.
+								ACCOUNT_ENTRY_ADDRESS_TYPE_BILLING_AND_SHIPPING)
+				).put(
+					"shipping",
+					AccountEntryAddressSubtypeConfigurationManagerUtil.
+						getAddressSubtypeListTypeDefinitionExternalReferenceCode(
+							companyId,
+							AccountListTypeConstants.
+								ACCOUNT_ENTRY_ADDRESS_TYPE_SHIPPING)
+				).build();
+			}
+		).put(
+			"initialAddressId",
+			() -> {
+				if (commerceAddress != null) {
+					return commerceAddress.getCommerceAddressId();
+				}
+
+				return 0;
+			}
+		).put(
+			"initialAddressType",
+			() -> {
+				if (commerceAddress != null) {
+					return commerceAddress.getType();
+				}
+
+				return addressType;
+			}
+		).put(
+			"initialValue",
+			() -> {
+				if (commerceAddress != null) {
+					return commerceAddress.getSubtype();
+				}
+
+				return StringPool.BLANK;
+			}
+		).put(
+			"namespace", _liferayPortletResponse.getNamespace()
+		).build();
+	}
+
 	public abstract long getDefaultCommerceAddressId(long commerceChannelId)
 		throws PortalException;
 
@@ -177,6 +259,10 @@ public abstract class BaseAddressCheckoutStepDisplayContext {
 		}
 
 		return false;
+	}
+
+	public boolean isCommerceOrderMultishipping() {
+		return CommerceOrderUtil.isCommerceOrderMultishipping(_commerceOrder);
 	}
 
 	public boolean isShippingUsedAsBilling() throws PortalException {
@@ -236,22 +322,28 @@ public abstract class BaseAddressCheckoutStepDisplayContext {
 				defaultShippingCommerceAddress.getCommerceAddressId();
 		}
 
-		CommerceAddress shippingAddress = _commerceOrder.getShippingAddress();
-		CommerceAddress billingAddress = _commerceOrder.getBillingAddress();
+		CommerceAddress billingCommerceAddress =
+			_commerceOrder.getBillingAddress();
+		CommerceAddress shippingCommerceAddress =
+			_commerceOrder.getShippingAddress();
 
 		if (((accountEntry != null) &&
 			 (defaultBillingCommerceAddressId ==
 				 defaultShippingCommerceAddressId) &&
-			 (billingAddress == null) && (shippingAddress == null)) ||
-			((billingAddress != null) && (shippingAddress != null) &&
-			 (billingAddress.getCommerceAddressId() ==
-				 shippingAddress.getCommerceAddressId())) ||
-			((billingAddress != null) && (shippingAddress == null) &&
+			 (billingCommerceAddress == null) &&
+			 (shippingCommerceAddress == null)) ||
+			((billingCommerceAddress != null) &&
+			 (shippingCommerceAddress != null) &&
+			 (billingCommerceAddress.getCommerceAddressId() ==
+				 shippingCommerceAddress.getCommerceAddressId())) ||
+			((billingCommerceAddress != null) &&
+			 (shippingCommerceAddress == null) &&
 			 (defaultShippingCommerceAddressId ==
-				 billingAddress.getCommerceAddressId())) ||
-			((billingAddress == null) && (shippingAddress != null) &&
+				 billingCommerceAddress.getCommerceAddressId())) ||
+			((billingCommerceAddress == null) &&
+			 (shippingCommerceAddress != null) &&
 			 (defaultBillingCommerceAddressId ==
-				 shippingAddress.getCommerceAddressId()))) {
+				 shippingCommerceAddress.getCommerceAddressId()))) {
 
 			return true;
 		}
@@ -267,9 +359,11 @@ public abstract class BaseAddressCheckoutStepDisplayContext {
 	protected final CommerceChannelAccountEntryRelLocalService
 		commerceChannelAccountEntryRelLocalService;
 	protected final CommerceChannelLocalService commerceChannelLocalService;
+	protected final ListTypeLocalService listTypeLocalService;
 	protected PortletResourcePermission portletResourcePermission;
 
 	private final CommerceContext _commerceContext;
 	private final CommerceOrder _commerceOrder;
+	private final LiferayPortletResponse _liferayPortletResponse;
 
 }

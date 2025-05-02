@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Catalog;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,39 +46,26 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface CatalogResource {
 
-	public Response deleteCatalogByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public Catalog getCatalogByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public Response patchCatalogByExternalReferenceCode(
-			String externalReferenceCode, Catalog catalog)
-		throws Exception;
-
 	public Response deleteCatalog(Long id) throws Exception;
 
 	public Response deleteCatalogBatch(String callbackURL, Object object)
 		throws Exception;
 
+	public Response deleteCatalogByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
 	public Catalog getCatalog(Long id) throws Exception;
 
-	public Response patchCatalog(Long id, Catalog catalog) throws Exception;
+	public Catalog getCatalogByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
 
 	public Page<Catalog> getCatalogsPage(
-			String search, Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public Response postCatalogsPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
-			String contentType, String fieldNames)
-		throws Exception;
-
-	public Catalog postCatalog(Catalog catalog) throws Exception;
-
-	public Response postCatalogBatch(String callbackURL, Object object)
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
 	public Catalog getProductByExternalReferenceCodeCatalog(
@@ -88,6 +73,28 @@ public interface CatalogResource {
 		throws Exception;
 
 	public Catalog getProductIdCatalog(Long id, Pagination pagination)
+		throws Exception;
+
+	public Response patchCatalog(Long id, Catalog catalog) throws Exception;
+
+	public Response patchCatalogByExternalReferenceCode(
+			String externalReferenceCode, Catalog catalog)
+		throws Exception;
+
+	public Catalog postCatalog(Catalog catalog) throws Exception;
+
+	public Response postCatalogBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public Response postCatalogsPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
+		throws Exception;
+
+	public Catalog putCatalogByExternalReferenceCode(
+			String externalReferenceCode, Catalog catalog)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -112,7 +119,8 @@ public interface CatalogResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -137,19 +145,23 @@ public interface CatalogResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

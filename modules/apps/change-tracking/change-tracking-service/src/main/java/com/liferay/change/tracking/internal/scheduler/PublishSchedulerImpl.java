@@ -12,6 +12,7 @@ import com.liferay.change.tracking.scheduler.PublishScheduler;
 import com.liferay.change.tracking.scheduler.ScheduledPublishInfo;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
@@ -19,6 +20,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.messaging.Message;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelper;
 import com.liferay.portal.kernel.scheduler.StorageType;
 import com.liferay.portal.kernel.scheduler.TriggerFactory;
@@ -32,7 +34,6 @@ import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -71,40 +72,33 @@ public class PublishSchedulerImpl implements PublishScheduler {
 	public List<ScheduledPublishInfo> getScheduledPublishInfos()
 		throws PortalException {
 
-		List<SchedulerResponse> schedulerResponses =
-			_schedulerEngineHelper.getScheduledJobs(
-				CTDestinationNames.CT_COLLECTION_SCHEDULED_PUBLISH,
-				StorageType.PERSISTED);
-
-		List<ScheduledPublishInfo> scheduledPublishInfos = new ArrayList<>(
-			schedulerResponses.size());
-
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 
-		for (SchedulerResponse schedulerResponse : schedulerResponses) {
-			Message message = schedulerResponse.getMessage();
+		return TransformUtil.transform(
+			_schedulerEngineHelper.getScheduledJobs(
+				CTDestinationNames.CT_COLLECTION_SCHEDULED_PUBLISH,
+				StorageType.PERSISTED),
+			schedulerResponse -> {
+				Message message = schedulerResponse.getMessage();
 
-			long ctCollectionId = message.getLong("ctCollectionId");
+				long ctCollectionId = message.getLong("ctCollectionId");
 
-			CTCollection ctCollection =
-				_ctCollectionLocalService.fetchCTCollection(ctCollectionId);
+				CTCollection ctCollection =
+					_ctCollectionLocalService.fetchCTCollection(ctCollectionId);
 
-			if ((ctCollection == null) ||
-				!_ctCollectionModelResourcePermission.contains(
-					permissionChecker, ctCollection, ActionKeys.VIEW)) {
+				if ((ctCollection == null) ||
+					!_ctCollectionModelResourcePermission.contains(
+						permissionChecker, ctCollection, ActionKeys.VIEW)) {
 
-				continue;
-			}
+					return null;
+				}
 
-			scheduledPublishInfos.add(
-				new ScheduledPublishInfo(
+				return new ScheduledPublishInfo(
 					ctCollection, schedulerResponse.getJobName(),
 					_schedulerEngineHelper.getStartTime(schedulerResponse),
-					message.getLong("userId")));
-		}
-
-		return scheduledPublishInfos;
+					message.getLong("userId"));
+			});
 	}
 
 	@Override
@@ -154,6 +148,7 @@ public class PublishSchedulerImpl implements PublishScheduler {
 			CTActionKeys.PUBLISH);
 
 		ctCollection.setStatus(WorkflowConstants.STATUS_DRAFT);
+		ctCollection.setStatusByUserId(UserConstants.USER_ID_DEFAULT);
 
 		_ctCollectionLocalService.updateCTCollection(ctCollection);
 
@@ -190,6 +185,7 @@ public class PublishSchedulerImpl implements PublishScheduler {
 			CTActionKeys.PUBLISH);
 
 		ctCollection.setStatus(WorkflowConstants.STATUS_SCHEDULED);
+		ctCollection.setStatusByUserId(userId);
 
 		ctCollection = _ctCollectionLocalService.updateCTCollection(
 			ctCollection);

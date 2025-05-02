@@ -82,7 +82,7 @@ public class ModifiedFacetCalendarDisplayContextBuilder {
 	private void _buildBounds() {
 		String[] bounds = _getBounds();
 
-		if (!ArrayUtil.isEmpty(bounds)) {
+		if (ArrayUtil.isNotEmpty(bounds)) {
 			_parseFrom(bounds[0]);
 			_parseTo(bounds[1]);
 		}
@@ -93,14 +93,14 @@ public class ModifiedFacetCalendarDisplayContextBuilder {
 			return RangeParserUtil.parserRange(_rangeString);
 		}
 
-		if (!Validator.isBlank(_from) && !Validator.isBlank(_to)) {
-			return new String[] {
-				StringUtil.removeChar(_from, CharPool.DASH),
-				StringUtil.removeChar(_to, CharPool.DASH)
-			};
+		if (Validator.isBlank(_from) || Validator.isBlank(_to)) {
+			return null;
 		}
 
-		return null;
+		return new String[] {
+			StringUtil.removeChar(_from, CharPool.DASH),
+			StringUtil.removeChar(_to, CharPool.DASH)
+		};
 	}
 
 	private Calendar _getFromCalendar() {

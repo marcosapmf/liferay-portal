@@ -7,23 +7,14 @@ import {getRandomInt} from '../utils/getRandomInt';
 import getRandomString from '../utils/getRandomString';
 import {ApiHelpers, DataApiHelpers} from './ApiHelpers';
 
-type TTerms = {
-	active?: boolean;
-	id?: number;
-	label?: {
-		[key: string]: string;
-	};
-	name?: string;
-	priority?: number;
-	type: string;
-};
-
 type TOrder = {
 	accountId?: number;
 	billingAddressId?: string;
 	channelId?: number;
+	createDate?: string;
 	currencyCode?: string;
 	id?: number;
+	name?: string;
 	orderItems?: TOrderItem[];
 	orderStatus?: string;
 	orderStatusInfo?: number;
@@ -35,6 +26,7 @@ type TOrder = {
 	shippingAmount?: number;
 	shippingMethod?: string;
 	shippingOption?: string;
+	total?: number;
 };
 
 type TOrderItem = {
@@ -44,6 +36,16 @@ type TOrderItem = {
 	quantity: number;
 	skuId?: string;
 	unitPrice?: number;
+};
+
+type TOrderNote = {
+	author?: string;
+	content?: string;
+	externalReferenceCode?: string;
+	id?: number;
+	orderExternalReferenceCode?: string;
+	orderId?: number;
+	restricted?: boolean;
 };
 
 type TOrderRule = {
@@ -63,6 +65,20 @@ type TOrderType = {
 	};
 };
 
+type TTerm = {
+	active?: boolean;
+	description?: {
+		[key: string]: string;
+	};
+	id?: number;
+	label?: {
+		[key: string]: string;
+	};
+	name?: string;
+	priority?: number;
+	type: string;
+};
+
 export class HeadlessCommerceAdminOrderApiHelper {
 	readonly apiHelpers: ApiHelpers | DataApiHelpers;
 	readonly basePath: string;
@@ -73,6 +89,15 @@ export class HeadlessCommerceAdminOrderApiHelper {
 	}
 
 	async deleteOrder(orderId: number) {
+		const shipments =
+			await this.apiHelpers.headlessCommerceAdminShipment.getShipments();
+
+		for (const shipment of shipments.items) {
+			await this.apiHelpers.headlessCommerceAdminShipment.deleteShipment(
+				shipment.id
+			);
+		}
+
 		return this.apiHelpers.delete(
 			`${this.apiHelpers.baseUrl}${this.basePath}/orders/${orderId}`
 		);
@@ -102,24 +127,6 @@ export class HeadlessCommerceAdminOrderApiHelper {
 		);
 	}
 
-	async postOrder(order: TOrder): Promise<TOrder> {
-		const postOrder = await this.apiHelpers.post(
-			`${this.apiHelpers.baseUrl}${this.basePath}/orders?nestedFields=orderItems`,
-			{
-				data: {currencyCode: 'USD', ...order},
-			}
-		);
-
-		if (this.apiHelpers instanceof DataApiHelpers) {
-			this.apiHelpers.data.push({
-				id: postOrder.id,
-				type: 'order',
-			});
-		}
-
-		return postOrder;
-	}
-
 	async patchOrder(id: number, order: TOrder) {
 		await this.apiHelpers.patch(
 			`${this.apiHelpers.baseUrl}${this.basePath}orders/${id}?nestedFields=orderItems`,
@@ -146,31 +153,51 @@ export class HeadlessCommerceAdminOrderApiHelper {
 		return patchOrder;
 	}
 
-	async postTerms(terms: TTerms) {
-		terms = {
-			active: true,
-			label: {
-				en_US: getRandomString(),
-			},
-			name: getRandomString(),
-			priority: getRandomInt(),
-			type: '',
-			...(terms || {}),
+	async postOrder(order: TOrder): Promise<TOrder> {
+		const postOrder = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/orders?nestedFields=orderItems`,
+			{
+				data: {currencyCode: 'USD', ...order},
+			}
+		);
+
+		if (this.apiHelpers instanceof DataApiHelpers) {
+			this.apiHelpers.data.push({
+				id: postOrder.id,
+				type: 'order',
+			});
+		}
+
+		return postOrder;
+	}
+
+	async postOrderIdOrderNote(
+		orderId: number,
+		orderNote: TOrderNote
+	): Promise<TOrderNote> {
+		orderNote = {
+			author: getRandomString(),
+			content: getRandomString(),
+			externalReferenceCode: getRandomString(),
+			...(orderNote || {}),
 		};
 
-		terms = await this.apiHelpers.post(
-			`${this.apiHelpers.baseUrl}${this.basePath}/terms`,
+		const postOrder = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/orders/${orderId}/orderNotes`,
 			{
-				data: terms,
+				data: orderNote,
 				failOnStatusCode: true,
 			}
 		);
 
 		if (this.apiHelpers instanceof DataApiHelpers) {
-			this.apiHelpers.data.push({id: terms.id, type: 'terms'});
+			this.apiHelpers.data.push({
+				id: postOrder.id,
+				type: 'order',
+			});
 		}
 
-		return terms;
+		return postOrder;
 	}
 
 	async postOrderRule(orderRule: TOrderRule) {
@@ -219,5 +246,35 @@ export class HeadlessCommerceAdminOrderApiHelper {
 		}
 
 		return orderType;
+	}
+
+	async postTerm(terms: TTerm) {
+		terms = {
+			active: true,
+			description: {
+				en_US: getRandomString(),
+			},
+			label: {
+				en_US: getRandomString(),
+			},
+			name: getRandomString(),
+			priority: getRandomInt(),
+			type: '',
+			...(terms || {}),
+		};
+
+		terms = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/terms`,
+			{
+				data: terms,
+				failOnStatusCode: true,
+			}
+		);
+
+		if (this.apiHelpers instanceof DataApiHelpers) {
+			this.apiHelpers.data.push({id: terms.id, type: 'terms'});
+		}
+
+		return terms;
 	}
 }

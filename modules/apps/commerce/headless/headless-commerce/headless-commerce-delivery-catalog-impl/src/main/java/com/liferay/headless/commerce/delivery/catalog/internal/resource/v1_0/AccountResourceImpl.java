@@ -15,7 +15,6 @@ import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelCons
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Account;
-import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.delivery.catalog.internal.odata.entity.v1_0.AccountEntityModel;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.AccountResource;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
@@ -36,12 +35,16 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import java.io.Serializable;
+
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -123,9 +126,9 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry = _accountEntryService.addAccountEntry(
-			contextUser.getUserId(), 0, account.getName(),
-			account.getDescription(), _getDomains(account), null,
-			_getLogoBytes(account, null, false), account.getTaxId(),
+			account.getExternalReferenceCode(), contextUser.getUserId(), 0,
+			account.getName(), account.getDescription(), _getDomains(account),
+			null, _getLogoBytes(account, null, false), account.getTaxId(),
 			_getType(account), _getStatus(account),
 			_createServiceContext(account));
 
@@ -155,10 +158,6 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				account.getDefaultShippingAddressId());
 		}
 
-		accountEntry = _accountEntryService.updateExternalReferenceCode(
-			accountEntry.getAccountEntryId(),
-			account.getExternalReferenceCode());
-
 		_accountEntryOrganizationRelLocalService.
 			setAccountEntryOrganizationRels(
 				accountEntry.getAccountEntryId(), _getOrganizationIds(account));
@@ -169,13 +168,20 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	private ServiceContext _createServiceContext(Account account)
 		throws Exception {
 
-		ServiceContext serviceContext = ServiceContextBuilder.create(
-			contextCompany.getGroupId(), contextHttpServletRequest, null
-		).expandoBridgeAttributes(
+		Map<String, Serializable> expandoBridgeAttributes =
 			CustomFieldsUtil.toMap(
 				AccountEntry.class.getName(), contextCompany.getCompanyId(),
 				account.getCustomFields(),
-				contextAcceptLanguage.getPreferredLocale())
+				contextAcceptLanguage.getPreferredLocale());
+
+		if (expandoBridgeAttributes == null) {
+			expandoBridgeAttributes = new HashMap<>();
+		}
+
+		ServiceContext serviceContext = ServiceContextBuilder.create(
+			contextCompany.getGroupId(), contextHttpServletRequest, null
+		).expandoBridgeAttributes(
+			expandoBridgeAttributes
 		).build();
 
 		serviceContext.setCompanyId(contextCompany.getCompanyId());
@@ -207,15 +213,15 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			logoId = accountEntry.getLogoId();
 		}
 
-		if ((logoId != null) && (logoId != 0) &&
-			((accountEntry == null) || (accountEntry.getLogoId() != logoId))) {
+		if ((logoId == null) || (logoId == 0) ||
+			((accountEntry != null) && (accountEntry.getLogoId() == logoId))) {
 
-			FileEntry fileEntry = _dlAppLocalService.getFileEntry(logoId);
-
-			return _file.getBytes(fileEntry.getContentStream());
+			return null;
 		}
 
-		return null;
+		FileEntry fileEntry = _dlAppLocalService.getFileEntry(logoId);
+
+		return _file.getBytes(fileEntry.getContentStream());
 	}
 
 	private long[] _getOrganizationIds(Account account) {

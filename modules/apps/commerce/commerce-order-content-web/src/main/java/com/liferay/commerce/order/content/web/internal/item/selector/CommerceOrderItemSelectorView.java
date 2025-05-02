@@ -80,11 +80,7 @@ public class CommerceOrderItemSelectorView
 		InfoItemItemSelectorCriterion infoItemItemSelectorCriterion,
 		ThemeDisplay themeDisplay) {
 
-		if (FeatureFlagManagerUtil.isEnabled("COMMERCE-9410")) {
-			return true;
-		}
-
-		return false;
+		return FeatureFlagManagerUtil.isEnabled("LPD-20379");
 	}
 
 	@Override

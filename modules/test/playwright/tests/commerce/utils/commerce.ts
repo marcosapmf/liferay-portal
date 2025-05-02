@@ -1,11 +1,32 @@
-import {DataApiHelpers} from '../../../helpers/ApiHelpers';
-import getRandomString from '../../../utils/getRandomString';
-import {ORDER_WORKFLOW_STATUS_CODE} from '../../workspaces/liferay-workspace-marketplace/utils/constants';
-
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
+
+import {Page, expect} from '@playwright/test';
+
+import {DataApiHelpers} from '../../../helpers/ApiHelpers';
+import {CommerceAdminChannelDetailsPage} from '../../../pages/commerce/commerce-channel-web/commerceAdminChannelDetailsPage';
+import {CommerceAdminChannelsPage} from '../../../pages/commerce/commerce-channel-web/commerceAdminChannelsPage';
+import getRandomString from '../../../utils/getRandomString';
+import {performLogout} from '../../../utils/performLogin';
+import {openProductMenu} from '../../../utils/productMenu';
+import {waitForAlert} from '../../../utils/waitForAlert';
+import {ORDER_WORKFLOW_STATUS_CODE} from '../../workspaces/liferay-workspace-marketplace/main/utils/constants';
+
+export async function classicCommerceSetUp(
+	apiHelpers: DataApiHelpers,
+	siteName?: string
+) {
+	return initializerSetUp(
+		apiHelpers,
+		'com.liferay.commerce.site.initializer',
+		'Commerce Classic',
+		'Liferay Commerce Channel',
+		siteName
+	);
+}
+
 export async function commerceReturnSetUp(
 	apiHelpers: DataApiHelpers,
 	amount?: number,
@@ -211,27 +232,37 @@ export async function completedVirtualOrderItemSetUp(
 	};
 }
 
-export async function miniumSetUp(
+export async function initializerSetUp(
 	apiHelpers: DataApiHelpers,
+	templateKey: string,
+	catalogName?: string,
+	channelName?: string,
 	siteName?: string
 ) {
 	siteName = siteName || getRandomString();
 
+	catalogName = catalogName || siteName;
+	channelName = channelName || siteName;
+
 	const site = await apiHelpers.headlessSite.createSite({
 		name: siteName,
-		templateKey: 'minium-initializer',
+		templateKey,
 		templateType: 'site-initializer',
 	});
 
 	apiHelpers.data.push({id: site.id, type: 'site'});
 
 	const channels =
-		await apiHelpers.headlessCommerceAdminChannel.getChannelsPage(siteName);
+		await apiHelpers.headlessCommerceAdminChannel.getChannelsPage(
+			channelName
+		);
 
 	apiHelpers.data.push({id: channels.items[0].id, type: 'channel'});
 
 	const catalogs =
-		await apiHelpers.headlessCommerceAdminCatalog.getCatalogsPage(siteName);
+		await apiHelpers.headlessCommerceAdminCatalog.getCatalogsPage(
+			catalogName
+		);
 
 	apiHelpers.data.push({id: catalogs.items[0].id, type: 'catalog'});
 
@@ -287,4 +318,84 @@ export async function miniumSetUp(
 	}
 
 	return {catalog: catalogs.items[0], channel: channels.items[0], site};
+}
+
+export async function guestCheckoutSetUp(
+	channel: any,
+	commerceAdminChannelDetailsPage: CommerceAdminChannelDetailsPage,
+	commerceAdminChannelsPage: CommerceAdminChannelsPage,
+	page: Page,
+	site: Site
+): Promise<void> {
+	const siteURL = `/web${site.friendlyUrlPath}`;
+
+	await page.goto(siteURL);
+
+	await openProductMenu(page);
+
+	const productMenuSiteBuilderButton = await page.getByRole('menuitem', {
+		name: 'Site Builder',
+	});
+
+	await productMenuSiteBuilderButton.click();
+
+	const productMenuPagesButton = await page.getByRole('menuitem', {
+		name: 'Pages',
+	});
+
+	await productMenuPagesButton.click();
+	await page.locator('[aria-label="Select All Items on the Page"]').click();
+	await page.getByRole('button', {name: 'Permissions'}).click();
+
+	const guestActionViewCheckbox = page
+		.frameLocator('iframe[title="Permissions"]')
+		.locator('#guest_ACTION_VIEW');
+
+	await guestActionViewCheckbox.click({clickCount: 2});
+
+	const savePagePermissionsButton = page
+		.frameLocator('iframe[title="Permissions"]')
+		.getByRole('button', {name: 'Save'});
+
+	await savePagePermissionsButton.click();
+
+	await waitForAlert(
+		page.frameLocator('iframe[title="Permissions"]'),
+		'success'
+	);
+
+	await commerceAdminChannelsPage.goto();
+
+	await (
+		await commerceAdminChannelsPage.channelsTableRowLink(channel.name)
+	).click();
+
+	await commerceAdminChannelDetailsPage.guestCheckoutToggle.setChecked(true);
+
+	await expect(
+		commerceAdminChannelDetailsPage.guestCheckoutToggle
+	).toBeChecked();
+
+	await commerceAdminChannelDetailsPage.saveButton.click();
+
+	await waitForAlert(page, 'success');
+
+	await performLogout(page);
+
+	await page.goto(siteURL);
+
+	await expect(page.locator('.btn-account-selector')).not.toBeVisible();
+}
+
+export async function miniumSetUp(
+	apiHelpers: DataApiHelpers,
+	siteName?: string
+) {
+	return initializerSetUp(
+		apiHelpers,
+		'minium-initializer',
+		null,
+		null,
+		siteName
+	);
 }

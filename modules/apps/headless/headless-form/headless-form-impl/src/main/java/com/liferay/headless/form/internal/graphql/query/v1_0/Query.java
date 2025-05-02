@@ -16,8 +16,6 @@ import com.liferay.headless.form.resource.v1_0.FormResource;
 import com.liferay.headless.form.resource.v1_0.FormStructureResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -133,17 +131,18 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {formRecord(formRecordId: ___){creator, dateCreated, dateModified, datePublished, draft, formFieldValues, formId, id}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {formFormRecordByLatestDraft(formId: ___){creator, dateCreated, dateModified, datePublished, draft, formFieldValues, formId, id}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public FormRecord formRecord(@GraphQLName("formRecordId") Long formRecordId)
+	public FormRecord formFormRecordByLatestDraft(
+			@GraphQLName("formId") Long formId)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_formRecordResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			formRecordResource -> formRecordResource.getFormRecord(
-				formRecordId));
+			formRecordResource ->
+				formRecordResource.getFormFormRecordByLatestDraft(formId));
 	}
 
 	/**
@@ -169,18 +168,17 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {formFormRecordByLatestDraft(formId: ___){creator, dateCreated, dateModified, datePublished, draft, formFieldValues, formId, id}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {formRecord(formRecordId: ___){creator, dateCreated, dateModified, datePublished, draft, formFieldValues, formId, id}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public FormRecord formFormRecordByLatestDraft(
-			@GraphQLName("formId") Long formId)
+	public FormRecord formRecord(@GraphQLName("formRecordId") Long formRecordId)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_formRecordResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			formRecordResource ->
-				formRecordResource.getFormFormRecordByLatestDraft(formId));
+			formRecordResource -> formRecordResource.getFormRecord(
+				formRecordId));
 	}
 
 	/**
@@ -478,12 +476,15 @@ public class Query {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

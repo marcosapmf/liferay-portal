@@ -107,7 +107,7 @@ public class UpdateDisplayPageEntryContentTypeMVCActionCommandTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-				null, serviceContext.getScopeGroupId(), 0,
+				null, serviceContext.getScopeGroupId(), 0, null,
 				_portal.getClassNameId(JournalArticle.class.getName()),
 				ddmStructure.getStructureId(), RandomTestUtil.randomString(), 0,
 				WorkflowConstants.STATUS_DRAFT, serviceContext);
@@ -170,7 +170,7 @@ public class UpdateDisplayPageEntryContentTypeMVCActionCommandTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-				null, serviceContext.getScopeGroupId(), 0,
+				null, serviceContext.getScopeGroupId(), 0, null,
 				_portal.getClassNameId(JournalArticle.class.getName()),
 				ddmStructure.getStructureId(), RandomTestUtil.randomString(), 0,
 				WorkflowConstants.STATUS_DRAFT, serviceContext);
@@ -224,7 +224,7 @@ public class UpdateDisplayPageEntryContentTypeMVCActionCommandTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-				null, serviceContext.getScopeGroupId(), 0, classNameId,
+				null, serviceContext.getScopeGroupId(), 0, null, classNameId,
 				journalArticle.getDDMStructureId(),
 				RandomTestUtil.randomString(), 0,
 				WorkflowConstants.STATUS_DRAFT, serviceContext);
@@ -291,7 +291,7 @@ public class UpdateDisplayPageEntryContentTypeMVCActionCommandTest {
 		DDMFormLayout ddmFormLayout = DDMUtil.getDefaultDDMFormLayout(ddmForm);
 
 		return _ddmStructureLocalService.addStructure(
-			TestPropsValues.getUserId(), _group.getGroupId(), 0,
+			null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
 			_portal.getClassNameId(JournalArticle.class.getName()), null,
 			RandomTestUtil.randomLocaleStringMap(), null, ddmForm,
 			ddmFormLayout, StorageType.DEFAULT.toString(),

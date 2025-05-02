@@ -17,7 +17,9 @@ import java.io.IOException;
 import java.nio.file.PathMatcher;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,51 +63,76 @@ public class SemVerModulesBatchTestClassGroup
 			_quarterlyReleaseNamePattern.matcher(
 				portalGitWorkingDirectory.getUpstreamBranchName());
 
-		if (quarterlyReleaseNameMatcher.find()) {
-			return true;
-		}
-
-		return false;
+		return quarterlyReleaseNameMatcher.find();
 	}
 
 	@Override
 	protected void setTestClasses() throws IOException {
+		Set<File> moduleDirs = new HashSet<>();
+
+		List<PathMatcher> excludesPathMatchers = getPathMatchers(
+			getExcludesJobProperties());
+		List<PathMatcher> includesPathMatchers = getIncludesPathMatchers();
+
 		PortalGitWorkingDirectory portalGitWorkingDirectory =
 			getPortalGitWorkingDirectory();
 
 		File portalModulesBaseDir = new File(
 			portalGitWorkingDirectory.getWorkingDirectory(), "modules");
 
-		List<PathMatcher> excludesPathMatchers = getPathMatchers(
-			getExcludesJobProperties());
-		List<PathMatcher> includesPathMatchers = getIncludesPathMatchers();
-
 		if (testRelevantChanges &&
 			!(includeStableTestSuite && isStableTestSuiteBatch())) {
 
-			moduleDirsList.addAll(
+			moduleDirs.addAll(
 				portalGitWorkingDirectory.getModifiedModuleDirsList(
 					excludesPathMatchers, includesPathMatchers));
 		}
 		else if (isRootCauseAnalysis()) {
-			moduleDirsList.addAll(
+			moduleDirs.addAll(
 				portalGitWorkingDirectory.getModuleDirsList(
 					excludesPathMatchers, includesPathMatchers));
 		}
 		else {
-			moduleDirsList.addAll(
+			moduleDirs.addAll(
 				portalGitWorkingDirectory.getModuleDirsList(
 					excludesPathMatchers, includesPathMatchers));
 
 			List<File> semVerMarkerFiles = JenkinsResultsParserUtil.findFiles(
 				portalModulesBaseDir, "\\.lfrbuild-semantic-versioning");
 
+			semVerMarkerFiles = JenkinsResultsParserUtil.getIncludedFiles(
+				excludesPathMatchers, includesPathMatchers, semVerMarkerFiles);
+
 			for (File semVerMarkerFile : semVerMarkerFiles) {
-				moduleDirsList.add(semVerMarkerFile.getParentFile());
+				moduleDirs.add(semVerMarkerFile.getParentFile());
 			}
 		}
 
-		for (File moduleDir : moduleDirsList) {
+		for (File moduleDir : moduleDirs) {
+			List<File> bndBndFiles = JenkinsResultsParserUtil.findFiles(
+				moduleDir, "bnd.bnd");
+
+			boolean exportPackageModule = false;
+
+			for (File bndBndFile : bndBndFiles) {
+				String bndBndFileContent = JenkinsResultsParserUtil.read(
+					bndBndFile);
+
+				if ((bndBndFileContent == null) ||
+					!bndBndFileContent.contains("Export-Package:")) {
+
+					continue;
+				}
+
+				exportPackageModule = true;
+			}
+
+			if (!exportPackageModule) {
+				continue;
+			}
+
+			moduleDirsList.add(moduleDir);
+
 			TestClass testClass = TestClassFactory.newTestClass(
 				this, moduleDir);
 

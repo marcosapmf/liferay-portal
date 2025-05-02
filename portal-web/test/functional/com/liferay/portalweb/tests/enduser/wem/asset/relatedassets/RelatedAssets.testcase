@@ -1,4 +1,4 @@
-@component-name = "page-management"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -10,6 +10,10 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		HeadlessSite.addSite(siteName = "Site Name");
 	}
@@ -328,6 +332,7 @@ definition {
 			WebContent.addExistingRelatedAssetCP(
 				assetTitle = "Blogs Entry Title",
 				assetType = "Blogs Entry",
+				edit = "true",
 				siteName = "Site Name");
 		}
 
@@ -391,6 +396,7 @@ definition {
 			WebContent.addExistingRelatedAssetCP(
 				assetTitle = "Web Content Title 1",
 				assetType = "Basic Web Content",
+				edit = "true",
 				otherSite = "Global",
 				siteName = "Global",
 				webContentTitle = "Web Content Title 2");
@@ -435,7 +441,9 @@ definition {
 	@priority = 4
 	@uitest
 	test ShouldBeDisplayWithCategory {
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Add a public page with JSON") {
 			JSONLayout.addPublicLayout(
@@ -495,6 +503,7 @@ definition {
 			WebContent.addExistingRelatedAssetCP(
 				assetTitle = "Web Content Title 1",
 				assetType = "Basic Web Content",
+				edit = "true",
 				siteName = "Site Name");
 		}
 
@@ -588,11 +597,12 @@ definition {
 				entryContent = "Blogs Entry Content",
 				entryTitle = "Blogs Entry Title");
 
-			Panel.expandPanel(panel = "Related Assets");
+			Blogs.expandPanel(panel = "Related Assets");
 
 			RelatedAssets.selectAsset(
 				assetTitle = "WC WebContent Title",
-				assetType = "Basic Web Content");
+				assetType = "Basic Web Content",
+				scopeAssetType = "Blogs Entry");
 
 			PortletEntry.publish();
 		}

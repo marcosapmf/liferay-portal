@@ -7,8 +7,6 @@ package com.liferay.headless.commerce.admin.account.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountMember;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.User;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -49,21 +47,27 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface AccountMemberResource {
 
+	public Response deleteAccountByExternalReferenceCodeAccountMember(
+			String externalReferenceCode, Long userId)
+		throws Exception;
+
+	public Response deleteAccountIdAccountMember(Long id, Long userId)
+		throws Exception;
+
+	public AccountMember getAccountByExternalReferenceCodeAccountMember(
+			String externalReferenceCode, Long userId)
+		throws Exception;
+
 	public Page<AccountMember>
 			getAccountByExternalReferenceCodeAccountMembersPage(
 				String externalReferenceCode, Pagination pagination)
 		throws Exception;
 
-	public AccountMember postAccountByExternalReferenceCodeAccountMember(
-			String externalReferenceCode, AccountMember accountMember)
+	public AccountMember getAccountIdAccountMember(Long id, Long userId)
 		throws Exception;
 
-	public Response deleteAccountByExternalReferenceCodeAccountMember(
-			String externalReferenceCode, Long userId)
-		throws Exception;
-
-	public AccountMember getAccountByExternalReferenceCodeAccountMember(
-			String externalReferenceCode, Long userId)
+	public Page<AccountMember> getAccountIdAccountMembersPage(
+			Long id, Pagination pagination)
 		throws Exception;
 
 	public Response patchAccountByExternalReferenceCodeAccountMember(
@@ -71,8 +75,12 @@ public interface AccountMemberResource {
 			AccountMember accountMember)
 		throws Exception;
 
-	public Page<AccountMember> getAccountIdAccountMembersPage(
-			Long id, Pagination pagination)
+	public Response patchAccountIdAccountMember(
+			Long id, Long userId, AccountMember accountMember)
+		throws Exception;
+
+	public AccountMember postAccountByExternalReferenceCodeAccountMember(
+			String externalReferenceCode, AccountMember accountMember)
 		throws Exception;
 
 	public AccountMember postAccountIdAccountMember(
@@ -81,16 +89,6 @@ public interface AccountMemberResource {
 
 	public Response postAccountIdAccountMemberBatch(
 			String callbackURL, Object object)
-		throws Exception;
-
-	public Response deleteAccountIdAccountMember(Long id, Long userId)
-		throws Exception;
-
-	public AccountMember getAccountIdAccountMember(Long id, Long userId)
-		throws Exception;
-
-	public Response patchAccountIdAccountMember(
-			Long id, Long userId, AccountMember accountMember)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -115,7 +113,8 @@ public interface AccountMemberResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -140,19 +139,23 @@ public interface AccountMemberResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

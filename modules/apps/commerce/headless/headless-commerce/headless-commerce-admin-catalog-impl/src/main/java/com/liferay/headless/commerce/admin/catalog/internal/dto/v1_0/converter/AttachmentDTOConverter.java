@@ -17,7 +17,6 @@ import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Attachment;
-import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
@@ -25,9 +24,13 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
@@ -62,6 +65,8 @@ public class AttachmentDTOConverter
 			_cpAttachmentFileEntryService.getCPAttachmentFileEntry(
 				(Long)dtoConverterContext.getId());
 
+		FileEntry fileEntry = cpAttachmentFileEntry.fetchFileEntry();
+
 		return new Attachment() {
 			{
 				setCdnEnabled(cpAttachmentFileEntry::isCDNEnabled);
@@ -77,6 +82,29 @@ public class AttachmentDTOConverter
 				setExpirationDate(cpAttachmentFileEntry::getExpirationDate);
 				setExternalReferenceCode(
 					cpAttachmentFileEntry::getExternalReferenceCode);
+				setFileEntryExternalReferenceCode(
+					() -> {
+						if (fileEntry == null) {
+							return null;
+						}
+
+						return fileEntry.getExternalReferenceCode();
+					});
+				setFileEntryGroupExternalReferenceCode(
+					() -> {
+						if (fileEntry == null) {
+							return null;
+						}
+
+						Group group = _groupLocalService.fetchGroup(
+							fileEntry.getGroupId());
+
+						if (group == null) {
+							return null;
+						}
+
+						return group.getExternalReferenceCode();
+					});
 				setFileEntryId(cpAttachmentFileEntry::getFileEntryId);
 				setGalleryEnabled(cpAttachmentFileEntry::isGalleryEnabled);
 				setId(cpAttachmentFileEntry::getCPAttachmentFileEntryId);
@@ -189,6 +217,9 @@ public class AttachmentDTOConverter
 
 	@Reference
 	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private JSONFactory _jsonFactory;

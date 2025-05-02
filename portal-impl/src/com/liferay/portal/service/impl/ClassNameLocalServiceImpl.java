@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.ClassNameImpl;
 import com.liferay.portal.service.base.ClassNameLocalServiceBaseImpl;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -158,7 +157,7 @@ public class ClassNameLocalServiceImpl
 
 	@Override
 	public Supplier<long[]> getClassNameIdsSupplier(String[] classNames) {
-		Map<Long, long[]> classNameIds = new HashMap<>();
+		Map<Long, long[]> classNameIds = new ConcurrentHashMap<>();
 
 		return () -> classNameIds.computeIfAbsent(
 			_getCompanyId(),
@@ -179,6 +178,14 @@ public class ClassNameLocalServiceImpl
 
 	@Override
 	public void invalidate() {
+		if (DBPartition.isPartitionEnabled() &&
+			(CompanyThreadLocal.getCompanyId() != CompanyConstants.SYSTEM)) {
+
+			ClassNamePool.invalidate(CompanyThreadLocal.getCompanyId());
+
+			return;
+		}
+
 		ClassNamePool.invalidate();
 	}
 
@@ -239,6 +246,11 @@ public class ClassNameLocalServiceImpl
 			for (Map<Long, ClassName> map : _classNamesMap.values()) {
 				map.clear();
 			}
+		}
+
+		public static void invalidate(long companyId) {
+			_classNameIdsMap.remove(companyId);
+			_classNamesMap.remove(companyId);
 		}
 
 		public static void remove(ClassName className) {

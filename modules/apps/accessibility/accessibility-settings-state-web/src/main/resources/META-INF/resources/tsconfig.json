@@ -1,19 +1,21 @@
 {
-	"@generated": "6516ab2b0d7a6a6990137b3a322933738fb41404",
+	"@generated": "cb44e58e13d01bc5cf59c359eb836daa11b42eb6",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 			"@liferay/frontend-js-state-web": [
-				"../../../../../../../frontend-js/frontend-js-state-web/src/main/resources/META-INF/resources/index.ts"
+				"../../../../../../../frontend-js/frontend-js-state-web/src/main/resources/META-INF/resources/main/index.ts"
+			],
+			"@liferay/frontend-js-state-web/react": [
+				"../../../../../../../frontend-js/frontend-js-state-web/src/main/resources/META-INF/resources/react/index.ts"
 			]
 		},
 		"rootDir": "../../../../../../../..",

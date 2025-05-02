@@ -13,7 +13,6 @@ import com.liferay.object.rest.dto.v1_0.FileEntry;
 import com.liferay.object.rest.dto.v1_0.ListEntry;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -115,8 +114,7 @@ public class APIApplicationOpenApiContributor implements OpenAPIContributor {
 							}
 						});
 					setTitle(apiApplication.getTitle());
-					setVersion(
-						GetterUtil.get(apiApplication.getVersion(), "v1.0"));
+					setVersion(apiApplication.getVersion());
 				}
 			});
 
@@ -137,7 +135,37 @@ public class APIApplicationOpenApiContributor implements OpenAPIContributor {
 				continue;
 			}
 
-			paths.put(_formatPath(endpoint), _toOpenAPIPathItem(endpoint));
+			paths.compute(
+				_formatPath(endpoint),
+				(key, pathItem) -> {
+					PathItem openAPIPathItem = _toOpenAPIPathItem(endpoint);
+
+					if (pathItem == null) {
+						return openAPIPathItem;
+					}
+
+					if (openAPIPathItem.getDelete() != null) {
+						pathItem.setDelete(openAPIPathItem.getDelete());
+					}
+
+					if (openAPIPathItem.getGet() != null) {
+						pathItem.setGet(openAPIPathItem.getGet());
+					}
+
+					if (openAPIPathItem.getPatch() != null) {
+						pathItem.setPatch(openAPIPathItem.getPatch());
+					}
+
+					if (openAPIPathItem.getPost() != null) {
+						pathItem.setPost(openAPIPathItem.getPost());
+					}
+
+					if (openAPIPathItem.getPut() != null) {
+						pathItem.setPut(openAPIPathItem.getPut());
+					}
+
+					return pathItem;
+				});
 
 			APIApplication.Schema requestSchema = endpoint.getRequestSchema();
 

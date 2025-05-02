@@ -12,8 +12,10 @@ import com.liferay.portal.kernel.aop.AopMethodInvocation;
 import com.liferay.portal.kernel.aop.ChainableMethodAdvice;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.mass.delete.MassDeleteCacheThreadLocal;
 import com.liferay.portal.kernel.model.AuditedModel;
 import com.liferay.portal.kernel.model.ClassedModel;
+import com.liferay.portal.kernel.model.ExternalReferenceCodeModel;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.StagedModel;
@@ -30,7 +32,10 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Zsolt Berentey
@@ -41,6 +46,10 @@ public class SystemEventAdvice extends ChainableMethodAdvice {
 	public Object before(
 			AopMethodInvocation aopMethodInvocation, Object[] arguments)
 		throws Throwable {
+
+		if (MassDeleteCacheThreadLocal.isMassDeleteMode()) {
+			return null;
+		}
 
 		SystemEvent systemEvent = aopMethodInvocation.getAdviceMethodContext();
 
@@ -78,6 +87,10 @@ public class SystemEventAdvice extends ChainableMethodAdvice {
 			Object result)
 		throws Throwable {
 
+		if (MassDeleteCacheThreadLocal.isMassDeleteMode()) {
+			return;
+		}
+
 		SystemEvent systemEvent = aopMethodInvocation.getAdviceMethodContext();
 
 		if (!systemEvent.send() ||
@@ -92,7 +105,10 @@ public class SystemEventAdvice extends ChainableMethodAdvice {
 
 		Group group = GroupLocalServiceUtil.fetchGroup(groupId);
 
+		String classExternalReferenceCode = getClassExternalReferenceCode(
+			classedModel);
 		String className = getClassName(classedModel);
+		long classPK = getClassPK(classedModel);
 
 		String referrerClassName = null;
 
@@ -102,8 +118,6 @@ public class SystemEventAdvice extends ChainableMethodAdvice {
 			referrerClassName = typedModel.getClassName();
 		}
 
-		long classPK = getClassPK(classedModel);
-
 		SystemEventHierarchyEntry systemEventHierarchyEntry =
 			SystemEventHierarchyEntryThreadLocal.peek();
 
@@ -112,14 +126,15 @@ public class SystemEventAdvice extends ChainableMethodAdvice {
 
 			if (group != null) {
 				SystemEventLocalServiceUtil.addSystemEvent(
-					0, groupId, systemEventHierarchyEntry.getClassName(),
-					classPK, systemEventHierarchyEntry.getUuid(),
-					referrerClassName, systemEvent.type(),
+					0, groupId, classExternalReferenceCode,
+					systemEventHierarchyEntry.getClassName(), classPK,
+					systemEventHierarchyEntry.getUuid(), referrerClassName,
+					systemEvent.type(),
 					systemEventHierarchyEntry.getExtraData());
 			}
 			else {
 				SystemEventLocalServiceUtil.addSystemEvent(
-					getCompanyId(classedModel),
+					getCompanyId(classedModel), classExternalReferenceCode,
 					systemEventHierarchyEntry.getClassName(), classPK,
 					systemEventHierarchyEntry.getUuid(), referrerClassName,
 					systemEvent.type(),
@@ -128,20 +143,25 @@ public class SystemEventAdvice extends ChainableMethodAdvice {
 		}
 		else if (group != null) {
 			SystemEventLocalServiceUtil.addSystemEvent(
-				0, groupId, className, classPK, getUuid(classedModel),
-				referrerClassName, systemEvent.type(), StringPool.BLANK);
+				0, groupId, classExternalReferenceCode, className, classPK,
+				getUuid(classedModel), referrerClassName, systemEvent.type(),
+				StringPool.BLANK);
 		}
 		else {
 			SystemEventLocalServiceUtil.addSystemEvent(
-				getCompanyId(classedModel), className, classPK,
-				getUuid(classedModel), referrerClassName, systemEvent.type(),
-				StringPool.BLANK);
+				getCompanyId(classedModel), classExternalReferenceCode,
+				className, classPK, getUuid(classedModel), referrerClassName,
+				systemEvent.type(), StringPool.BLANK);
 		}
 	}
 
 	@Override
 	protected void duringFinally(
 		AopMethodInvocation aopMethodInvocation, Object[] arguments) {
+
+		if (MassDeleteCacheThreadLocal.isMassDeleteMode()) {
+			return;
+		}
 
 		SystemEvent systemEvent = aopMethodInvocation.getAdviceMethodContext();
 
@@ -161,6 +181,20 @@ public class SystemEventAdvice extends ChainableMethodAdvice {
 
 		SystemEventHierarchyEntryThreadLocal.pop(
 			getClassName(classedModel), classPK);
+	}
+
+	protected String getClassExternalReferenceCode(ClassedModel classedModel) {
+		String externalReferenceCode = null;
+
+		if (classedModel instanceof ExternalReferenceCodeModel) {
+			ExternalReferenceCodeModel externalReferenceCodeModel =
+				(ExternalReferenceCodeModel)classedModel;
+
+			externalReferenceCode =
+				externalReferenceCodeModel.getExternalReferenceCode();
+		}
+
+		return externalReferenceCode;
 	}
 
 	protected String getClassName(ClassedModel classedModel) {
@@ -226,17 +260,25 @@ public class SystemEventAdvice extends ChainableMethodAdvice {
 			return stagedModel.getUuid();
 		}
 
+		Class<?> modelClass = classedModel.getClass();
+
+		String className = modelClass.getName();
+
+		if (_noUUIDClassNames.contains(className)) {
+			return StringPool.BLANK;
+		}
+
 		Method getUuidMethod = null;
 
 		try {
-			Class<?> modelClass = classedModel.getClass();
-
 			getUuidMethod = modelClass.getMethod("getUuid", new Class<?>[0]);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(exception);
 			}
+
+			_noUUIDClassNames.add(className);
 
 			return StringPool.BLANK;
 		}
@@ -319,5 +361,8 @@ public class SystemEventAdvice extends ChainableMethodAdvice {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		SystemEventAdvice.class);
+
+	private final Set<String> _noUUIDClassNames = Collections.newSetFromMap(
+		new ConcurrentHashMap<>());
 
 }

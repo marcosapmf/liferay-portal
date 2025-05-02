@@ -86,7 +86,13 @@ public class GitHubRemoteGitCommit extends BaseGitCommit {
 
 		JSONObject jsonObject = new JSONObject();
 
-		jsonObject.put("state", StringUtils.lowerCase(status.toString()));
+		String state = status.toString();
+
+		if (state.equals("BYPASSED")) {
+			state = "SUCCESS";
+		}
+
+		jsonObject.put("state", StringUtils.lowerCase(state));
 
 		if (context != null) {
 			jsonObject.put("context", context);
@@ -111,7 +117,7 @@ public class GitHubRemoteGitCommit extends BaseGitCommit {
 
 	public enum Status {
 
-		ERROR, FAILURE, PENDING, SUCCESS
+		BYPASSED, ERROR, FAILURE, PENDING, SUCCESS
 
 	}
 

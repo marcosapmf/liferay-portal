@@ -3,7 +3,6 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Document Management";
 	property testray.main.component.name = "Content Management Headless";
 
 	setUp {
@@ -184,11 +183,9 @@ definition {
 		task ("And Then the document in the document folder is deleted") {
 			var response = DocumentAPI.getDocumentsByDifferentParameters(documentId = ${documentId});
 
-			var actualMessage = JSONUtil.getWithJSONPath(${response}, "$.title");
-
-			TestUtils.assertPartialEquals(
-				actual = ${actualMessage},
-				expected = "No FileEntry exists with the key");
+			ObjectDefinitionAPI.assertStatusInResponse(
+				expectedValue = "NOT_FOUND",
+				responseToParse = ${response});
 		}
 	}
 
@@ -319,11 +316,9 @@ definition {
 		}
 
 		task ("Then I receive no DLFolder exists error message in response") {
-			var actualMessage = JSONUtil.getWithJSONPath(${response}, "$.title");
-
-			TestUtils.assertPartialEquals(
-				actual = ${actualMessage},
-				expected = "No DLFolder exists with the key");
+			ObjectDefinitionAPI.assertStatusInResponse(
+				expectedValue = "NOT_FOUND",
+				responseToParse = ${response});
 		}
 	}
 

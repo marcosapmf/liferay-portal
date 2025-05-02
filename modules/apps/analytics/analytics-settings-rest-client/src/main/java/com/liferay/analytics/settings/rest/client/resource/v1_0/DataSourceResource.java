@@ -5,9 +5,11 @@
 
 package com.liferay.analytics.settings.rest.client.resource.v1_0;
 
+import com.liferay.analytics.settings.rest.client.dto.v1_0.DataSourceLiferayAnalyticsURL;
 import com.liferay.analytics.settings.rest.client.dto.v1_0.DataSourceToken;
 import com.liferay.analytics.settings.rest.client.http.HttpInvoker;
 import com.liferay.analytics.settings.rest.client.problem.Problem;
+import com.liferay.analytics.settings.rest.client.serdes.v1_0.DataSourceLiferayAnalyticsURLSerDes;
 
 import java.net.URL;
 
@@ -36,7 +38,8 @@ public interface DataSourceResource {
 	public HttpInvoker.HttpResponse deleteDataSourceHttpResponse()
 		throws Exception;
 
-	public void postDataSource(DataSourceToken dataSourceToken)
+	public DataSourceLiferayAnalyticsURL postDataSource(
+			DataSourceToken dataSourceToken)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postDataSourceHttpResponse(
@@ -141,8 +144,8 @@ public interface DataSourceResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -243,13 +246,16 @@ public interface DataSourceResource {
 					_builder._port + _builder._contextPath +
 						"/o/analytics-settings-rest/v1.0/data-sources");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void postDataSource(DataSourceToken dataSourceToken)
+		public DataSourceLiferayAnalyticsURL postDataSource(
+				DataSourceToken dataSourceToken)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse = postDataSourceHttpResponse(
@@ -303,7 +309,7 @@ public interface DataSourceResource {
 			}
 
 			try {
-				return;
+				return DataSourceLiferayAnalyticsURLSerDes.toDTO(content);
 			}
 			catch (Exception e) {
 				_logger.log(
@@ -346,8 +352,10 @@ public interface DataSourceResource {
 					_builder._port + _builder._contextPath +
 						"/o/analytics-settings-rest/v1.0/data-sources");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

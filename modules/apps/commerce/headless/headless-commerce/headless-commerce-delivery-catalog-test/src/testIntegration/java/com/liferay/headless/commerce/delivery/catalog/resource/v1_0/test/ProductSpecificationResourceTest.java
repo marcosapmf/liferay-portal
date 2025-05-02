@@ -18,6 +18,7 @@ import com.liferay.commerce.product.service.CPSpecificationOptionLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.ProductSpecification;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -66,11 +67,11 @@ public class ProductSpecificationResourceTest
 		_cpSpecificationOption =
 			_cpSpecificationOptionLocalService.addCPSpecificationOption(
 				RandomTestUtil.randomString(), _user.getUserId(),
-				_cpOptionCategory.getCPOptionCategoryId(), 0,
+				_cpOptionCategory.getCPOptionCategoryId(), null,
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(), true,
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				_serviceContext);
+				true, _serviceContext);
 	}
 
 	@Override
@@ -163,11 +164,11 @@ public class ProductSpecificationResourceTest
 			cpDefinitionSpecificationOptionValue =
 				_cpDefinitionSpecificationOptionValueLocalService.
 					addCPDefinitionSpecificationOptionValue(
-						_cpDefinition.getCPDefinitionId(),
+						StringPool.BLANK, _cpDefinition.getCPDefinitionId(),
 						productSpecification.getSpecificationId(),
 						productSpecification.getOptionCategoryId(),
 						productSpecification.getPriority(),
-						RandomTestUtil.randomLocaleStringMap(),
+						RandomTestUtil.randomLocaleStringMap(), true,
 						_serviceContext);
 
 		_cpDefinitionSpecificationOptionValues.add(

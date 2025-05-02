@@ -21,6 +21,7 @@ import com.liferay.jenkins.results.parser.failure.message.generator.SemanticVers
 import com.liferay.jenkins.results.parser.failure.message.generator.ServiceBuilderFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.SourceFormatFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.StartupFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.failure.message.generator.UpgradeFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.test.clazz.FunctionalTestClass;
 import com.liferay.jenkins.results.parser.test.clazz.JUnitTestClass;
 import com.liferay.jenkins.results.parser.test.clazz.TestClass;
@@ -220,7 +221,7 @@ public class DownstreamBuild extends BaseBuild {
 		String batchName = getBatchName();
 
 		if (batchName.contains("playwright-js")) {
-			for (URL url : getTestrayAttachmentURLs()) {
+			for (URL url : getTestrayS3AttachmentURLs()) {
 				String urlString = url.toString();
 
 				if (urlString.contains("playwright-report/index.html")) {
@@ -1009,7 +1010,6 @@ public class DownstreamBuild extends BaseBuild {
 		new CompileFailureMessageGenerator(),
 		new IntegrationTestTimeoutFailureMessageGenerator(),
 		new JSUnitTestFailureMessageGenerator(),
-		new LocalGitMirrorFailureMessageGenerator(),
 		new PMDFailureMessageGenerator(),
 		new PlaywrightCompilationFailureMessageGenerator(),
 		new PluginGitIDFailureMessageGenerator(),
@@ -1017,8 +1017,10 @@ public class DownstreamBuild extends BaseBuild {
 		new ServiceBuilderFailureMessageGenerator(),
 		new SourceFormatFailureMessageGenerator(),
 		new StartupFailureMessageGenerator(),
+		new UpgradeFailureMessageGenerator(),
 		//
 		new GradleTaskFailureMessageGenerator(),
+		new LocalGitMirrorFailureMessageGenerator(),
 		//
 		new CIFailureMessageGenerator(),
 		new GenericFailureMessageGenerator()

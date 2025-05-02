@@ -14,18 +14,19 @@ import 'react-quill/dist/quill.snow.css';
 import {useModal} from '@clayui/modal';
 import {useMemo} from 'react';
 
-import AppToolbar from '../../../../../components/AppToolBar/AppToolBar';
+import AppPublish from '../../../../../components/AppPublish';
+import PublishNav from '../../../../../components/AppPublish/Sidebar';
 import Modal from '../../../../../components/Modal';
 import {useSolutionContext} from '../../../../../context/SolutionContext';
-import {PRODUCT_WORKFLOW_STATUS_CODE} from '../../../../../enums/Product';
+import {ProductWorkflowStatusCode} from '../../../../../enums/Product';
 import i18n from '../../../../../i18n';
-import usePublishSolutionHeader from '../../../hooks/usePublishSolutionHeader';
-import usePublishSolutionNavigation from '../../../hooks/usePublishSolutionNavigation';
+import usePublishHeader from '../../../hooks/usePublishHeader';
+import usePublishNavigation from '../../../hooks/usePublishNavigation';
 import usePublishSolutionSubmission from '../../../hooks/usePublishSolutionSubmission';
-import PublishNav from '../components/PublishNav';
+import {SOLUTION_FLOW_ITEMS} from '../constants';
 
 const PublishSolutionOutlet = () => {
-	usePublishSolutionHeader();
+	usePublishHeader();
 
 	const {data: account} = useAccount();
 	const [context, dispatch] = useSolutionContext();
@@ -37,8 +38,11 @@ const PublishSolutionOutlet = () => {
 		onClickContinue,
 		onClickPrevious,
 		onExit,
-		publishSolutionSteps,
-	} = usePublishSolutionNavigation();
+		steps,
+	} = usePublishNavigation({
+		exitLink: '/solutions',
+		flowItems: SOLUTION_FLOW_ITEMS,
+	});
 
 	const {onSave, onSaveAsDraft} = usePublishSolutionSubmission(
 		context,
@@ -60,15 +64,15 @@ const PublishSolutionOutlet = () => {
 
 	const isDisabled = parsedSchema ? !parsedSchema.success : false;
 
-	const isDraft = (status?: number) =>
-		status === PRODUCT_WORKFLOW_STATUS_CODE.DRAFT;
+	const isDraft = (status: number) =>
+		status === ProductWorkflowStatusCode.DRAFT;
 
 	const isSaveAsDraft =
 		!context._product || isDraft(context._product.productStatus);
 
 	return (
-		<>
-			<AppToolbar
+		<AppPublish>
+			<AppPublish.Navbar
 				accountImage={account?.logoURL}
 				accountName={account?.name as string}
 				appImage={context.profile.file?.preview}
@@ -100,15 +104,10 @@ const PublishSolutionOutlet = () => {
 				}}
 			/>
 
-			<hr />
+			<AppPublish.Body>
+				<PublishNav activeIndex={activeIndex} items={steps} />
 
-			<div className="d-flex justify-content-center mt-8">
-				<PublishNav
-					activeIndex={activeIndex}
-					items={publishSolutionSteps}
-				/>
-
-				<div className="ml-8 solutions-body-container">
+				<AppPublish.Content>
 					<h1 className="header-title mb-4">{activeRoute.title}</h1>
 					{activeRoute.description}
 
@@ -143,8 +142,8 @@ const PublishSolutionOutlet = () => {
 							)}
 						</ClayButton>
 					</div>
-				</div>
-			</div>
+				</AppPublish.Content>
+			</AppPublish.Body>
 
 			<Modal
 				last={
@@ -198,7 +197,7 @@ const PublishSolutionOutlet = () => {
 					</p>
 				</Modal>
 			)}
-		</>
+		</AppPublish>
 	);
 };
 

@@ -209,6 +209,17 @@
 					"allOf": [
 						{
 							"$ref": "#/definitions/propertySets/properties/url"
+						},
+						{
+							"properties": {
+								"scope": {
+									"default": "layout",
+									"enum": [
+										"company",
+										"layout"
+									]
+								}
+							}
 						}
 					],
 					"description": "Description for globalCSS"
@@ -220,6 +231,13 @@
 						},
 						{
 							"properties": {
+								"scope": {
+									"default": "layout",
+									"enum": [
+										"company",
+										"layout"
+									]
+								},
 								"scriptElementAttributes": {
 									"additionalProperties": {
 										"type": [
@@ -235,6 +253,10 @@
 									},
 									"title": "Script Element Attributes",
 									"type": "object"
+								},
+								"scriptLocation": {
+									"description": "",
+									"type": "string"
 								}
 							},
 							"type": "object"
@@ -395,6 +417,13 @@
 								},
 								"mainURL": {
 									"type": "string"
+								},
+								"scope": {
+									"default": "layout",
+									"enum": [
+										"controlPanel",
+										"layout"
+									]
 								}
 							},
 							"type": "object"

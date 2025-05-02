@@ -44,10 +44,10 @@ components:
                 zip:
                     type: string
             required:
-                - city
-                - countryISOCode
-                - name
-                - street1
+                -   city
+                -   countryISOCode
+                -   name
+                -   street1
             type: object
         Cart:
             properties:
@@ -134,7 +134,7 @@ components:
                 useAsBilling:
                     type: boolean
             required:
-                - currencyCode
+                -   currencyCode
             type: object
         CartComment:
             properties:
@@ -207,7 +207,7 @@ components:
                 name:
                     type: string
             required:
-                - name
+                -   name
             type: object
         Organization:
             properties:
@@ -216,7 +216,7 @@ components:
                 name:
                     type: string
             required:
-                - name
+                -   name
             type: object
         Price:
             properties:
@@ -268,12 +268,12 @@ components:
                 punchOutStartURL:
                     type: string
             required:
-                - buyerAccountReferenceCode
-                - buyerGroup
-                - buyerUser
-                - cart
-                - punchOutReturnURL
-                - punchOutSessionType
+                -   buyerAccountReferenceCode
+                -   buyerGroup
+                -   buyerUser
+                -   cart
+                -   punchOutReturnURL
+                -   punchOutSessionType
             type: object
         Settings:
             properties:
@@ -361,16 +361,16 @@ components:
                         type: string
                     type: array
             required:
-                - email
+                -   email
             type: object
 info:
     description:
         "API for requesting punch out session.. A Java client JAR is available for use with the group ID 'com.liferay',
         artifact ID 'com.liferay.headless.commerce.punchout.client', and version '1.0.0'."
     license:
-        name: "Apache 2.0"
-        url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-    title: "Liferay Headless Commerce Punch Out"
+        name: Apache 2.0
+        url: http://www.apache.org/licenses/LICENSE-2.0.html
+    title: Liferay Headless Commerce Punch Out
     version: v1.0
 openapi: 3.0.1
 paths:

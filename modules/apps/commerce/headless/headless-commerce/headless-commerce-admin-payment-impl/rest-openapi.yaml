@@ -25,10 +25,10 @@ components:
                     readOnly: true
                     type: integer
             required:
-                - errorCode
-                - errorDescription
-                - message
-                - status
+                -   errorCode
+                -   errorDescription
+                -   message
+                -   status
             type: object
         Payment:
             properties:
@@ -45,6 +45,9 @@ components:
                     type: number
                 amountFormatted:
                     example: $ 101.00
+                    readOnly: true
+                    type: string
+                author:
                     readOnly: true
                     type: string
                 callbackURL:
@@ -66,6 +69,14 @@ components:
                 currencyCode:
                     example: USD
                     type: string
+                currencyExternalReferenceCode:
+                    example: AAB-34098-789-N
+                    type: string
+                currencyId:
+                    example: 30130
+                    format: int64
+                    minimum: 0
+                    type: integer
                 errorMessages:
                     type: string
                 externalReferenceCode:
@@ -169,10 +180,10 @@ info:
         name: Commerce Team
     description:
         "Liferay Commerce Admin Payment API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.admin.payment.client', and version '1.0.9'."
+        artifact ID 'com.liferay.headless.commerce.admin.payment.client', and version '1.0.14'."
     license:
-        name: "Apache 2.0"
-        url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+        name: Apache 2.0
+        url: http://www.apache.org/licenses/LICENSE-2.0.html
     title: Liferay Commerce Admin Payment API
     version: v1.0
 openapi: 3.0.0
@@ -181,31 +192,31 @@ paths:
         get:
             operationId: getPaymentsPage
             parameters:
-                - in: query
-                  name: filter
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  required: false
-                  schema:
-                      type: string
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -255,13 +266,13 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a List of Payments.
             tags:
-                - Payment
+                -   Payment
         post:
             operationId: postPayment
             requestBody:
@@ -324,26 +335,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Creates or updates a Payment.
             tags:
-                - Payment
+                -   Payment
     /payments/by-externalReferenceCode/{externalReferenceCode}:
         delete:
             operationId: deletePaymentByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 204:
                     description:
@@ -359,25 +370,25 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes an Payment by external reference code.
             tags:
-                - Payment
+                -   Payment
         get:
             operationId: getPaymentByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -423,25 +434,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets an Payment by external reference code.
             tags:
-                - Payment
+                -   Payment
         patch:
             operationId: patchPaymentByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -499,26 +510,103 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates an Payment by external reference code.
             tags:
-                - Payment
+                -   Payment
+        put:
+            operationId: putPaymentByExternalReferenceCode
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Payment"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Payment"
+                required: true
+            responses:
+                202:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Payment"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Payment"
+                    description:
+                        Succesfully update the Payment
+                204:
+                    description:
+                        Updated
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
+            summary: Replaces a payment with information sent in the request body. Any missing fields are deleted
+                unless they are required.
+            tags:
+                -   Payment
     /payments/by-externalReferenceCode/{externalReferenceCode}/refund:
         post:
             operationId: postPaymentByExternalReferenceCodeRefund
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 201:
                     content:
@@ -570,27 +658,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Makes a refund from an existing payment.
             tags:
-                - Payment
+                -   Payment
     /payments/{id}:
         delete:
             operationId: deletePayment
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 204:
                     description:
@@ -606,26 +694,26 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes an Payment by ID.
             tags:
-                - Payment
+                -   Payment
         get:
             operationId: getPayment
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -671,26 +759,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets an Payment by ID.
             tags:
-                - Payment
+                -   Payment
         patch:
             operationId: patchPayment
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -748,27 +836,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates an Payment by ID.
             tags:
-                - Payment
+                -   Payment
     /payments/{id}/refund:
         post:
             operationId: postPaymentRefund
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 201:
                     content:
@@ -820,12 +908,12 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Makes a refund from an existing payment.
             tags:
-                - Payment
+                -   Payment
 servers:
-    - url: /
+    -   url: /

@@ -79,13 +79,14 @@ public class ObjectStateFlowLocalServiceTest {
 
 		_objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), 0, false, true, false, false,
+				TestPropsValues.getUserId(), 0, null, false, false, true, false,
+				false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
-				Collections.emptyList());
+				Collections.emptyList(), Collections.emptyList());
 
 		ObjectField objectField = ObjectFieldUtil.addCustomObjectField(
 			new PicklistObjectFieldBuilder(

@@ -1,6 +1,16 @@
 {
 	"dependencies": {
-		"frontend-js-web": "*"
+		"@clayui/autocomplete": "3.135.0",
+		"@clayui/button": "3.128.0",
+		"@clayui/form": "3.132.0",
+		"@clayui/icon": "3.128.0",
+		"@clayui/modal": "3.134.0",
+		"classnames": "2.3.1",
+		"commerce-frontend-js": "*",
+		"frontend-js-components-web": "*",
+		"frontend-js-web": "*",
+		"react": "18.2.0",
+		"react-dom": "18.2.0"
 	},
 	"main": "js/index.js",
 	"name": "@liferay/commerce-checkout-web",
@@ -9,5 +19,5 @@
 		"checkFormat": "node-scripts format --check",
 		"format": "node-scripts format"
 	},
-	"version": "5.0.95"
+	"version": "5.0.106"
 }

@@ -308,6 +308,12 @@ public class ListTypeEntryLocalServiceUtil {
 			listTypeDefinitionId, start, end, orderByComparator);
 	}
 
+	public static List<ListTypeEntry> getListTypeEntries(
+		long[] listTypeDefinitionIds) {
+
+		return getService().getListTypeEntries(listTypeDefinitionIds);
+	}
+
 	/**
 	 * Returns the number of list type entries.
 	 *
@@ -406,6 +412,13 @@ public class ListTypeEntryLocalServiceUtil {
 
 		return getService().updateListTypeEntry(
 			externalReferenceCode, listTypeEntryId, nameMap);
+	}
+
+	public static void updateUserId(
+			long companyId, long oldUserId, long newUserId)
+		throws PortalException {
+
+		getService().updateUserId(companyId, oldUserId, newUserId);
 	}
 
 	public static ListTypeEntryLocalService getService() {

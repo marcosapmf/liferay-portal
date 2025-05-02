@@ -1150,6 +1150,12 @@ public class ContentManager {
 			return;
 		}
 
+		String className = _portal.fetchClassName(classNameId);
+
+		if (Validator.isNull(className)) {
+			return;
+		}
+
 		long classPK = jsonObject.getLong("classPK");
 		String externalReferenceCode = jsonObject.getString(
 			"externalReferenceCode");
@@ -1165,7 +1171,7 @@ public class ContentManager {
 			return;
 		}
 
-		String className = _portal.getClassName(classNameId);
+		className = _infoSearchClassMapperRegistry.getClassName(className);
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 			_layoutDisplayPageProviderRegistry.
@@ -1556,7 +1562,7 @@ public class ContentManager {
 						PRODUCT_NAVIGATION_CONTROL_MENU,
 					PortletRequest.ACTION_PHASE)
 			).setActionName(
-				"/control_menu/add_collection_item"
+				"/layout_content_page_editor/add_collection_item"
 			).setRedirect(
 				currentURL
 			).setParameter(

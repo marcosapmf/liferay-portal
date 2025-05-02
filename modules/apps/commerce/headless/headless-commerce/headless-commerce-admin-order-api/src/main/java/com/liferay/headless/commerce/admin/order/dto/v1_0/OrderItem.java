@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.math.BigDecimal;
@@ -58,7 +56,7 @@ public class OrderItem implements Serializable {
 	}
 
 	@DecimalMin("0")
-	@Schema(example = "32144")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "32144")
 	public Long getBookedQuantityId() {
 		if (_bookedQuantityIdSupplier != null) {
 			bookedQuantityId = _bookedQuantityIdSupplier.get();
@@ -99,9 +97,11 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _bookedQuantityIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
-	public CustomField[] getCustomFields() {
+	public com.liferay.portal.vulcan.custom.field.CustomField[]
+		getCustomFields() {
+
 		if (_customFieldsSupplier != null) {
 			customFields = _customFieldsSupplier.get();
 
@@ -111,7 +111,9 @@ public class OrderItem implements Serializable {
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields) {
+
 		this.customFields = customFields;
 
 		_customFieldsSupplier = null;
@@ -119,7 +121,9 @@ public class OrderItem implements Serializable {
 
 	@JsonIgnore
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.custom.field.CustomField[], Exception>
+				customFieldsUnsafeSupplier) {
 
 		_customFieldsSupplier = () -> {
 			try {
@@ -136,13 +140,14 @@ public class OrderItem implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected CustomField[] customFields;
+	protected com.liferay.portal.vulcan.custom.field.CustomField[] customFields;
 
 	@JsonIgnore
-	private Supplier<CustomField[]> _customFieldsSupplier;
+	private Supplier<com.liferay.portal.vulcan.custom.field.CustomField[]>
+		_customFieldsSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "10.1")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "10.1")
 	@Valid
 	public BigDecimal getDecimalQuantity() {
 		if (_decimalQuantitySupplier != null) {
@@ -184,7 +189,9 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<BigDecimal> _decimalQuantitySupplier;
 
-	@Schema(example = "separate package")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		deprecated = true, example = "separate package"
+	)
 	public String getDeliveryGroup() {
 		if (_deliveryGroupSupplier != null) {
 			deliveryGroup = _deliveryGroupSupplier.get();
@@ -218,6 +225,7 @@ public class OrderItem implements Serializable {
 		};
 	}
 
+	@Deprecated
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String deliveryGroup;
@@ -225,8 +233,49 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _deliveryGroupSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(example = "separate package")
+	public String getDeliveryGroupName() {
+		if (_deliveryGroupNameSupplier != null) {
+			deliveryGroupName = _deliveryGroupNameSupplier.get();
+
+			_deliveryGroupNameSupplier = null;
+		}
+
+		return deliveryGroupName;
+	}
+
+	public void setDeliveryGroupName(String deliveryGroupName) {
+		this.deliveryGroupName = deliveryGroupName;
+
+		_deliveryGroupNameSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setDeliveryGroupName(
+		UnsafeSupplier<String, Exception> deliveryGroupNameUnsafeSupplier) {
+
+		_deliveryGroupNameSupplier = () -> {
+			try {
+				return deliveryGroupNameUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String deliveryGroupName;
+
+	@JsonIgnore
+	private Supplier<String> _deliveryGroupNameSupplier;
+
 	@DecimalMin("0")
-	@Schema(example = "2")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "2")
 	@Valid
 	public BigDecimal getDiscountAmount() {
 		if (_discountAmountSupplier != null) {
@@ -268,7 +317,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<BigDecimal> _discountAmountSupplier;
 
-	@Schema(example = "true")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
 	public Boolean getDiscountManuallyAdjusted() {
 		if (_discountManuallyAdjustedSupplier != null) {
 			discountManuallyAdjusted = _discountManuallyAdjustedSupplier.get();
@@ -311,7 +360,7 @@ public class OrderItem implements Serializable {
 	private Supplier<Boolean> _discountManuallyAdjustedSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "20")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "20")
 	@Valid
 	public BigDecimal getDiscountPercentageLevel1() {
 		if (_discountPercentageLevel1Supplier != null) {
@@ -357,7 +406,7 @@ public class OrderItem implements Serializable {
 	private Supplier<BigDecimal> _discountPercentageLevel1Supplier;
 
 	@DecimalMin("0")
-	@Schema(example = "20")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "20")
 	@Valid
 	public BigDecimal getDiscountPercentageLevel1WithTaxAmount() {
 		if (_discountPercentageLevel1WithTaxAmountSupplier != null) {
@@ -406,7 +455,7 @@ public class OrderItem implements Serializable {
 	private Supplier<BigDecimal> _discountPercentageLevel1WithTaxAmountSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "0")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "0")
 	@Valid
 	public BigDecimal getDiscountPercentageLevel2() {
 		if (_discountPercentageLevel2Supplier != null) {
@@ -452,7 +501,7 @@ public class OrderItem implements Serializable {
 	private Supplier<BigDecimal> _discountPercentageLevel2Supplier;
 
 	@DecimalMin("0")
-	@Schema(example = "0")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "0")
 	@Valid
 	public BigDecimal getDiscountPercentageLevel2WithTaxAmount() {
 		if (_discountPercentageLevel2WithTaxAmountSupplier != null) {
@@ -501,7 +550,7 @@ public class OrderItem implements Serializable {
 	private Supplier<BigDecimal> _discountPercentageLevel2WithTaxAmountSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "0")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "0")
 	@Valid
 	public BigDecimal getDiscountPercentageLevel3() {
 		if (_discountPercentageLevel3Supplier != null) {
@@ -547,7 +596,7 @@ public class OrderItem implements Serializable {
 	private Supplier<BigDecimal> _discountPercentageLevel3Supplier;
 
 	@DecimalMin("0")
-	@Schema(example = "0")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "0")
 	@Valid
 	public BigDecimal getDiscountPercentageLevel3WithTaxAmount() {
 		if (_discountPercentageLevel3WithTaxAmountSupplier != null) {
@@ -596,7 +645,7 @@ public class OrderItem implements Serializable {
 	private Supplier<BigDecimal> _discountPercentageLevel3WithTaxAmountSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "0")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "0")
 	@Valid
 	public BigDecimal getDiscountPercentageLevel4() {
 		if (_discountPercentageLevel4Supplier != null) {
@@ -642,7 +691,7 @@ public class OrderItem implements Serializable {
 	private Supplier<BigDecimal> _discountPercentageLevel4Supplier;
 
 	@DecimalMin("0")
-	@Schema(example = "0")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "0")
 	@Valid
 	public BigDecimal getDiscountPercentageLevel4WithTaxAmount() {
 		if (_discountPercentageLevel4WithTaxAmountSupplier != null) {
@@ -691,7 +740,7 @@ public class OrderItem implements Serializable {
 	private Supplier<BigDecimal> _discountPercentageLevel4WithTaxAmountSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "2")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "2")
 	@Valid
 	public BigDecimal getDiscountWithTaxAmount() {
 		if (_discountWithTaxAmountSupplier != null) {
@@ -734,7 +783,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<BigDecimal> _discountWithTaxAmountSupplier;
 
-	@Schema(example = "AB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -776,7 +825,7 @@ public class OrderItem implements Serializable {
 	private Supplier<String> _externalReferenceCodeSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "200")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "200")
 	@Valid
 	public BigDecimal getFinalPrice() {
 		if (_finalPriceSupplier != null) {
@@ -819,7 +868,7 @@ public class OrderItem implements Serializable {
 	private Supplier<BigDecimal> _finalPriceSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "200")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "200")
 	@Valid
 	public BigDecimal getFinalPriceWithTaxAmount() {
 		if (_finalPriceWithTaxAmountSupplier != null) {
@@ -862,7 +911,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<BigDecimal> _finalPriceWithTaxAmountSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getFormattedQuantity() {
 		if (_formattedQuantitySupplier != null) {
 			formattedQuantity = _formattedQuantitySupplier.get();
@@ -904,7 +953,7 @@ public class OrderItem implements Serializable {
 	private Supplier<String> _formattedQuantitySupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "30130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -943,7 +992,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		example = "{en_US=Hand Saw, hr_HR=Product Name HR, hu_HU=Product Name HU}"
 	)
 	@Valid
@@ -987,7 +1036,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _nameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getOptions() {
 		if (_optionsSupplier != null) {
 			options = _optionsSupplier.get();
@@ -1028,7 +1077,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _optionsSupplier;
 
-	@Schema(example = "CAB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "CAB-34098-789-N")
 	public String getOrderExternalReferenceCode() {
 		if (_orderExternalReferenceCodeSupplier != null) {
 			orderExternalReferenceCode =
@@ -1074,7 +1123,7 @@ public class OrderItem implements Serializable {
 	private Supplier<String> _orderExternalReferenceCodeSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "30128")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30128")
 	public Long getOrderId() {
 		if (_orderIdSupplier != null) {
 			orderId = _orderIdSupplier.get();
@@ -1115,7 +1164,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _orderIdSupplier;
 
-	@Schema(example = "true")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
 	public Boolean getPriceManuallyAdjusted() {
 		if (_priceManuallyAdjustedSupplier != null) {
 			priceManuallyAdjusted = _priceManuallyAdjustedSupplier.get();
@@ -1157,7 +1206,9 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _priceManuallyAdjustedSupplier;
 
-	@Schema(example = "Order item printed note")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		example = "Order item printed note"
+	)
 	public String getPrintedNote() {
 		if (_printedNoteSupplier != null) {
 			printedNote = _printedNoteSupplier.get();
@@ -1199,7 +1250,7 @@ public class OrderItem implements Serializable {
 	private Supplier<String> _printedNoteSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "101")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "101")
 	@Valid
 	public BigDecimal getPromoPrice() {
 		if (_promoPriceSupplier != null) {
@@ -1242,7 +1293,7 @@ public class OrderItem implements Serializable {
 	private Supplier<BigDecimal> _promoPriceSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "101")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "101")
 	@Valid
 	public BigDecimal getPromoPriceWithTaxAmount() {
 		if (_promoPriceWithTaxAmountSupplier != null) {
@@ -1286,7 +1337,7 @@ public class OrderItem implements Serializable {
 	private Supplier<BigDecimal> _promoPriceWithTaxAmountSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "2.1")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "2.1")
 	@Valid
 	public BigDecimal getQuantity() {
 		if (_quantitySupplier != null) {
@@ -1328,7 +1379,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<BigDecimal> _quantitySupplier;
 
-	@Schema(example = "1234123124")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "1234123124")
 	public String getReplacedSku() {
 		if (_replacedSkuSupplier != null) {
 			replacedSku = _replacedSkuSupplier.get();
@@ -1369,7 +1420,53 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _replacedSkuSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
+	public String getReplacedSkuExternalReferenceCode() {
+		if (_replacedSkuExternalReferenceCodeSupplier != null) {
+			replacedSkuExternalReferenceCode =
+				_replacedSkuExternalReferenceCodeSupplier.get();
+
+			_replacedSkuExternalReferenceCodeSupplier = null;
+		}
+
+		return replacedSkuExternalReferenceCode;
+	}
+
+	public void setReplacedSkuExternalReferenceCode(
+		String replacedSkuExternalReferenceCode) {
+
+		this.replacedSkuExternalReferenceCode =
+			replacedSkuExternalReferenceCode;
+
+		_replacedSkuExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setReplacedSkuExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			replacedSkuExternalReferenceCodeUnsafeSupplier) {
+
+		_replacedSkuExternalReferenceCodeSupplier = () -> {
+			try {
+				return replacedSkuExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String replacedSkuExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _replacedSkuExternalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getReplacedSkuId() {
 		if (_replacedSkuIdSupplier != null) {
 			replacedSkuId = _replacedSkuIdSupplier.get();
@@ -1410,7 +1507,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _replacedSkuIdSupplier;
 
-	@Schema(example = "2017-07-21")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "2017-07-21")
 	public Date getRequestedDeliveryDate() {
 		if (_requestedDeliveryDateSupplier != null) {
 			requestedDeliveryDate = _requestedDeliveryDateSupplier.get();
@@ -1451,8 +1548,49 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _requestedDeliveryDateSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
+	public Boolean getShippable() {
+		if (_shippableSupplier != null) {
+			shippable = _shippableSupplier.get();
+
+			_shippableSupplier = null;
+		}
+
+		return shippable;
+	}
+
+	public void setShippable(Boolean shippable) {
+		this.shippable = shippable;
+
+		_shippableSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setShippable(
+		UnsafeSupplier<Boolean, Exception> shippableUnsafeSupplier) {
+
+		_shippableSupplier = () -> {
+			try {
+				return shippableUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Boolean shippable;
+
+	@JsonIgnore
+	private Supplier<Boolean> _shippableSupplier;
+
 	@DecimalMin("0")
-	@Schema(example = "1.1")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "1.1")
 	@Valid
 	public BigDecimal getShippedQuantity() {
 		if (_shippedQuantitySupplier != null) {
@@ -1494,7 +1632,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<BigDecimal> _shippedQuantitySupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public ShippingAddress getShippingAddress() {
 		if (_shippingAddressSupplier != null) {
@@ -1537,8 +1675,54 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<ShippingAddress> _shippingAddressSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
+	public String getShippingAddressExternalReferenceCode() {
+		if (_shippingAddressExternalReferenceCodeSupplier != null) {
+			shippingAddressExternalReferenceCode =
+				_shippingAddressExternalReferenceCodeSupplier.get();
+
+			_shippingAddressExternalReferenceCodeSupplier = null;
+		}
+
+		return shippingAddressExternalReferenceCode;
+	}
+
+	public void setShippingAddressExternalReferenceCode(
+		String shippingAddressExternalReferenceCode) {
+
+		this.shippingAddressExternalReferenceCode =
+			shippingAddressExternalReferenceCode;
+
+		_shippingAddressExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setShippingAddressExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			shippingAddressExternalReferenceCodeUnsafeSupplier) {
+
+		_shippingAddressExternalReferenceCodeSupplier = () -> {
+			try {
+				return shippingAddressExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String shippingAddressExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _shippingAddressExternalReferenceCodeSupplier;
+
 	@DecimalMin("0")
-	@Schema(example = "31130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "31130")
 	public Long getShippingAddressId() {
 		if (_shippingAddressIdSupplier != null) {
 			shippingAddressId = _shippingAddressIdSupplier.get();
@@ -1579,7 +1763,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _shippingAddressIdSupplier;
 
-	@Schema(example = "12341234")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "12341234")
 	public String getSku() {
 		if (_skuSupplier != null) {
 			sku = _skuSupplier.get();
@@ -1618,7 +1802,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _skuSupplier;
 
-	@Schema(example = "CAB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "CAB-34098-789-N")
 	public String getSkuExternalReferenceCode() {
 		if (_skuExternalReferenceCodeSupplier != null) {
 			skuExternalReferenceCode = _skuExternalReferenceCodeSupplier.get();
@@ -1661,7 +1845,7 @@ public class OrderItem implements Serializable {
 	private Supplier<String> _skuExternalReferenceCodeSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "30128")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30128")
 	public Long getSkuId() {
 		if (_skuIdSupplier != null) {
 			skuId = _skuIdSupplier.get();
@@ -1700,7 +1884,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _skuIdSupplier;
 
-	@Schema(example = "true")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
 	public Boolean getSubscription() {
 		if (_subscriptionSupplier != null) {
 			subscription = _subscriptionSupplier.get();
@@ -1741,7 +1925,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _subscriptionSupplier;
 
-	@Schema(example = "pc")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "pc")
 	public String getUnitOfMeasure() {
 		if (_unitOfMeasureSupplier != null) {
 			unitOfMeasure = _unitOfMeasureSupplier.get();
@@ -1782,7 +1966,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _unitOfMeasureSupplier;
 
-	@Schema(example = "s")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "s")
 	public String getUnitOfMeasureKey() {
 		if (_unitOfMeasureKeySupplier != null) {
 			unitOfMeasureKey = _unitOfMeasureKeySupplier.get();
@@ -1824,7 +2008,7 @@ public class OrderItem implements Serializable {
 	private Supplier<String> _unitOfMeasureKeySupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "101")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "101")
 	@Valid
 	public BigDecimal getUnitPrice() {
 		if (_unitPriceSupplier != null) {
@@ -1867,7 +2051,7 @@ public class OrderItem implements Serializable {
 	private Supplier<BigDecimal> _unitPriceSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "101")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "101")
 	@Valid
 	public BigDecimal getUnitPriceWithTaxAmount() {
 		if (_unitPriceWithTaxAmountSupplier != null) {
@@ -1910,7 +2094,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<BigDecimal> _unitPriceWithTaxAmountSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String[] getVirtualItemURLs() {
 		if (_virtualItemURLsSupplier != null) {
 			virtualItemURLs = _virtualItemURLsSupplier.get();
@@ -1951,7 +2135,7 @@ public class OrderItem implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _virtualItemURLsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public VirtualItem[] getVirtualItems() {
 		if (_virtualItemsSupplier != null) {
@@ -2035,7 +2219,8 @@ public class OrderItem implements Serializable {
 			sb.append(bookedQuantityId);
 		}
 
-		CustomField[] customFields = getCustomFields();
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields =
+			getCustomFields();
 
 		if (customFields != null) {
 			if (sb.length() > 1) {
@@ -2047,7 +2232,7 @@ public class OrderItem implements Serializable {
 			sb.append("[");
 
 			for (int i = 0; i < customFields.length; i++) {
-				sb.append(String.valueOf(customFields[i]));
+				sb.append(customFields[i]);
 
 				if ((i + 1) < customFields.length) {
 					sb.append(", ");
@@ -2081,6 +2266,22 @@ public class OrderItem implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(deliveryGroup));
+
+			sb.append("\"");
+		}
+
+		String deliveryGroupName = getDeliveryGroupName();
+
+		if (deliveryGroupName != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"deliveryGroupName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(deliveryGroupName));
 
 			sb.append("\"");
 		}
@@ -2425,6 +2626,23 @@ public class OrderItem implements Serializable {
 			sb.append("\"");
 		}
 
+		String replacedSkuExternalReferenceCode =
+			getReplacedSkuExternalReferenceCode();
+
+		if (replacedSkuExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacedSkuExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(replacedSkuExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		Long replacedSkuId = getReplacedSkuId();
 
 		if (replacedSkuId != null) {
@@ -2453,6 +2671,18 @@ public class OrderItem implements Serializable {
 			sb.append("\"");
 		}
 
+		Boolean shippable = getShippable();
+
+		if (shippable != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"shippable\": ");
+
+			sb.append(shippable);
+		}
+
 		BigDecimal shippedQuantity = getShippedQuantity();
 
 		if (shippedQuantity != null) {
@@ -2475,6 +2705,23 @@ public class OrderItem implements Serializable {
 			sb.append("\"shippingAddress\": ");
 
 			sb.append(String.valueOf(shippingAddress));
+		}
+
+		String shippingAddressExternalReferenceCode =
+			getShippingAddressExternalReferenceCode();
+
+		if (shippingAddressExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"shippingAddressExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(shippingAddressExternalReferenceCode));
+
+			sb.append("\"");
 		}
 
 		Long shippingAddressId = getShippingAddressId();
@@ -2654,8 +2901,8 @@ public class OrderItem implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.order.dto.v1_0.OrderItem",
 		name = "x-class-name"
 	)

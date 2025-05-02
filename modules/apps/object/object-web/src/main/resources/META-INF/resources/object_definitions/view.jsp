@@ -9,5 +9,6 @@
 
 <liferay-frontend:screen-navigation
 	key="<%= ObjectDefinitionsScreenNavigationEntryConstants.SCREEN_NAVIGATION_KEY_OBJECTS %>"
+	navBarCssClass="container-fluid-max-xxxl"
 	portletURL="<%= currentURLObj %>"
 />

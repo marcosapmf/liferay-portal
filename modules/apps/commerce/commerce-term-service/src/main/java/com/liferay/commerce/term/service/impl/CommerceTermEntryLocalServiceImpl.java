@@ -21,6 +21,7 @@ import com.liferay.commerce.term.model.CommerceTermEntryRelTable;
 import com.liferay.commerce.term.model.CommerceTermEntryTable;
 import com.liferay.commerce.term.service.CommerceTermEntryRelLocalService;
 import com.liferay.commerce.term.service.base.CommerceTermEntryLocalServiceBaseImpl;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.query.FromStep;
@@ -236,19 +237,10 @@ public class CommerceTermEntryLocalServiceImpl
 	public List<String> getCTermEntryLocalizationLanguageIds(
 		long commerceTermEntryId) {
 
-		List<CTermEntryLocalization> cTermEntryLocalizations =
+		return TransformUtil.transform(
 			cTermEntryLocalizationPersistence.findByCommerceTermEntryId(
-				commerceTermEntryId);
-
-		List<String> availableLanguageIds = new ArrayList<>();
-
-		for (CTermEntryLocalization cTermEntryLocalization :
-				cTermEntryLocalizations) {
-
-			availableLanguageIds.add(cTermEntryLocalization.getLanguageId());
-		}
-
-		return availableLanguageIds;
+				commerceTermEntryId),
+			cTermEntryLocalization -> cTermEntryLocalization.getLanguageId());
 	}
 
 	@Override
@@ -286,6 +278,30 @@ public class CommerceTermEntryLocalServiceImpl
 	}
 
 	@Override
+	public int getDeliveryCommerceTermEntriesCount(
+		long companyId, long commerceOrderTypeId,
+		long commerceShippingOptionId) {
+
+		int count = dslQueryCount(
+			_getDeliveryTermsEntryGroupByStep(
+				companyId,
+				(commerceOrderTypeId > 0) ? commerceOrderTypeId : null,
+				commerceShippingOptionId,
+				DSLQueryFactoryUtil.countDistinct(
+					CommerceTermEntryTable.INSTANCE.commerceTermEntryId)));
+
+		if ((commerceOrderTypeId > 0) && (count == 0)) {
+			count = dslQueryCount(
+				_getDeliveryTermsEntryGroupByStep(
+					companyId, null, commerceShippingOptionId,
+					DSLQueryFactoryUtil.countDistinct(
+						CommerceTermEntryTable.INSTANCE.commerceTermEntryId)));
+		}
+
+		return count;
+	}
+
+	@Override
 	public List<CommerceTermEntry> getPaymentCommerceTermEntries(
 		long companyId, long commerceOrderTypeId,
 		long commercePaymentMethodGroupRelId) {
@@ -317,6 +333,30 @@ public class CommerceTermEntryLocalServiceImpl
 		}
 
 		return commerceTermEntries;
+	}
+
+	@Override
+	public int getPaymentCommerceTermEntriesCount(
+		long companyId, long commerceOrderTypeId,
+		long commercePaymentMethodGroupRelId) {
+
+		int count = dslQueryCount(
+			_getPaymentTermsEntryGroupByStep(
+				companyId,
+				(commerceOrderTypeId > 0) ? commerceOrderTypeId : null,
+				commercePaymentMethodGroupRelId,
+				DSLQueryFactoryUtil.countDistinct(
+					CommerceTermEntryTable.INSTANCE.commerceTermEntryId)));
+
+		if ((commerceOrderTypeId > 0) && (count == 0)) {
+			count = dslQueryCount(
+				_getPaymentTermsEntryGroupByStep(
+					companyId, null, commercePaymentMethodGroupRelId,
+					DSLQueryFactoryUtil.countDistinct(
+						CommerceTermEntryTable.INSTANCE.commerceTermEntryId)));
+		}
+
+		return count;
 	}
 
 	@Override
@@ -481,44 +521,38 @@ public class CommerceTermEntryLocalServiceImpl
 		long companyId, long commerceTermEntryId,
 		Map<Locale, String> descriptionMap, Map<Locale, String> labelMap) {
 
-		Set<Locale> localeSet = new HashSet<>();
+		Set<Locale> locales = new HashSet<>();
 
 		if (descriptionMap != null) {
-			localeSet.addAll(descriptionMap.keySet());
+			locales.addAll(descriptionMap.keySet());
 		}
 
 		if (labelMap != null) {
-			localeSet.addAll(labelMap.keySet());
+			locales.addAll(labelMap.keySet());
 		}
 
-		List<CTermEntryLocalization> cTermEntryLocalizations =
-			new ArrayList<>();
+		return TransformUtil.transform(
+			locales,
+			locale -> {
+				String description = null;
+				String label = null;
 
-		for (Locale locale : localeSet) {
-			String description = null;
-			String label = null;
+				if (descriptionMap != null) {
+					description = descriptionMap.get(locale);
+				}
 
-			if (descriptionMap != null) {
-				description = descriptionMap.get(locale);
-			}
+				if (labelMap != null) {
+					label = labelMap.get(locale);
+				}
 
-			if (labelMap != null) {
-				label = labelMap.get(locale);
-			}
+				if (Validator.isNull(description) && Validator.isNull(label)) {
+					return null;
+				}
 
-			if (Validator.isNull(description) && Validator.isNull(label)) {
-				continue;
-			}
-
-			CTermEntryLocalization cTermEntryLocalization =
-				_addCommerceTermEntryLocalizedFields(
+				return _addCommerceTermEntryLocalizedFields(
 					companyId, commerceTermEntryId, description, label,
 					LocaleUtil.toLanguageId(locale));
-
-			cTermEntryLocalizations.add(cTermEntryLocalization);
-		}
-
-		return cTermEntryLocalizations;
+			});
 	}
 
 	private CTermEntryLocalization _addCommerceTermEntryLocalizedFields(

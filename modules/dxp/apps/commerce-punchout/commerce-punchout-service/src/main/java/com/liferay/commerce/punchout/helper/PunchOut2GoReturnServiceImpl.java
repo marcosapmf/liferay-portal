@@ -125,7 +125,10 @@ public class PunchOut2GoReturnServiceImpl implements PunchOutReturnService {
 					"commercePriceListId",
 					commerceOrderItem.getCommercePriceListId()
 				).put(
-					"deliveryGroup", commerceOrderItem.getDeliveryGroup()
+					"deliveryGroup", commerceOrderItem.getDeliveryGroupName()
+				).put(
+					"deliveryGroupName",
+					commerceOrderItem.getDeliveryGroupName()
 				).put(
 					"discountAmount", commerceOrderItem.getDiscountAmount()
 				).put(

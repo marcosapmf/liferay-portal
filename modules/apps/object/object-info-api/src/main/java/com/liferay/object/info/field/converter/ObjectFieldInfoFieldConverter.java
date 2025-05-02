@@ -118,6 +118,8 @@ public class ObjectFieldInfoFieldConverter {
 				).values(
 					objectField.getLabelMap()
 				).build()
+			).localizable(
+				objectField.isLocalized()
 			).readOnly(
 				Objects.equals(
 					objectField.getReadOnly(),
@@ -204,9 +206,8 @@ public class ObjectFieldInfoFieldConverter {
 						objectField.getListTypeDefinitionId()),
 					listTypeEntry -> new OptionInfoFieldType(
 						Objects.equals(
-							ObjectFieldSettingUtil.getDefaultValueAsString(
-								null, objectField.getObjectFieldId(),
-								_objectFieldSettingLocalService, null),
+							ObjectFieldSettingUtil.getDefaultValue(
+								null, objectField, null),
 							listTypeEntry.getKey()),
 						new FunctionInfoLocalizedValue<>(
 							listTypeEntry::getName),
@@ -337,9 +338,18 @@ public class ObjectFieldInfoFieldConverter {
 			return null;
 		}
 
-		return (LayoutDisplayPageObjectProvider<?>)
-			httpServletRequest.getAttribute(
+		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
+			(LayoutDisplayPageObjectProvider<?>)httpServletRequest.getAttribute(
 				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER);
+
+		if ((layoutDisplayPageObjectProvider == null) ||
+			!(layoutDisplayPageObjectProvider.getDisplayObject() instanceof
+				ObjectEntry)) {
+
+			return null;
+		}
+
+		return layoutDisplayPageObjectProvider;
 	}
 
 	private long _getMaximumFileSize(ObjectField objectField) {
@@ -382,9 +392,8 @@ public class ObjectFieldInfoFieldConverter {
 	private List<OptionInfoFieldType> _getOptionInfoFieldTypes(
 		ObjectField objectField) {
 
-		String defaultValue = ObjectFieldSettingUtil.getDefaultValueAsString(
-			null, objectField.getObjectFieldId(),
-			_objectFieldSettingLocalService, null);
+		String defaultValue = String.valueOf(
+			ObjectFieldSettingUtil.getDefaultValue(null, objectField, null));
 
 		if (!objectField.isState()) {
 			return _getOptionInfoFieldTypes(

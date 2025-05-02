@@ -11,7 +11,6 @@ import com.liferay.headless.admin.address.resource.v1_0.CountryResource;
 import com.liferay.headless.admin.address.resource.v1_0.RegionResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -53,6 +52,44 @@ public class Mutation {
 
 		_regionResourceComponentServiceObjects =
 			regionResourceComponentServiceObjects;
+	}
+
+	@GraphQLField
+	public boolean deleteCountry(@GraphQLName("countryId") Long countryId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_countryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			countryResource -> countryResource.deleteCountry(countryId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteCountryBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_countryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			countryResource -> countryResource.deleteCountryBatch(
+				callbackURL, object));
+	}
+
+	@GraphQLField
+	public Country patchCountry(
+			@GraphQLName("countryId") Long countryId,
+			@GraphQLName("country") Country country)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_countryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			countryResource -> countryResource.patchCountry(
+				countryId, country));
 	}
 
 	@GraphQLField
@@ -98,44 +135,6 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public boolean deleteCountry(@GraphQLName("countryId") Long countryId)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_countryResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			countryResource -> countryResource.deleteCountry(countryId));
-
-		return true;
-	}
-
-	@GraphQLField
-	public Response deleteCountryBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_countryResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			countryResource -> countryResource.deleteCountryBatch(
-				callbackURL, object));
-	}
-
-	@GraphQLField
-	public Country patchCountry(
-			@GraphQLName("countryId") Long countryId,
-			@GraphQLName("country") Country country)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_countryResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			countryResource -> countryResource.patchCountry(
-				countryId, country));
-	}
-
-	@GraphQLField
 	public Country updateCountry(
 			@GraphQLName("countryId") Long countryId,
 			@GraphQLName("country") Country country)
@@ -158,72 +157,6 @@ public class Mutation {
 			this::_populateResourceContext,
 			countryResource -> countryResource.putCountryBatch(
 				callbackURL, object));
-	}
-
-	@GraphQLField
-	public Response createCountryRegionsPageExportBatch(
-			@GraphQLName("countryId") Long countryId,
-			@GraphQLName("active") Boolean active,
-			@GraphQLName("search") String search,
-			@GraphQLName("sort") String sortsString,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("contentType") String contentType,
-			@GraphQLName("fieldNames") String fieldNames)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_regionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			regionResource -> regionResource.postCountryRegionsPageExportBatch(
-				countryId, active, search,
-				_sortsBiFunction.apply(regionResource, sortsString),
-				callbackURL, contentType, fieldNames));
-	}
-
-	@GraphQLField
-	public Region createCountryRegion(
-			@GraphQLName("countryId") Long countryId,
-			@GraphQLName("region") Region region)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_regionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			regionResource -> regionResource.postCountryRegion(
-				countryId, region));
-	}
-
-	@GraphQLField
-	public Response createCountryRegionBatch(
-			@GraphQLName("countryId") Long countryId,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_regionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			regionResource -> regionResource.postCountryRegionBatch(
-				countryId, callbackURL, object));
-	}
-
-	@GraphQLField
-	public Response createRegionsPageExportBatch(
-			@GraphQLName("active") Boolean active,
-			@GraphQLName("search") String search,
-			@GraphQLName("sort") String sortsString,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("contentType") String contentType,
-			@GraphQLName("fieldNames") String fieldNames)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_regionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			regionResource -> regionResource.postRegionsPageExportBatch(
-				active, search,
-				_sortsBiFunction.apply(regionResource, sortsString),
-				callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -261,6 +194,72 @@ public class Mutation {
 			_regionResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			regionResource -> regionResource.patchRegion(regionId, region));
+	}
+
+	@GraphQLField
+	public Region createCountryRegion(
+			@GraphQLName("countryId") Long countryId,
+			@GraphQLName("region") Region region)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_regionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			regionResource -> regionResource.postCountryRegion(
+				countryId, region));
+	}
+
+	@GraphQLField
+	public Response createCountryRegionBatch(
+			@GraphQLName("countryId") Long countryId,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_regionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			regionResource -> regionResource.postCountryRegionBatch(
+				countryId, callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response createCountryRegionsPageExportBatch(
+			@GraphQLName("countryId") Long countryId,
+			@GraphQLName("active") Boolean active,
+			@GraphQLName("search") String search,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_regionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			regionResource -> regionResource.postCountryRegionsPageExportBatch(
+				countryId, active, search,
+				_sortsBiFunction.apply(regionResource, sortsString),
+				callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
+	public Response createRegionsPageExportBatch(
+			@GraphQLName("active") Boolean active,
+			@GraphQLName("search") String search,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_regionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			regionResource -> regionResource.postRegionsPageExportBatch(
+				active, search,
+				_sortsBiFunction.apply(regionResource, sortsString),
+				callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -375,7 +374,8 @@ public class Mutation {
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

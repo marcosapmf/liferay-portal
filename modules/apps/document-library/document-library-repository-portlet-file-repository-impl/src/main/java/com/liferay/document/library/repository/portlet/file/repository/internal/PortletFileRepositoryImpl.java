@@ -73,14 +73,15 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 	public void addPortletFileEntries(
 			long groupId, long userId, String className, long classPK,
 			String portletId, long folderId,
-			List<ObjectValuePair<String, InputStream>> inputStreamOVPs)
+			List<ObjectValuePair<String, InputStream>>
+				inputStreamObjectValuePairs)
 		throws PortalException {
 
-		for (ObjectValuePair<String, InputStream> inputStreamOVP :
-				inputStreamOVPs) {
+		for (ObjectValuePair<String, InputStream> inputStreamObjectValuePair :
+				inputStreamObjectValuePairs) {
 
-			InputStream inputStream = inputStreamOVP.getValue();
-			String fileName = inputStreamOVP.getKey();
+			InputStream inputStream = inputStreamObjectValuePair.getValue();
+			String fileName = inputStreamObjectValuePair.getKey();
 
 			addPortletFileEntry(
 				null, groupId, userId, className, classPK, portletId, folderId,
@@ -284,7 +285,7 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 
 			return _run(
 				() -> _repositoryLocalService.addRepository(
-					user.getUserId(), groupId, classNameId,
+					null, user.getUserId(), groupId, classNameId,
 					DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, portletId,
 					StringPool.BLANK, portletId, typeSettingsUnicodeProperties,
 					true, serviceContext));
@@ -407,6 +408,26 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 				_repositoryProvider.getLocalRepository(groupId);
 
 			return localRepository.fetchFileEntry(folderId, fileName);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+
+		return null;
+	}
+
+	@Override
+	public FileEntry fetchPortletFileEntryByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		try {
+			LocalRepository localRepository =
+				_repositoryProvider.getLocalRepository(groupId);
+
+			return localRepository.fetchFileEntryByExternalReferenceCode(
+				externalReferenceCode);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {

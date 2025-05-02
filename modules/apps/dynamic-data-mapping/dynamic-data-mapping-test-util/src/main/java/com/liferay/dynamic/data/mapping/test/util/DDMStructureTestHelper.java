@@ -87,7 +87,7 @@ public class DDMStructureTestHelper {
 		serviceContext.setAttribute("status", status);
 
 		return DDMStructureLocalServiceUtil.addStructure(
-			_userId, group.getGroupId(), parentStructureId, classNameId,
+			null, _userId, group.getGroupId(), parentStructureId, classNameId,
 			structureKey, getDefaultLocaleMap(name),
 			getDefaultLocaleMap(description), ddmForm, ddmFormLayout,
 			storageType, type, serviceContext);
@@ -132,11 +132,24 @@ public class DDMStructureTestHelper {
 
 	public DDMStructure addStructure(
 			long classNameId, String structureKey, String name,
+			String description, DDMForm ddmForm, String storageType, int type)
+		throws Exception {
+
+		DDMFormLayout ddmFormLayout = DDMUtil.getDefaultDDMFormLayout(ddmForm);
+
+		return addStructure(
+			DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID, classNameId,
+			structureKey, name, description, ddmForm, ddmFormLayout,
+			storageType, type);
+	}
+
+	public DDMStructure addStructure(
+			long classNameId, String structureKey, String name,
 			String definition, String storageType)
 		throws Exception {
 
 		return DDMStructureLocalServiceUtil.addStructure(
-			_userId, _group.getGroupId(),
+			null, _userId, _group.getGroupId(),
 			DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID, classNameId,
 			structureKey, getDefaultLocaleMap(name),
 			getDefaultLocaleMap(StringPool.BLANK), definition, storageType,

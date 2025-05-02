@@ -38,10 +38,11 @@ public class SiteNavigationMenuPortletUtil {
 		}
 
 		if (orderByCol.equals("create-date")) {
-			return new SiteNavigationMenuCreateDateComparator(orderByAsc);
+			return SiteNavigationMenuCreateDateComparator.getInstance(
+				orderByAsc);
 		}
 		else if (orderByCol.equals("name")) {
-			return new SiteNavigationMenuNameComparator(orderByAsc);
+			return SiteNavigationMenuNameComparator.getInstance(orderByAsc);
 		}
 
 		return null;
@@ -75,6 +76,10 @@ public class SiteNavigationMenuPortletUtil {
 					getSiteNavigationMenuItemsJSONArray(
 						siteNavigationMenuItemId, siteNavigationMenuId,
 						siteNavigationMenuItemTypeRegistry, themeDisplay)
+				).put(
+					"displayIcon",
+					siteNavigationMenuItemType.getDisplayIcon(
+						siteNavigationMenuItem)
 				).put(
 					"dynamic",
 					() -> {

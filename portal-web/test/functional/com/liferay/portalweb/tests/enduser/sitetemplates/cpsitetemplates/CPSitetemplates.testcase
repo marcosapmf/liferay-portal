@@ -4,13 +4,16 @@ definition {
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Site Templates";
 	property testray.main.component.name = "Site Templates";
 
 	setUp {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 	}
 
 	tearDown {
@@ -46,66 +49,6 @@ definition {
 				siteName = "Site Name",
 				siteTemplateName = "Site Template Name",
 				siteTemplateTab = "Custom Site Templates");
-		}
-	}
-
-	@description = "This is a use case for LPS-166515. TC-1: The changes made on the site template will apply to the site created by the template by default and background tasks are deleted at the end of propagation."
-	@priority = 3
-	test AddSiteTemplateApplySiteTemplateChangesToSite {
-		property portal.acceptance = "true";
-
-		var siteName = TestCase.getSiteName(siteName = ${siteName});
-
-		task ("Given: User adds new site template and a new site based on this site template") {
-			SiteTemplates.addCP(siteTemplateName = "Site Template Name");
-
-			Site.openSitesAdmin();
-
-			Site.addCP(
-				siteName = "Site Template Site Name",
-				siteTemplateName = "Site Template Name",
-				siteTemplateTab = "Custom Site Templates",
-				siteType = "Site Template");
-
-			Navigator.openSiteURL(siteName = "Site Template Site Name");
-
-			Portlet.viewNoPortletsPresentPG();
-		}
-
-		task ("When: User add a widget to the Site template") {
-			SiteTemplatesNavigator.gotoSiteTemplatesPage(
-				pageName = "Home",
-				siteTemplateName = "Site Template Name");
-
-			ContentPages.gotoPageEditor();
-
-			PageEditor.addWidget(portletName = "Asset Publisher");
-
-			PageEditor.publish();
-		}
-
-		task ("Then: The widget will be visible on the new site too") {
-			Navigator.openSiteURL(siteName = "Site Template Site Name");
-
-			if (IsElementNotPresent(locator1 = "Portlet#PORTLET_CONTENT")) {
-				Refresh();
-			}
-
-			Alert.viewInfoMessageSpecific(infoMessage = "There are no results.");
-		}
-
-		task ("And: Verify the propagation background task is deleted") {
-			var mysqlStatement = "SELECT * FROM BackgroundTask WHERE taskExecutorClassName = 'com.liferay.exportimport.internal.background.task.LayoutSetPrototypeImportBackgroundTaskExecutor' AND STATUS NOT IN (0, 1, 4);";
-
-			var sqlResults = SQL.executeSQLStatement(sqlStatement = ${mysqlStatement});
-
-			var getHeader = StringUtil.regexReplaceAll(${sqlResults}, "[\r\n]", "");
-
-			var getRecord = StringUtil.replace(${getHeader}, "mvccVersion,backgroundTaskId,groupId,companyId,userId,userName,createDate,modifiedDate,name,servletContextNames,taskExecutorClassName,taskContextMap,completed,completionDate,status,statusMessage", "");
-
-			TestUtils.assertEquals(
-				actual = ${getRecord},
-				expected = "");
 		}
 	}
 
@@ -190,7 +133,7 @@ definition {
 		task ("Then: The widget will appear on the site") {
 			Navigator.openSiteURL(siteName = "Site Name");
 
-			Refresh();
+			Refresh.pauseRefresh();
 
 			Alert.viewInfoMessageSpecific(infoMessage = "There are no results.");
 		}
@@ -227,7 +170,7 @@ definition {
 	@description = "This is a use case for LPS-150460 TC-1. User is able to trigger propagation of the site template to all connected sites automatically."
 	@priority = 4
 	test AssertAutomaticSiteTemplatePropagation {
-		property database.types = "mysql";
+		property database.types = "mysql,postgresql";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -340,129 +283,6 @@ definition {
 			AssertElementPresent(
 				key_menuItem = "Add Child Page of Test Page",
 				locator1 = "MenuItem#ANY_MENU_ITEM");
-		}
-	}
-
-	@description = "This is a use case for LPS-121139. User is able to propagate pages separately on site templates and in this situation only the corresponding page's SQL value will be updated."
-	@priority = 3
-	test AssertPartialSiteTemplatePropagation {
-		property database.types = "mysql";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		var siteName = TestCase.getSiteName(siteName = ${siteName});
-
-		task ("Given: User adds new site template, a widget page and a portlet to it") {
-			SiteTemplates.addCP(siteTemplateName = "Site Template Name");
-
-			SiteTemplates.addSitePageViaSiteTemplateCP(
-				pageName = "Widget Page Name",
-				siteTemplateName = "Site Template Name");
-
-			SiteTemplatesNavigator.gotoSiteTemplatesPage(
-				pageName = "Widget Page Name",
-				siteTemplateName = "Site Template Name");
-
-			Portlet.addPG(portletName = "Asset Publisher");
-		}
-
-		task ("And: Adds a new site based on the template") {
-			Site.openSitesAdmin();
-
-			Site.addCP(
-				siteName = "Site Name",
-				siteTemplateName = "Site Template Name",
-				siteTemplateTab = "Custom Site Templates",
-				siteType = "Site Template");
-
-			var homePageModificationDate1 = SiteTemplates.getPageModificationDate(
-				groupName = "Site Name",
-				pageNameFilter = "%Home%");
-			var widgetPageModificationDate1 = SiteTemplates.getPageModificationDate(
-				groupName = "Site Name",
-				pageNameFilter = "%Widget Page Name%");
-		}
-
-		task ("And: Adds a portlet on the widget page of the site template") {
-			SiteTemplatesNavigator.gotoSiteTemplatesPage(
-				pageName = "Widget Page Name",
-				siteTemplateName = "Site Template Name");
-
-			Portlet.addPG(portletName = "Web Content Display");
-		}
-
-		task ("When: The portlet is visible on the widget page of the site too") {
-			Navigator.openSiteURL(siteName = "Site Name");
-
-			Refresh();
-
-			Navigator.gotoSitePage(
-				pageName = "Widget Page Name",
-				siteName = "Site Name");
-
-			Refresh();
-
-			Alert.viewInfoMessageSpecific(infoMessage = "This application is not visible to users yet");
-		}
-
-		task ("Then: The modification date of the widget page will be updated while the date of the home page will stay the same") {
-			var homePageModificationDate2 = SiteTemplates.getPageModificationDate(
-				groupName = "Site Name",
-				pageNameFilter = "%Home%");
-			var widgetPageModificationDate2 = SiteTemplates.getPageModificationDate(
-				groupName = "Site Name",
-				pageNameFilter = "%Widget Page Name%");
-
-			if (${widgetPageModificationDate2} != ${widgetPageModificationDate1}) {
-				echo("The modification date of widget page is updated.");
-			}
-
-			if (${homePageModificationDate2} != ${homePageModificationDate1}) {
-				fail("The modification date of home page should not be updated.");
-			}
-		}
-
-		task ("When: User adds a portlet to the home page of the template") {
-			SiteTemplatesNavigator.gotoSiteTemplatesPage(
-				pageName = "Home",
-				siteTemplateName = "Site Template Name");
-
-			ContentPages.gotoPageEditor();
-
-			PageEditor.addWidget(portletName = "Asset Publisher");
-
-			PageEditor.publish();
-		}
-
-		task ("And: The portlet is visible on the home page of the site") {
-			Navigator.openSiteURL(siteName = "Site Name");
-
-			Refresh();
-
-			Alert.viewInfoMessageSpecific(infoMessage = "There are no results.");
-		}
-
-		task ("Then: The modification date of the home page will be updated while the date of the widget page will stay the same") {
-			Navigator.gotoSitePage(
-				pageName = "Widget Page Name",
-				siteName = "Site Name");
-
-			Refresh();
-
-			var homePageModificationDate3 = SiteTemplates.getPageModificationDate(
-				groupName = "Site Name",
-				pageNameFilter = "%Home%");
-			var widgetPageModificationDate3 = SiteTemplates.getPageModificationDate(
-				groupName = "Site Name",
-				pageNameFilter = "%Widget Page Name%");
-
-			if (${widgetPageModificationDate3} != ${widgetPageModificationDate2}) {
-				fail("The modification date of widget page should not be updated.");
-			}
-
-			if (${homePageModificationDate3} != ${homePageModificationDate1}) {
-				echo("The modification date of home page is updated.");
-			}
 		}
 	}
 
@@ -582,9 +402,12 @@ definition {
 	@description = "This is a use case for LPS-166286. TC-2: Verify that site template propagation works well on private page."
 	@priority = 3
 	test AssertSiteTemplatePropagationOnPrivatePage {
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Given: Add new site template and a new private site based on this site template") {
 			SiteTemplates.addCP(siteTemplateName = "Site Template Name");
@@ -647,7 +470,7 @@ definition {
 	@description = "This is a use case for LPS-150460 TC-2. User can trigger Site template propagation upon visiting a connected site."
 	@priority = 3
 	test AssertSiteTemplatePropagationWhenOpeningSite {
-		property database.types = "mysql";
+		property database.types = "mysql,postgresql";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -697,44 +520,6 @@ definition {
 			TestUtils.assertPartialEquals(
 				actual = ${sqlResults},
 				expected = ${consoleText});
-		}
-	}
-
-	@description = "This is a use case for LPS-131903 and LPS-132256. Verify that users can not attempt to edit pages when disable changes."
-	@priority = 3
-	test CannotEditSiteLinkedToDisabledPageModificationSiteTemplate {
-		property portal.acceptance = "true";
-
-		task ("Given: User adds new site template with disallowing site admin's right to modificate pages") {
-			SiteTemplates.addCP(
-				disableChanges = "true",
-				siteTemplateName = "Site Template Name");
-		}
-
-		task ("When: Adds a site based on this site template") {
-			Site.openSitesAdmin();
-
-			Site.addCP(
-				siteName = "Site Template Site Name",
-				siteTemplateName = "Site Template Name",
-				siteTemplateTab = "Custom Site Templates",
-				siteType = "Site Template");
-		}
-
-		task ("Then: User is not able to edit the site or to view Permissions menu") {
-			Navigator.openSiteURL(siteName = "Site Template Site Name");
-
-			Page.viewPageLockCheck();
-
-			AssertElementNotPresent(locator1 = "Icon#EDIT_PENCIL");
-
-			MouseOver(
-				key_pageName = "Home",
-				locator1 = "Home#PAGE");
-
-			AssertElementNotPresent(locator1 = "Portlet#OPTIONS_ICON");
-
-			MenuItem.viewNotPresent(menuItem = "Permissions");
 		}
 	}
 
@@ -1194,7 +979,6 @@ definition {
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.names = "Training";
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
@@ -1711,6 +1495,10 @@ definition {
 				category = "Site Builder",
 				portlet = "Pages");
 
+			Alert.viewSuccessMessage();
+
+			WaitForElementNotPresent(locator1 = "Message#SUCCESS_DISMISSIBLE");
+
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "View",
 				pageName = "Home");
@@ -1725,6 +1513,10 @@ definition {
 				siteName = "Site Name",
 				siteTemplateName = "Site Template Name",
 				siteTemplateTab = "Custom Site Templates");
+
+			Alert.viewSuccessMessage();
+
+			WaitForElementNotPresent(locator1 = "Message#SUCCESS_DISMISSIBLE");
 		}
 
 		task ("Then: The javascript will be inherited from the site template") {

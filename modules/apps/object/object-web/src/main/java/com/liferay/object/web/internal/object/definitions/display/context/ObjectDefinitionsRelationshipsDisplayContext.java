@@ -14,11 +14,13 @@ import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.relationship.util.ObjectRelationshipUtil;
 import com.liferay.object.service.ObjectDefinitionService;
 import com.liferay.object.service.ObjectFieldService;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.object.web.internal.display.context.helper.ObjectRequestHelper;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -46,10 +48,13 @@ public class ObjectDefinitionsRelationshipsDisplayContext
 			objectDefinitionModelResourcePermission,
 		ObjectDefinitionService objectDefinitionService,
 		ObjectFieldService objectFieldService,
+		ObjectFolderLocalService objectFolderLocalService,
 		SystemObjectDefinitionManagerRegistry
 			systemObjectDefinitionManagerRegistry) {
 
-		super(httpServletRequest, objectDefinitionModelResourcePermission);
+		super(
+			httpServletRequest, objectDefinitionModelResourcePermission,
+			objectFolderLocalService);
 
 		_objectDefinitionService = objectDefinitionService;
 		_objectFieldService = objectFieldService;
@@ -136,7 +141,9 @@ public class ObjectDefinitionsRelationshipsDisplayContext
 		return JSONUtil.put(
 			"deletionType", objectRelationship.getDeletionType()
 		).put(
-			"edge", objectRelationship.isEdge()
+			"edge",
+			FeatureFlagManagerUtil.isEnabled("LPD-34594") ?
+				objectRelationship.isEdge() : null
 		).put(
 			"id", Long.valueOf(objectRelationship.getObjectRelationshipId())
 		).put(

@@ -12,6 +12,7 @@ import com.liferay.jenkins.results.parser.test.clazz.TestClass;
 import com.liferay.jenkins.results.parser.test.clazz.TestClassFactory;
 
 import java.io.File;
+import java.io.IOException;
 
 import java.util.List;
 
@@ -29,7 +30,8 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 		}
 
 		_averageDuration =
-			getAverageOverheadDuration() + getAverageTotalTestDuration();
+			getAverageOverheadDuration() + getAverageTotalTestDuration() +
+				getAverageTotalTestTaskDuration();
 
 		if (_averageDuration <= 0L) {
 			BatchHistory batchHistory = getBatchHistory();
@@ -78,6 +80,10 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 		}
 
 		return _averageTotalTestDuration;
+	}
+
+	public long getAverageTotalTestTaskDuration() {
+		return 0L;
 	}
 
 	public String getAxisName() {
@@ -169,11 +175,26 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 	}
 
 	public String getSlaveLabel() {
-		if (_segmentTestClassGroup != null) {
-			return _segmentTestClassGroup.getSlaveLabel();
+		if (!JenkinsResultsParserUtil.isCloudCINode()) {
+			return _getSlaveLabel();
 		}
 
-		return _batchTestClassGroup.getSlaveLabel();
+		String slaveLabel = null;
+
+		try {
+			slaveLabel = JenkinsResultsParserUtil.getBuildProperty(
+				"jenkins.osb.jenkins.web.slave.label.minimum.ram",
+				String.valueOf(getMinimumSlaveRAM()));
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+			return slaveLabel;
+		}
+
+		return _getSlaveLabel();
 	}
 
 	public File getTestBaseDir() {
@@ -225,6 +246,14 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 		SegmentTestClassGroup segmentTestClassGroup) {
 
 		_segmentTestClassGroup = segmentTestClassGroup;
+	}
+
+	private String _getSlaveLabel() {
+		if (_segmentTestClassGroup != null) {
+			return _segmentTestClassGroup.getSlaveLabel();
+		}
+
+		return _batchTestClassGroup.getSlaveLabel();
 	}
 
 	private Long _averageDuration;

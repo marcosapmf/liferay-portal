@@ -109,13 +109,11 @@ if (Validator.isNotNull(backURL)) {
 					}
 					%>
 
-					<div class="active progress">
-						<div class="progress-bar" style="width: <%= percentage %>%;">
-							<c:if test="<%= allProgressBarCountersTotal > 0 %>">
-								<%= percentage + StringPool.PERCENT %>
-							</c:if>
-						</div>
-					</div>
+					<clay:progressbar
+						maxValue="<%= 100 %>"
+						minValue="<%= 0 %>"
+						value="<%= percentage %>"
+					/>
 
 					<%
 					String stagedModelName = (String)backgroundTaskStatus.getAttribute("stagedModelName");
@@ -136,9 +134,11 @@ if (Validator.isNotNull(backURL)) {
 
 			<c:if test="<%= Validator.isNotNull(curBackgroundTask.getStatusMessage()) %>">
 				<div class="background-task-status-row h6">
-					<a class="details-link" href="javascript:void(0);" onclick="<portlet:namespace />viewBackgroundTaskDetails(<%= curBackgroundTask.getBackgroundTaskId() %>);">
-						<liferay-ui:message key="see-more-details" />
-					</a>
+					<liferay-ui:csp>
+						<a class="details-link" href="javascript:void(0);" onclick="<portlet:namespace />viewBackgroundTaskDetails(<%= curBackgroundTask.getBackgroundTaskId() %>);">
+							<liferay-ui:message key="see-more-details" />
+						</a>
+					</liferay-ui:csp>
 				</div>
 
 				<div class="background-task-status-message hide" id="<portlet:namespace />backgroundTaskStatusMessage<%= curBackgroundTask.getBackgroundTaskId() %>">

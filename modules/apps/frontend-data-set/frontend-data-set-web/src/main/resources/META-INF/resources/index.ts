@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ModalStatus} from 'frontend-js-components-web';
+
 import {TRenderer} from './FrontendDataSetContext';
 
 export declare function FrontendDataSet({
@@ -72,6 +74,15 @@ type TDelta = {
 	label: number;
 };
 
+export enum DisplayType {
+	DANGER = 'danger',
+	INFO = 'info',
+	SECONDARY = 'secondary',
+	SUCCESS = 'success',
+	UNSTYLED = 'unstyled',
+	WARNING = 'warning',
+}
+
 export interface IInlineEditingSettings {
 	alwaysOn: boolean;
 	defaultBodyContent: object;
@@ -96,6 +107,7 @@ export interface IItemsActions {
 	href?: string;
 	icon?: string;
 	id?: string | number;
+	isVisible?: (item: any) => boolean;
 	items?: IItemsActions[];
 	label?: string;
 	method?: string;
@@ -121,10 +133,16 @@ export interface IItemActionsData {
 	id?: string | number;
 	method?: 'delete' | 'get' | 'patch' | 'post';
 	permissionKey?: string;
+	requestBody?: string;
 	size?: 'sm' | 'lg' | 'full-screen';
-	status?: string;
+	status?: ModalStatus;
 	successMessage?: string;
 	title?: string;
+	visibilityFilters?: IItemActionsDataFilter;
+}
+
+export interface IItemActionsDataFilter {
+	[key: string]: boolean | number | string;
 }
 
 export interface IQuickActions extends IBaseActions {
@@ -139,6 +157,50 @@ export type TSort = {
 	label?: string;
 };
 
+export interface IField {
+	actionId?: string;
+	contentRenderer?: string;
+	expand?: boolean;
+	fieldName: string | [];
+	label: string;
+	localizeLabel?: boolean;
+	sortable?: boolean;
+	truncate?: boolean;
+}
+export interface ITableSchema {
+	fields: Array<IField>;
+}
+
+export interface IBaseCardLabelSchema {
+	value: string;
+}
+
+export interface IStaticCardLabelSchema extends IBaseCardLabelSchema {
+	displayType: DisplayType;
+	displayTypeKey?: never;
+	displayTypeValues?: never;
+}
+
+export interface IDynamicCardLabelSchema extends IBaseCardLabelSchema {
+	displayType?: never;
+	displayTypeKey: string;
+	displayTypeValues: Record<string, DisplayType>;
+}
+
+export type ICardLabelSchema = IStaticCardLabelSchema | IDynamicCardLabelSchema;
+
+export interface ICardSchema {
+	description: string;
+	image?: string;
+	labels?: ICardLabelSchema[];
+	link?: string;
+	sticker?: string;
+	symbol: string;
+	title: string;
+}
+
+export type ISchema = ITableSchema | ICardSchema;
+
 type TViews = {
 	component?: any;
 	contentRenderer?: string;
@@ -146,7 +208,7 @@ type TViews = {
 	contentRendererModuleURL?: string;
 	label?: string;
 	name?: string;
-	schema?: object;
+	schema?: ISchema;
 	thumbnail?: string;
 };
 
@@ -192,7 +254,7 @@ export interface IFrontendDataSetProps {
 	nestedItemsReferenceKey?: string;
 	onActionDropdownItemClick?: any;
 	onBulkActionItemClick?: any;
-	onSelect?: Function;
+	onSelect?: ({selectedItems}: {selectedItems: Array<any>}) => void;
 	overrideEmptyResultView?: boolean;
 	pagination?: {
 		deltas?: TDelta[];
@@ -224,3 +286,5 @@ export {
 	FDS_NESTED_FIELD_NAME_DELIMITER,
 	FDS_NESTED_FIELD_NAME_PARENT_SUFFIX,
 } from './constants';
+
+export {Card} from './views/cards/Cards';

@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -50,7 +48,7 @@ public class SearchableAssetNameDisplay implements Serializable {
 			SearchableAssetNameDisplay.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getClassName() {
 		if (_classNameSupplier != null) {
 			className = _classNameSupplier.get();
@@ -91,7 +89,7 @@ public class SearchableAssetNameDisplay implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _classNameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getDisplayName() {
 		if (_displayNameSupplier != null) {
 			displayName = _displayNameSupplier.get();
@@ -131,6 +129,47 @@ public class SearchableAssetNameDisplay implements Serializable {
 
 	@JsonIgnore
 	private Supplier<String> _displayNameSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getHasSubtype() {
+		if (_hasSubtypeSupplier != null) {
+			hasSubtype = _hasSubtypeSupplier.get();
+
+			_hasSubtypeSupplier = null;
+		}
+
+		return hasSubtype;
+	}
+
+	public void setHasSubtype(Boolean hasSubtype) {
+		this.hasSubtype = hasSubtype;
+
+		_hasSubtypeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setHasSubtype(
+		UnsafeSupplier<Boolean, Exception> hasSubtypeUnsafeSupplier) {
+
+		_hasSubtypeSupplier = () -> {
+			try {
+				return hasSubtypeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean hasSubtype;
+
+	@JsonIgnore
+	private Supplier<Boolean> _hasSubtypeSupplier;
 
 	@Override
 	public boolean equals(Object object) {
@@ -193,13 +232,25 @@ public class SearchableAssetNameDisplay implements Serializable {
 			sb.append("\"");
 		}
 
+		Boolean hasSubtype = getHasSubtype();
+
+		if (hasSubtype != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"hasSubtype\": ");
+
+			sb.append(hasSubtype);
+		}
+
 		sb.append("}");
 
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.search.experiences.rest.dto.v1_0.SearchableAssetNameDisplay",
 		name = "x-class-name"
 	)

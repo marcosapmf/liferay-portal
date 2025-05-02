@@ -5,7 +5,8 @@
 
 package com.liferay.partner;
 
-import com.liferay.client.extension.util.spring.boot.LiferayOAuth2AccessTokenManager;
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
+import com.liferay.client.extension.util.spring.boot3.client.LiferayOAuth2AccessTokenManager;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringUtil;
 
@@ -17,6 +18,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.springframework.amqp.core.ExchangeTypes;
@@ -30,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 /**
  * @author Jair Medeiros
@@ -234,7 +237,7 @@ public class QueueListener extends BaseRestController {
 		}
 
 		post(
-			"",
+			_getAuthorization(), "",
 			StringBundler.concat(
 				"/o/headless-admin-user/v1.0/accounts",
 				"/by-external-reference-code/", accountExternalReferenceCode,
@@ -260,7 +263,7 @@ public class QueueListener extends BaseRestController {
 		}
 
 		post(
-			"",
+			_getAuthorization(), "",
 			StringBundler.concat(
 				"/o/headless-admin-user/v1.0/accounts",
 				"/by-external-reference-code/", accountExternalReferenceCode,
@@ -269,11 +272,11 @@ public class QueueListener extends BaseRestController {
 	}
 
 	private void _assignUserToRegularRole(String emailAddress, String name) {
-		JSONObject userAccountJSONObject = get(
-			uriBuilder -> uriBuilder.path(
+		JSONObject userAccountJSONObject = new JSONObject(
+			get(
+				_getAuthorization(),
 				"/o/headless-admin-user/v1.0/user-accounts/by-email-address/" +
-					emailAddress
-			).build());
+					emailAddress));
 
 		Long userAccountId = userAccountJSONObject.getLong("id");
 
@@ -295,7 +298,7 @@ public class QueueListener extends BaseRestController {
 		}
 
 		post(
-			"",
+			_getAuthorization(), "",
 			StringBundler.concat(
 				"/o/headless-admin-user/v1.0/roles/", roleId,
 				"/association/user-account/", userAccountId));
@@ -304,15 +307,19 @@ public class QueueListener extends BaseRestController {
 	private long _getAccountRoleId(
 		String accountExternalReferenceCode, String accountRoleName) {
 
-		JSONObject accountRolesResponseJSONObject = get(
-			uriBuilder -> uriBuilder.path(
-				StringBundler.concat(
-					"/o/headless-admin-user/v1.0/accounts",
-					"/by-external-reference-code/",
-					accountExternalReferenceCode, "/account-roles")
-			).queryParam(
-				"pageSize", "-1"
-			).build());
+		JSONObject accountRolesResponseJSONObject = new JSONObject(
+			get(
+				_getAuthorization(),
+				_defaultUriBuilderFactory.builder(
+				).path(
+					StringBundler.concat(
+						"/o/headless-admin-user/v1.0/accounts",
+						"/by-external-reference-code/",
+						accountExternalReferenceCode, "/account-roles")
+				).queryParam(
+					"pageSize", "-1"
+				).build(
+				).toString()));
 
 		JSONArray accountRolesJSONArray =
 			accountRolesResponseJSONObject.getJSONArray("items");
@@ -329,6 +336,12 @@ public class QueueListener extends BaseRestController {
 		}
 
 		return 0;
+	}
+
+	private String _getAuthorization() {
+		return _liferayOAuth2AccessTokenManager.getAuthorization(
+			"liferay-partner-etc-spring-boot-oauth-application-headless-" +
+				"server");
 	}
 
 	private String _getCountryISOCode(JSONObject koroneikiAccountJSONObject) {
@@ -359,21 +372,40 @@ public class QueueListener extends BaseRestController {
 		return "";
 	}
 
-	private long _getRegionOrganizationId(String regionName) {
-		JSONObject globalOrganizationJSONObject = get(
-			uriBuilder -> uriBuilder.path(
-				"/o/headless-admin-user/v1.0/organizations" +
-					"/by-external-reference-code/PRM-ORG-GLOBAL"
-			).build());
+	private JSONObject _getJSONObject(String json) {
+		try {
+			return new JSONObject(json);
+		}
+		catch (JSONException jsonException) {
+			_log.error("Unable to create JSON object: " + json);
 
-		JSONObject organizationsJSONObject = get(
-			uriBuilder -> uriBuilder.path(
-				"/o/headless-admin-user/v1.0/organizations/" +
-					globalOrganizationJSONObject.getLong("id") +
-						"/child-organizations"
-			).queryParam(
-				"pageSize", "-1"
-			).build());
+			throw jsonException;
+		}
+	}
+
+	private long _getRegionOrganizationId(String regionName) {
+		JSONObject globalOrganizationJSONObject = _getJSONObject(
+			get(
+				_getAuthorization(),
+				_defaultUriBuilderFactory.builder(
+				).path(
+					"/o/headless-admin-user/v1.0/organizations" +
+						"/by-external-reference-code/PRM-ORG-GLOBAL"
+				).build(
+				).toString()));
+
+		JSONObject organizationsJSONObject = _getJSONObject(
+			get(
+				_getAuthorization(),
+				_defaultUriBuilderFactory.builder(
+				).path(
+					"/o/headless-admin-user/v1.0/organizations/" +
+						globalOrganizationJSONObject.getLong("id") +
+							"/child-organizations"
+				).queryParam(
+					"pageSize", "-1"
+				).build(
+				).toString()));
 
 		JSONArray organizationsJSONArray = organizationsJSONObject.getJSONArray(
 			"items");
@@ -391,14 +423,18 @@ public class QueueListener extends BaseRestController {
 	}
 
 	private long _getRegularRoleId(String name) {
-		JSONObject regularRolesResponseJSONObject = get(
-			uriBuilder -> uriBuilder.path(
-				"/o/headless-admin-user/v1.0/roles"
-			).queryParam(
-				"filter", "name eq '" + name + "'"
-			).queryParam(
-				"pageSize", "-1"
-			).build());
+		JSONObject regularRolesResponseJSONObject = _getJSONObject(
+			get(
+				_getAuthorization(),
+				_defaultUriBuilderFactory.builder(
+				).path(
+					"/o/headless-admin-user/v1.0/roles"
+				).queryParam(
+					"filter", "name eq '" + name + "'"
+				).queryParam(
+					"pageSize", "-1"
+				).build(
+				).toString()));
 
 		JSONArray regularRolesJSONArray =
 			regularRolesResponseJSONObject.getJSONArray("items");
@@ -525,15 +561,15 @@ public class QueueListener extends BaseRestController {
 		String accountExternalReferenceCode, String accountName,
 		String contactEmailAddress) {
 
-		JSONObject jsonObject = get(
-			uriBuilder -> uriBuilder.path(
+		JSONObject jsonObject = new JSONObject(
+			get(
+				_getAuthorization(),
 				StringBundler.concat(
 					"/o/headless-admin-user/v1.0/accounts",
 					"/by-external-reference-code/",
 					accountExternalReferenceCode,
 					"/user-accounts/by-email-address/", contactEmailAddress,
-					"/account-roles")
-			).build());
+					"/account-roles")));
 
 		if (jsonObject.getLong("totalCount") > 0) {
 			return;
@@ -547,6 +583,7 @@ public class QueueListener extends BaseRestController {
 		}
 
 		delete(
+			_getAuthorization(), "",
 			StringBundler.concat(
 				"/o/headless-admin-user/v1.0/accounts",
 				"/by-external-reference-code/", accountExternalReferenceCode,
@@ -572,6 +609,7 @@ public class QueueListener extends BaseRestController {
 		}
 
 		delete(
+			_getAuthorization(), "",
 			StringBundler.concat(
 				"/o/headless-admin-user/v1.0/accounts",
 				"/by-external-reference-code/", accountExternalReferenceCode,
@@ -582,11 +620,15 @@ public class QueueListener extends BaseRestController {
 	private void _unassignUserFromRegularRole(
 		String emailAddress, String name) {
 
-		JSONObject userAccountJSONObject = get(
-			uriBuilder -> uriBuilder.path(
-				"/o/headless-admin-user/v1.0/user-accounts/by-email-address/" +
-					emailAddress
-			).build());
+		JSONObject userAccountJSONObject = _getJSONObject(
+			get(
+				_getAuthorization(),
+				_defaultUriBuilderFactory.builder(
+				).path(
+					"/o/headless-admin-user/v1.0/user-accounts" +
+						"/by-email-address/" + emailAddress
+				).build(
+				).toString()));
 
 		Long userAccountId = userAccountJSONObject.getLong("id");
 
@@ -608,6 +650,7 @@ public class QueueListener extends BaseRestController {
 		}
 
 		delete(
+			_getAuthorization(), "",
 			StringBundler.concat(
 				"/o/headless-admin-user/v1.0/roles/", roleId,
 				"/association/user-account/", userAccountId));
@@ -624,11 +667,11 @@ public class QueueListener extends BaseRestController {
 			}
 		};
 
-		JSONObject proxyAccountJSONObject = get(
-			uriBuilder -> uriBuilder.path(
+		JSONObject proxyAccountJSONObject = new JSONObject(
+			get(
+				_getAuthorization(),
 				"/o/c/proxyaccounts/by-external-reference-code/" +
-					externalReferenceCode
-			).build());
+					externalReferenceCode));
 
 		if (proxyAccountJSONObject.has("currency")) {
 			JSONObject proxyCurrencyJSONObject =
@@ -642,10 +685,11 @@ public class QueueListener extends BaseRestController {
 			accountJSONObject.put("partnerCountry", countryISOCode);
 		}
 
-		JSONObject updatedAccountJSONObject = put(
-			accountJSONObject.toString(),
-			"/o/headless-admin-user/v1.0/accounts/by-external-reference-code/" +
-				externalReferenceCode);
+		JSONObject updatedAccountJSONObject = _getJSONObject(
+			put(
+				_getAuthorization(), accountJSONObject.toString(),
+				"/o/headless-admin-user/v1.0/accounts" +
+					"/by-external-reference-code/" + externalReferenceCode));
 
 		if (proxyAccountJSONObject.has("region")) {
 			_updateAccountRegion(
@@ -673,7 +717,7 @@ public class QueueListener extends BaseRestController {
 
 		if (organizationIdsJSONArray.isEmpty()) {
 			post(
-				"",
+				_getAuthorization(), "",
 				StringBundler.concat(
 					"/o/headless-admin-user/v1.0/accounts",
 					"/by-external-reference-code/",
@@ -691,6 +735,7 @@ public class QueueListener extends BaseRestController {
 					accountJSONObject.getString("externalReferenceCode"));
 
 				patch(
+					_getAuthorization(),
 					accountExternalReferenceCodeJSONArray.toString(),
 					StringBundler.concat(
 						"/o/headless-admin-user/v1.0/organizations",
@@ -740,6 +785,9 @@ public class QueueListener extends BaseRestController {
 		"Partner Technical User (PTU)";
 
 	private static final Log _log = LogFactory.getLog(QueueListener.class);
+
+	private final DefaultUriBuilderFactory _defaultUriBuilderFactory =
+		new DefaultUriBuilderFactory();
 
 	@Autowired
 	private LiferayOAuth2AccessTokenManager _liferayOAuth2AccessTokenManager;

@@ -40,14 +40,16 @@ public class KaleoDefinitionServiceImpl extends KaleoDefinitionServiceBaseImpl {
 
 	@Override
 	public KaleoDefinition addKaleoDefinition(
-			String name, String title, String description, String content,
-			String scope, int version, ServiceContext serviceContext)
+			String externalReferenceCode, String name, String title,
+			String description, String content, String scope, int version,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		_checkPermissions(serviceContext);
 
 		return _kaleoDefinitionLocalService.addKaleoDefinition(
-			name, title, description, content, scope, version, serviceContext);
+			externalReferenceCode, name, title, description, content, scope,
+			version, serviceContext);
 	}
 
 	@Override
@@ -59,6 +61,19 @@ public class KaleoDefinitionServiceImpl extends KaleoDefinitionServiceBaseImpl {
 
 		return _kaleoDefinitionLocalService.getKaleoDefinition(
 			kaleoDefinitionId);
+	}
+
+	@Override
+	public KaleoDefinition getKaleoDefinition(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		_kaleoDefinitionModelResourcePermission.check(
+			getPermissionChecker(), null, ActionKeys.VIEW);
+
+		return _kaleoDefinitionLocalService.
+			getKaleoDefinitionByExternalReferenceCode(
+				externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -103,14 +118,15 @@ public class KaleoDefinitionServiceImpl extends KaleoDefinitionServiceBaseImpl {
 
 	@Override
 	public KaleoDefinition updateKaleoDefinition(
-			long kaleoDefinitionId, String title, String description,
-			String content, ServiceContext serviceContext)
+			String externalReferenceCode, long kaleoDefinitionId, String title,
+			String description, String content, ServiceContext serviceContext)
 		throws PortalException {
 
 		_checkPermissions(serviceContext);
 
 		return _kaleoDefinitionLocalService.updatedKaleoDefinition(
-			kaleoDefinitionId, title, description, content, serviceContext);
+			externalReferenceCode, kaleoDefinitionId, title, description,
+			content, serviceContext);
 	}
 
 	private void _checkPermissions(ServiceContext serviceContext)

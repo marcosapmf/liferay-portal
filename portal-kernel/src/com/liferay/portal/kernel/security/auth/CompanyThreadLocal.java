@@ -19,8 +19,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.spring.orm.LastSessionRecorderHelperUtil;
-import com.liferay.portal.kernel.util.LocaleThreadLocal;
-import com.liferay.portal.kernel.util.TimeZoneThreadLocal;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -43,12 +41,14 @@ public class CompanyThreadLocal {
 
 		User guestUser = null;
 
-		try {
-			guestUser = UserLocalServiceUtil.fetchGuestUser(companyId);
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
+		if (!isUpgradingPortalInstance()) {
+			try {
+				guestUser = UserLocalServiceUtil.fetchGuestUser(companyId);
+			}
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
 			}
 		}
 
@@ -113,6 +113,10 @@ public class CompanyThreadLocal {
 		return _locked.get();
 	}
 
+	public static boolean isUpgradingPortalInstance() {
+		return _upgradingPortalInstance.get();
+	}
+
 	public static SafeCloseable lock(long companyId) {
 		long currentCompanyId = _companyId.get();
 
@@ -173,34 +177,22 @@ public class CompanyThreadLocal {
 			_companyId.set(CompanyConstants.SYSTEM);
 		}
 
-		_clearUserThreadLocals();
+		for (CompanyCentralizedThreadLocal<?> companyCentralizedThreadLocal :
+				CompanyCentralizedThreadLocal.
+					getCompanyCentralizedThreadLocals()) {
+
+			companyCentralizedThreadLocal.remove();
+		}
 
 		CTCollectionThreadLocal.removeCTCollectionId();
 	}
 
-	public static SafeCloseable setInitializingCompanyIdWithSafeCloseable(
-		long companyId) {
-
-		if (companyId > 0) {
-			return _companyId.setWithSafeCloseable(companyId);
-		}
-
-		return _companyId.setWithSafeCloseable(CompanyConstants.SYSTEM);
-	}
-
-	public static SafeCloseable setInitializingPortalInstance(
-		boolean initializingPortalInstance) {
-
-		return _initializingPortalInstance.setWithSafeCloseable(
-			initializingPortalInstance);
-	}
-
-	public static SafeCloseable setWithSafeCloseable(Long companyId) {
-		return setWithSafeCloseable(
+	public static SafeCloseable setCompanyIdWithSafeCloseable(Long companyId) {
+		return setCompanyIdWithSafeCloseable(
 			companyId, CTCollectionThreadLocal.CT_COLLECTION_ID_PRODUCTION);
 	}
 
-	public static SafeCloseable setWithSafeCloseable(
+	public static SafeCloseable setCompanyIdWithSafeCloseable(
 		Long companyId, Long ctCollectionId) {
 
 		List<SafeCloseable> safeCloseables = new ArrayList<>();
@@ -225,12 +217,16 @@ public class CompanyThreadLocal {
 					_companyId.setWithSafeCloseable(CompanyConstants.SYSTEM));
 			}
 
-			safeCloseables.add(
-				LocaleThreadLocal.setDefaultLocaleWithSafeCloseable(null));
-			safeCloseables.add(
-				TimeZoneThreadLocal.setDefaultTimeZoneWithSafeCloseable(null));
+			for (CompanyCentralizedThreadLocal<?>
+					companyCentralizedThreadLocal :
+						CompanyCentralizedThreadLocal.
+							getCompanyCentralizedThreadLocals()) {
 
-			_clearUserThreadLocals();
+				safeCloseables.add(
+					companyCentralizedThreadLocal.setWithSafeCloseable(null));
+
+				companyCentralizedThreadLocal.remove();
+			}
 		}
 
 		safeCloseables.add(
@@ -248,9 +244,28 @@ public class CompanyThreadLocal {
 		};
 	}
 
-	private static void _clearUserThreadLocals() {
-		LocaleThreadLocal.removeDefaultLocale();
-		TimeZoneThreadLocal.removeDefaultTimeZone();
+	public static SafeCloseable setInitializingCompanyIdWithSafeCloseable(
+		long companyId) {
+
+		if (companyId > 0) {
+			return _companyId.setWithSafeCloseable(companyId);
+		}
+
+		return _companyId.setWithSafeCloseable(CompanyConstants.SYSTEM);
+	}
+
+	public static SafeCloseable setInitializingPortalInstanceWithSafeCloseable(
+		boolean initializingPortalInstance) {
+
+		return _initializingPortalInstance.setWithSafeCloseable(
+			initializingPortalInstance);
+	}
+
+	public static SafeCloseable setUpgradingPortalInstanceWithSafeCloseable(
+		boolean upgradingPortalInstance) {
+
+		return _upgradingPortalInstance.setWithSafeCloseable(
+			upgradingPortalInstance);
 	}
 
 	private static void _syncLastDBPartitionSessionState() {
@@ -270,6 +285,10 @@ public class CompanyThreadLocal {
 	private static final ThreadLocal<Boolean> _locked =
 		new CentralizedThreadLocal<>(
 			CompanyThreadLocal.class + "._locked", () -> Boolean.FALSE);
+	private static final CentralizedThreadLocal<Boolean>
+		_upgradingPortalInstance = new CentralizedThreadLocal<>(
+			CompanyThreadLocal.class + "._upgradingPortalInstance",
+			() -> Boolean.FALSE);
 
 	static {
 		_companyId = new CentralizedThreadLocal<>(

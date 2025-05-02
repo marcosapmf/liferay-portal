@@ -7,24 +7,37 @@ package com.liferay.object.exception;
 
 import com.liferay.portal.kernel.exception.PortalException;
 
+import java.util.List;
+
 /**
  * @author Marco Leo
  */
 public class ObjectRelationshipEdgeException extends PortalException {
 
-	public ObjectRelationshipEdgeException() {
+	public ObjectRelationshipEdgeException(
+		List<Object> arguments, String message, String messageKey) {
+
+		super(message);
+
+		_arguments = arguments;
+		_messageKey = messageKey;
 	}
 
-	public ObjectRelationshipEdgeException(String msg) {
-		super(msg);
+	public ObjectRelationshipEdgeException(String message, String messageKey) {
+		super(message);
+
+		_messageKey = messageKey;
 	}
 
-	public ObjectRelationshipEdgeException(String msg, Throwable throwable) {
-		super(msg, throwable);
+	public List<Object> getArguments() {
+		return _arguments;
 	}
 
-	public ObjectRelationshipEdgeException(Throwable throwable) {
-		super(throwable);
+	public String getMessageKey() {
+		return _messageKey;
 	}
+
+	private List<Object> _arguments;
+	private final String _messageKey;
 
 }

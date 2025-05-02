@@ -5,16 +5,25 @@
 
 package com.liferay.portal.tools.db.schema.importer;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.tools.db.schema.importer.jdbc.ConnectionConfigUtil;
+import com.liferay.portal.tools.db.schema.importer.jdbc.DataSourceFactoryUtil;
 
-import javax.sql.DataSource;
+import java.io.File;
+import java.io.PrintWriter;
+
+import java.text.SimpleDateFormat;
+
+import java.util.Date;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 /**
  * @author Mariano Álvaro Sáiz
@@ -25,69 +34,103 @@ public class DBSchemaImporter {
 		Options options = _getOptions();
 
 		if ((args.length != 0) && args[0].equals("--help")) {
-			HelpFormatter helpFormatter = new HelpFormatter();
-
-			helpFormatter.printHelp(
-				"Liferay Portal Tools Database Schema Importer", options);
-
-			System.exit(_LIFERAY_COMMON_EXIT_CODE_HELP);
+			_printHelpAndExit(options);
 		}
 
 		CommandLineParser commandLineParser = new DefaultParser();
 
+		CommandLine commandLine = null;
+
 		try {
-			CommandLine commandLine = commandLineParser.parse(options, args);
+			commandLine = commandLineParser.parse(options, args);
+		}
+		catch (ParseException parseException) {
+			System.err.println(parseException.getMessage());
 
-			_getDataSource(
-				commandLine.getOptionValue("source-jdbc-url"),
-				commandLine.getOptionValue("source-password"),
-				commandLine.getOptionValue("source-user"));
+			_printHelpAndExit(options);
+		}
 
-			_getDataSource(
-				commandLine.getOptionValue("target-jdbc-url"),
-				commandLine.getOptionValue("target-password"),
-				commandLine.getOptionValue("target-user"));
+		if (!DataSourceFactoryUtil.isValidSourceDatabase(
+				commandLine.getOptionValue("source-jdbc-url"))) {
+
+			System.err.println(
+				"Source database must be MariaDB, MySQL, Oracle, or SQL " +
+					"Server.");
+
+			_printHelpAndExit(options);
+		}
+
+		if (!DataSourceFactoryUtil.isValidTargetDatabase(
+				commandLine.getOptionValue("target-jdbc-url"))) {
+
+			System.err.println("Target database must be PostgreSQL.");
+
+			_printHelpAndExit(options);
+		}
+
+		try {
+			System.out.println(
+				"This tool is a beta feature. It is experimental and not " +
+					"supported.");
+
+			ConnectionConfigUtil.setBatchSize(
+				commandLine.getOptionValue("jdbc-batch-size"));
+			ConnectionConfigUtil.setFetchSize(
+				commandLine.getOptionValue("jdbc-fetch-size"));
+
+			DBSchemaImporterProcess dbSchemaImporterProcess =
+				new DBSchemaImporterProcess(
+					commandLine.getOptionValue("path"),
+					commandLine.getOptionValue("source-jdbc-url"),
+					commandLine.getOptionValue("source-password"),
+					commandLine.getOptionValue("source-user"),
+					commandLine.getOptionValue("target-jdbc-url"),
+					commandLine.getOptionValue("target-password"),
+					commandLine.getOptionValue("target-user"));
+
+			dbSchemaImporterProcess.run();
+
+			try (PrintWriter printWriter = new PrintWriter(
+					new File(
+						commandLine.getOptionValue("path"),
+						"db_schema_import_report.txt"))) {
+
+				SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+					DateUtil.ISO_8601_PATTERN);
+
+				printWriter.println(
+					StringUtil.merge(
+						new Object[] {
+							"Export date: " +
+								simpleDateFormat.format(new Date()),
+							dbSchemaImporterProcess.getReleaseInfo(),
+							StringPool.NEW_LINE, StringPool.NEW_LINE,
+							dbSchemaImporterProcess.getDataSourceInfos()
+						},
+						StringPool.NEW_LINE));
+			}
 
 			System.exit(_LIFERAY_COMMON_EXIT_CODE_OK);
 		}
 		catch (Exception exception) {
+			exception.printStackTrace(System.err);
+
 			System.exit(_LIFERAY_COMMON_EXIT_CODE_BAD);
 		}
-	}
-
-	private static DataSource _getDataSource(
-			String jdbcURL, String password, String userName)
-		throws Exception {
-
-		String driverClassName = "com.mysql.cj.jdbc.Driver";
-
-		if (jdbcURL.indexOf("postgresql") > 0) {
-			driverClassName = "org.postgresql.Driver";
-		}
-
-		Class.forName(driverClassName);
-
-		HikariConfig hikariConfig = new HikariConfig();
-
-		hikariConfig.setDriverClassName(driverClassName);
-		hikariConfig.setJdbcUrl(jdbcURL);
-		hikariConfig.setPassword(password);
-		hikariConfig.setUsername(userName);
-
-		hikariConfig.setConnectionTimeout(30000);
-		hikariConfig.setIdleTimeout(600000);
-		hikariConfig.setMaximumPoolSize(10);
-		hikariConfig.setMaxLifetime(0);
-		hikariConfig.setMinimumIdle(10);
-		hikariConfig.setTransactionIsolation("TRANSACTION_READ_UNCOMMITTED");
-
-		return new HikariDataSource(hikariConfig);
 	}
 
 	private static Options _getOptions() {
 		Options options = new Options();
 
 		options.addOption(null, "help", false, "Print help message.");
+		options.addOption(
+			null, "jdbc-batch-size", true,
+			"Set the JDBC batch size. The default value is 2500.");
+		options.addOption(
+			null, "jdbc-fetch-size", true,
+			"Set the JDBC result set fetch size. The default value is 2500.");
+		options.addRequiredOption(
+			null, "path", true, "Set the path of the source SQL files.");
 		options.addRequiredOption(
 			null, "source-jdbc-url", true, "Set the source JDBC URL.");
 		options.addRequiredOption(
@@ -104,6 +147,17 @@ public class DBSchemaImporter {
 			null, "target-user", true, "Set the target database user.");
 
 		return options;
+	}
+
+	private static void _printHelpAndExit(Options options) {
+		new HelpFormatter(
+		).printHelp(
+			"Liferay Portal Tools Database Schema Importer. This tool is a " +
+				"beta feature. It is experimental and not supported.",
+			options
+		);
+
+		System.exit(_LIFERAY_COMMON_EXIT_CODE_HELP);
 	}
 
 	/**

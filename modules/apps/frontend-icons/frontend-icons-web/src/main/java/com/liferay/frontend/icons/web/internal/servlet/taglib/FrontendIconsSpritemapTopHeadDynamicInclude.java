@@ -35,37 +35,32 @@ public class FrontendIconsSpritemapTopHeadDynamicInclude
 
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
-		StringBundler sb = new StringBundler(5);
+		StringBundler sb = new StringBundler(8);
 
 		sb.append("<script");
 		sb.append(
 			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
 				httpServletRequest));
-		sb.append(" data-senna-track=\"temporary\">");
-		sb.append("var Liferay = window.Liferay || {};");
-		sb.append("Liferay.Icons = Liferay.Icons || {};");
+		sb.append(" data-senna-track=\"temporary\">Liferay.Icons = Liferay.");
+		sb.append("Icons || {};Liferay.Icons.controlPanelSpritemap = '");
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		sb.append(
-			StringBundler.concat(
-				"Liferay.Icons.controlPanelSpritemap = '",
-				themeDisplay.getPathControlPanelSpritemap(), "';"));
-		sb.append(
-			StringBundler.concat(
-				"Liferay.Icons.spritemap = '",
-				themeDisplay.getPathThemeSpritemap(), "';"));
+		sb.append(themeDisplay.getPathControlPanelSpritemap());
 
-		sb.append("</script>");
+		sb.append("'; Liferay.Icons.spritemap = '");
+		sb.append(themeDisplay.getPathThemeSpritemap());
+		sb.append("';</script>\n");
 
-		printWriter.println(sb);
+		printWriter.write(sb.toString());
 	}
 
 	@Override
 	public void register(DynamicIncludeRegistry dynamicIncludeRegistry) {
-		dynamicIncludeRegistry.register("/html/common/themes/top_head.jsp#pre");
+		dynamicIncludeRegistry.register(
+			"/html/common/themes/top_js.jspf#resources");
 	}
 
 }

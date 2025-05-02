@@ -1,15 +1,14 @@
 {
-	"@generated": "b31cca7136faf460b154f4476a13cc769f651a86",
+	"@generated": "7c8797003aaa11500351db216df005c5124f5612",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 			"data-engine-js-components-web": [

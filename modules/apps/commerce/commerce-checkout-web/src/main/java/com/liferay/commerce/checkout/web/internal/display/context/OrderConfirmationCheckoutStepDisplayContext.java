@@ -14,14 +14,11 @@ import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderPaymentLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
-
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -85,15 +82,8 @@ public class OrderConfirmationCheckoutStepDisplayContext {
 	}
 
 	public String getOrderDetailURL() throws PortalException {
-		PortletURL portletURL =
-			_commerceOrderHttpHelper.getCommerceCartPortletURL(
-				_httpServletRequest, getCommerceOrder());
-
-		if (portletURL == null) {
-			return StringPool.BLANK;
-		}
-
-		return portletURL.toString();
+		return _commerceOrderHttpHelper.getCommerceCartPortletURL(
+			_httpServletRequest, getCommerceOrder());
 	}
 
 	public String getRetryPaymentURL() throws PortalException {

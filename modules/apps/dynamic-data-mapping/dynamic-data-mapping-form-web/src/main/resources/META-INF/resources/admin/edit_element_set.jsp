@@ -22,6 +22,8 @@ if (structure != null) {
 
 String structureKey = BeanParamUtil.getString(structure, request, "structureKey");
 
+JSONObject formBuilderContextJSONObject = ddmFormAdminDisplayContext.getFormBuilderContextJSONObject();
+
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
 
@@ -35,6 +37,7 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 <div class="portlet-forms" id="<portlet:namespace />formContainer">
 	<div class="forms-navigation-bar">
 		<clay:navigation-bar
+			cssClass="container-fluid-max-xxxl"
 			inverted="<%= true %>"
 			navigationItems="<%= ddmFormAdminDisplayContext.getElementSetBuilderNavigationItems() %>"
 		/>

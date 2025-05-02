@@ -30,7 +30,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -62,8 +61,9 @@ public class WarehouseChannelResourceImpl
 		throws Exception {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
-			_commerceInventoryWarehouseService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceInventoryWarehouseService.
+				fetchCommerceInventoryWarehouseByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchWarehouseException(
@@ -78,12 +78,12 @@ public class WarehouseChannelResourceImpl
 				null, pagination.getStartPosition(),
 				pagination.getEndPosition());
 
-		int totalItems = _commerceChannelRelService.getCommerceChannelRelsCount(
+		int totalCount = _commerceChannelRelService.getCommerceChannelRelsCount(
 			CommerceInventoryWarehouse.class.getName(),
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId());
 
 		return Page.of(
-			_toWarehouseChannels(commerceChannelRels), pagination, totalItems);
+			_toWarehouseChannels(commerceChannelRels), pagination, totalCount);
 	}
 
 	@NestedField(parentClass = Warehouse.class, value = "warehouseChannels")
@@ -106,11 +106,11 @@ public class WarehouseChannelResourceImpl
 				CommerceInventoryWarehouse.class.getName(), id, search,
 				pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems = _commerceChannelRelService.getCommerceChannelRelsCount(
+		int totalCount = _commerceChannelRelService.getCommerceChannelRelsCount(
 			CommerceInventoryWarehouse.class.getName(), id, search);
 
 		return Page.of(
-			_toWarehouseChannels(commerceChannelRel), pagination, totalItems);
+			_toWarehouseChannels(commerceChannelRel), pagination, totalCount);
 	}
 
 	@Override
@@ -120,8 +120,9 @@ public class WarehouseChannelResourceImpl
 		throws Exception {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
-			_commerceInventoryWarehouseService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceInventoryWarehouseService.
+				fetchCommerceInventoryWarehouseByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchWarehouseException(
@@ -174,9 +175,10 @@ public class WarehouseChannelResourceImpl
 		}
 		else {
 			commerceChannel =
-				_commerceChannelService.fetchByExternalReferenceCode(
-					warehouseChannel.getChannelExternalReferenceCode(),
-					serviceContext.getCompanyId());
+				_commerceChannelService.
+					fetchCommerceChannelByExternalReferenceCode(
+						warehouseChannel.getChannelExternalReferenceCode(),
+						serviceContext.getCompanyId());
 
 			if (commerceChannel == null) {
 				throw new NoSuchChannelException(
@@ -223,15 +225,10 @@ public class WarehouseChannelResourceImpl
 			List<CommerceChannelRel> commerceChannelRels)
 		throws Exception {
 
-		List<WarehouseChannel> warehouseChannels = new ArrayList<>();
-
-		for (CommerceChannelRel commerceChannelRel : commerceChannelRels) {
-			warehouseChannels.add(
-				_toWarehouseChannel(
-					commerceChannelRel.getCommerceChannelRelId()));
-		}
-
-		return warehouseChannels;
+		return transform(
+			commerceChannelRels,
+			commerceChannelRel -> _toWarehouseChannel(
+				commerceChannelRel.getCommerceChannelRelId()));
 	}
 
 	@Reference(

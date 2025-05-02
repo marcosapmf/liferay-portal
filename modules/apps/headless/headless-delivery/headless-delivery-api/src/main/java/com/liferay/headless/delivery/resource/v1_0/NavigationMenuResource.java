@@ -7,8 +7,6 @@ package com.liferay.headless.delivery.resource.v1_0;
 
 import com.liferay.headless.delivery.dto.v1_0.NavigationMenu;
 import com.liferay.portal.kernel.change.tracking.CTAware;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -55,14 +53,11 @@ public interface NavigationMenuResource {
 	public Response deleteNavigationMenuBatch(String callbackURL, Object object)
 		throws Exception;
 
+	public void deleteSiteNavigationMenuByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
 	public NavigationMenu getNavigationMenu(Long navigationMenuId)
-		throws Exception;
-
-	public NavigationMenu putNavigationMenu(
-			Long navigationMenuId, NavigationMenu navigationMenu)
-		throws Exception;
-
-	public Response putNavigationMenuBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
@@ -70,19 +65,16 @@ public interface NavigationMenuResource {
 				Long navigationMenuId, String roleNames)
 		throws Exception;
 
+	public NavigationMenu getSiteNavigationMenuByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
 	public Page<com.liferay.portal.vulcan.permission.Permission>
-			putNavigationMenuPermissionsPage(
-				Long navigationMenuId,
-				com.liferay.portal.vulcan.permission.Permission[] permissions)
+			getSiteNavigationMenuPermissionsPage(Long siteId, String roleNames)
 		throws Exception;
 
 	public Page<NavigationMenu> getSiteNavigationMenusPage(
 			Long siteId, Pagination pagination)
-		throws Exception;
-
-	public Response postSiteNavigationMenusPageExportBatch(
-			Long siteId, String callbackURL, String contentType,
-			String fieldNames)
 		throws Exception;
 
 	public NavigationMenu postSiteNavigationMenu(
@@ -93,8 +85,27 @@ public interface NavigationMenuResource {
 			Long siteId, String callbackURL, Object object)
 		throws Exception;
 
+	public Response postSiteNavigationMenusPageExportBatch(
+			Long siteId, String callbackURL, String contentType,
+			String fieldNames)
+		throws Exception;
+
+	public NavigationMenu putNavigationMenu(
+			Long navigationMenuId, NavigationMenu navigationMenu)
+		throws Exception;
+
+	public Response putNavigationMenuBatch(String callbackURL, Object object)
+		throws Exception;
+
 	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getSiteNavigationMenuPermissionsPage(Long siteId, String roleNames)
+			putNavigationMenuPermissionsPage(
+				Long navigationMenuId,
+				com.liferay.portal.vulcan.permission.Permission[] permissions)
+		throws Exception;
+
+	public NavigationMenu putSiteNavigationMenuByExternalReferenceCode(
+			Long siteId, String externalReferenceCode,
+			NavigationMenu navigationMenu)
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
@@ -125,7 +136,8 @@ public interface NavigationMenuResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -150,19 +162,23 @@ public interface NavigationMenuResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

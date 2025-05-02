@@ -3,24 +3,40 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Page} from '@playwright/test';
+import {Page, expect} from '@playwright/test';
 
 export async function openProductMenu(page: Page) {
-	const button = page.getByLabel('Open Product Menu');
+	const productMenu = page.getByLabel('Product Menu', {exact: true});
 
-	if (await button.isVisible()) {
-		button.click();
+	const isOpen = await productMenu.evaluate((element) =>
+		element.classList.contains('open')
+	);
 
-		await button.waitFor({state: 'hidden'});
+	if (!isOpen) {
+		const button = page.getByLabel('Open Product Menu');
+
+		await expect(async () => {
+			await button.click();
+
+			await expect(productMenu).toHaveClass(/open/, {timeout: 2000});
+		}).toPass();
 	}
 }
 
 export async function closeProductMenu(page: Page) {
-	const button = page.getByLabel('Close Product Menu');
+	const productMenu = page.getByLabel('Product Menu', {exact: true});
 
-	if (await button.isVisible()) {
-		button.click();
+	const isClosed = await productMenu.evaluate((element) =>
+		element.classList.contains('closed')
+	);
 
-		await button.waitFor({state: 'hidden'});
+	if (!isClosed) {
+		const button = page.getByLabel('Close Product Menu');
+
+		await expect(async () => {
+			await button.click();
+
+			await expect(productMenu).toHaveClass(/closed/, {timeout: 2000});
+		}).toPass();
 	}
 }

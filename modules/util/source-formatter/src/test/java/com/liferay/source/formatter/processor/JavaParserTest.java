@@ -22,4 +22,14 @@ public class JavaParserTest extends BaseSourceProcessorTestCase {
 		test("JavaArray.testjava");
 	}
 
+	@Test
+	public void testJavaModifierStrictfp() throws Exception {
+		test("JavaModifierStrictfp.testjava");
+	}
+
+	@Test
+	public void testJavaPatternMatchingForInstanceof() throws Exception {
+		test("JavaPatternMatchingForInstanceof.testjava");
+	}
+
 }

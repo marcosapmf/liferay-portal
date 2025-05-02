@@ -6,7 +6,7 @@
 import ClayLayout from '@clayui/layout';
 import {ReactPortal, useIsMounted} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {openConfirmModal} from 'frontend-js-web';
+import {openConfirmModal} from 'frontend-js-components-web';
 import React, {useEffect, useState} from 'react';
 
 import ExperienceToolbarSection from '../../plugins/experience/components/ExperienceToolbarSection';
@@ -110,7 +110,7 @@ function ToolbarBody({className}) {
 			)}
 			onClick={deselectItem}
 			ref={dropClearRef}
-			size={Liferay?.FeatureFlags?.['LPS-184404'] ? false : 'xl'}
+			size={false}
 		>
 			<ZoomAlert />
 

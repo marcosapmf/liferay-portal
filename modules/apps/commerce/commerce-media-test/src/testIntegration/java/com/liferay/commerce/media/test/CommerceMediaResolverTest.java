@@ -103,8 +103,8 @@ public class CommerceMediaResolverTest {
 			_group.getCompanyId(), _group.getGroupId(), _user.getUserId());
 
 		_accountEntry = _accountEntryLocalService.addAccountEntry(
-			_user.getUserId(), 0, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null,
+			StringPool.BLANK, _user.getUserId(), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null, null,
 			"business", 1, _serviceContext);
 
@@ -114,7 +114,7 @@ public class CommerceMediaResolverTest {
 			_accountEntry.getAccountEntryId(), _serviceContext);
 
 		_commerceCurrency = _commerceCurrencyLocalService.addCommerceCurrency(
-			_user.getUserId(), RandomTestUtil.randomString(),
+			null, _user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomString(), BigDecimal.ONE,
 			RandomTestUtil.randomLocaleStringMap(), 2, 2, "HALF_EVEN", false,

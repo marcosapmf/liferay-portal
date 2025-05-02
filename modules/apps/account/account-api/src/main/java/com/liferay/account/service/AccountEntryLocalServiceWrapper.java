@@ -71,15 +71,17 @@ public class AccountEntryLocalServiceWrapper
 
 	@Override
 	public com.liferay.account.model.AccountEntry addAccountEntry(
-			long userId, long parentAccountEntryId, String name,
-			String description, String[] domains, String emailAddress,
-			byte[] logoBytes, String taxIdNumber, String type, int status,
+			String externalReferenceCode, long userId,
+			long parentAccountEntryId, String name, String description,
+			String[] domains, String emailAddress, byte[] logoBytes,
+			String taxIdNumber, String type, int status,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _accountEntryLocalService.addAccountEntry(
-			userId, parentAccountEntryId, name, description, domains,
-			emailAddress, logoBytes, taxIdNumber, type, status, serviceContext);
+			externalReferenceCode, userId, parentAccountEntryId, name,
+			description, domains, emailAddress, logoBytes, taxIdNumber, type,
+			status, serviceContext);
 	}
 
 	@Override
@@ -480,6 +482,17 @@ public class AccountEntryLocalServiceWrapper
 		return _accountEntryLocalService.getIndexableActionableDynamicQuery();
 	}
 
+	@Override
+	public com.liferay.account.model.AccountEntry
+			getOrAddIncompleteAccountEntry(
+				String externalReferenceCode, long companyId, long userId,
+				String name, String type)
+		throws Exception {
+
+		return _accountEntryLocalService.getOrAddIncompleteAccountEntry(
+			externalReferenceCode, companyId, userId, name, type);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -587,17 +600,17 @@ public class AccountEntryLocalServiceWrapper
 
 	@Override
 	public com.liferay.account.model.AccountEntry updateAccountEntry(
-			long accountEntryId, long parentAccountEntryId, String name,
-			String description, boolean deleteLogo, String[] domains,
-			String emailAddress, byte[] logoBytes, String taxIdNumber,
-			int status,
+			String externalReferenceCode, long accountEntryId,
+			long parentAccountEntryId, String name, String description,
+			boolean deleteLogo, String[] domains, String emailAddress,
+			byte[] logoBytes, String taxIdNumber, int status,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _accountEntryLocalService.updateAccountEntry(
-			accountEntryId, parentAccountEntryId, name, description, deleteLogo,
-			domains, emailAddress, logoBytes, taxIdNumber, status,
-			serviceContext);
+			externalReferenceCode, accountEntryId, parentAccountEntryId, name,
+			description, deleteLogo, domains, emailAddress, logoBytes,
+			taxIdNumber, status, serviceContext);
 	}
 
 	@Override

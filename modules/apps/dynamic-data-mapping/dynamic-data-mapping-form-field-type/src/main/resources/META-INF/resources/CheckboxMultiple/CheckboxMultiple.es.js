@@ -3,52 +3,24 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {ClayCheckbox} from '@clayui/form';
+import {ClayCheckbox, ClayToggle} from '@clayui/form';
 import classNames from 'classnames';
 import React, {useEffect, useState} from 'react';
 
 import FieldBase from '../FieldBase/ReactFieldBase.es';
 import {setJSONArrayValue} from '../util/setters.es';
 
-const Switcher = ({
-	accessibleProps,
-	checked,
-	disabled,
-	inline,
-	label,
-	name,
-	onBlur,
-	onChange,
-	onFocus,
-	value,
-}) => (
-	<div
-		className={classNames('lfr-ddm-form-field-checkbox-switch', {
-			'lfr-ddm-form-field-checkbox-switch-inline': inline,
-		})}
-	>
-		<label className="simple-toggle-switch toggle-switch">
-			<input
-				{...accessibleProps}
-				checked={checked}
-				className="toggle-switch-check"
-				disabled={disabled}
-				name={name}
-				onBlur={onBlur}
-				onChange={onChange}
-				onFocus={onFocus}
-				type="checkbox"
-				value={value}
-			/>
-
-			<span aria-hidden="true" className="toggle-switch-bar">
-				<span className="toggle-switch-handle"></span>
-			</span>
-
-			<span className="toggle-switch-label">{label}</span>
-		</label>
-	</div>
-);
+const Switcher = ({checked, inline, ...otherProps}) => {
+	return (
+		<div
+			className={classNames('lfr-ddm-form-field-checkbox-switch', {
+				'lfr-ddm-form-field-checkbox-switch-inline': inline,
+			})}
+		>
+			<ClayToggle toggled={checked} {...otherProps} />
+		</div>
+	);
+};
 
 const CheckboxMultiple = ({
 	accessibleProps,
@@ -64,10 +36,12 @@ const CheckboxMultiple = ({
 	predefinedValue,
 	value: initialValue,
 }) => {
-	const [value, setValue] = useState(initialValue);
+	const [value, setValue] = useState(initialValue ?? predefinedValue);
 
 	useEffect(() => {
-		setValue(initialValue);
+		if (initialValue?.length > 0) {
+			setValue(initialValue);
+		}
 	}, [initialValue]);
 
 	const displayValues =
@@ -96,6 +70,7 @@ const CheckboxMultiple = ({
 				<Toggle
 					{...accessibleProps}
 					checked={displayValues.includes(option.value)}
+					data-option-reference={option.reference}
 					disabled={disabled}
 					inline={inline}
 					key={option.value}
@@ -139,6 +114,9 @@ const Main = ({
 	<FieldBase name={name} readOnly={readOnly} {...otherProps}>
 		<CheckboxMultiple
 			accessibleProps={{
+				...((otherProps.errorMessage || otherProps.tip) && {
+					'aria-describedby': `${otherProps.id ?? name}_fieldFeedback`,
+				}),
 				'aria-required': otherProps.required,
 			}}
 			disabled={readOnly}

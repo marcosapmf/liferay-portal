@@ -6,8 +6,8 @@
 package com.liferay.portal.search.web.internal.search.results.portlet.action;
 
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
-import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.search.web.constants.SearchResultsPortletKeys;
+import com.liferay.portlet.display.template.portlet.action.BaseConfigurationAction;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -20,8 +20,7 @@ import org.osgi.service.component.annotations.Component;
 	property = "javax.portlet.name=" + SearchResultsPortletKeys.SEARCH_RESULTS,
 	service = ConfigurationAction.class
 )
-public class SearchResultsConfigurationAction
-	extends DefaultConfigurationAction {
+public class SearchResultsConfigurationAction extends BaseConfigurationAction {
 
 	@Override
 	public String getJspPath(HttpServletRequest httpServletRequest) {

@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -33,6 +31,7 @@ import java.util.function.Supplier;
 import javax.annotation.Generated;
 
 import javax.validation.Valid;
+import javax.validation.constraints.DecimalMin;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -54,7 +53,7 @@ public class Cart implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Cart.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getAccount() {
 		if (_accountSupplier != null) {
 			account = _accountSupplier.get();
@@ -95,7 +94,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _accountSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getAccountId() {
 		if (_accountIdSupplier != null) {
 			accountId = _accountIdSupplier.get();
@@ -136,7 +135,49 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _accountIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public Attachment[] getAttachments() {
+		if (_attachmentsSupplier != null) {
+			attachments = _attachmentsSupplier.get();
+
+			_attachmentsSupplier = null;
+		}
+
+		return attachments;
+	}
+
+	public void setAttachments(Attachment[] attachments) {
+		this.attachments = attachments;
+
+		_attachmentsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setAttachments(
+		UnsafeSupplier<Attachment[], Exception> attachmentsUnsafeSupplier) {
+
+		_attachmentsSupplier = () -> {
+			try {
+				return attachmentsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Attachment[] attachments;
+
+	@JsonIgnore
+	private Supplier<Attachment[]> _attachmentsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getAuthor() {
 		if (_authorSupplier != null) {
 			author = _authorSupplier.get();
@@ -177,7 +218,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _authorSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Address getBillingAddress() {
 		if (_billingAddressSupplier != null) {
@@ -219,7 +260,53 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Address> _billingAddressSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AAB-34098-789-N")
+	public String getBillingAddressExternalReferenceCode() {
+		if (_billingAddressExternalReferenceCodeSupplier != null) {
+			billingAddressExternalReferenceCode =
+				_billingAddressExternalReferenceCodeSupplier.get();
+
+			_billingAddressExternalReferenceCodeSupplier = null;
+		}
+
+		return billingAddressExternalReferenceCode;
+	}
+
+	public void setBillingAddressExternalReferenceCode(
+		String billingAddressExternalReferenceCode) {
+
+		this.billingAddressExternalReferenceCode =
+			billingAddressExternalReferenceCode;
+
+		_billingAddressExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setBillingAddressExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			billingAddressExternalReferenceCodeUnsafeSupplier) {
+
+		_billingAddressExternalReferenceCodeSupplier = () -> {
+			try {
+				return billingAddressExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String billingAddressExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _billingAddressExternalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getBillingAddressId() {
 		if (_billingAddressIdSupplier != null) {
 			billingAddressId = _billingAddressIdSupplier.get();
@@ -260,7 +347,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _billingAddressIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public CartItem[] getCartItems() {
 		if (_cartItemsSupplier != null) {
@@ -302,7 +389,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<CartItem[]> _cartItemsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getChannelId() {
 		if (_channelIdSupplier != null) {
 			channelId = _channelIdSupplier.get();
@@ -343,7 +430,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _channelIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getCouponCode() {
 		if (_couponCodeSupplier != null) {
 			couponCode = _couponCodeSupplier.get();
@@ -384,7 +471,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _couponCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getCreateDate() {
 		if (_createDateSupplier != null) {
 			createDate = _createDateSupplier.get();
@@ -425,7 +512,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _createDateSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getCurrencyCode() {
 		if (_currencyCodeSupplier != null) {
 			currencyCode = _currencyCodeSupplier.get();
@@ -466,7 +553,94 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _currencyCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AAB-34098-789-N")
+	public String getCurrencyExternalReferenceCode() {
+		if (_currencyExternalReferenceCodeSupplier != null) {
+			currencyExternalReferenceCode =
+				_currencyExternalReferenceCodeSupplier.get();
+
+			_currencyExternalReferenceCodeSupplier = null;
+		}
+
+		return currencyExternalReferenceCode;
+	}
+
+	public void setCurrencyExternalReferenceCode(
+		String currencyExternalReferenceCode) {
+
+		this.currencyExternalReferenceCode = currencyExternalReferenceCode;
+
+		_currencyExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCurrencyExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			currencyExternalReferenceCodeUnsafeSupplier) {
+
+		_currencyExternalReferenceCodeSupplier = () -> {
+			try {
+				return currencyExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String currencyExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _currencyExternalReferenceCodeSupplier;
+
+	@DecimalMin("0")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
+	public Long getCurrencyId() {
+		if (_currencyIdSupplier != null) {
+			currencyId = _currencyIdSupplier.get();
+
+			_currencyIdSupplier = null;
+		}
+
+		return currencyId;
+	}
+
+	public void setCurrencyId(Long currencyId) {
+		this.currencyId = currencyId;
+
+		_currencyIdSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCurrencyId(
+		UnsafeSupplier<Long, Exception> currencyIdUnsafeSupplier) {
+
+		_currencyIdSupplier = () -> {
+			try {
+				return currencyIdUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long currencyId;
+
+	@JsonIgnore
+	private Supplier<Long> _currencyIdSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, ?> getCustomFields() {
 		if (_customFieldsSupplier != null) {
@@ -508,7 +682,89 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, ?>> _customFieldsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Long getDeliveryTermId() {
+		if (_deliveryTermIdSupplier != null) {
+			deliveryTermId = _deliveryTermIdSupplier.get();
+
+			_deliveryTermIdSupplier = null;
+		}
+
+		return deliveryTermId;
+	}
+
+	public void setDeliveryTermId(Long deliveryTermId) {
+		this.deliveryTermId = deliveryTermId;
+
+		_deliveryTermIdSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setDeliveryTermId(
+		UnsafeSupplier<Long, Exception> deliveryTermIdUnsafeSupplier) {
+
+		_deliveryTermIdSupplier = () -> {
+			try {
+				return deliveryTermIdUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long deliveryTermId;
+
+	@JsonIgnore
+	private Supplier<Long> _deliveryTermIdSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getDeliveryTermLabel() {
+		if (_deliveryTermLabelSupplier != null) {
+			deliveryTermLabel = _deliveryTermLabelSupplier.get();
+
+			_deliveryTermLabelSupplier = null;
+		}
+
+		return deliveryTermLabel;
+	}
+
+	public void setDeliveryTermLabel(String deliveryTermLabel) {
+		this.deliveryTermLabel = deliveryTermLabel;
+
+		_deliveryTermLabelSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setDeliveryTermLabel(
+		UnsafeSupplier<String, Exception> deliveryTermLabelUnsafeSupplier) {
+
+		_deliveryTermLabelSupplier = () -> {
+			try {
+				return deliveryTermLabelUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String deliveryTermLabel;
+
+	@JsonIgnore
+	private Supplier<String> _deliveryTermLabelSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String[] getErrorMessages() {
 		if (_errorMessagesSupplier != null) {
 			errorMessages = _errorMessagesSupplier.get();
@@ -549,7 +805,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _errorMessagesSupplier;
 
-	@Schema(example = "AB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -590,7 +846,48 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getFriendlyURLSeparator() {
+		if (_friendlyURLSeparatorSupplier != null) {
+			friendlyURLSeparator = _friendlyURLSeparatorSupplier.get();
+
+			_friendlyURLSeparatorSupplier = null;
+		}
+
+		return friendlyURLSeparator;
+	}
+
+	public void setFriendlyURLSeparator(String friendlyURLSeparator) {
+		this.friendlyURLSeparator = friendlyURLSeparator;
+
+		_friendlyURLSeparatorSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setFriendlyURLSeparator(
+		UnsafeSupplier<String, Exception> friendlyURLSeparatorUnsafeSupplier) {
+
+		_friendlyURLSeparatorSupplier = () -> {
+			try {
+				return friendlyURLSeparatorUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String friendlyURLSeparator;
+
+	@JsonIgnore
+	private Supplier<String> _friendlyURLSeparatorSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -629,7 +926,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getLastPriceUpdateDate() {
 		if (_lastPriceUpdateDateSupplier != null) {
 			lastPriceUpdateDate = _lastPriceUpdateDateSupplier.get();
@@ -670,7 +967,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _lastPriceUpdateDateSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getModifiedDate() {
 		if (_modifiedDateSupplier != null) {
 			modifiedDate = _modifiedDateSupplier.get();
@@ -711,7 +1008,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _modifiedDateSupplier;
 
-	@Schema(example = "Order Name")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "Order Name")
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -750,7 +1047,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public CartComment[] getNotes() {
 		if (_notesSupplier != null) {
@@ -792,7 +1089,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<CartComment[]> _notesSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Status getOrderStatusInfo() {
 		if (_orderStatusInfoSupplier != null) {
@@ -834,7 +1131,48 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Status> _orderStatusInfoSupplier;
 
-	@Schema(example = "AB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getOrderType() {
+		if (_orderTypeSupplier != null) {
+			orderType = _orderTypeSupplier.get();
+
+			_orderTypeSupplier = null;
+		}
+
+		return orderType;
+	}
+
+	public void setOrderType(String orderType) {
+		this.orderType = orderType;
+
+		_orderTypeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setOrderType(
+		UnsafeSupplier<String, Exception> orderTypeUnsafeSupplier) {
+
+		_orderTypeSupplier = () -> {
+			try {
+				return orderTypeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String orderType;
+
+	@JsonIgnore
+	private Supplier<String> _orderTypeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
 	public String getOrderTypeExternalReferenceCode() {
 		if (_orderTypeExternalReferenceCodeSupplier != null) {
 			orderTypeExternalReferenceCode =
@@ -879,7 +1217,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _orderTypeExternalReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getOrderTypeId() {
 		if (_orderTypeIdSupplier != null) {
 			orderTypeId = _orderTypeIdSupplier.get();
@@ -920,7 +1258,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _orderTypeIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getOrderUUID() {
 		if (_orderUUIDSupplier != null) {
 			orderUUID = _orderUUIDSupplier.get();
@@ -961,7 +1299,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _orderUUIDSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPaymentMethod() {
 		if (_paymentMethodSupplier != null) {
 			paymentMethod = _paymentMethodSupplier.get();
@@ -1002,7 +1340,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _paymentMethodSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPaymentMethodLabel() {
 		if (_paymentMethodLabelSupplier != null) {
 			paymentMethodLabel = _paymentMethodLabelSupplier.get();
@@ -1043,7 +1381,48 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _paymentMethodLabelSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Integer getPaymentMethodType() {
+		if (_paymentMethodTypeSupplier != null) {
+			paymentMethodType = _paymentMethodTypeSupplier.get();
+
+			_paymentMethodTypeSupplier = null;
+		}
+
+		return paymentMethodType;
+	}
+
+	public void setPaymentMethodType(Integer paymentMethodType) {
+		this.paymentMethodType = paymentMethodType;
+
+		_paymentMethodTypeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPaymentMethodType(
+		UnsafeSupplier<Integer, Exception> paymentMethodTypeUnsafeSupplier) {
+
+		_paymentMethodTypeSupplier = () -> {
+			try {
+				return paymentMethodTypeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Integer paymentMethodType;
+
+	@JsonIgnore
+	private Supplier<Integer> _paymentMethodTypeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Integer getPaymentStatus() {
 		if (_paymentStatusSupplier != null) {
 			paymentStatus = _paymentStatusSupplier.get();
@@ -1084,7 +1463,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _paymentStatusSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Status getPaymentStatusInfo() {
 		if (_paymentStatusInfoSupplier != null) {
@@ -1126,7 +1505,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Status> _paymentStatusInfoSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPaymentStatusLabel() {
 		if (_paymentStatusLabelSupplier != null) {
 			paymentStatusLabel = _paymentStatusLabelSupplier.get();
@@ -1167,7 +1546,89 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _paymentStatusLabelSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Long getPaymentTermId() {
+		if (_paymentTermIdSupplier != null) {
+			paymentTermId = _paymentTermIdSupplier.get();
+
+			_paymentTermIdSupplier = null;
+		}
+
+		return paymentTermId;
+	}
+
+	public void setPaymentTermId(Long paymentTermId) {
+		this.paymentTermId = paymentTermId;
+
+		_paymentTermIdSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPaymentTermId(
+		UnsafeSupplier<Long, Exception> paymentTermIdUnsafeSupplier) {
+
+		_paymentTermIdSupplier = () -> {
+			try {
+				return paymentTermIdUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long paymentTermId;
+
+	@JsonIgnore
+	private Supplier<Long> _paymentTermIdSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getPaymentTermLabel() {
+		if (_paymentTermLabelSupplier != null) {
+			paymentTermLabel = _paymentTermLabelSupplier.get();
+
+			_paymentTermLabelSupplier = null;
+		}
+
+		return paymentTermLabel;
+	}
+
+	public void setPaymentTermLabel(String paymentTermLabel) {
+		this.paymentTermLabel = paymentTermLabel;
+
+		_paymentTermLabelSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPaymentTermLabel(
+		UnsafeSupplier<String, Exception> paymentTermLabelUnsafeSupplier) {
+
+		_paymentTermLabelSupplier = () -> {
+			try {
+				return paymentTermLabelUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String paymentTermLabel;
+
+	@JsonIgnore
+	private Supplier<String> _paymentTermLabelSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPrintedNote() {
 		if (_printedNoteSupplier != null) {
 			printedNote = _printedNoteSupplier.get();
@@ -1208,7 +1669,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _printedNoteSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPurchaseOrderNumber() {
 		if (_purchaseOrderNumberSupplier != null) {
 			purchaseOrderNumber = _purchaseOrderNumberSupplier.get();
@@ -1249,7 +1710,48 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _purchaseOrderNumberSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema(example = "2017-07-21")
+	public Date getRequestedDeliveryDate() {
+		if (_requestedDeliveryDateSupplier != null) {
+			requestedDeliveryDate = _requestedDeliveryDateSupplier.get();
+
+			_requestedDeliveryDateSupplier = null;
+		}
+
+		return requestedDeliveryDate;
+	}
+
+	public void setRequestedDeliveryDate(Date requestedDeliveryDate) {
+		this.requestedDeliveryDate = requestedDeliveryDate;
+
+		_requestedDeliveryDateSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setRequestedDeliveryDate(
+		UnsafeSupplier<Date, Exception> requestedDeliveryDateUnsafeSupplier) {
+
+		_requestedDeliveryDateSupplier = () -> {
+			try {
+				return requestedDeliveryDateUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Date requestedDeliveryDate;
+
+	@JsonIgnore
+	private Supplier<Date> _requestedDeliveryDateSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Address getShippingAddress() {
 		if (_shippingAddressSupplier != null) {
@@ -1291,7 +1793,53 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Address> _shippingAddressSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AAB-34098-789-N")
+	public String getShippingAddressExternalReferenceCode() {
+		if (_shippingAddressExternalReferenceCodeSupplier != null) {
+			shippingAddressExternalReferenceCode =
+				_shippingAddressExternalReferenceCodeSupplier.get();
+
+			_shippingAddressExternalReferenceCodeSupplier = null;
+		}
+
+		return shippingAddressExternalReferenceCode;
+	}
+
+	public void setShippingAddressExternalReferenceCode(
+		String shippingAddressExternalReferenceCode) {
+
+		this.shippingAddressExternalReferenceCode =
+			shippingAddressExternalReferenceCode;
+
+		_shippingAddressExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setShippingAddressExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			shippingAddressExternalReferenceCodeUnsafeSupplier) {
+
+		_shippingAddressExternalReferenceCodeSupplier = () -> {
+			try {
+				return shippingAddressExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String shippingAddressExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _shippingAddressExternalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getShippingAddressId() {
 		if (_shippingAddressIdSupplier != null) {
 			shippingAddressId = _shippingAddressIdSupplier.get();
@@ -1332,7 +1880,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _shippingAddressIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getShippingMethod() {
 		if (_shippingMethodSupplier != null) {
 			shippingMethod = _shippingMethodSupplier.get();
@@ -1373,7 +1921,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _shippingMethodSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getShippingOption() {
 		if (_shippingOptionSupplier != null) {
 			shippingOption = _shippingOptionSupplier.get();
@@ -1414,7 +1962,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _shippingOptionSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getStatus() {
 		if (_statusSupplier != null) {
 			status = _statusSupplier.get();
@@ -1455,7 +2003,49 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _statusSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public Step[] getSteps() {
+		if (_stepsSupplier != null) {
+			steps = _stepsSupplier.get();
+
+			_stepsSupplier = null;
+		}
+
+		return steps;
+	}
+
+	public void setSteps(Step[] steps) {
+		this.steps = steps;
+
+		_stepsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setSteps(
+		UnsafeSupplier<Step[], Exception> stepsUnsafeSupplier) {
+
+		_stepsSupplier = () -> {
+			try {
+				return stepsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Step[] steps;
+
+	@JsonIgnore
+	private Supplier<Step[]> _stepsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Summary getSummary() {
 		if (_summarySupplier != null) {
@@ -1497,7 +2087,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Summary> _summarySupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getUseAsBilling() {
 		if (_useAsBillingSupplier != null) {
 			useAsBilling = _useAsBillingSupplier.get();
@@ -1538,7 +2128,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _useAsBillingSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getValid() {
 		if (_validSupplier != null) {
 			valid = _validSupplier.get();
@@ -1579,7 +2169,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _validSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Status getWorkflowStatusInfo() {
 		if (_workflowStatusInfoSupplier != null) {
@@ -1679,6 +2269,28 @@ public class Cart implements Serializable {
 			sb.append(accountId);
 		}
 
+		Attachment[] attachments = getAttachments();
+
+		if (attachments != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"attachments\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < attachments.length; i++) {
+				sb.append(String.valueOf(attachments[i]));
+
+				if ((i + 1) < attachments.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		String author = getAuthor();
 
 		if (author != null) {
@@ -1705,6 +2317,23 @@ public class Cart implements Serializable {
 			sb.append("\"billingAddress\": ");
 
 			sb.append(String.valueOf(billingAddress));
+		}
+
+		String billingAddressExternalReferenceCode =
+			getBillingAddressExternalReferenceCode();
+
+		if (billingAddressExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"billingAddressExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(billingAddressExternalReferenceCode));
+
+			sb.append("\"");
 		}
 
 		Long billingAddressId = getBillingAddressId();
@@ -1801,6 +2430,35 @@ public class Cart implements Serializable {
 			sb.append("\"");
 		}
 
+		String currencyExternalReferenceCode =
+			getCurrencyExternalReferenceCode();
+
+		if (currencyExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"currencyExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(currencyExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
+		Long currencyId = getCurrencyId();
+
+		if (currencyId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"currencyId\": ");
+
+			sb.append(currencyId);
+		}
+
 		Map<String, ?> customFields = getCustomFields();
 
 		if (customFields != null) {
@@ -1811,6 +2469,34 @@ public class Cart implements Serializable {
 			sb.append("\"customFields\": ");
 
 			sb.append(_toJSON(customFields));
+		}
+
+		Long deliveryTermId = getDeliveryTermId();
+
+		if (deliveryTermId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"deliveryTermId\": ");
+
+			sb.append(deliveryTermId);
+		}
+
+		String deliveryTermLabel = getDeliveryTermLabel();
+
+		if (deliveryTermLabel != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"deliveryTermLabel\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(deliveryTermLabel));
+
+			sb.append("\"");
 		}
 
 		String[] errorMessages = getErrorMessages();
@@ -1851,6 +2537,22 @@ public class Cart implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
+
+		String friendlyURLSeparator = getFriendlyURLSeparator();
+
+		if (friendlyURLSeparator != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"friendlyURLSeparator\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(friendlyURLSeparator));
 
 			sb.append("\"");
 		}
@@ -1949,6 +2651,22 @@ public class Cart implements Serializable {
 			sb.append(String.valueOf(orderStatusInfo));
 		}
 
+		String orderType = getOrderType();
+
+		if (orderType != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"orderType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(orderType));
+
+			sb.append("\"");
+		}
+
 		String orderTypeExternalReferenceCode =
 			getOrderTypeExternalReferenceCode();
 
@@ -2026,6 +2744,18 @@ public class Cart implements Serializable {
 			sb.append("\"");
 		}
 
+		Integer paymentMethodType = getPaymentMethodType();
+
+		if (paymentMethodType != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"paymentMethodType\": ");
+
+			sb.append(paymentMethodType);
+		}
+
 		Integer paymentStatus = getPaymentStatus();
 
 		if (paymentStatus != null) {
@@ -2066,6 +2796,34 @@ public class Cart implements Serializable {
 			sb.append("\"");
 		}
 
+		Long paymentTermId = getPaymentTermId();
+
+		if (paymentTermId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"paymentTermId\": ");
+
+			sb.append(paymentTermId);
+		}
+
+		String paymentTermLabel = getPaymentTermLabel();
+
+		if (paymentTermLabel != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"paymentTermLabel\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(paymentTermLabel));
+
+			sb.append("\"");
+		}
+
 		String printedNote = getPrintedNote();
 
 		if (printedNote != null) {
@@ -2098,6 +2856,22 @@ public class Cart implements Serializable {
 			sb.append("\"");
 		}
 
+		Date requestedDeliveryDate = getRequestedDeliveryDate();
+
+		if (requestedDeliveryDate != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"requestedDeliveryDate\": ");
+
+			sb.append("\"");
+
+			sb.append(liferayToJSONDateFormat.format(requestedDeliveryDate));
+
+			sb.append("\"");
+		}
+
 		Address shippingAddress = getShippingAddress();
 
 		if (shippingAddress != null) {
@@ -2108,6 +2882,23 @@ public class Cart implements Serializable {
 			sb.append("\"shippingAddress\": ");
 
 			sb.append(String.valueOf(shippingAddress));
+		}
+
+		String shippingAddressExternalReferenceCode =
+			getShippingAddressExternalReferenceCode();
+
+		if (shippingAddressExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"shippingAddressExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(shippingAddressExternalReferenceCode));
+
+			sb.append("\"");
 		}
 
 		Long shippingAddressId = getShippingAddressId();
@@ -2170,6 +2961,28 @@ public class Cart implements Serializable {
 			sb.append("\"");
 		}
 
+		Step[] steps = getSteps();
+
+		if (steps != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"steps\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < steps.length; i++) {
+				sb.append(String.valueOf(steps[i]));
+
+				if ((i + 1) < steps.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		Summary summary = getSummary();
 
 		if (summary != null) {
@@ -2223,8 +3036,8 @@ public class Cart implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.delivery.cart.dto.v1_0.Cart",
 		name = "x-class-name"
 	)

@@ -7,6 +7,7 @@ import ClayBreadcrumb from '@clayui/breadcrumb';
 import {ReactPortal} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
+import {useDragLayer} from 'react-dnd';
 
 import {ITEM_ACTIVATION_ORIGINS} from '../config/constants/itemActivationOrigins';
 import {ITEM_TYPES} from '../config/constants/itemTypes';
@@ -33,7 +34,11 @@ const ELLIPSIS_BUFFER_MARGIN = 4;
 export function LayoutBreadcrumbs() {
 	const activeItemIds = useActiveItemIds();
 
-	if (Liferay.FeatureFlags['LPD-18221'] && activeItemIds.length > 1) {
+	const {isDragging} = useDragLayer((monitor) => ({
+		isDragging: monitor.isDragging(),
+	}));
+
+	if (isDragging || activeItemIds.length > 1) {
 		return null;
 	}
 
@@ -100,6 +105,10 @@ function useBreadcrumbItems() {
 		(state) => {
 			const items = [];
 
+			if (!activeItemId) {
+				return items;
+			}
+
 			const addLayoutDataItems = (layoutDataItem) => {
 				if (
 					!layoutDataItem ||
@@ -122,11 +131,7 @@ function useBreadcrumbItems() {
 							: DROP_ZONE_BASE_LABEL,
 					});
 				}
-				else if (
-					layoutDataItem.type !== LAYOUT_DATA_ITEM_TYPES.column &&
-					layoutDataItem.type !==
-						LAYOUT_DATA_ITEM_TYPES.collectionItem
-				) {
+				else {
 					items.push({
 						label: selectLayoutDataItemLabel(state, layoutDataItem),
 						onClick: () =>
@@ -185,10 +190,6 @@ function useBreadcrumbItems() {
 
 function useEllipsisBuffer(breacrumbItems, containerRef) {
 	const [ellipsisBuffer, setEllipsisBuffer] = useState(0);
-
-	useEffect(() => {
-		setEllipsisBuffer(0);
-	}, [breacrumbItems]);
 
 	useEffect(() => {
 		const containerElement = containerRef.current;

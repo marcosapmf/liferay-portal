@@ -18,7 +18,6 @@ import com.liferay.info.exception.NoSuchFormVariationException;
 import com.liferay.info.exception.NoSuchInfoItemException;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
-import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.form.InfoForm;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemDetails;
@@ -33,6 +32,7 @@ import com.liferay.info.type.WebImage;
 import com.liferay.info.type.WebURL;
 import com.liferay.layout.helper.structure.LayoutStructureRulesHelper;
 import com.liferay.layout.taglib.internal.servlet.ServletContextUtil;
+import com.liferay.layout.taglib.internal.util.SegmentsExperienceUtil;
 import com.liferay.layout.util.constants.LayoutDataItemTypeConstants;
 import com.liferay.layout.util.structure.ContainerStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.DropZoneLayoutStructureItem;
@@ -44,7 +44,6 @@ import com.liferay.layout.util.structure.LayoutStructureItemUtil;
 import com.liferay.layout.util.structure.RootLayoutStructureItem;
 import com.liferay.layout.util.structure.RowStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.StyledLayoutStructureItem;
-import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.InfoFormException;
@@ -63,6 +62,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -70,6 +70,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.SegmentsEntryRetriever;
+import com.liferay.segments.constants.SegmentsWebKeys;
 import com.liferay.segments.context.RequestContextMapper;
 
 import java.util.ArrayList;
@@ -259,8 +260,9 @@ public class RenderLayoutStructureDisplayContext {
 				InfoDisplayWebKeys.INFO_FORM);
 		}
 
+		defaultFragmentRendererContext.setInfoForm(infoForm);
+
 		if (!Objects.equals(layout.getType(), LayoutConstants.TYPE_PORTLET)) {
-			defaultFragmentRendererContext.setInfoForm(infoForm);
 			defaultFragmentRendererContext.setMode(_mode);
 			defaultFragmentRendererContext.setPreviewClassNameId(
 				_getPreviewClassNameId());
@@ -283,9 +285,16 @@ public class RenderLayoutStructureDisplayContext {
 		return defaultFragmentRendererContext;
 	}
 
+	public Set<String> getDisabledItemIds() {
+		LayoutStructureRulesHelper.LayoutStructureRulesResult
+			layoutStructureRulesResult = getLayoutStructureRulesResult();
+
+		return layoutStructureRulesResult.getDisabledItemIds();
+	}
+
 	public Set<String> getDisplayedItemIds() {
 		LayoutStructureRulesHelper.LayoutStructureRulesResult
-			layoutStructureRulesResult = _getLayoutStructureRulesResult();
+			layoutStructureRulesResult = getLayoutStructureRulesResult();
 
 		return layoutStructureRulesResult.getDisplayedItemIds();
 	}
@@ -298,6 +307,13 @@ public class RenderLayoutStructureDisplayContext {
 		sb.append("/portal/edit_info_item");
 
 		return PortalUtil.addPreservedParameters(_themeDisplay, sb.toString());
+	}
+
+	public Set<String> getEnabledItemIds() {
+		LayoutStructureRulesHelper.LayoutStructureRulesResult
+			layoutStructureRulesResult = getLayoutStructureRulesResult();
+
+		return layoutStructureRulesResult.getEnabledItemIds();
 	}
 
 	public String getErrorMessage(
@@ -382,7 +398,7 @@ public class RenderLayoutStructureDisplayContext {
 
 	public Set<String> getHiddenItemIds() {
 		LayoutStructureRulesHelper.LayoutStructureRulesResult
-			layoutStructureRulesResult = _getLayoutStructureRulesResult();
+			layoutStructureRulesResult = getLayoutStructureRulesResult();
 
 		return layoutStructureRulesResult.getHiddenItemIds();
 	}
@@ -409,39 +425,22 @@ public class RenderLayoutStructureDisplayContext {
 			infoItemServiceRegistry.getFirstInfoItemService(
 				InfoItemFormProvider.class, className);
 
-		if (infoItemFormProvider != null) {
-			try {
-				return infoItemFormProvider.getInfoForm(
-					String.valueOf(
-						formStyledLayoutStructureItem.getClassTypeId()),
-					_themeDisplay.getScopeGroupId());
-			}
-			catch (NoSuchFormVariationException noSuchFormVariationException) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(noSuchFormVariationException);
-				}
-
-				return null;
-			}
+		if (infoItemFormProvider == null) {
+			return null;
 		}
 
-		return null;
-	}
+		try {
+			return infoItemFormProvider.getInfoForm(
+				String.valueOf(formStyledLayoutStructureItem.getClassTypeId()),
+				_themeDisplay.getScopeGroupId());
+		}
+		catch (NoSuchFormVariationException noSuchFormVariationException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchFormVariationException);
+			}
 
-	public String getInfoFormCheckboxNames(InfoForm infoForm) {
-		List<String> checkboxNames = TransformUtil.transform(
-			infoForm.getAllInfoFields(),
-			infoField -> {
-				if (infoField.getInfoFieldType() instanceof
-						BooleanInfoFieldType) {
-
-					return infoField.getName();
-				}
-
-				return null;
-			});
-
-		return StringUtil.merge(checkboxNames);
+			return null;
+		}
 	}
 
 	public Map<String, Object> getInfoItemActionComponentContext() {
@@ -474,6 +473,28 @@ public class RenderLayoutStructureDisplayContext {
 
 	public LayoutStructure getLayoutStructure() {
 		return _layoutStructure;
+	}
+
+	public LayoutStructureRulesHelper.LayoutStructureRulesResult
+		getLayoutStructureRulesResult() {
+
+		if (_layoutStructureRulesResult != null) {
+			return _layoutStructureRulesResult;
+		}
+
+		LayoutStructureRulesHelper layoutStructureRulesHelper =
+			ServletContextUtil.getLayoutStructureRulesHelper();
+
+		LayoutStructureRulesHelper.LayoutStructureRulesResult
+			layoutStructureRulesResult =
+				layoutStructureRulesHelper.processLayoutStructureRules(
+					_themeDisplay.getScopeGroupId(), _layoutStructure,
+					_themeDisplay.getPermissionChecker(),
+					_getSegmentsEntryIds());
+
+		_layoutStructureRulesResult = layoutStructureRulesResult;
+
+		return _layoutStructureRulesResult;
 	}
 
 	public List<String> getMainChildrenItemIds() {
@@ -526,6 +547,40 @@ public class RenderLayoutStructureDisplayContext {
 		return LanguageUtil.get(
 			_themeDisplay.getLocale(),
 			"your-information-was-successfully-received");
+	}
+
+	public Map<String, Object> getRulesHandlerComponentContext() {
+		LayoutStructureRulesHelper.LayoutStructureRulesResult
+			layoutStructureRulesResult = getLayoutStructureRulesResult();
+
+		return HashMapBuilder.<String, Object>put(
+			"evaluateRulesURL",
+			() -> {
+				StringBundler sb = new StringBundler(6);
+
+				sb.append(PortalUtil.getPortalURL(_httpServletRequest));
+				sb.append(_themeDisplay.getPathMain());
+				sb.append("/portal/evaluate_layout_structure_rules?plid=");
+
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)_httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
+				sb.append(themeDisplay.getPlid());
+
+				sb.append("&segmentsExperienceId=");
+				sb.append(
+					SegmentsExperienceUtil.getSegmentsExperienceId(
+						_httpServletRequest));
+
+				return sb.toString();
+			}
+		).put(
+			"itemIdsByRuleId",
+			layoutStructureRulesResult.getLayoutStructureRuleIdsMap()
+		).put(
+			"ruleIdsByItemId", layoutStructureRulesResult.getItemIdsMap()
+		).build();
 	}
 
 	public String getStyle(StyledLayoutStructureItem styledLayoutStructureItem)
@@ -610,16 +665,16 @@ public class RenderLayoutStructureDisplayContext {
 			JSONObject messageJSONObject =
 				successMessageJSONObject.getJSONObject("message");
 
-			successMessage = messageJSONObject.getString(
-				_themeDisplay.getLanguageId());
+			successMessage = HtmlUtil.escape(
+				messageJSONObject.getString(_themeDisplay.getLanguageId()));
 
 			if (Validator.isNull(successMessage)) {
 				String siteDefaultLanguageId = LanguageUtil.getLanguageId(
 					PortalUtil.getSiteDefaultLocale(
 						_themeDisplay.getScopeGroupId()));
 
-				successMessage = messageJSONObject.getString(
-					siteDefaultLanguageId);
+				successMessage = HtmlUtil.escape(
+					messageJSONObject.getString(siteDefaultLanguageId));
 			}
 		}
 
@@ -635,8 +690,17 @@ public class RenderLayoutStructureDisplayContext {
 	public boolean includeCommonStyles(FragmentEntryLink fragmentEntryLink)
 		throws Exception {
 
+		String editableValues = fragmentEntryLink.getEditableValues();
+
+		if (!editableValues.contains(
+				FragmentEntryProcessorConstants.
+					KEY_STYLES_FRAGMENT_ENTRY_PROCESSOR)) {
+
+			return false;
+		}
+
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-			fragmentEntryLink.getEditableValues());
+			editableValues);
 
 		JSONObject stylesFragmentEntryEntryProcessorJSONObject =
 			jsonObject.getJSONObject(
@@ -647,13 +711,8 @@ public class RenderLayoutStructureDisplayContext {
 			return false;
 		}
 
-		if (stylesFragmentEntryEntryProcessorJSONObject.getBoolean(
-				"hasCommonStyles")) {
-
-			return true;
-		}
-
-		return false;
+		return stylesFragmentEntryEntryProcessorJSONObject.getBoolean(
+			"hasCommonStyles");
 	}
 
 	public boolean isIncludeContainer(
@@ -958,28 +1017,6 @@ public class RenderLayoutStructureDisplayContext {
 		return null;
 	}
 
-	private LayoutStructureRulesHelper.LayoutStructureRulesResult
-		_getLayoutStructureRulesResult() {
-
-		if (_layoutStructureRulesResult != null) {
-			return _layoutStructureRulesResult;
-		}
-
-		LayoutStructureRulesHelper layoutStructureRulesHelper =
-			ServletContextUtil.getLayoutStructureRulesHelper();
-
-		LayoutStructureRulesHelper.LayoutStructureRulesResult
-			layoutStructureRulesResult =
-				layoutStructureRulesHelper.processLayoutStructureRules(
-					_themeDisplay.getScopeGroupId(), _layoutStructure,
-					_themeDisplay.getPermissionChecker(),
-					_getSegmentsEntryIds());
-
-		_layoutStructureRulesResult = layoutStructureRulesResult;
-
-		return _layoutStructureRulesResult;
-	}
-
 	private String _getMainItemId() {
 		if (Validator.isNotNull(_mainItemId)) {
 			return _mainItemId;
@@ -1052,15 +1089,23 @@ public class RenderLayoutStructureDisplayContext {
 			return _segmentsEntryIds;
 		}
 
-		SegmentsEntryRetriever segmentsEntryRetriever =
-			ServletContextUtil.getSegmentsEntryRetriever();
+		long[] segmentEntryIds = (long[])_httpServletRequest.getAttribute(
+			SegmentsWebKeys.SEGMENTS_ENTRY_IDS);
 
-		RequestContextMapper requestContextMapper =
-			ServletContextUtil.getRequestContextMapper();
+		if (segmentEntryIds != null) {
+			_segmentsEntryIds = segmentEntryIds;
+		}
+		else {
+			SegmentsEntryRetriever segmentsEntryRetriever =
+				ServletContextUtil.getSegmentsEntryRetriever();
 
-		_segmentsEntryIds = segmentsEntryRetriever.getSegmentsEntryIds(
-			_themeDisplay.getScopeGroupId(), _themeDisplay.getUserId(),
-			requestContextMapper.map(_httpServletRequest), new long[0]);
+			RequestContextMapper requestContextMapper =
+				ServletContextUtil.getRequestContextMapper();
+
+			_segmentsEntryIds = segmentsEntryRetriever.getSegmentsEntryIds(
+				_themeDisplay.getScopeGroupId(), _themeDisplay.getUserId(),
+				requestContextMapper.map(_httpServletRequest), new long[0]);
+		}
 
 		return _segmentsEntryIds;
 	}

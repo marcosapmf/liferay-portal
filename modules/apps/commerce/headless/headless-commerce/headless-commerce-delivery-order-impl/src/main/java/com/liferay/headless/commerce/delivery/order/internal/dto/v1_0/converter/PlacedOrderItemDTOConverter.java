@@ -11,18 +11,22 @@ import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.media.CommerceMediaResolver;
 import com.liferay.commerce.model.CPDefinitionInventory;
+import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.price.CommerceOrderItemPrice;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
 import com.liferay.commerce.product.model.CPInstance;
+import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
+import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
 import com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItem;
 import com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItemFileEntry;
 import com.liferay.commerce.product.type.virtual.order.service.CommerceVirtualOrderItemService;
 import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.service.CPDefinitionInventoryLocalService;
+import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.util.CommerceQuantityFormatter;
 import com.liferay.expando.kernel.model.ExpandoBridge;
@@ -36,6 +40,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.language.LanguageResources;
@@ -96,6 +101,8 @@ public class PlacedOrderItemDTOConverter
 
 						return expandoBridge.getAttributes();
 					});
+				setDeliveryGroup(commerceOrderItem::getDeliveryGroupName);
+				setDeliveryGroupName(commerceOrderItem::getDeliveryGroupName);
 				setErrorMessages(
 					() -> _getErrorMessages(commerceOrderItem, locale));
 				setExternalReferenceCode(
@@ -107,6 +114,19 @@ public class PlacedOrderItemDTOConverter
 				setOptions(commerceOrderItem::getJson);
 				setParentOrderItemId(
 					commerceOrderItem::getParentCommerceOrderItemId);
+				setPlacedOrderItems(
+					() -> {
+						PlacedOrderItem[] placedOrderItems =
+							(PlacedOrderItem[])
+								placedOrderItemDTOConverterContext.getAttribute(
+									"placedOrderItems");
+
+						if (ArrayUtil.isEmpty(placedOrderItems)) {
+							return null;
+						}
+
+						return placedOrderItems;
+					});
 				setPrice(() -> _getPrice(commerceOrderItem, locale));
 				setProductId(commerceOrderItem::getCProductId);
 				setProductURLs(
@@ -119,8 +139,23 @@ public class PlacedOrderItemDTOConverter
 						commerceOrderItem.getQuantity(),
 						commerceOrderItem.getUnitOfMeasureKey()));
 				setReplacedSku(commerceOrderItem::getReplacedSku);
+				setRequestedDeliveryDate(
+					commerceOrderItem::getRequestedDeliveryDate);
 				setSettings(
 					() -> _getSettings(commerceOrderItem.getCPInstanceId()));
+				setShippingAddressExternalReferenceCode(
+					() -> {
+						CommerceAddress commerceAddress =
+							_commerceAddressService.fetchCommerceAddress(
+								commerceOrderItem.getShippingAddressId());
+
+						if (commerceAddress == null) {
+							return null;
+						}
+
+						return commerceAddress.getExternalReferenceCode();
+					});
+				setShippingAddressId(commerceOrderItem::getShippingAddressId);
 				setSku(commerceOrderItem::getSku);
 				setSkuId(commerceOrderItem::getCPInstanceId);
 				setSubscription(commerceOrderItem::isSubscription);
@@ -128,6 +163,27 @@ public class PlacedOrderItemDTOConverter
 					() -> _cpInstanceHelper.getCPInstanceThumbnailSrc(
 						placedOrderItemDTOConverterContext.getAccountId(),
 						commerceOrderItem.getCPInstanceId()));
+				setUnitOfMeasure(
+					() -> {
+						String unitOfMeasureKey =
+							commerceOrderItem.getUnitOfMeasureKey();
+
+						if (Validator.isNull(unitOfMeasureKey)) {
+							return null;
+						}
+
+						CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
+							_cpInstanceUnitOfMeasureLocalService.
+								fetchCPInstanceUnitOfMeasure(
+									commerceOrderItem.getCPInstanceId(),
+									unitOfMeasureKey);
+
+						if (cpInstanceUnitOfMeasure == null) {
+							return null;
+						}
+
+						return cpInstanceUnitOfMeasure.getName(locale);
+					});
 				setUnitOfMeasureKey(commerceOrderItem::getUnitOfMeasureKey);
 
 				setVirtualItems(
@@ -139,7 +195,9 @@ public class PlacedOrderItemDTOConverter
 										commerceOrderItem.
 											getCommerceOrderItemId());
 
-							if (commerceVirtualOrderItem == null) {
+							if ((commerceVirtualOrderItem == null) ||
+								!commerceVirtualOrderItem.isActive()) {
+
 								return null;
 							}
 
@@ -165,7 +223,9 @@ public class PlacedOrderItemDTOConverter
 										commerceOrderItem.
 											getCommerceOrderItemId());
 
-							if (commerceVirtualOrderItem == null) {
+							if ((commerceVirtualOrderItem == null) ||
+								!commerceVirtualOrderItem.isActive()) {
+
 								return null;
 							}
 
@@ -214,17 +274,16 @@ public class PlacedOrderItemDTOConverter
 
 		CPInstance cpInstance = commerceOrderItem.fetchCPInstance();
 
-		if (cpInstance == null) {
-			ResourceBundle resourceBundle = LanguageResources.getResourceBundle(
-				locale);
-
-			return new String[] {
-				_language.get(
-					resourceBundle, "the-product-is-no-longer-available")
-			};
+		if (cpInstance != null) {
+			return null;
 		}
 
-		return null;
+		ResourceBundle resourceBundle = LanguageResources.getResourceBundle(
+			locale);
+
+		return new String[] {
+			_language.get(resourceBundle, "the-product-is-no-longer-available")
+		};
 	}
 
 	private Price _getPrice(CommerceOrderItem commerceOrderItem, Locale locale)
@@ -422,6 +481,9 @@ public class PlacedOrderItemDTOConverter
 		PlacedOrderItemDTOConverter.class);
 
 	@Reference
+	private CommerceAddressService _commerceAddressService;
+
+	@Reference
 	private CommerceMediaResolver _commerceMediaResolver;
 
 	@Reference
@@ -451,6 +513,10 @@ public class PlacedOrderItemDTOConverter
 
 	@Reference
 	private CPInstanceLocalService _cpInstanceLocalService;
+
+	@Reference
+	private CPInstanceUnitOfMeasureLocalService
+		_cpInstanceUnitOfMeasureLocalService;
 
 	@Reference
 	private Language _language;

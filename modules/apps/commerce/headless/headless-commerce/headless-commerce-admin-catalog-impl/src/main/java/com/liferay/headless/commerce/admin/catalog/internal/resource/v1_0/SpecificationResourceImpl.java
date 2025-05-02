@@ -14,6 +14,7 @@ import com.liferay.headless.commerce.admin.catalog.internal.odata.entity.v1_0.Sp
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.SpecificationResource;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.list.type.model.ListTypeDefinition;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -31,6 +32,7 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -158,6 +160,61 @@ public class SpecificationResourceImpl extends BaseSpecificationResourceImpl {
 		return _addOrUpdateSpecification(specification);
 	}
 
+	@Override
+	public Specification putSpecificationByExternalReferenceCode(
+			String externalReferenceCode, Specification specification)
+		throws Exception {
+
+		CPSpecificationOption cpSpecificationOption =
+			_cpSpecificationOptionService.
+				fetchCPSpecificationOptionByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
+
+		long[] listTypeDefinitionIds = GetterUtil.getLongValues(
+			specification.getListTypeDefinitionIds(),
+			new long[] {
+				GetterUtil.getLong(specification.getListTypeDefinitionId())
+			});
+
+		if (cpSpecificationOption == null) {
+			cpSpecificationOption =
+				_cpSpecificationOptionService.addCPSpecificationOption(
+					specification.getExternalReferenceCode(),
+					_getCPOptionCategoryId(specification),
+					listTypeDefinitionIds,
+					LanguageUtils.getLocalizedMap(specification.getTitle()),
+					LanguageUtils.getLocalizedMap(
+						specification.getDescription()),
+					GetterUtil.getBoolean(specification.getFacetable()),
+					GetterUtil.getString(specification.getKey()),
+					GetterUtil.getDouble(specification.getPriority()),
+					GetterUtil.getBoolean(specification.getVisible(), true),
+					_serviceContextHelper.getServiceContext());
+
+			return _toSpecification(
+				cpSpecificationOption.getCPSpecificationOptionId());
+		}
+
+		Map<String, String> descriptionMap = specification.getDescription();
+		Map<String, String> titleMap = specification.getTitle();
+
+		_cpSpecificationOptionService.updateCPSpecificationOption(
+			GetterUtil.getString(specification.getExternalReferenceCode()),
+			cpSpecificationOption.getCPSpecificationOptionId(),
+			GetterUtil.getLong(_getCPOptionCategoryId(specification)),
+			listTypeDefinitionIds, LanguageUtils.getLocalizedMap(titleMap),
+			LanguageUtils.getLocalizedMap(descriptionMap),
+			GetterUtil.getBoolean(specification.getFacetable()),
+			GetterUtil.getString(specification.getKey()),
+			GetterUtil.getDouble(specification.getPriority()),
+			GetterUtil.getBoolean(
+				specification.getVisible(), cpSpecificationOption.isVisible()),
+			_serviceContextHelper.getServiceContext());
+
+		return _toSpecification(
+			cpSpecificationOption.getCPSpecificationOptionId());
+	}
+
 	private Specification _addOrUpdateSpecification(Specification specification)
 		throws Exception {
 
@@ -248,12 +305,17 @@ public class SpecificationResourceImpl extends BaseSpecificationResourceImpl {
 			_cpSpecificationOptionService.addCPSpecificationOption(
 				specification.getExternalReferenceCode(),
 				_getCPOptionCategoryId(specification),
-				GetterUtil.getLong(specification.getListTypeDefinitionId()),
+				GetterUtil.getLongValues(
+					specification.getListTypeDefinitionIds(),
+					new long[] {
+						GetterUtil.getLong(
+							specification.getListTypeDefinitionId())
+					}),
 				LanguageUtils.getLocalizedMap(specification.getTitle()),
 				LanguageUtils.getLocalizedMap(specification.getDescription()),
 				GetterUtil.getBoolean(specification.getFacetable()),
 				specificationKey,
-				GetterUtil.getDouble(specification.getPriority()),
+				GetterUtil.getDouble(specification.getPriority()), true,
 				_serviceContextHelper.getServiceContext());
 
 		return _toSpecification(
@@ -291,6 +353,31 @@ public class SpecificationResourceImpl extends BaseSpecificationResourceImpl {
 				cpSpecificationOption.getDescriptionMap());
 		}
 
+		long[] listTypeDefinitionIds = GetterUtil.getLongValues(
+			specification.getListTypeDefinitionIds(),
+			transformToLongArray(
+				cpSpecificationOption.getListTypeDefinitions(),
+				ListTypeDefinition::getListTypeDefinitionId));
+
+		if (specification.getListTypeDefinitionIds() == null) {
+			long listTypeDefinitionId = GetterUtil.getLong(
+				specification.getListTypeDefinitionId());
+
+			List<ListTypeDefinition> listTypeDefinitions =
+				cpSpecificationOption.getListTypeDefinitions();
+
+			if (!listTypeDefinitions.isEmpty()) {
+				ListTypeDefinition listTypeDefinition = listTypeDefinitions.get(
+					0);
+
+				listTypeDefinitionId = GetterUtil.getLong(
+					specification.getListTypeDefinitionId(),
+					listTypeDefinition.getListTypeDefinitionId());
+			}
+
+			listTypeDefinitionIds = new long[] {listTypeDefinitionId};
+		}
+
 		Map<String, String> titleMap = specification.getTitle();
 
 		if (titleMap == null) {
@@ -306,10 +393,7 @@ public class SpecificationResourceImpl extends BaseSpecificationResourceImpl {
 			GetterUtil.getLong(
 				cpSpecificationOption.getCPOptionCategoryId(),
 				_getCPOptionCategoryId(specification)),
-			GetterUtil.getLong(
-				specification.getListTypeDefinitionId(),
-				cpSpecificationOption.getListTypeDefinitionId()),
-			LanguageUtils.getLocalizedMap(titleMap),
+			listTypeDefinitionIds, LanguageUtils.getLocalizedMap(titleMap),
 			LanguageUtils.getLocalizedMap(descriptionMap),
 			GetterUtil.getBoolean(
 				specification.getFacetable(),
@@ -319,6 +403,8 @@ public class SpecificationResourceImpl extends BaseSpecificationResourceImpl {
 			GetterUtil.getDouble(
 				specification.getPriority(),
 				cpSpecificationOption.getPriority()),
+			GetterUtil.getBoolean(
+				specification.getVisible(), cpSpecificationOption.isVisible()),
 			_serviceContextHelper.getServiceContext());
 	}
 

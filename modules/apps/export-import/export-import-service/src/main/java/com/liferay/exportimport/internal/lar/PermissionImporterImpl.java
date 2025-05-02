@@ -10,6 +10,7 @@ import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.exportimport.lar.PermissionImporter;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.portal.kernel.exception.NoSuchTeamException;
 import com.liferay.portal.kernel.log.Log;
@@ -126,7 +127,7 @@ public class PermissionImporterImpl implements PermissionImporter {
 			long resourcePK = GetterUtil.getLong(
 				portletDataElement.attributeValue("resource-pk"));
 
-			List<KeyValuePair> permissions = new ArrayList<>();
+			List<KeyValuePair> permissionKeyValuePairs = new ArrayList<>();
 
 			List<Element> permissionsElements = portletDataElement.elements(
 				"permissions");
@@ -138,11 +139,11 @@ public class PermissionImporterImpl implements PermissionImporter {
 
 				KeyValuePair permission = new KeyValuePair(roleName, actions);
 
-				permissions.add(permission);
+				permissionKeyValuePairs.add(permission);
 			}
 
 			portletDataContext.addPermissions(
-				resourceName, resourcePK, permissions);
+				resourceName, resourcePK, permissionKeyValuePairs);
 		}
 	}
 
@@ -221,15 +222,9 @@ public class PermissionImporterImpl implements PermissionImporter {
 	}
 
 	private List<String> _getActions(Element element) {
-		List<String> actions = new ArrayList<>();
-
-		List<Element> actionKeyElements = element.elements("action-key");
-
-		for (Element actionKeyElement : actionKeyElements) {
-			actions.add(actionKeyElement.getText());
-		}
-
-		return actions;
+		return TransformUtil.transform(
+			element.elements("action-key"),
+			actionKeyElement -> actionKeyElement.getText());
 	}
 
 	private void _importPermissions(

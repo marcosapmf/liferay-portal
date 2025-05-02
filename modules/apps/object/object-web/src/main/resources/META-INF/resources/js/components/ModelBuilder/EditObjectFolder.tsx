@@ -43,6 +43,7 @@ import {LeftSidebarItem, ObjectRelationshipEdgeData} from './types';
 import {updatePreviousURLParam} from './utils';
 
 import './EditObjectFolder.scss';
+import ModalDeletionNotAllowed from '../ModalDeletionNotAllowed';
 import {ModalMoveObjectDefinition} from '../ViewObjectDefinitions/ModalMoveObjectDefinition';
 
 interface EditObjectFolder {
@@ -361,7 +362,7 @@ export default function EditObjectFolder({
 								type: TYPES.SET_SHOW_ALL_OBJECT_FIELDS,
 							});
 						}}
-						setVisibility={() =>
+						setVisible={() =>
 							dispatch({
 								payload: {
 									updatedModelBuilderModals: {
@@ -388,6 +389,7 @@ export default function EditObjectFolder({
 								type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
 							});
 						}}
+						learnResources={learnResourceContext}
 						objectDefinitionExternalReferenceCode1={
 							selectedObjectDefinitionNode.data
 								.externalReferenceCode
@@ -470,6 +472,36 @@ export default function EditObjectFolder({
 								return element;
 							}) as Elements<ObjectDefinitionNodeData>;
 
+							const updatedSelectedObjectFolderItems =
+								selectedObjectFolder.objectFolderItems.map(
+									(objectFolderItem) => {
+										if (
+											objectFolderItem.objectDefinitionExternalReferenceCode ===
+											selectedObjectDefinitionNode.data
+												?.externalReferenceCode
+										) {
+											return {
+												...objectFolderItem,
+												objectDefinitionExternalReferenceCode:
+													externalReferenceCode,
+											};
+										}
+
+										return objectFolderItem;
+									}
+								);
+
+							dispatch({
+								payload: {
+									updatedSelectedObjectFolder: {
+										...selectedObjectFolder,
+										objectFolderItems:
+											updatedSelectedObjectFolderItems,
+									},
+								},
+								type: TYPES.SET_SELECTED_OBJECT_FOLDER_DETAILS,
+							});
+
 							dispatch({
 								payload: {
 									newElements: updatedElements,
@@ -545,6 +577,32 @@ export default function EditObjectFolder({
 								type: TYPES.SET_MOVED_OBJECT_DEFINITION,
 							});
 						}}
+					/>
+				)}
+
+			{modelBuilderModals.objectDefinitionOnRootModelDeletionNotAllowed &&
+				Liferay.FeatureFlags['LPD-34594'] && (
+					<ModalDeletionNotAllowed
+						content={
+							<span
+								dangerouslySetInnerHTML={{
+									__html: Liferay.Language.get(
+										'to-delete-this-object-you-must-first-disable-inheritance-and-delete-its-relationships'
+									),
+								}}
+							/>
+						}
+						onModalClose={() =>
+							dispatch({
+								payload: {
+									updatedModelBuilderModals: {
+										objectDefinitionOnRootModelDeletionNotAllowed:
+											false,
+									},
+								},
+								type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
+							})
+						}
 					/>
 				)}
 

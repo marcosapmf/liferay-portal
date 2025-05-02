@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -96,10 +95,6 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 
 		properties.remove("hibernate.cache.region.factory_class");
 
-		if (DBManagerUtil.getDBType(dialect) == DBType.SYBASE) {
-			properties.setProperty(PropsKeys.HIBERNATE_JDBC_BATCH_SIZE, "0");
-		}
-
 		properties.setProperty(
 			"hibernate.allow_update_outside_transaction", "true");
 		properties.setProperty("hibernate.cache.use_query_cache", "false");
@@ -157,26 +152,6 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 
 	public void setMvccEnabled(boolean mvccEnabled) {
 		_mvccEnabled = mvccEnabled;
-	}
-
-	protected static Map<String, Class<?>> getPreloadClassLoaderClasses() {
-		try {
-			Map<String, Class<?>> classes = new HashMap<>();
-
-			for (String className : _PRELOAD_CLASS_NAMES) {
-				ClassLoader portalClassLoader =
-					PortalClassLoaderUtil.getClassLoader();
-
-				Class<?> clazz = portalClassLoader.loadClass(className);
-
-				classes.put(className, clazz);
-			}
-
-			return classes;
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new RuntimeException(classNotFoundException);
-		}
 	}
 
 	@Override
@@ -373,10 +348,6 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 	}
 
 	private static final Field _META_MODEL_FIELD;
-
-	private static final String[] _PRELOAD_CLASS_NAMES =
-		PropsValues.
-			SPRING_HIBERNATE_CONFIGURATION_PROXY_FACTORY_PRELOAD_CLASSLOADER_CLASSES;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		PortalHibernateConfiguration.class);

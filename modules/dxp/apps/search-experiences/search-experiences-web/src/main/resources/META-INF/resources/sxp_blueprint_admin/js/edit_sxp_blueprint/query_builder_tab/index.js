@@ -37,11 +37,13 @@ function QueryBuilderTab({
 	onDeleteSXPElement,
 	onFetchSearchableTypes,
 	onFrameworkConfigChange,
+	onAssetSubtypesMapChange,
 	searchableTypes = [],
 	setFieldTouched,
 	setFieldValue,
 	openSidebar,
 	setOpenSidebar,
+	assetSubtypesMap,
 	touched = [],
 }) {
 	const [activeVerticalNavKey, setActiveVerticalNavKey] = useState(
@@ -164,12 +166,16 @@ function QueryBuilderTab({
 								VERTICAL_NAV_KEYS.QUERY_SETTINGS && (
 								<QuerySettings
 									applyIndexerClauses={applyIndexerClauses}
+									assetSubtypesMap={assetSubtypesMap}
 									clauseContributorsList={
 										clauseContributorsList
 									}
 									frameworkConfig={frameworkConfig}
 									onApplyIndexerClausesChange={
 										onApplyIndexerClausesChange
+									}
+									onAssetSubtypesMapChange={
+										onAssetSubtypesMapChange
 									}
 									onChangeClauseContributorsVisibility={_handleChangeSidebarVisibility(
 										SIDEBAR_TYPES.CLAUSE_CONTRIBUTORS
@@ -199,6 +205,7 @@ function QueryBuilderTab({
 
 QueryBuilderTab.propTypes = {
 	applyIndexerClauses: PropTypes.bool,
+	assetSubtypesMap: PropTypes.object,
 	clauseContributorsList: PropTypes.arrayOf(PropTypes.string),
 	elementInstances: PropTypes.arrayOf(PropTypes.object),
 	entityJSON: PropTypes.object,
@@ -208,6 +215,7 @@ QueryBuilderTab.propTypes = {
 	isIndexCompany: PropTypes.bool,
 	isSubmitting: PropTypes.bool,
 	onApplyIndexerClausesChange: PropTypes.func,
+	onAssetSubtypesMapChange: PropTypes.func,
 	onBlur: PropTypes.func,
 	onChange: PropTypes.func,
 	onDeleteSXPElement: PropTypes.func,

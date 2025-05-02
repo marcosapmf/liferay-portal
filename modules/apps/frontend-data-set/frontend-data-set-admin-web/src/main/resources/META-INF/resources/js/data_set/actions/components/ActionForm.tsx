@@ -10,12 +10,10 @@ import ClayLayout from '@clayui/layout';
 import ClayPanel from '@clayui/panel';
 import ClayTabs from '@clayui/tabs';
 import classNames from 'classnames';
-import {InputLocalized} from 'frontend-js-components-web';
-import {fetch, openModal} from 'frontend-js-web';
+import {InputLocalized, openModal} from 'frontend-js-components-web';
+import {fetch} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
-import {IDataSet} from '../../../DataSets';
-import {FDSViewType} from '../../../FDSViews';
 import RequiredMark from '../../../components/RequiredMark';
 import Search from '../../../components/Search';
 import ValidationFeedback from '../../../components/ValidationFeedback';
@@ -26,7 +24,8 @@ import {
 } from '../../../utils/constants';
 import openDefaultFailureToast from '../../../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../../../utils/openDefaultSuccessToast';
-import {EActionType, IAction} from '../Actions';
+import {IDataSet} from '../../../utils/types';
+import {EActionTarget, EActionType, IAction} from '../Actions';
 
 enum EAsyncActionMethod {
 	DELETE = 'DELETE',
@@ -36,31 +35,31 @@ enum EAsyncActionMethod {
 	PUT = 'PUT',
 }
 
-const ACTION_TYPES = [
+const ACTION_TARGETS = [
 	{
 		label: Liferay.Language.get('link'),
-		value: EActionType.LINK,
+		value: EActionTarget.LINK,
 	},
 	{
 		label: Liferay.Language.get('modal'),
-		value: EActionType.MODAL,
+		value: EActionTarget.MODAL,
 	},
 	{
 		label: Liferay.Language.get('side-panel'),
-		value: EActionType.SIDEPANEL,
+		value: EActionTarget.SIDEPANEL,
 	},
 ];
 
-const ITEM_ACTION_TYPES = [
+const ITEM_ACTION_TARGETS = [
 	{
 		label: Liferay.Language.get('async'),
-		value: EActionType.ASYNC,
+		value: EActionTarget.ASYNC,
 	},
 	{
 		label: Liferay.Language.get('headless'),
-		value: EActionType.HEADLESS,
+		value: EActionTarget.HEADLESS,
 	},
-].concat(ACTION_TYPES);
+].concat(ACTION_TARGETS);
 
 const MESSAGE_TYPES = [
 	{
@@ -115,7 +114,7 @@ const ActionForm = ({
 	spritemap,
 }: {
 	activeTab: number;
-	dataSet: IDataSet | FDSViewType;
+	dataSet: IDataSet;
 	editing?: boolean;
 	initialValues?: IAction;
 	namespace: string;
@@ -137,6 +136,8 @@ const ActionForm = ({
 	const [labelTranslations, setLabelTranslations] = useState(
 		initialValues?.label_i18n ?? {}
 	);
+	const [requestBodyValidationError, setRequestBodyValidationError] =
+		useState(false);
 	const [labelValidationError, setLabelValidationError] = useState(false);
 	const [permissionKeyValidationError, setPermissionKeyValidationError] =
 		useState(false);
@@ -157,22 +158,45 @@ const ActionForm = ({
 		method: initialValues?.method ?? '',
 		modalSize: initialValues?.modalSize ?? '',
 		permissionKey: initialValues?.permissionKey ?? '',
+		requestBody: initialValues?.requestBody ?? '',
+		target: initialValues?.target ?? 'link',
 		title: initialValues?.title ?? '',
-		type: initialValues?.type ?? 'link',
+		type: initialValues?.type ?? '',
 		url: initialValues?.url ?? '',
 	} as IAction);
 
-	const onActionTypeChange = (event: any) => {
-		const type = event.target.value;
+	const isRequestBodyInputValid = (value: string | undefined) => {
+		if (!value) {
+			return true;
+		}
+
+		if (!value.match(/{[^}]*}/)) {
+			return false;
+		}
+
+		try {
+			JSON.parse(value);
+
+			return true;
+		}
+		catch {
+			return false;
+		}
+	};
+
+	const onActionTargetChange = (event: any) => {
+		const target = event.target.value;
 
 		setActionData({
 			...actionData,
-			method: type === EActionType.ASYNC ? EAsyncActionMethod.DELETE : '',
-			modalSize: type === EActionType.MODAL ? MODAL_SIZES[0].value : '',
-			type,
+			method:
+				target === EActionTarget.ASYNC ? EAsyncActionMethod.DELETE : '',
+			modalSize:
+				target === EActionTarget.MODAL ? MODAL_SIZES[0].value : '',
+			target,
 		});
 
-		if (type !== EActionType.HEADLESS) {
+		if (target !== EActionTarget.HEADLESS) {
 			setPermissionKeyValidationError(false);
 		}
 	};
@@ -186,14 +210,13 @@ const ActionForm = ({
 			method,
 			modalSize,
 			permissionKey,
-			type,
+			requestBody,
+			target,
 			url,
 		} = actionData;
 
-		const relationship: string =
-			activeTab === 0
-				? OBJECT_RELATIONSHIP.DATA_SET_ITEM_ACTION_ID
-				: OBJECT_RELATIONSHIP.DATA_SET_CREATION_ACTION_ID;
+		const type: string =
+			activeTab === 0 ? EActionType.ITEM : EActionType.CREATION;
 
 		const body = {
 			confirmationMessage_i18n: confirmationMessageTranslations,
@@ -202,7 +225,9 @@ const ActionForm = ({
 			method,
 			modalSize,
 			permissionKey,
-			[relationship]: dataSet.id,
+			[OBJECT_RELATIONSHIP.DATA_SET_ACTIONS_ID]: dataSet.id,
+			requestBody,
+			target,
 			title_i18n: titleTranslations,
 			type,
 			url,
@@ -213,14 +238,14 @@ const ActionForm = ({
 		}
 
 		if (
-			actionData.type === EActionType.ASYNC ||
-			actionData.type === EActionType.HEADLESS
+			actionData.target === EActionTarget.ASYNC ||
+			actionData.target === EActionTarget.HEADLESS
 		) {
 			body.errorMessage_i18n = errorMessageTranslations;
 			body.successMessage_i18n = successMessageTranslations;
 		}
 
-		if (actionData.type === EActionType.ASYNC) {
+		if (actionData.target === EActionTarget.ASYNC) {
 			body.method = method;
 		}
 
@@ -256,7 +281,7 @@ const ActionForm = ({
 	const validate = () => {
 		let valid: boolean = true;
 
-		const {permissionKey, type, url} = actionData;
+		const {permissionKey, requestBody, target, url} = actionData;
 
 		if (
 			!translationExists({
@@ -268,13 +293,24 @@ const ActionForm = ({
 			setLabelValidationError(true);
 		}
 
-		if (!url && type !== EActionType.HEADLESS) {
+		if (!url && target !== EActionTarget.HEADLESS) {
 			valid = false;
 
 			setURLValidationError(true);
 		}
 
-		if (!permissionKey && type === EActionType.HEADLESS) {
+		if (
+			target === EActionTarget.ASYNC ||
+			target === EActionTarget.HEADLESS
+		) {
+			if (!isRequestBodyInputValid(requestBody)) {
+				valid = false;
+
+				setRequestBodyValidationError(true);
+			}
+		}
+
+		if (!permissionKey && target === EActionTarget.HEADLESS) {
 			valid = false;
 
 			setPermissionKeyValidationError(true);
@@ -312,14 +348,15 @@ const ActionForm = ({
 		getIcons();
 	}, [spritemap]);
 
-	const iconFormElementId = `${namespace}Icon`;
 	const confirmationMessageFormElementId = `${namespace}ConfirmationMessage`;
 	const confirmationMessageTypeFormElementId = `${namespace}ConfirmationMessageType`;
 	const errorMessageFormElementId = `${namespace}ErrorMessage`;
+	const iconFormElementId = `${namespace}Icon`;
 	const labelFormElementId = `${namespace}Label`;
 	const methodFormElementId = `${namespace}Method`;
 	const modalSizeFormElementId = `${namespace}ModalSize`;
 	const permissionKeyFormElementId = `${namespace}PermissionKey`;
+	const requestBodyFormElementId = `${namespace}RequestBody`;
 	const successMessageFormElementId = `${namespace}SuccessMessage`;
 	const titleFormElementId = `${namespace}Title`;
 	const typeFormElementId = `${namespace}Type`;
@@ -365,13 +402,19 @@ const ActionForm = ({
 										closeModal();
 									}}
 								>
-									<ClayIcon
-										className="mr-2"
-										spritemap={spritemap}
-										symbol={item.value}
-									/>
+									<ClayButton
+										borderless
+										displayType="secondary"
+										size="sm"
+									>
+										<ClayIcon
+											className="mr-2"
+											spritemap={spritemap}
+											symbol={item.value}
+										/>
 
-									<span>{item.label}</span>
+										{item.label}
+									</ClayButton>
 								</li>
 							);
 						})}
@@ -538,21 +581,21 @@ const ActionForm = ({
 								<ClaySelectWithOption
 									disabled={editing}
 									id={typeFormElementId}
-									onChange={onActionTypeChange}
+									onChange={onActionTargetChange}
 									options={
 										activeTab === 0
-											? ITEM_ACTION_TYPES
-											: ACTION_TYPES
+											? ITEM_ACTION_TARGETS
+											: ACTION_TARGETS
 									}
 									placeholder={Liferay.Language.get(
 										'please-select-an-option'
 									)}
-									value={actionData.type}
+									value={actionData.target}
 								/>
 							</ClayForm.Group>
 						</ClayLayout.Col>
 
-						{actionData.type === EActionType.ASYNC && (
+						{actionData.target === EActionTarget.ASYNC && (
 							<ClayLayout.Col size={4}>
 								<ClayForm.Group>
 									<label htmlFor={methodFormElementId}>
@@ -584,7 +627,7 @@ const ActionForm = ({
 							</ClayLayout.Col>
 						)}
 
-						{actionData.type === EActionType.MODAL && (
+						{actionData.target === EActionTarget.MODAL && (
 							<ClayLayout.Col size={4}>
 								<ClayForm.Group>
 									<label htmlFor={modalSizeFormElementId}>
@@ -612,8 +655,8 @@ const ActionForm = ({
 						)}
 					</ClayLayout.Row>
 
-					{(actionData.type === EActionType.MODAL ||
-						actionData.type === EActionType.SIDEPANEL) && (
+					{(actionData.target === EActionTarget.MODAL ||
+						actionData.target === EActionTarget.SIDEPANEL) && (
 						<ClayLayout.Row>
 							<ClayLayout.Col>
 								<InputLocalized
@@ -626,7 +669,8 @@ const ActionForm = ({
 										setTitleTranslations(translations);
 									}}
 									placeholder={
-										actionData.type === EActionType.MODAL
+										actionData.target ===
+										EActionTarget.MODAL
 											? Liferay.Language.get(
 													'add-the-title-of-the-modal'
 												)
@@ -640,7 +684,7 @@ const ActionForm = ({
 						</ClayLayout.Row>
 					)}
 
-					{actionData.type !== EActionType.HEADLESS && (
+					{actionData.target !== EActionTarget.HEADLESS && (
 						<ClayLayout.Row justify="start">
 							<ClayLayout.Col lg>
 								<ClayForm.Group
@@ -681,6 +725,64 @@ const ActionForm = ({
 						</ClayLayout.Row>
 					)}
 
+					{(actionData.target === EActionTarget.HEADLESS ||
+						actionData.target === EActionTarget.ASYNC) && (
+						<ClayLayout.Row justify="start">
+							<ClayLayout.Col lg>
+								<ClayForm.Group
+									className={classNames({
+										'has-error': requestBodyValidationError,
+									})}
+								>
+									<label htmlFor={requestBodyFormElementId}>
+										{Liferay.Language.get('request-body')}
+
+										<span
+											className="label-icon lfr-portal-tooltip ml-2"
+											title={Liferay.Language.get(
+												'request-body-help'
+											)}
+										>
+											<ClayIcon symbol="question-circle-full" />
+										</span>
+									</label>
+
+									<ClayInput
+										component="textarea"
+										id={requestBodyFormElementId}
+										onChange={(event) => {
+											const requestBody =
+												event.target.value;
+
+											setActionData({
+												...actionData,
+												requestBody,
+											});
+
+											setRequestBodyValidationError(
+												!isRequestBodyInputValid(
+													requestBody
+												)
+											);
+										}}
+										placeholder={Liferay.Language.get(
+											'add-a-request-body-here'
+										)}
+										value={actionData.requestBody}
+									/>
+
+									{requestBodyValidationError && (
+										<ValidationFeedback
+											message={Liferay.Language.get(
+												'this-field-must-contain-a-valid-json'
+											)}
+										/>
+									)}
+								</ClayForm.Group>
+							</ClayLayout.Col>
+						</ClayLayout.Row>
+					)}
+
 					<ClayLayout.Row justify="start">
 						<ClayLayout.Col>
 							<ClayForm.Group
@@ -693,8 +795,8 @@ const ActionForm = ({
 										'headless-action-key'
 									)}
 
-									{actionData.type ===
-										EActionType.HEADLESS && (
+									{actionData.target ===
+										EActionTarget.HEADLESS && (
 										<RequiredMark />
 									)}
 
@@ -720,8 +822,8 @@ const ActionForm = ({
 										});
 
 										if (
-											actionData.type ===
-											EActionType.HEADLESS
+											actionData.target ===
+											EActionTarget.HEADLESS
 										) {
 											setPermissionKeyValidationError(
 												!permissionKey
@@ -800,8 +902,8 @@ const ActionForm = ({
 				</ClayPanel.Body>
 			</ClayPanel>
 
-			{(actionData.type === EActionType.ASYNC ||
-				actionData.type === EActionType.HEADLESS) && (
+			{(actionData.target === EActionTarget.ASYNC ||
+				actionData.target === EActionTarget.HEADLESS) && (
 				<ClayPanel
 					collapsable
 					defaultExpanded

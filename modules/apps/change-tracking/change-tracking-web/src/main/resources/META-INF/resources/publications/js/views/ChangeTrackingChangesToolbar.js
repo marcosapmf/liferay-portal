@@ -8,7 +8,6 @@ import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
-import ClayLayout from '@clayui/layout';
 import ClayToolbar from '@clayui/toolbar';
 import classNames from 'classnames';
 import React, {useCallback, useRef, useState} from 'react';
@@ -41,6 +40,7 @@ export default function ChangeTrackingChangesToolbar({
 }) {
 	const commentsCacheRef = useRef({});
 	const [showComments, setShowComments] = useState(false);
+	const [publishButtonDisabled, setPublishButtonDisabled] = useState(false);
 
 	const setParameter = useCallback(
 		(url, name, value) => {
@@ -63,7 +63,9 @@ export default function ChangeTrackingChangesToolbar({
 						'btn btn-' + displayType + ' btn-sm',
 						{
 							disabled:
-								(!total && !ctMappingInfos.length) || expired,
+								publishButtonDisabled ||
+								(!total && !ctMappingInfos.length) ||
+								expired,
 						}
 					)}
 					href={setParameter(
@@ -71,6 +73,7 @@ export default function ChangeTrackingChangesToolbar({
 						'redirect',
 						window.location.pathname + window.location.search
 					)}
+					onClick={() => setPublishButtonDisabled(true)}
 				>
 					<span className="inline-item inline-item-before">
 						<ClayIcon spritemap={spritemap} symbol={symbol} />
@@ -166,7 +169,7 @@ export default function ChangeTrackingChangesToolbar({
 	const renderPublicationsToolbar = () => {
 		return (
 			<ClayToolbar className="publications-tbar" light>
-				<div className="container-fluid container-fluid-max-xl">
+				<div className="container-fluid">
 					<ClayToolbar.Nav>
 						<ClayToolbar.Item className="text-left" expand>
 							<ClayToolbar.Section>
@@ -203,6 +206,7 @@ export default function ChangeTrackingChangesToolbar({
 			<ClayAlert
 				displayType="warning"
 				spritemap={spritemap}
+				style={{margin: '0px'}}
 				title={Liferay.Language.get('out-of-date')}
 			>
 				{Liferay.Language.get(
@@ -273,9 +277,7 @@ export default function ChangeTrackingChangesToolbar({
 				</div>
 			</div>
 
-			<ClayLayout.ContainerFluid style={{marginTop: '1em'}}>
-				{renderExpiredBanner()}
-			</ClayLayout.ContainerFluid>
+			<div>{renderExpiredBanner()}</div>
 		</>
 	);
 }

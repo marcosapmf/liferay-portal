@@ -18,6 +18,10 @@ definition {
 		}
 	}
 
+	tearDown {
+		JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+	}
+
 	@description = "This is a test for LPS-121979 and LPS-120005. Change the configuration of page won't break the connection with its style book."
 	@priority = 5
 	test ChangeConfigurationOfPageBasedOnStyleBook {
@@ -590,7 +594,10 @@ definition {
 	@priority = 4
 	test SelectStyleBookInMasterPageWhenUsePublicPagesTheme {
 		property portal.release = "false";
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Add a public page and change it's theme to Minium") {
 			JSONLayout.addPublicLayout(

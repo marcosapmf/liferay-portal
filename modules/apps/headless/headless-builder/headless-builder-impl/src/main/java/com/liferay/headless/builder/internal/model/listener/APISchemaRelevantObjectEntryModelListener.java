@@ -15,6 +15,7 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.model.BaseModelListener;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
@@ -58,8 +59,10 @@ public class APISchemaRelevantObjectEntryModelListener
 
 			if (!_validationHelper.isValidObjectEntry(
 					"L_API_APPLICATION",
-					(long)values.get(
-						"r_apiApplicationToAPISchemas_c_apiApplicationId"))) {
+					GetterUtil.getLong(
+						values.get(
+							"r_apiApplicationToAPISchemas_l_" +
+								"apiApplicationId")))) {
 
 				throw new ObjectEntryValuesException.InvalidObjectField(
 					null, "An API schema must be related to an API application",
@@ -93,10 +96,10 @@ public class APISchemaRelevantObjectEntryModelListener
 						StringBundler.concat(
 							"id ne '", objectEntry.getObjectEntryId(),
 							"' and name eq '", values.get("name"),
-							"' and r_apiApplicationToAPISchemas_c_",
+							"' and r_apiApplicationToAPISchemas_l_",
 							"apiApplicationId eq '",
 							values.get(
-								"r_apiApplicationToAPISchemas_c_" +
+								"r_apiApplicationToAPISchemas_l_" +
 									"apiApplicationId"),
 							"'"),
 						"L_API_SCHEMA"))) {

@@ -6,21 +6,29 @@
 import {useEffect} from 'react';
 import {HashRouter, Outlet, Route, Routes} from 'react-router-dom';
 
+import NewAppContextProvider from '../../context/NewAppContext';
 import SolutionContextProvider from '../../context/SolutionContext';
 import withProviders from '../../hoc/withProviders';
 import {useAccount} from '../../hooks/data/useAccounts';
 import {useCatalogs} from '../../hooks/data/useCatalogs';
 import {useSupplierAccounts} from '../../hooks/data/useSupplierAccounts';
 import {Liferay} from '../../liferay/liferay';
-import CommerceSelectAccountImpl from '../../services/rest/CommerceSelectAccount';
+import CommerceSelectAccount from '../../services/rest/CommerceSelectAccount';
 import PublishedDashboardOutlet from './PublisherDashboardOutlet';
 import Accounts from './pages/Accounts/Accounts';
 import Apps from './pages/Apps';
 import App from './pages/Apps/App';
 import {AppContextProvider} from './pages/Apps/AppCreationFlow/AppContext/AppManageState';
 import {AppCreationFlow} from './pages/Apps/AppCreationFlow/AppCreationFlow';
-import Members from './pages/Members';
-import Projects from './pages/Projects';
+import PublishAppOutlet from './pages/NewAppFlow/PublishAppOutlet';
+import {Build, Profile as AppProfile} from './pages/NewAppFlow/pages';
+import Licensing from './pages/NewAppFlow/pages/Licensing';
+import LicensePrices from './pages/NewAppFlow/pages/Licensing/LicensePrices';
+import Pricing from './pages/NewAppFlow/pages/Pricing';
+import Storefront from './pages/NewAppFlow/pages/Storefront';
+import SubmitApp from './pages/NewAppFlow/pages/Submit';
+import Support from './pages/NewAppFlow/pages/Support';
+import Version from './pages/NewAppFlow/pages/Version';
 import Solutions from './pages/Solutions';
 import PublishSolutionOutlet from './pages/Solutions/NewSolutionFlow/PublishSolutionOutlet';
 import {
@@ -36,13 +44,13 @@ import SolutionsDetails from './pages/Solutions/Solution';
 
 const PublisherDashboardRouter = () => {
 	const {accountId} = Liferay.CommerceContext.account || {};
+	const {data, isValidating} = useAccount();
 	const {data: catalogs = []} = useCatalogs();
 	const accountsSearch = useSupplierAccounts();
-	const {data, isValidating} = useAccount();
 
 	useEffect(() => {
 		const checkAccount = async (accountId: number) => {
-			await CommerceSelectAccountImpl.selectAccount(accountId);
+			await CommerceSelectAccount.selectAccount(accountId);
 
 			Liferay.CommerceContext.account = {
 				accountId,
@@ -65,6 +73,37 @@ const PublisherDashboardRouter = () => {
 	return (
 		<HashRouter>
 			<Routes>
+				<Route path="newapp">
+					<Route
+						element={
+							<NewAppContextProvider
+								catalogId={catalogId as number}
+							>
+								<Outlet />
+							</NewAppContextProvider>
+						}
+						path=":productId?"
+					>
+						<Route element={<PublishAppOutlet />} path="publisher">
+							<Route element={<AppProfile />} path="profile" />
+							<Route element={<Build />} path="build" />
+							<Route element={<Create />} index />
+							<Route element={<Licensing />} path="licensing" />
+							<Route element={<Pricing />} path="pricing" />
+							<Route element={<Storefront />} path="storefront" />
+							<Route element={<Version />} path="version" />
+							<Route element={<SubmitApp />} path="submit" />
+
+							<Route
+								element={<LicensePrices />}
+								path="licensing-prices"
+							/>
+
+							<Route element={<Support />} path="support" />
+						</Route>
+					</Route>
+				</Route>
+
 				<Route
 					element={
 						<AppContextProvider>
@@ -88,8 +127,6 @@ const PublisherDashboardRouter = () => {
 					</Route>
 
 					<Route element={<Accounts />} path="accounts" />
-					<Route element={<Members />} path="members" />
-					<Route element={<Projects />} path="projects" />
 
 					<Route path="solutions">
 						<Route element={<Solutions />} index />

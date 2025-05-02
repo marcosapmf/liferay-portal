@@ -30,24 +30,25 @@ public class StyleBookEntryServiceUtil {
 	 */
 	public static StyleBookEntry addStyleBookEntry(
 			String externalReferenceCode, long groupId, String name,
-			String styleBookEntryKey,
+			String styleBookEntryKey, String themeId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addStyleBookEntry(
-			externalReferenceCode, groupId, name, styleBookEntryKey,
+			externalReferenceCode, groupId, name, styleBookEntryKey, themeId,
 			serviceContext);
 	}
 
 	public static StyleBookEntry addStyleBookEntry(
 			String externalReferenceCode, long groupId,
 			String frontendTokensValues, String name, String styleBookEntryKey,
+			String themeId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addStyleBookEntry(
 			externalReferenceCode, groupId, frontendTokensValues, name,
-			styleBookEntryKey, serviceContext);
+			styleBookEntryKey, themeId, serviceContext);
 	}
 
 	public static StyleBookEntry copyStyleBookEntry(

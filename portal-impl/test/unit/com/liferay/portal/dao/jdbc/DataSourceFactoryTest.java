@@ -9,15 +9,26 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.jdbc.DataSourceFactory;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.FastDateFormatFactoryImpl;
 import com.liferay.portal.util.FileImpl;
+import com.liferay.portal.util.PropsUtil;
 
 import java.io.File;
 
 import java.sql.Connection;
 
+import java.util.Properties;
+import java.util.logging.Level;
+
+import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.naming.NameNotFoundException;
+import javax.naming.NamingException;
 import javax.naming.spi.NamingManager;
 
 import javax.sql.DataSource;
@@ -53,11 +64,6 @@ public class DataSourceFactoryTest {
 		fileUtil.setFile(new FileImpl());
 
 		_tempDir = FileUtil.createTempFolder();
-
-		_dataSource = _dataSourceFactory.initDataSource(
-			"org.hsqldb.jdbc.JDBCDriver",
-			"jdbc:hsqldb:" + _tempDir.getAbsolutePath() + "/lportal;", "sa",
-			StringPool.BLANK, StringPool.BLANK);
 	}
 
 	@After
@@ -70,35 +76,40 @@ public class DataSourceFactoryTest {
 
 		// Destroy JDNI data source
 
+		DataSource dataSource1 = _dataSourceFactory.initDataSource(
+			"org.hsqldb.jdbc.JDBCDriver",
+			"jdbc:hsqldb:" + _tempDir.getAbsolutePath() + "/lportal;", "sa",
+			StringPool.BLANK, StringPool.BLANK);
+
 		NamingManager.setInitialContextFactoryBuilder(
 			environment -> environment1 -> new InitialContext() {
 
 				@Override
 				public Object lookup(String name) {
-					return _dataSource;
+					return dataSource1;
 				}
 
 			});
 
-		DataSource dataSource = _dataSourceFactory.initDataSource(
+		DataSource dataSource2 = _dataSourceFactory.initDataSource(
 			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
 			StringPool.BLANK, "jdbc/test");
 
-		try (Connection connection = dataSource.getConnection()) {
+		try (Connection connection = dataSource2.getConnection()) {
 			Assert.assertFalse(connection.isClosed());
 		}
 
-		_dataSourceFactory.destroyDataSource(dataSource);
+		_dataSourceFactory.destroyDataSource(dataSource2);
 
-		try (Connection connection = dataSource.getConnection()) {
+		try (Connection connection = dataSource2.getConnection()) {
 			Assert.assertFalse(connection.isClosed());
 		}
 
 		// Destroy other data source
 
-		_dataSourceFactory.destroyDataSource(_dataSource);
+		_dataSourceFactory.destroyDataSource(dataSource1);
 
-		try (Connection connection = _dataSource.getConnection()) {
+		try (Connection connection = dataSource1.getConnection()) {
 			Assert.fail();
 		}
 		catch (Exception exception) {
@@ -109,7 +120,39 @@ public class DataSourceFactoryTest {
 		}
 	}
 
-	private DataSource _dataSource;
+	@Test
+	public void testJNDIDataSourceFailure() throws Exception {
+		PropsUtil.addProperties(
+			UnicodePropertiesBuilder.setProperty(
+				PropsKeys.JNDI_ENVIRONMENT + Context.INITIAL_CONTEXT_FACTORY,
+				"org.apache.naming.java.javaURLContextFactory"
+			).build());
+
+		Properties properties = new Properties();
+
+		String jndiName = "jdbc/" + DataSourceFactoryTest.class.getName();
+
+		properties.setProperty("jndi.name", jndiName);
+
+		try (LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
+				DataSourceFactoryImpl.class.getName(), Level.SEVERE)) {
+
+			_dataSourceFactory.initDataSource(properties);
+
+			Assert.fail();
+		}
+		catch (NamingException namingException) {
+			Assert.assertEquals(
+				NameNotFoundException.class, namingException.getClass());
+			Assert.assertEquals(
+				String.format(
+					"Name [java:comp/env/%s] is not bound in this Context. " +
+						"Unable to find [java:comp].",
+					jndiName),
+				namingException.getMessage());
+		}
+	}
+
 	private final DataSourceFactory _dataSourceFactory =
 		new DataSourceFactoryImpl();
 	private File _tempDir;

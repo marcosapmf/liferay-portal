@@ -8,7 +8,7 @@ import {useOutletContext} from 'react-router-dom';
 
 import Page from '../../../../components/Page';
 import {useMarketplaceContext} from '../../../../context/MarketplaceContext';
-import {ORDER_WORKFLOW_STATUS_CODE} from '../../../../enums/Order';
+import {OrderTypes, OrderWorkflowStatusCode} from '../../../../enums/Order';
 import PurchasedSolutionsTable from '../../components/PurchasedSolutionsTable';
 import {usePurchasedOrders} from '../../usePurchasedOrders';
 
@@ -29,7 +29,11 @@ const Solutions = () => {
 	} = usePurchasedOrders({
 		accountId: selectedAccount?.id,
 		channelId: channel?.id,
-		orderTypeExternalReferenceCodes: ['SOLUTION30', 'SOLUTIONS7'],
+		orderTypeExternalReferenceCodes: [
+			OrderTypes.SOLUTIONS7,
+			OrderTypes.SOLUTIONS30,
+			OrderTypes.ADDONS,
+		],
 		page: 1,
 		pageSize: 20,
 		swrConfig: {refreshInterval},
@@ -43,8 +47,8 @@ const Solutions = () => {
 	useEffect(() => {
 		const isProcessing = orderItems.some(({orderStatusInfo}) =>
 			[
-				ORDER_WORKFLOW_STATUS_CODE.PROCESSING,
-				ORDER_WORKFLOW_STATUS_CODE.ON_HOLD,
+				OrderWorkflowStatusCode.PROCESSING,
+				OrderWorkflowStatusCode.ON_HOLD,
 			].includes(orderStatusInfo.code)
 		);
 

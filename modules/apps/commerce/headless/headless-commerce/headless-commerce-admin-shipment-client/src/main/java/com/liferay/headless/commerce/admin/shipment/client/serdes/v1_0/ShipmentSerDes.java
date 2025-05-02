@@ -5,7 +5,6 @@
 
 package com.liferay.headless.commerce.admin.shipment.client.serdes.v1_0;
 
-import com.liferay.headless.commerce.admin.shipment.client.dto.v1_0.CustomField;
 import com.liferay.headless.commerce.admin.shipment.client.dto.v1_0.Shipment;
 import com.liferay.headless.commerce.admin.shipment.client.dto.v1_0.ShipmentItem;
 import com.liferay.headless.commerce.admin.shipment.client.json.BaseJSONParser;
@@ -110,7 +109,7 @@ public class ShipmentSerDes {
 			sb.append("[");
 
 			for (int i = 0; i < shipment.getCustomFields().length; i++) {
-				sb.append(String.valueOf(shipment.getCustomFields()[i]));
+				sb.append(shipment.getCustomFields()[i]);
 
 				if ((i + 1) < shipment.getCustomFields().length) {
 					sb.append(", ");
@@ -170,6 +169,20 @@ public class ShipmentSerDes {
 
 			sb.append(
 				liferayToJSONDateFormat.format(shipment.getModifiedDate()));
+
+			sb.append("\"");
+		}
+
+		if (shipment.getOrderExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"orderExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(shipment.getOrderExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -407,6 +420,15 @@ public class ShipmentSerDes {
 				liferayToJSONDateFormat.format(shipment.getModifiedDate()));
 		}
 
+		if (shipment.getOrderExternalReferenceCode() == null) {
+			map.put("orderExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"orderExternalReferenceCode",
+				String.valueOf(shipment.getOrderExternalReferenceCode()));
+		}
+
 		if (shipment.getOrderId() == null) {
 			map.put("orderId", null);
 		}
@@ -542,6 +564,11 @@ public class ShipmentSerDes {
 			else if (Objects.equals(jsonParserFieldName, "modifiedDate")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "orderExternalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "orderId")) {
 				return false;
 			}
@@ -614,12 +641,17 @@ public class ShipmentSerDes {
 					Object[] jsonParserFieldValues =
 						(Object[])jsonParserFieldValue;
 
-					CustomField[] customFieldsArray =
-						new CustomField[jsonParserFieldValues.length];
+					com.liferay.headless.commerce.admin.shipment.client.custom.
+						field.CustomField[] customFieldsArray = new
+						com.liferay.headless.commerce.admin.shipment.client.
+							custom.field.CustomField
+							[jsonParserFieldValues.length];
 
 					for (int i = 0; i < customFieldsArray.length; i++) {
-						customFieldsArray[i] = CustomFieldSerDes.toDTO(
-							(String)jsonParserFieldValues[i]);
+						customFieldsArray[i] =
+							com.liferay.headless.commerce.admin.shipment.client.
+								custom.field.CustomField.toDTO(
+									(String)jsonParserFieldValues[i]);
 					}
 
 					shipment.setCustomFields(customFieldsArray);
@@ -648,6 +680,14 @@ public class ShipmentSerDes {
 				if (jsonParserFieldValue != null) {
 					shipment.setModifiedDate(
 						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "orderExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					shipment.setOrderExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "orderId")) {
@@ -771,6 +811,10 @@ public class ShipmentSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

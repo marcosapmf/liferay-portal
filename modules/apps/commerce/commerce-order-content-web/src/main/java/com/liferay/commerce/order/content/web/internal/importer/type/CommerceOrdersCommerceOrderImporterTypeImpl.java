@@ -67,12 +67,11 @@ public class CommerceOrdersCommerceOrderImporterTypeImpl
 		long selectedCommerceOrderId = ParamUtil.getLong(
 			httpServletRequest, getCommerceOrderImporterItemParamName());
 
-		if (selectedCommerceOrderId > 0) {
-			return _commerceOrderService.getCommerceOrder(
-				selectedCommerceOrderId);
+		if (selectedCommerceOrderId <= 0) {
+			return null;
 		}
 
-		return null;
+		return _commerceOrderService.getCommerceOrder(selectedCommerceOrderId);
 	}
 
 	@Override
@@ -166,12 +165,14 @@ public class CommerceOrdersCommerceOrderImporterTypeImpl
 			_commerceOrderItemService.getCommerceOrderItems(
 				commerceOrder.getCommerceOrderId(), start, end),
 			commerceOrderItem -> _toCommerceOrderImporterItemImpl(
-				commerceChannelGroupId, commerceOrderItem),
+				commerceOrder.getCommerceAccountId(), commerceChannelGroupId,
+				commerceOrder.getCommerceOrderTypeId(), commerceOrderItem),
 			CommerceOrderImporterItemImpl.class);
 	}
 
 	private CommerceOrderImporterItemImpl _toCommerceOrderImporterItemImpl(
-			long commerceChannelGroupId, CommerceOrderItem commerceOrderItem)
+			long accountEntryId, long commerceChannelGroupId,
+			long commerceOrderTypeId, CommerceOrderItem commerceOrderItem)
 		throws Exception {
 
 		CommerceOrderImporterItemImpl commerceOrderImporterItemImpl =
@@ -189,12 +190,13 @@ public class CommerceOrdersCommerceOrderImporterTypeImpl
 		else {
 			CPInstance firstAvailableReplacementCPInstance =
 				_cpInstanceHelper.fetchFirstAvailableReplacementCPInstance(
-					commerceChannelGroupId, cpInstance.getCPInstanceId());
+					accountEntryId, commerceChannelGroupId, commerceOrderTypeId,
+					cpInstance.getCPInstanceId());
 
 			if ((firstAvailableReplacementCPInstance != null) &&
 				!_cpAvailabilityChecker.check(
-					commerceChannelGroupId, cpInstance, StringPool.BLANK,
-					commerceOrderItem.getQuantity())) {
+					accountEntryId, commerceChannelGroupId, cpInstance,
+					StringPool.BLANK, commerceOrderItem.getQuantity())) {
 
 				commerceOrderImporterItemImpl.setReplacingSKU(
 					cpInstance.getSku());

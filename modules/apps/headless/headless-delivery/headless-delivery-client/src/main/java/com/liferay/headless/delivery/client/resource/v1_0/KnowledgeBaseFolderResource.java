@@ -52,53 +52,21 @@ public interface KnowledgeBaseFolderResource {
 			String callbackURL, Object object)
 		throws Exception;
 
+	public void deleteSiteKnowledgeBaseFolderByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			deleteSiteKnowledgeBaseFolderByExternalReferenceCodeHttpResponse(
+				Long siteId, String externalReferenceCode)
+		throws Exception;
+
 	public KnowledgeBaseFolder getKnowledgeBaseFolder(
 			Long knowledgeBaseFolderId)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse getKnowledgeBaseFolderHttpResponse(
 			Long knowledgeBaseFolderId)
-		throws Exception;
-
-	public KnowledgeBaseFolder patchKnowledgeBaseFolder(
-			Long knowledgeBaseFolderId, KnowledgeBaseFolder knowledgeBaseFolder)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse patchKnowledgeBaseFolderHttpResponse(
-			Long knowledgeBaseFolderId, KnowledgeBaseFolder knowledgeBaseFolder)
-		throws Exception;
-
-	public KnowledgeBaseFolder putKnowledgeBaseFolder(
-			Long knowledgeBaseFolderId, KnowledgeBaseFolder knowledgeBaseFolder)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse putKnowledgeBaseFolderHttpResponse(
-			Long knowledgeBaseFolderId, KnowledgeBaseFolder knowledgeBaseFolder)
-		throws Exception;
-
-	public void putKnowledgeBaseFolderBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse putKnowledgeBaseFolderBatchHttpResponse(
-			String callbackURL, Object object)
-		throws Exception;
-
-	public Page<Permission> getKnowledgeBaseFolderPermissionsPage(
-			Long knowledgeBaseFolderId, String roleNames)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			getKnowledgeBaseFolderPermissionsPageHttpResponse(
-				Long knowledgeBaseFolderId, String roleNames)
-		throws Exception;
-
-	public Page<Permission> putKnowledgeBaseFolderPermissionsPage(
-			Long knowledgeBaseFolderId, Permission[] permissions)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			putKnowledgeBaseFolderPermissionsPageHttpResponse(
-				Long knowledgeBaseFolderId, Permission[] permissions)
 		throws Exception;
 
 	public Page<KnowledgeBaseFolder>
@@ -111,15 +79,32 @@ public interface KnowledgeBaseFolderResource {
 				Long parentKnowledgeBaseFolderId, Pagination pagination)
 		throws Exception;
 
-	public KnowledgeBaseFolder postKnowledgeBaseFolderKnowledgeBaseFolder(
-			Long parentKnowledgeBaseFolderId,
-			KnowledgeBaseFolder knowledgeBaseFolder)
+	public Page<Permission> getKnowledgeBaseFolderPermissionsPage(
+			Long knowledgeBaseFolderId, String roleNames)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
-			postKnowledgeBaseFolderKnowledgeBaseFolderHttpResponse(
-				Long parentKnowledgeBaseFolderId,
-				KnowledgeBaseFolder knowledgeBaseFolder)
+			getKnowledgeBaseFolderPermissionsPageHttpResponse(
+				Long knowledgeBaseFolderId, String roleNames)
+		throws Exception;
+
+	public KnowledgeBaseFolder
+			getSiteKnowledgeBaseFolderByExternalReferenceCode(
+				Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getSiteKnowledgeBaseFolderByExternalReferenceCodeHttpResponse(
+				Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public Page<Permission> getSiteKnowledgeBaseFolderPermissionsPage(
+			Long siteId, String roleNames)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getSiteKnowledgeBaseFolderPermissionsPageHttpResponse(
+				Long siteId, String roleNames)
 		throws Exception;
 
 	public Page<KnowledgeBaseFolder> getSiteKnowledgeBaseFoldersPage(
@@ -130,15 +115,23 @@ public interface KnowledgeBaseFolderResource {
 			Long siteId, Pagination pagination)
 		throws Exception;
 
-	public void postSiteKnowledgeBaseFoldersPageExportBatch(
-			Long siteId, String callbackURL, String contentType,
-			String fieldNames)
+	public KnowledgeBaseFolder patchKnowledgeBaseFolder(
+			Long knowledgeBaseFolderId, KnowledgeBaseFolder knowledgeBaseFolder)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse patchKnowledgeBaseFolderHttpResponse(
+			Long knowledgeBaseFolderId, KnowledgeBaseFolder knowledgeBaseFolder)
+		throws Exception;
+
+	public KnowledgeBaseFolder postKnowledgeBaseFolderKnowledgeBaseFolder(
+			Long parentKnowledgeBaseFolderId,
+			KnowledgeBaseFolder knowledgeBaseFolder)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
-			postSiteKnowledgeBaseFoldersPageExportBatchHttpResponse(
-				Long siteId, String callbackURL, String contentType,
-				String fieldNames)
+			postKnowledgeBaseFolderKnowledgeBaseFolderHttpResponse(
+				Long parentKnowledgeBaseFolderId,
+				KnowledgeBaseFolder knowledgeBaseFolder)
 		throws Exception;
 
 	public KnowledgeBaseFolder postSiteKnowledgeBaseFolder(
@@ -158,23 +151,39 @@ public interface KnowledgeBaseFolderResource {
 				Long siteId, String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteSiteKnowledgeBaseFolderByExternalReferenceCode(
-			Long siteId, String externalReferenceCode)
+	public void postSiteKnowledgeBaseFoldersPageExportBatch(
+			Long siteId, String callbackURL, String contentType,
+			String fieldNames)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
-			deleteSiteKnowledgeBaseFolderByExternalReferenceCodeHttpResponse(
-				Long siteId, String externalReferenceCode)
+			postSiteKnowledgeBaseFoldersPageExportBatchHttpResponse(
+				Long siteId, String callbackURL, String contentType,
+				String fieldNames)
 		throws Exception;
 
-	public KnowledgeBaseFolder
-			getSiteKnowledgeBaseFolderByExternalReferenceCode(
-				Long siteId, String externalReferenceCode)
+	public KnowledgeBaseFolder putKnowledgeBaseFolder(
+			Long knowledgeBaseFolderId, KnowledgeBaseFolder knowledgeBaseFolder)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse putKnowledgeBaseFolderHttpResponse(
+			Long knowledgeBaseFolderId, KnowledgeBaseFolder knowledgeBaseFolder)
+		throws Exception;
+
+	public void putKnowledgeBaseFolderBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse putKnowledgeBaseFolderBatchHttpResponse(
+			String callbackURL, Object object)
+		throws Exception;
+
+	public Page<Permission> putKnowledgeBaseFolderPermissionsPage(
+			Long knowledgeBaseFolderId, Permission[] permissions)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
-			getSiteKnowledgeBaseFolderByExternalReferenceCodeHttpResponse(
-				Long siteId, String externalReferenceCode)
+			putKnowledgeBaseFolderPermissionsPageHttpResponse(
+				Long knowledgeBaseFolderId, Permission[] permissions)
 		throws Exception;
 
 	public KnowledgeBaseFolder
@@ -187,15 +196,6 @@ public interface KnowledgeBaseFolderResource {
 			putSiteKnowledgeBaseFolderByExternalReferenceCodeHttpResponse(
 				Long siteId, String externalReferenceCode,
 				KnowledgeBaseFolder knowledgeBaseFolder)
-		throws Exception;
-
-	public Page<Permission> getSiteKnowledgeBaseFolderPermissionsPage(
-			Long siteId, String roleNames)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse
-			getSiteKnowledgeBaseFolderPermissionsPageHttpResponse(
-				Long siteId, String roleNames)
 		throws Exception;
 
 	public Page<Permission> putSiteKnowledgeBaseFolderPermissionsPage(
@@ -305,8 +305,8 @@ public interface KnowledgeBaseFolderResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -413,8 +413,10 @@ public interface KnowledgeBaseFolderResource {
 
 			httpInvoker.path("knowledgeBaseFolderId", knowledgeBaseFolderId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -512,8 +514,119 @@ public interface KnowledgeBaseFolderResource {
 					_builder._port + _builder._contextPath +
 						"/o/headless-delivery/v1.0/knowledge-base-folders/batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public void deleteSiteKnowledgeBaseFolderByExternalReferenceCode(
+				Long siteId, String externalReferenceCode)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				deleteSiteKnowledgeBaseFolderByExternalReferenceCodeHttpResponse(
+					siteId, externalReferenceCode);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return;
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				deleteSiteKnowledgeBaseFolderByExternalReferenceCodeHttpResponse(
+					Long siteId, String externalReferenceCode)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.DELETE);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}");
+
+			httpInvoker.path("siteId", siteId);
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -616,550 +729,10 @@ public interface KnowledgeBaseFolderResource {
 
 			httpInvoker.path("knowledgeBaseFolderId", knowledgeBaseFolderId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public KnowledgeBaseFolder patchKnowledgeBaseFolder(
-				Long knowledgeBaseFolderId,
-				KnowledgeBaseFolder knowledgeBaseFolder)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				patchKnowledgeBaseFolderHttpResponse(
-					knowledgeBaseFolderId, knowledgeBaseFolder);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return KnowledgeBaseFolderSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse patchKnowledgeBaseFolderHttpResponse(
-				Long knowledgeBaseFolderId,
-				KnowledgeBaseFolder knowledgeBaseFolder)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(
-				knowledgeBaseFolder.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PATCH);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}");
-
-			httpInvoker.path("knowledgeBaseFolderId", knowledgeBaseFolderId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public KnowledgeBaseFolder putKnowledgeBaseFolder(
-				Long knowledgeBaseFolderId,
-				KnowledgeBaseFolder knowledgeBaseFolder)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putKnowledgeBaseFolderHttpResponse(
-					knowledgeBaseFolderId, knowledgeBaseFolder);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return KnowledgeBaseFolderSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse putKnowledgeBaseFolderHttpResponse(
-				Long knowledgeBaseFolderId,
-				KnowledgeBaseFolder knowledgeBaseFolder)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(
-				knowledgeBaseFolder.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}");
-
-			httpInvoker.path("knowledgeBaseFolderId", knowledgeBaseFolderId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public void putKnowledgeBaseFolderBatch(
-				String callbackURL, Object object)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putKnowledgeBaseFolderBatchHttpResponse(callbackURL, object);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-		}
-
-		public HttpInvoker.HttpResponse putKnowledgeBaseFolderBatchHttpResponse(
-				String callbackURL, Object object)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(object.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			if (callbackURL != null) {
-				httpInvoker.parameter(
-					"callbackURL", String.valueOf(callbackURL));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/knowledge-base-folders/batch");
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Page<Permission> getKnowledgeBaseFolderPermissionsPage(
-				Long knowledgeBaseFolderId, String roleNames)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				getKnowledgeBaseFolderPermissionsPageHttpResponse(
-					knowledgeBaseFolderId, roleNames);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return Page.of(content, Permission::toDTO);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				getKnowledgeBaseFolderPermissionsPageHttpResponse(
-					Long knowledgeBaseFolderId, String roleNames)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			if (roleNames != null) {
-				httpInvoker.parameter("roleNames", String.valueOf(roleNames));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}/permissions");
-
-			httpInvoker.path("knowledgeBaseFolderId", knowledgeBaseFolderId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Page<Permission> putKnowledgeBaseFolderPermissionsPage(
-				Long knowledgeBaseFolderId, Permission[] permissions)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				putKnowledgeBaseFolderPermissionsPageHttpResponse(
-					knowledgeBaseFolderId, permissions);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return Page.of(content, Permission::toDTO);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				putKnowledgeBaseFolderPermissionsPageHttpResponse(
-					Long knowledgeBaseFolderId, Permission[] permissions)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			List<String> values = new ArrayList<>();
-
-			for (Permission permissionValue : permissions) {
-				values.add(String.valueOf(permissionValue));
-			}
-
-			httpInvoker.body(values.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}/permissions");
-
-			httpInvoker.path("knowledgeBaseFolderId", knowledgeBaseFolderId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}
@@ -1273,20 +846,134 @@ public interface KnowledgeBaseFolderResource {
 			httpInvoker.path(
 				"parentKnowledgeBaseFolderId", parentKnowledgeBaseFolderId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public KnowledgeBaseFolder postKnowledgeBaseFolderKnowledgeBaseFolder(
-				Long parentKnowledgeBaseFolderId,
-				KnowledgeBaseFolder knowledgeBaseFolder)
+		public Page<Permission> getKnowledgeBaseFolderPermissionsPage(
+				Long knowledgeBaseFolderId, String roleNames)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postKnowledgeBaseFolderKnowledgeBaseFolderHttpResponse(
-					parentKnowledgeBaseFolderId, knowledgeBaseFolder);
+				getKnowledgeBaseFolderPermissionsPageHttpResponse(
+					knowledgeBaseFolderId, roleNames);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return Page.of(content, Permission::toDTO);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				getKnowledgeBaseFolderPermissionsPageHttpResponse(
+					Long knowledgeBaseFolderId, String roleNames)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			if (roleNames != null) {
+				httpInvoker.parameter("roleNames", String.valueOf(roleNames));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}/permissions");
+
+			httpInvoker.path("knowledgeBaseFolderId", knowledgeBaseFolderId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public KnowledgeBaseFolder
+				getSiteKnowledgeBaseFolderByExternalReferenceCode(
+					Long siteId, String externalReferenceCode)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				getSiteKnowledgeBaseFolderByExternalReferenceCodeHttpResponse(
+					siteId, externalReferenceCode);
 
 			String content = httpResponse.getContent();
 
@@ -1348,15 +1035,11 @@ public interface KnowledgeBaseFolderResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				postKnowledgeBaseFolderKnowledgeBaseFolderHttpResponse(
-					Long parentKnowledgeBaseFolderId,
-					KnowledgeBaseFolder knowledgeBaseFolder)
+				getSiteKnowledgeBaseFolderByExternalReferenceCodeHttpResponse(
+					Long siteId, String externalReferenceCode)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(
-				knowledgeBaseFolder.toString(), "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(
@@ -1375,18 +1058,132 @@ public interface KnowledgeBaseFolderResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/knowledge-base-folders/{parentKnowledgeBaseFolderId}/knowledge-base-folders");
+						"/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}");
+
+			httpInvoker.path("siteId", siteId);
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public Page<Permission> getSiteKnowledgeBaseFolderPermissionsPage(
+				Long siteId, String roleNames)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				getSiteKnowledgeBaseFolderPermissionsPageHttpResponse(
+					siteId, roleNames);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return Page.of(content, Permission::toDTO);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				getSiteKnowledgeBaseFolderPermissionsPageHttpResponse(
+					Long siteId, String roleNames)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			if (roleNames != null) {
+				httpInvoker.parameter("roleNames", String.valueOf(roleNames));
+			}
 
 			httpInvoker.path(
-				"parentKnowledgeBaseFolderId", parentKnowledgeBaseFolderId);
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/permissions");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			httpInvoker.path("siteId", siteId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1497,8 +1294,450 @@ public interface KnowledgeBaseFolderResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public KnowledgeBaseFolder patchKnowledgeBaseFolder(
+				Long knowledgeBaseFolderId,
+				KnowledgeBaseFolder knowledgeBaseFolder)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				patchKnowledgeBaseFolderHttpResponse(
+					knowledgeBaseFolderId, knowledgeBaseFolder);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return KnowledgeBaseFolderSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse patchKnowledgeBaseFolderHttpResponse(
+				Long knowledgeBaseFolderId,
+				KnowledgeBaseFolder knowledgeBaseFolder)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(
+				knowledgeBaseFolder.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PATCH);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}");
+
+			httpInvoker.path("knowledgeBaseFolderId", knowledgeBaseFolderId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public KnowledgeBaseFolder postKnowledgeBaseFolderKnowledgeBaseFolder(
+				Long parentKnowledgeBaseFolderId,
+				KnowledgeBaseFolder knowledgeBaseFolder)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postKnowledgeBaseFolderKnowledgeBaseFolderHttpResponse(
+					parentKnowledgeBaseFolderId, knowledgeBaseFolder);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return KnowledgeBaseFolderSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postKnowledgeBaseFolderKnowledgeBaseFolderHttpResponse(
+					Long parentKnowledgeBaseFolderId,
+					KnowledgeBaseFolder knowledgeBaseFolder)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(
+				knowledgeBaseFolder.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/knowledge-base-folders/{parentKnowledgeBaseFolderId}/knowledge-base-folders");
+
+			httpInvoker.path(
+				"parentKnowledgeBaseFolderId", parentKnowledgeBaseFolderId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public KnowledgeBaseFolder postSiteKnowledgeBaseFolder(
+				Long siteId, KnowledgeBaseFolder knowledgeBaseFolder)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postSiteKnowledgeBaseFolderHttpResponse(
+					siteId, knowledgeBaseFolder);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return KnowledgeBaseFolderSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse postSiteKnowledgeBaseFolderHttpResponse(
+				Long siteId, KnowledgeBaseFolder knowledgeBaseFolder)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(
+				knowledgeBaseFolder.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders");
+
+			httpInvoker.path("siteId", siteId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
+
+			return httpInvoker.invoke();
+		}
+
+		public void postSiteKnowledgeBaseFolderBatch(
+				Long siteId, String callbackURL, Object object)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postSiteKnowledgeBaseFolderBatchHttpResponse(
+					siteId, callbackURL, object);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postSiteKnowledgeBaseFolderBatchHttpResponse(
+					Long siteId, String callbackURL, Object object)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(object.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (callbackURL != null) {
+				httpInvoker.parameter(
+					"callbackURL", String.valueOf(callbackURL));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/batch");
+
+			httpInvoker.path("siteId", siteId);
+
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1610,19 +1849,22 @@ public interface KnowledgeBaseFolderResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public KnowledgeBaseFolder postSiteKnowledgeBaseFolder(
-				Long siteId, KnowledgeBaseFolder knowledgeBaseFolder)
+		public KnowledgeBaseFolder putKnowledgeBaseFolder(
+				Long knowledgeBaseFolderId,
+				KnowledgeBaseFolder knowledgeBaseFolder)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postSiteKnowledgeBaseFolderHttpResponse(
-					siteId, knowledgeBaseFolder);
+				putKnowledgeBaseFolderHttpResponse(
+					knowledgeBaseFolderId, knowledgeBaseFolder);
 
 			String content = httpResponse.getContent();
 
@@ -1683,8 +1925,9 @@ public interface KnowledgeBaseFolderResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse postSiteKnowledgeBaseFolderHttpResponse(
-				Long siteId, KnowledgeBaseFolder knowledgeBaseFolder)
+		public HttpInvoker.HttpResponse putKnowledgeBaseFolderHttpResponse(
+				Long knowledgeBaseFolderId,
+				KnowledgeBaseFolder knowledgeBaseFolder)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1709,28 +1952,29 @@ public interface KnowledgeBaseFolderResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders");
+						"/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}");
 
-			httpInvoker.path("siteId", siteId);
+			httpInvoker.path("knowledgeBaseFolderId", knowledgeBaseFolderId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void postSiteKnowledgeBaseFolderBatch(
-				Long siteId, String callbackURL, Object object)
+		public void putKnowledgeBaseFolderBatch(
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postSiteKnowledgeBaseFolderBatchHttpResponse(
-					siteId, callbackURL, object);
+				putKnowledgeBaseFolderBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -1780,9 +2024,8 @@ public interface KnowledgeBaseFolderResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse
-				postSiteKnowledgeBaseFolderBatchHttpResponse(
-					Long siteId, String callbackURL, Object object)
+		public HttpInvoker.HttpResponse putKnowledgeBaseFolderBatchHttpResponse(
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1806,7 +2049,7 @@ public interface KnowledgeBaseFolderResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
 
 			if (callbackURL != null) {
 				httpInvoker.parameter(
@@ -1816,23 +2059,23 @@ public interface KnowledgeBaseFolderResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/batch");
+						"/o/headless-delivery/v1.0/knowledge-base-folders/batch");
 
-			httpInvoker.path("siteId", siteId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void deleteSiteKnowledgeBaseFolderByExternalReferenceCode(
-				Long siteId, String externalReferenceCode)
+		public Page<Permission> putKnowledgeBaseFolderPermissionsPage(
+				Long knowledgeBaseFolderId, Permission[] permissions)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteSiteKnowledgeBaseFolderByExternalReferenceCodeHttpResponse(
-					siteId, externalReferenceCode);
+				putKnowledgeBaseFolderPermissionsPageHttpResponse(
+					knowledgeBaseFolderId, permissions);
 
 			String content = httpResponse.getContent();
 
@@ -1882,7 +2125,7 @@ public interface KnowledgeBaseFolderResource {
 			}
 
 			try {
-				return;
+				return Page.of(content, Permission::toDTO);
 			}
 			catch (Exception e) {
 				_logger.log(
@@ -1894,11 +2137,19 @@ public interface KnowledgeBaseFolderResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				deleteSiteKnowledgeBaseFolderByExternalReferenceCodeHttpResponse(
-					Long siteId, String externalReferenceCode)
+				putKnowledgeBaseFolderPermissionsPageHttpResponse(
+					Long knowledgeBaseFolderId, Permission[] permissions)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			List<String> values = new ArrayList<>();
+
+			for (Permission permissionValue : permissions) {
+				values.add(String.valueOf(permissionValue));
+			}
+
+			httpInvoker.body(values.toString(), "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(
@@ -1917,126 +2168,19 @@ public interface KnowledgeBaseFolderResource {
 				httpInvoker.parameter(entry.getKey(), entry.getValue());
 			}
 
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.DELETE);
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}");
+						"/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}/permissions");
 
-			httpInvoker.path("siteId", siteId);
-			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+			httpInvoker.path("knowledgeBaseFolderId", knowledgeBaseFolderId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public KnowledgeBaseFolder
-				getSiteKnowledgeBaseFolderByExternalReferenceCode(
-					Long siteId, String externalReferenceCode)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				getSiteKnowledgeBaseFolderByExternalReferenceCodeHttpResponse(
-					siteId, externalReferenceCode);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return KnowledgeBaseFolderSerDes.toDTO(content);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				getSiteKnowledgeBaseFolderByExternalReferenceCodeHttpResponse(
-					Long siteId, String externalReferenceCode)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/by-external-reference-code/{externalReferenceCode}");
-
-			httpInvoker.path("siteId", siteId);
-			httpInvoker.path("externalReferenceCode", externalReferenceCode);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}
@@ -2148,118 +2292,10 @@ public interface KnowledgeBaseFolderResource {
 			httpInvoker.path("siteId", siteId);
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Page<Permission> getSiteKnowledgeBaseFolderPermissionsPage(
-				Long siteId, String roleNames)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				getSiteKnowledgeBaseFolderPermissionsPageHttpResponse(
-					siteId, roleNames);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return Page.of(content, Permission::toDTO);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse
-				getSiteKnowledgeBaseFolderPermissionsPageHttpResponse(
-					Long siteId, String roleNames)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			if (roleNames != null) {
-				httpInvoker.parameter("roleNames", String.valueOf(roleNames));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-folders/permissions");
-
-			httpInvoker.path("siteId", siteId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}
@@ -2372,8 +2408,10 @@ public interface KnowledgeBaseFolderResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

@@ -5,6 +5,7 @@
 
 import {Locator, Page} from '@playwright/test';
 
+import {EActions} from '../../helpers/ServerAdministrationHelper';
 import {UIElementsPage} from '../uielements/UIElementsPage';
 
 export class ServerAdministrationPage {
@@ -20,8 +21,17 @@ export class ServerAdministrationPage {
 		this.page = page;
 
 		this.executeButton = page.getByRole('button', {name: 'Execute'});
-		this.scriptBox = page.getByLabel('Script');
+		this.scriptBox = page.getByLabel('Script', {exact: true});
 		this.scriptLink = page.getByRole('link', {name: 'Script'});
+	}
+
+	async executeAction(action: EActions) {
+		await this.page
+			.getByText(action)
+			.getByRole('button', {name: 'Execute'})
+			.click();
+		await this.uiElementsPage.anySuccessAlert.waitFor({state: 'visible'});
+		await this.uiElementsPage.anySuccessAlert.waitFor({state: 'hidden'});
 	}
 
 	async executeScript(script: string) {

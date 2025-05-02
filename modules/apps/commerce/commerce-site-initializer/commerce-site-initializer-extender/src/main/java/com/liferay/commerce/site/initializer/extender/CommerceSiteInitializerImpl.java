@@ -550,7 +550,7 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 
 			_addOrUpdateCommercePriceEntries(
 				cpDefinition,
-				_cpInstanceLocalService.fetchByExternalReferenceCode(
+				_cpInstanceLocalService.fetchCPInstanceByExternalReferenceCode(
 					subscriptionPropertiesJSONObject.getString(
 						"cpDefinitionExternalReferenceCode"),
 					serviceContext.getCompanyId()),
@@ -576,6 +576,20 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 		_cpOptionsImporter.importCPOptions(
 			_jsonFactory.createJSONArray(json),
 			commerceCatalogGroup.getGroupId(), serviceContext.getUserId());
+	}
+
+	private void _addCPSpecificationOptions(
+			String resourcePath, ServiceContext serviceContext,
+			ServletContext servletContext)
+		throws Exception {
+
+		String json = SiteInitializerUtil.read(resourcePath, servletContext);
+
+		JSONArray jsonArray = _jsonFactory.createJSONArray(json);
+
+		_cpSpecificationOptionsImporter.importCPSpecificationOptions(
+			jsonArray, serviceContext.getScopeGroupId(),
+			serviceContext.getUserId());
 	}
 
 	private void _addDefaultCPDisplayLayout(
@@ -677,6 +691,7 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 				resourcePath.endsWith(".products.specifications.json") ||
 				resourcePath.endsWith(
 					".products.subscriptions.properties.json") ||
+				resourcePath.endsWith("commerce-option-categories.json") ||
 				!resourcePath.endsWith(".json")) {
 
 				continue;
@@ -707,13 +722,19 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 				catalog,
 				StringUtil.replaceLast(resourcePath, ".json", ".options.json"),
 				serviceContext, servletContext);
+
+			_addOrUpdateCPOptionCategories(serviceContext, servletContext);
+
+			_addCPSpecificationOptions(
+				StringUtil.replaceLast(
+					resourcePath, ".json", ".specification.options.json"),
+				serviceContext, servletContext);
+
 			_addCPDefinitions(
 				assetVocabularyName, bundle, catalog, channel,
 				commerceInventoryWarehouses,
 				StringUtil.replaceLast(resourcePath, ".json", ".products.json"),
 				serviceContext, servletContext, stringUtilReplaceValues);
-
-			_addOrUpdateCPOptionCategories(serviceContext, servletContext);
 
 			_addCommerceProductSpecifications(
 				StringUtil.replaceLast(

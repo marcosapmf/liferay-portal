@@ -242,14 +242,6 @@ public class CommerceInventoryWarehouseLocalServiceUtil {
 				externalReferenceCode, companyId);
 	}
 
-	public static CommerceInventoryWarehouse
-		fetchCommerceInventoryWarehouseByReferenceCode(
-			String externalReferenceCode, long companyId) {
-
-		return getService().fetchCommerceInventoryWarehouseByReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	/**
 	 * Returns the commerce inventory warehouse with the matching UUID and company.
 	 *
@@ -377,16 +369,18 @@ public class CommerceInventoryWarehouseLocalServiceUtil {
 
 	public static List<CommerceInventoryWarehouse>
 		getCommerceInventoryWarehouses(
-			long companyId, long groupId, boolean active) {
+			long companyId, long accountEntryId, long groupId, boolean active) {
 
 		return getService().getCommerceInventoryWarehouses(
-			companyId, groupId, active);
+			companyId, accountEntryId, groupId, active);
 	}
 
 	public static List<CommerceInventoryWarehouse>
-		getCommerceInventoryWarehouses(long groupId, String sku) {
+		getCommerceInventoryWarehouses(
+			long accountEntryId, long groupId, String sku) {
 
-		return getService().getCommerceInventoryWarehouses(groupId, sku);
+		return getService().getCommerceInventoryWarehouses(
+			accountEntryId, groupId, sku);
 	}
 
 	/**

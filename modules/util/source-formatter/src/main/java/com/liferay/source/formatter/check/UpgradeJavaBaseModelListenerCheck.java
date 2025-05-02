@@ -21,6 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * @author Kyle Miho
  * @author Michael Cavalcanti
  */
 public class UpgradeJavaBaseModelListenerCheck extends BaseUpgradeCheck {
@@ -32,12 +33,13 @@ public class UpgradeJavaBaseModelListenerCheck extends BaseUpgradeCheck {
 
 		JavaClass javaClass = JavaClassParser.parseJavaClass(fileName, content);
 
-		List<String> implementedClassNames =
-			javaClass.getImplementedClassNames();
+		List<String> extendedClassNames = javaClass.getExtendedClassNames();
 
-		if (implementedClassNames.contains("BaseModelListener")) {
+		if (!extendedClassNames.contains("BaseModelListener")) {
 			return content;
 		}
+
+		_modelType = _getModelType(content);
 
 		for (JavaTerm childJavaTerm : javaClass.getChildJavaTerms()) {
 			if (!childJavaTerm.isJavaMethod()) {
@@ -46,7 +48,7 @@ public class UpgradeJavaBaseModelListenerCheck extends BaseUpgradeCheck {
 
 			JavaMethod javaMethod = (JavaMethod)childJavaTerm;
 
-			String newJavaMethodContent = _formatMethodDefinition(javaMethod);
+			String newJavaMethodContent = _formatMethod(javaMethod);
 
 			content = StringUtil.replace(
 				content, javaMethod.getContent(), newJavaMethodContent);
@@ -55,18 +57,43 @@ public class UpgradeJavaBaseModelListenerCheck extends BaseUpgradeCheck {
 		return content;
 	}
 
-	private String _formatMethodDefinition(JavaMethod javaMethod) {
-		String javaMethodContent = javaMethod.getContent();
-
+	private String _formatMethod(JavaMethod javaMethod) {
 		String javaMethodName = javaMethod.getName();
 
-		if (!javaMethodName.equals("onAfterUpdate") &&
-			!javaMethodName.equals("onBeforeUpdate")) {
+		if (javaMethodName.equals("onAfterUpdate") ||
+			javaMethodName.equals("onBeforeUpdate")) {
 
+			return _formatMethodDefinitionWithParameterUpgrade(javaMethod);
+		}
+
+		return _formatMethodDefinitionWithoutParameterUpgrade(javaMethod);
+	}
+
+	private String _formatMethodDefinitionWithoutParameterUpgrade(
+		JavaMethod javaMethod) {
+
+		String javaMethodContent = javaMethod.getContent();
+
+		Matcher matcher = _superMethodPattern.matcher(javaMethodContent);
+
+		if (!matcher.find()) {
 			return javaMethodContent;
 		}
 
-		javaMethodContent = _formatSuper(javaMethodContent);
+		String methodCall = JavaSourceUtil.getMethodCall(
+			javaMethodContent, matcher.start());
+
+		methodCall = methodCall.trim();
+
+		return StringUtil.replace(
+			javaMethodContent, methodCall,
+			_formatSuperMethod(methodCall, false));
+	}
+
+	private String _formatMethodDefinitionWithParameterUpgrade(
+		JavaMethod javaMethod) {
+
+		String javaMethodContent = javaMethod.getContent();
 
 		JavaSignature javaSignature = javaMethod.getSignature();
 
@@ -75,6 +102,8 @@ public class UpgradeJavaBaseModelListenerCheck extends BaseUpgradeCheck {
 		if (parameters.size() != 1) {
 			return javaMethodContent;
 		}
+
+		javaMethodContent = _formatSuperMethod(javaMethodContent, true);
 
 		JavaParameter javaParameter = parameters.get(0);
 
@@ -95,8 +124,10 @@ public class UpgradeJavaBaseModelListenerCheck extends BaseUpgradeCheck {
 			newParameters);
 	}
 
-	private String _formatSuper(String javaMethodContent) {
-		Matcher matcher = _superPattern.matcher(javaMethodContent);
+	private String _formatSuperMethod(
+		String javaMethodContent, boolean parameterUpgrade) {
+
+		Matcher matcher = _superMethodPattern.matcher(javaMethodContent);
 
 		if (!matcher.find()) {
 			return javaMethodContent;
@@ -105,26 +136,50 @@ public class UpgradeJavaBaseModelListenerCheck extends BaseUpgradeCheck {
 		String methodCall = JavaSourceUtil.getMethodCall(
 			javaMethodContent, matcher.start());
 
-		List<String> parameterList = JavaSourceUtil.getParameterList(
+		List<String> parameterNames = JavaSourceUtil.getParameterNames(
 			methodCall);
 
-		if (parameterList.size() != 1) {
+		if (parameterNames.size() != 1) {
 			return javaMethodContent;
 		}
 
-		String parameter = JavaSourceUtil.getParameters(methodCall);
+		String parameterName = parameterNames.get(0);
 
-		String newParameters = StringBundler.concat(
-			"original", StringUtil.upperCaseFirstLetter(parameter),
-			StringPool.COMMA_AND_SPACE, parameter);
+		String newParameters = null;
+
+		if (parameterUpgrade) {
+			newParameters = StringBundler.concat(
+				"original", StringUtil.upperCaseFirstLetter(parameterName),
+				StringPool.COMMA_AND_SPACE, parameterName);
+		}
+		else {
+			newParameters = StringBundler.concat(
+				StringPool.OPEN_PARENTHESIS, _modelType,
+				StringPool.CLOSE_PARENTHESIS, parameterName, ".clone(), ",
+				parameterName);
+		}
 
 		String newMethodCall = StringUtil.replace(
-			methodCall, parameter, newParameters);
+			methodCall, parameterName, newParameters);
 
 		return StringUtil.replace(javaMethodContent, methodCall, newMethodCall);
 	}
 
-	private static final Pattern _superPattern = Pattern.compile(
-		"super.\\s*\\w+\\(\\s*.+\\)");
+	private String _getModelType(String content) throws Exception {
+		Matcher matcher = _modelTypePattern.matcher(content);
+
+		if (!matcher.find()) {
+			throw new Exception("Unable to get model type");
+		}
+
+		return matcher.group(1);
+	}
+
+	private static final Pattern _modelTypePattern = Pattern.compile(
+		"extends\\s+\\w+\\<(\\w+)\\>");
+	private static final Pattern _superMethodPattern = Pattern.compile(
+		"super\\.\\s*(onAfterUpdate|onBeforeUpdate)\\(\\s*\\w+\\)");
+
+	private String _modelType;
 
 }

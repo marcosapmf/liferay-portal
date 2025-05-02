@@ -9,7 +9,8 @@ import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import classNames from 'classnames';
-import {fetch, objectToFormData, openToast, sub} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {fetch, objectToFormData, sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useMemo} from 'react';
 
@@ -317,6 +318,19 @@ export function MenuItem({item, onMenuItemRemoved, sidebarPanelRef}) {
 										)}
 									/>
 								</ClayLayout.ContentCol>
+
+								{item.displayIcon && (
+									<ClayLayout.ContentCol gutters>
+										<ClayIcon
+											className="lfr-portal-tooltip mr-3"
+											style={{
+												height: '1.5rem',
+												width: '1.5rem',
+											}}
+											symbol={item.displayIcon}
+										/>
+									</ClayLayout.ContentCol>
+								)}
 
 								<ClayLayout.ContentCol expand>
 									<ClayCard.Description

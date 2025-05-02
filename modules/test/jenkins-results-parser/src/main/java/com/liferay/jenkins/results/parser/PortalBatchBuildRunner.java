@@ -33,12 +33,24 @@ public abstract class PortalBatchBuildRunner<T extends PortalBatchBuildData>
 			workspaceGitRepository.addPropertyOption(
 				String.valueOf(portalBatchBuildData.getBuildProfile()));
 			workspaceGitRepository.addPropertyOption(
+				String.valueOf(portalBatchBuildData.getTopLevelJobName()));
+			workspaceGitRepository.addPropertyOption(
 				workspaceGitRepository.getUpstreamBranchName());
 
 			String dockerEnabled = System.getenv("LIFERAY_DOCKER_ENABLED");
 
 			if ((dockerEnabled != null) && dockerEnabled.equals("true")) {
 				workspaceGitRepository.addPropertyOption("docker");
+			}
+
+			String osbAsahStagingEnabled = System.getenv(
+				"OSB_ASAH_STAGING_ENABLED");
+
+			if ((osbAsahStagingEnabled != null) &&
+				osbAsahStagingEnabled.equals("true")) {
+
+				workspaceGitRepository.addPropertyOption(
+					"osb-asah-staging-enabled");
 			}
 
 			if (JenkinsResultsParserUtil.isWindows()) {

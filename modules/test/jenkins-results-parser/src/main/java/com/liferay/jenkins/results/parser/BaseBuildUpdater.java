@@ -6,7 +6,9 @@
 package com.liferay.jenkins.results.parser;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Michael Hashimoto
@@ -66,15 +68,11 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 		if (isBuildQueued()) {
 			_build.setStatus("queued");
 
-			runQueued();
-
 			return;
 		}
 
 		if (isBuildRunning()) {
 			_build.setStatus("running");
-
-			runRunning();
 
 			return;
 		}
@@ -85,17 +83,15 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 			return;
 		}
 
-		if (!_build.hasMaximumInvocationCount()) {
+		if (!_hasMaximumInvocationCount()) {
 			_build.setStatus("starting");
 
 			_build.reset();
 
-			runStarting();
-
 			return;
 		}
 
-		runReporting();
+		_build.setStatus("reporting");
 	}
 
 	protected void runQueued() {
@@ -105,8 +101,6 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 
 		if (isBuildRunning()) {
 			_build.setStatus("running");
-
-			runRunning();
 
 			return;
 		}
@@ -131,7 +125,7 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 			}
 		}
 
-		runCompleted();
+		_build.setStatus("completed");
 	}
 
 	protected void runRunning() {
@@ -142,8 +136,6 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 		}
 
 		_build.setStatus("reporting");
-
-		runReporting();
 	}
 
 	protected void runStarting() {
@@ -159,6 +151,24 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 		_build.setStatus("queued");
 	}
 
+	private boolean _hasMaximumInvocationCount() {
+		Build build = getBuild();
+
+		if ((isBuildCompleted() && !isBuildFailing()) || !isBuildCompleted() ||
+			build.isFromArchive()) {
+
+			return false;
+		}
+
+		_setCurrentReinvokeRule();
+
+		if (build.hasMaximumInvocationCount()) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private boolean _isApplyReinvokeRules() {
 		Build build = getBuild();
 
@@ -167,7 +177,7 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 		}
 
 		if ((isBuildCompleted() && !isBuildFailing()) || !isBuildCompleted() ||
-			build.isFromArchive() || build.hasMaximumInvocationCount()) {
+			build.isFromArchive() || _hasMaximumInvocationCount()) {
 
 			return false;
 		}
@@ -230,7 +240,7 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 		Build build = getBuild();
 
 		if (build instanceof AxisBuild || build instanceof ParentBuild ||
-			build.hasMaximumInvocationCount()) {
+			_hasMaximumInvocationCount()) {
 
 			return;
 		}
@@ -273,12 +283,60 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 				!notificationRecipients.isEmpty()) {
 
 				NotificationUtil.sendEmail(
-					message, "jenkins", "Build Reinvoked",
+					message, "jenkins", "Build reinvoked",
 					reinvokeRule.notificationRecipients);
+			}
+
+			String reinvokeBuildPriority =
+				reinvokeRule.getReinvokeBuildPriority();
+
+			if ((reinvokeBuildPriority != null) &&
+				!reinvokeBuildPriority.isEmpty()) {
+
+				Map<String, String> reinvokeBuildParameters = new HashMap<>();
+
+				reinvokeBuildParameters.put(
+					"BUILD_PRIORITY", reinvokeBuildPriority);
+
+				reinvoke(reinvokeBuildParameters);
 			}
 		}
 
 		reinvoke();
+	}
+
+	private void _setCurrentReinvokeRule() {
+		Build build = getBuild();
+
+		if (build instanceof AxisBuild || build instanceof ParentBuild) {
+			return;
+		}
+
+		if ((isBuildCompleted() && !isBuildFailing()) || !isBuildCompleted() ||
+			build.isFromArchive()) {
+
+			return;
+		}
+
+		Build.Invocation currentInvocation = build.getCurrentInvocation();
+
+		if (_reinvokeRulesMap.containsKey(currentInvocation)) {
+			return;
+		}
+
+		for (ReinvokeRule reinvokeRule : ReinvokeRule.getReinvokeRules()) {
+			if (!reinvokeRule.matches(build)) {
+				continue;
+			}
+
+			_reinvokeRulesMap.put(currentInvocation, reinvokeRule);
+
+			currentInvocation.setReinvokeRule(reinvokeRule);
+
+			break;
+		}
+
+		_reinvokeRulesMap.put(currentInvocation, null);
 	}
 
 	private void _takeSlaveOffline(SlaveOfflineRule slaveOfflineRule) {
@@ -292,5 +350,7 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 	}
 
 	private final Build _build;
+	private final Map<Build.Invocation, ReinvokeRule> _reinvokeRulesMap =
+		new HashMap<>();
 
 }

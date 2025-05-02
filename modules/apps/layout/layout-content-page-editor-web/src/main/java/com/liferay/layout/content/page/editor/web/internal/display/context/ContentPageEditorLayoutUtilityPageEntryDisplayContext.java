@@ -7,7 +7,6 @@ package com.liferay.layout.content.page.editor.web.internal.display.context;
 
 import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
-import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.search.InfoSearchClassMapperRegistry;
@@ -23,9 +22,9 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
 import com.liferay.portal.kernel.util.Portal;
@@ -56,7 +55,6 @@ public class ContentPageEditorLayoutUtilityPageEntryDisplayContext
 		FragmentCollectionManager fragmentCollectionManager,
 		FragmentEntryLinkManager fragmentEntryLinkManager,
 		FragmentEntryLinkLocalService fragmentEntryLinkLocalService,
-		FragmentEntryLocalService fragmentEntryLocalService,
 		FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
 		HttpServletRequest httpServletRequest,
 		InfoItemServiceRegistry infoItemServiceRegistry,
@@ -69,8 +67,9 @@ public class ContentPageEditorLayoutUtilityPageEntryDisplayContext
 		LayoutPageTemplateEntryService layoutPageTemplateEntryService,
 		LayoutPermission layoutPermission,
 		PageEditorConfiguration pageEditorConfiguration, Portal portal,
-		PortletRequest portletRequest, PortletURLFactory portletURLFactory,
-		RenderResponse renderResponse,
+		PortletRequest portletRequest,
+		PortletResourcePermission portletResourcePermission,
+		PortletURLFactory portletURLFactory, RenderResponse renderResponse,
 		SegmentsConfigurationProvider segmentsConfigurationProvider,
 		SegmentsExperienceManager segmentsExperienceManager,
 		SegmentsExperienceLocalService segmentsExperienceLocalService,
@@ -78,24 +77,22 @@ public class ContentPageEditorLayoutUtilityPageEntryDisplayContext
 		SegmentsEntryService segmentsEntryService, Staging staging,
 		StagingGroupHelper stagingGroupHelper,
 		StyleBookEntryLocalService styleBookEntryLocalService,
-		UserLocalService userLocalService,
 		WorkflowDefinitionLinkLocalService workflowDefinitionLinkLocalService) {
 
 		super(
 			contentPageEditorSidebarPanels, contentManager,
 			fragmentCollectionManager, fragmentEntryLinkManager,
-			fragmentEntryLinkLocalService, fragmentEntryLocalService,
-			frontendTokenDefinitionRegistry, httpServletRequest,
-			infoItemServiceRegistry, infoSearchClassMapperRegistry,
-			itemSelector, jsonFactory, language, layoutLocalService,
-			layoutLockManager, layoutPageTemplateEntryLocalService,
-			layoutPageTemplateEntryService, layoutPermission,
-			layoutSetLocalService, pageEditorConfiguration, portal,
-			portletRequest, portletURLFactory, renderResponse,
-			segmentsConfigurationProvider, segmentsExperienceManager,
-			segmentsExperienceLocalService, segmentsExperimentRelLocalService,
-			segmentsEntryService, staging, stagingGroupHelper,
-			styleBookEntryLocalService, userLocalService,
+			fragmentEntryLinkLocalService, frontendTokenDefinitionRegistry,
+			httpServletRequest, infoItemServiceRegistry,
+			infoSearchClassMapperRegistry, itemSelector, jsonFactory, language,
+			layoutLocalService, layoutLockManager,
+			layoutPageTemplateEntryLocalService, layoutPageTemplateEntryService,
+			layoutPermission, layoutSetLocalService, pageEditorConfiguration,
+			portal, portletRequest, portletResourcePermission,
+			portletURLFactory, renderResponse, segmentsConfigurationProvider,
+			segmentsExperienceManager, segmentsExperienceLocalService,
+			segmentsExperimentRelLocalService, segmentsEntryService, staging,
+			stagingGroupHelper, styleBookEntryLocalService,
 			workflowDefinitionLinkLocalService);
 	}
 

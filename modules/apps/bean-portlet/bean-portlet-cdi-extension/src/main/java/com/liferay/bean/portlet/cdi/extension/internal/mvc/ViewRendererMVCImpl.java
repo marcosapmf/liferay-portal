@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.event.Event;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.util.TypeLiteral;
@@ -117,7 +118,9 @@ public class ViewRendererMVCImpl implements ViewRenderer {
 			}
 
 			try {
-				_beanManager.fireEvent(
+				Event<Object> event = _beanManager.getEvent();
+
+				event.fire(
 					new BeforeProcessViewEventImpl(
 						viewName, supportingViewEngine.getClass()));
 
@@ -126,7 +129,7 @@ public class ViewRendererMVCImpl implements ViewRenderer {
 						configuration, portletRequest.getLocale(), mimeResponse,
 						models, portletRequest));
 
-				_beanManager.fireEvent(
+				event.fire(
 					new AfterProcessViewEventImpl(
 						viewName, supportingViewEngine.getClass()));
 			}
@@ -135,25 +138,30 @@ public class ViewRendererMVCImpl implements ViewRenderer {
 			}
 		}
 
-		if (_importsMvcBindingPackage) {
-			MutableBindingResult mutableBindingResult =
-				BeanUtil.getMutableBindingResult(_beanManager);
+		if (!_importsMvcBindingPackage) {
+			return;
+		}
 
-			if ((mutableBindingResult != null) &&
-				!mutableBindingResult.isConsulted()) {
+		MutableBindingResult mutableBindingResult =
+			BeanUtil.getMutableBindingResult(_beanManager);
 
-				Set<ParamError> allErrors = mutableBindingResult.getAllErrors();
+		if ((mutableBindingResult == null) ||
+			mutableBindingResult.isConsulted()) {
 
-				for (ParamError paramError : allErrors) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							StringBundler.concat(
-								"A BindingResult error was not processed for ",
-								paramError.getParamName(), ": ",
-								paramError.getMessage()));
-					}
-				}
+			return;
+		}
+
+		Set<ParamError> paramErrors = mutableBindingResult.getAllErrors();
+
+		for (ParamError paramError : paramErrors) {
+			if (!_log.isWarnEnabled()) {
+				continue;
 			}
+
+			_log.warn(
+				StringBundler.concat(
+					"A BindingResult error was not processed for ",
+					paramError.getParamName(), ": ", paramError.getMessage()));
 		}
 	}
 

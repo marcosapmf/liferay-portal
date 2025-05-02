@@ -5,9 +5,12 @@
 
 package com.liferay.dynamic.data.mapping.form.web.internal.portlet.action;
 
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.servlet.taglib.DynamicIncludeUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 
 import javax.portlet.RenderRequest;
@@ -38,6 +41,13 @@ public class EditElementSetMVCRenderCommand implements MVCRenderCommand {
 			"com.liferay.dynamic.data.mapping.form.web#" +
 				"EditElementSetMVCRenderCommand#render",
 			true);
+
+		long structureId = ParamUtil.getLong(renderRequest, "structureId");
+
+		if (structureId > 0) {
+			CTTimelineUtil.setCTTimelineKeys(
+				renderRequest, DDMStructure.class, structureId);
+		}
 
 		return "/admin/edit_element_set.jsp";
 	}

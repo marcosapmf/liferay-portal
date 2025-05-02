@@ -112,6 +112,27 @@ public class NavigationMenu implements Cloneable, Serializable {
 
 	protected Date dateModified;
 
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String externalReferenceCode;
+
 	public Long getId() {
 		return id;
 	}
@@ -203,6 +224,35 @@ public class NavigationMenu implements Cloneable, Serializable {
 	}
 
 	protected NavigationType navigationType;
+
+	public com.liferay.headless.delivery.client.permission.Permission[]
+		getPermissions() {
+
+		return permissions;
+	}
+
+	public void setPermissions(
+		com.liferay.headless.delivery.client.permission.Permission[]
+			permissions) {
+
+		this.permissions = permissions;
+	}
+
+	public void setPermissions(
+		UnsafeSupplier
+			<com.liferay.headless.delivery.client.permission.Permission[],
+			 Exception> permissionsUnsafeSupplier) {
+
+		try {
+			permissions = permissionsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected com.liferay.headless.delivery.client.permission.Permission[]
+		permissions;
 
 	public Long getSiteId() {
 		return siteId;

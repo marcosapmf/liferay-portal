@@ -1,4 +1,4 @@
-<definition component-name="portal-acceptance" ignore="true">
+<definition component-name="portal-ci-infrastructure" ignore="true">
 	<property name="app.server.bundles.size" value="12890"/>
 	<property name="portal.release" value="true" />
 	<property name="portal.upstream" value="true" />
@@ -34,9 +34,6 @@
 
 	<command priority="4" annotations="simple-annotation" name="AddBlogsEntries">
 		<description message="Ensure that a user can add multiple Blogs Entries." />
-
-		<property name="testray.component.names" value="Blogs" />
-		<property name="testray.main.component.name" value="Blogs" />
 
 		<task summary="Add a blogs entry called 'Blogs Entry1 Title' with content 'Blogs Entry1 Content'">
 			<execute macro="Navigator#openURL" />

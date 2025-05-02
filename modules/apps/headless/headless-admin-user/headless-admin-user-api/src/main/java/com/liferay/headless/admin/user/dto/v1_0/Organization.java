@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -57,7 +55,53 @@ public class Organization implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Organization.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The list of accounts associated with this organization."
+	)
+	@Valid
+	public AccountBrief[] getAccountBriefs() {
+		if (_accountBriefsSupplier != null) {
+			accountBriefs = _accountBriefsSupplier.get();
+
+			_accountBriefsSupplier = null;
+		}
+
+		return accountBriefs;
+	}
+
+	public void setAccountBriefs(AccountBrief[] accountBriefs) {
+		this.accountBriefs = accountBriefs;
+
+		_accountBriefsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setAccountBriefs(
+		UnsafeSupplier<AccountBrief[], Exception> accountBriefsUnsafeSupplier) {
+
+		_accountBriefsSupplier = () -> {
+			try {
+				return accountBriefsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The list of accounts associated with this organization."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected AccountBrief[] accountBriefs;
+
+	@JsonIgnore
+	private Supplier<AccountBrief[]> _accountBriefsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
 		if (_actionsSupplier != null) {
@@ -100,7 +144,7 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Organization[] getChildOrganizations() {
 		if (_childOrganizationsSupplier != null) {
@@ -143,7 +187,7 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<Organization[]> _childOrganizationsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The text of a comment associated with the organization."
 	)
 	public String getComment() {
@@ -188,9 +232,55 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _commentSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The user who created the organization."
+	)
 	@Valid
-	public CustomField[] getCustomFields() {
+	public Creator getCreator() {
+		if (_creatorSupplier != null) {
+			creator = _creatorSupplier.get();
+
+			_creatorSupplier = null;
+		}
+
+		return creator;
+	}
+
+	public void setCreator(Creator creator) {
+		this.creator = creator;
+
+		_creatorSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCreator(
+		UnsafeSupplier<Creator, Exception> creatorUnsafeSupplier) {
+
+		_creatorSupplier = () -> {
+			try {
+				return creatorUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The user who created the organization.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Creator creator;
+
+	@JsonIgnore
+	private Supplier<Creator> _creatorSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public com.liferay.portal.vulcan.custom.field.CustomField[]
+		getCustomFields() {
+
 		if (_customFieldsSupplier != null) {
 			customFields = _customFieldsSupplier.get();
 
@@ -200,7 +290,9 @@ public class Organization implements Serializable {
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields) {
+
 		this.customFields = customFields;
 
 		_customFieldsSupplier = null;
@@ -208,7 +300,9 @@ public class Organization implements Serializable {
 
 	@JsonIgnore
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.custom.field.CustomField[], Exception>
+				customFieldsUnsafeSupplier) {
 
 		_customFieldsSupplier = () -> {
 			try {
@@ -225,12 +319,15 @@ public class Organization implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected CustomField[] customFields;
+	protected com.liferay.portal.vulcan.custom.field.CustomField[] customFields;
 
 	@JsonIgnore
-	private Supplier<CustomField[]> _customFieldsSupplier;
+	private Supplier<com.liferay.portal.vulcan.custom.field.CustomField[]>
+		_customFieldsSupplier;
 
-	@Schema(description = "The organization's creation date.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The organization's creation date."
+	)
 	public Date getDateCreated() {
 		if (_dateCreatedSupplier != null) {
 			dateCreated = _dateCreatedSupplier.get();
@@ -271,7 +368,7 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateCreatedSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The most recent time any of the organization's fields changed."
 	)
 	public Date getDateModified() {
@@ -316,7 +413,9 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateModifiedSupplier;
 
-	@Schema(description = "The optional external key of this organization.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The optional external key of this organization."
+	)
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -359,7 +458,9 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema(description = "The organization's ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The organization's ID."
+	)
 	public String getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -398,7 +499,9 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _idSupplier;
 
-	@Schema(description = "A relative URL to the organization's image.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A relative URL to the organization's image."
+	)
 	public String getImage() {
 		if (_imageSupplier != null) {
 			image = _imageSupplier.get();
@@ -439,7 +542,58 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _imageSupplier;
 
-	@Schema(description = "The organization's image id.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The organization's image external reference code."
+	)
+	public String getImageExternalReferenceCode() {
+		if (_imageExternalReferenceCodeSupplier != null) {
+			imageExternalReferenceCode =
+				_imageExternalReferenceCodeSupplier.get();
+
+			_imageExternalReferenceCodeSupplier = null;
+		}
+
+		return imageExternalReferenceCode;
+	}
+
+	public void setImageExternalReferenceCode(
+		String imageExternalReferenceCode) {
+
+		this.imageExternalReferenceCode = imageExternalReferenceCode;
+
+		_imageExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setImageExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			imageExternalReferenceCodeUnsafeSupplier) {
+
+		_imageExternalReferenceCodeSupplier = () -> {
+			try {
+				return imageExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The organization's image external reference code."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String imageExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _imageExternalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The organization's image id."
+	)
 	public Long getImageId() {
 		if (_imageIdSupplier != null) {
 			imageId = _imageIdSupplier.get();
@@ -480,7 +634,9 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _imageIdSupplier;
 
-	@Schema(description = "A list of keywords describing the organization.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A list of keywords describing the organization."
+	)
 	public String[] getKeywords() {
 		if (_keywordsSupplier != null) {
 			keywords = _keywordsSupplier.get();
@@ -523,7 +679,7 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _keywordsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The organization's postal information (country and region)."
 	)
 	@Valid
@@ -569,7 +725,9 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<Location> _locationSupplier;
 
-	@Schema(description = "The organization's name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The organization's name."
+	)
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -608,7 +766,7 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The number of this organization's associated accounts."
 	)
 	public Integer getNumberOfAccounts() {
@@ -653,7 +811,7 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _numberOfAccountsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The number of this organization's child organizations."
 	)
 	public Integer getNumberOfOrganizations() {
@@ -699,7 +857,9 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _numberOfOrganizationsSupplier;
 
-	@Schema(description = "The number of this organization's associated users.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The number of this organization's associated users."
+	)
 	public Integer getNumberOfUsers() {
 		if (_numberOfUsersSupplier != null) {
 			numberOfUsers = _numberOfUsersSupplier.get();
@@ -742,7 +902,7 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _numberOfUsersSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Account[] getOrganizationAccounts() {
 		if (_organizationAccountsSupplier != null) {
@@ -785,7 +945,7 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<Account[]> _organizationAccountsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The organization's contact information, which includes email addresses, postal addresses, phone numbers, and web URLs. This is modeled internally as a `Contact`."
 	)
 	@Valid
@@ -836,7 +996,9 @@ public class Organization implements Serializable {
 	private Supplier<OrganizationContactInformation>
 		_organizationContactInformationSupplier;
 
-	@Schema(description = "The organization's parent organization.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The organization's parent organization."
+	)
 	@Valid
 	public Organization getParentOrganization() {
 		if (_parentOrganizationSupplier != null) {
@@ -879,7 +1041,100 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<Organization> _parentOrganizationSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public com.liferay.portal.vulcan.permission.Permission[] getPermissions() {
+		if (_permissionsSupplier != null) {
+			permissions = _permissionsSupplier.get();
+
+			_permissionsSupplier = null;
+		}
+
+		return permissions;
+	}
+
+	public void setPermissions(
+		com.liferay.portal.vulcan.permission.Permission[] permissions) {
+
+		this.permissions = permissions;
+
+		_permissionsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPermissions(
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.permission.Permission[], Exception>
+				permissionsUnsafeSupplier) {
+
+		_permissionsSupplier = () -> {
+			try {
+				return permissionsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected com.liferay.portal.vulcan.permission.Permission[] permissions;
+
+	@JsonIgnore
+	private Supplier<com.liferay.portal.vulcan.permission.Permission[]>
+		_permissionsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The list of roles associated with this organization."
+	)
+	@Valid
+	public RoleBrief[] getRoleBriefs() {
+		if (_roleBriefsSupplier != null) {
+			roleBriefs = _roleBriefsSupplier.get();
+
+			_roleBriefsSupplier = null;
+		}
+
+		return roleBriefs;
+	}
+
+	public void setRoleBriefs(RoleBrief[] roleBriefs) {
+		this.roleBriefs = roleBriefs;
+
+		_roleBriefsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setRoleBriefs(
+		UnsafeSupplier<RoleBrief[], Exception> roleBriefsUnsafeSupplier) {
+
+		_roleBriefsSupplier = () -> {
+			try {
+				return roleBriefsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The list of roles associated with this organization."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected RoleBrief[] roleBriefs;
+
+	@JsonIgnore
+	private Supplier<RoleBrief[]> _roleBriefsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A list of services the organization provides. This follows the [`Service`](https://www.schema.org/Service) specification."
 	)
 	@Valid
@@ -925,7 +1180,58 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<Service[]> _servicesSupplier;
 
-	@Schema(description = "The tree path of the organization.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The categories associated with this organization."
+	)
+	@Valid
+	public TaxonomyCategoryBrief[] getTaxonomyCategoryBriefs() {
+		if (_taxonomyCategoryBriefsSupplier != null) {
+			taxonomyCategoryBriefs = _taxonomyCategoryBriefsSupplier.get();
+
+			_taxonomyCategoryBriefsSupplier = null;
+		}
+
+		return taxonomyCategoryBriefs;
+	}
+
+	public void setTaxonomyCategoryBriefs(
+		TaxonomyCategoryBrief[] taxonomyCategoryBriefs) {
+
+		this.taxonomyCategoryBriefs = taxonomyCategoryBriefs;
+
+		_taxonomyCategoryBriefsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setTaxonomyCategoryBriefs(
+		UnsafeSupplier<TaxonomyCategoryBrief[], Exception>
+			taxonomyCategoryBriefsUnsafeSupplier) {
+
+		_taxonomyCategoryBriefsSupplier = () -> {
+			try {
+				return taxonomyCategoryBriefsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The categories associated with this organization."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected TaxonomyCategoryBrief[] taxonomyCategoryBriefs;
+
+	@JsonIgnore
+	private Supplier<TaxonomyCategoryBrief[]> _taxonomyCategoryBriefsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The tree path of the organization."
+	)
 	public String getTreePath() {
 		if (_treePathSupplier != null) {
 			treePath = _treePathSupplier.get();
@@ -966,7 +1272,54 @@ public class Organization implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _treePathSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The list of users associated with this organization."
+	)
+	@Valid
+	public UserAccountBrief[] getUserAccountBriefs() {
+		if (_userAccountBriefsSupplier != null) {
+			userAccountBriefs = _userAccountBriefsSupplier.get();
+
+			_userAccountBriefsSupplier = null;
+		}
+
+		return userAccountBriefs;
+	}
+
+	public void setUserAccountBriefs(UserAccountBrief[] userAccountBriefs) {
+		this.userAccountBriefs = userAccountBriefs;
+
+		_userAccountBriefsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setUserAccountBriefs(
+		UnsafeSupplier<UserAccountBrief[], Exception>
+			userAccountBriefsUnsafeSupplier) {
+
+		_userAccountBriefsSupplier = () -> {
+			try {
+				return userAccountBriefsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The list of users associated with this organization."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected UserAccountBrief[] userAccountBriefs;
+
+	@JsonIgnore
+	private Supplier<UserAccountBrief[]> _userAccountBriefsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public UserAccount[] getUserAccounts() {
 		if (_userAccountsSupplier != null) {
@@ -1038,6 +1391,28 @@ public class Organization implements Serializable {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		AccountBrief[] accountBriefs = getAccountBriefs();
+
+		if (accountBriefs != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"accountBriefs\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < accountBriefs.length; i++) {
+				sb.append(String.valueOf(accountBriefs[i]));
+
+				if ((i + 1) < accountBriefs.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		Map<String, Map<String, String>> actions = getActions();
 
 		if (actions != null) {
@@ -1088,7 +1463,20 @@ public class Organization implements Serializable {
 			sb.append("\"");
 		}
 
-		CustomField[] customFields = getCustomFields();
+		Creator creator = getCreator();
+
+		if (creator != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"creator\": ");
+
+			sb.append(String.valueOf(creator));
+		}
+
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields =
+			getCustomFields();
 
 		if (customFields != null) {
 			if (sb.length() > 1) {
@@ -1100,7 +1488,7 @@ public class Organization implements Serializable {
 			sb.append("[");
 
 			for (int i = 0; i < customFields.length; i++) {
-				sb.append(String.valueOf(customFields[i]));
+				sb.append(customFields[i]);
 
 				if ((i + 1) < customFields.length) {
 					sb.append(", ");
@@ -1186,6 +1574,22 @@ public class Organization implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(image));
+
+			sb.append("\"");
+		}
+
+		String imageExternalReferenceCode = getImageExternalReferenceCode();
+
+		if (imageExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"imageExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(imageExternalReferenceCode));
 
 			sb.append("\"");
 		}
@@ -1339,6 +1743,51 @@ public class Organization implements Serializable {
 			sb.append(String.valueOf(parentOrganization));
 		}
 
+		com.liferay.portal.vulcan.permission.Permission[] permissions =
+			getPermissions();
+
+		if (permissions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"permissions\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < permissions.length; i++) {
+				sb.append(permissions[i]);
+
+				if ((i + 1) < permissions.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		RoleBrief[] roleBriefs = getRoleBriefs();
+
+		if (roleBriefs != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"roleBriefs\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < roleBriefs.length; i++) {
+				sb.append(String.valueOf(roleBriefs[i]));
+
+				if ((i + 1) < roleBriefs.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		Service[] services = getServices();
 
 		if (services != null) {
@@ -1361,6 +1810,29 @@ public class Organization implements Serializable {
 			sb.append("]");
 		}
 
+		TaxonomyCategoryBrief[] taxonomyCategoryBriefs =
+			getTaxonomyCategoryBriefs();
+
+		if (taxonomyCategoryBriefs != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"taxonomyCategoryBriefs\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < taxonomyCategoryBriefs.length; i++) {
+				sb.append(String.valueOf(taxonomyCategoryBriefs[i]));
+
+				if ((i + 1) < taxonomyCategoryBriefs.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		String treePath = getTreePath();
 
 		if (treePath != null) {
@@ -1375,6 +1847,28 @@ public class Organization implements Serializable {
 			sb.append(_escape(treePath));
 
 			sb.append("\"");
+		}
+
+		UserAccountBrief[] userAccountBriefs = getUserAccountBriefs();
+
+		if (userAccountBriefs != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"userAccountBriefs\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < userAccountBriefs.length; i++) {
+				sb.append(String.valueOf(userAccountBriefs[i]));
+
+				if ((i + 1) < userAccountBriefs.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		UserAccount[] userAccounts = getUserAccounts();
@@ -1404,8 +1898,8 @@ public class Organization implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.user.dto.v1_0.Organization",
 		name = "x-class-name"
 	)

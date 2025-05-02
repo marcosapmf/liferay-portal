@@ -7,11 +7,15 @@ package com.liferay.portal.security.content.security.policy.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
+import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.io.BufferedReader;
@@ -43,12 +47,35 @@ public class ContentSecurityPolicyFilterTest {
 		new LiferayIntegrationTestRule();
 
 	@Test
-	public void testProcessFilter() throws Exception {
+	public void testNotNeededForDocrootHtmlResources() throws Exception {
 		try (CompanyConfigurationTemporarySwapper
 				configurationTemporarySwapper =
 					_getCompanyConfigurationTemporarySwapper(false, null, "")) {
 
-			HttpURLConnection httpURLConnection = _openHttpURLConnection();
+			HttpURLConnection httpURLConnection = _openHttpURLConnection(
+				"http://localhost:8080/html/common/null.html");
+
+			Map<String, List<String>> headerFields =
+				httpURLConnection.getHeaderFields();
+
+			Assert.assertFalse(
+				headerFields.containsKey("Content-Security-Policy"));
+
+			httpURLConnection.disconnect();
+		}
+	}
+
+	@Test
+	public void testProcessFilter() throws Exception {
+		Company company = _companyLocalService.getCompany(
+			TestPropsValues.getCompanyId());
+
+		try (CompanyConfigurationTemporarySwapper
+				configurationTemporarySwapper =
+					_getCompanyConfigurationTemporarySwapper(false, null, "")) {
+
+			HttpURLConnection httpURLConnection = _openHttpURLConnection(
+				"http://" + company.getVirtualHostname() + ":8080/web/guest");
 
 			Map<String, List<String>> headerFields =
 				httpURLConnection.getHeaderFields();
@@ -63,7 +90,8 @@ public class ContentSecurityPolicyFilterTest {
 				configurationTemporarySwapper =
 					_getCompanyConfigurationTemporarySwapper(true, null, "")) {
 
-			HttpURLConnection httpURLConnection = _openHttpURLConnection();
+			HttpURLConnection httpURLConnection = _openHttpURLConnection(
+				"http://" + company.getVirtualHostname() + ":8080/web/guest");
 
 			Map<String, List<String>> headerFields =
 				httpURLConnection.getHeaderFields();
@@ -85,7 +113,8 @@ public class ContentSecurityPolicyFilterTest {
 					_getCompanyConfigurationTemporarySwapper(
 						true, null, policy)) {
 
-			HttpURLConnection httpURLConnection = _openHttpURLConnection();
+			HttpURLConnection httpURLConnection = _openHttpURLConnection(
+				"http://" + company.getVirtualHostname() + ":8080/web/guest");
 
 			Map<String, List<String>> headerFields =
 				httpURLConnection.getHeaderFields();
@@ -109,7 +138,8 @@ public class ContentSecurityPolicyFilterTest {
 					_getCompanyConfigurationTemporarySwapper(
 						true, null, policy)) {
 
-			HttpURLConnection httpURLConnection = _openHttpURLConnection();
+			HttpURLConnection httpURLConnection = _openHttpURLConnection(
+				"http://" + company.getVirtualHostname() + ":8080/web/guest");
 
 			Map<String, List<String>> headerFields =
 				httpURLConnection.getHeaderFields();
@@ -133,11 +163,17 @@ public class ContentSecurityPolicyFilterTest {
 			String content = _getContent(httpURLConnection);
 
 			Assert.assertTrue(
-				content.contains("<link nonce=\"" + nonce + "\""));
+				content.matches(
+					".*<link [^>]*nonce=\"" + HtmlUtil.escapeJS(nonce) +
+						"\".*"));
 			Assert.assertTrue(
-				content.contains("<script nonce=\"" + nonce + "\""));
+				content.matches(
+					".*<script [^>]*nonce=\"" + HtmlUtil.escapeJS(nonce) +
+						"\".*"));
 			Assert.assertTrue(
-				content.contains("<style nonce=\"" + nonce + "\""));
+				content.matches(
+					".*<style [^>]*nonce=\"" + HtmlUtil.escapeJS(nonce) +
+						"\".*"));
 
 			httpURLConnection.disconnect();
 		}
@@ -148,7 +184,8 @@ public class ContentSecurityPolicyFilterTest {
 						true, new String[] {"/c/portal/layout", "/web/guest"},
 						policy)) {
 
-			HttpURLConnection httpURLConnection = _openHttpURLConnection();
+			HttpURLConnection httpURLConnection = _openHttpURLConnection(
+				"http://" + company.getVirtualHostname() + ":8080/web/guest");
 
 			Map<String, List<String>> headerFields =
 				httpURLConnection.getHeaderFields();
@@ -198,8 +235,10 @@ public class ContentSecurityPolicyFilterTest {
 		return sb.toString();
 	}
 
-	private HttpURLConnection _openHttpURLConnection() throws IOException {
-		URL url = new URL("http://localhost:8080/web/guest");
+	private HttpURLConnection _openHttpURLConnection(String urlString)
+		throws IOException {
+
+		URL url = new URL(urlString);
 
 		HttpURLConnection httpURLConnection =
 			(HttpURLConnection)url.openConnection();
@@ -208,5 +247,8 @@ public class ContentSecurityPolicyFilterTest {
 
 		return httpURLConnection;
 	}
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 }

@@ -10,8 +10,8 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.asset.vocabulary.item.selector.AssetVocabularyItemSelectorCriterion;
 import com.liferay.asset.vocabulary.item.selector.AssetVocabularyItemSelectorReturnType;
-import com.liferay.asset.vocabulary.item.selector.criterion.AssetVocabularyItemSelectorCriterion;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
@@ -360,16 +360,10 @@ public class AssetVocabularySiteNavigationMenuItemType
 				siteNavigationMenuItem.getTypeSettings()
 			).build();
 
-		if (AssetVocabularyPermission.contains(
-				permissionChecker,
-				GetterUtil.getLong(
-					typeSettingsUnicodeProperties.get("classPK")),
-				ActionKeys.VIEW)) {
-
-			return true;
-		}
-
-		return false;
+		return AssetVocabularyPermission.contains(
+			permissionChecker,
+			GetterUtil.getLong(typeSettingsUnicodeProperties.get("classPK")),
+			ActionKeys.VIEW);
 	}
 
 	@Override

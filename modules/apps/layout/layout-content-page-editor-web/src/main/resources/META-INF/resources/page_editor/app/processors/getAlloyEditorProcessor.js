@@ -4,7 +4,8 @@
  */
 
 import {isNullOrUndefined} from '@liferay/layout-js-components-web';
-import {debounce, openSelectionModal} from 'frontend-js-web';
+import {openSelectionModal} from 'frontend-js-components-web';
+import {debounce} from 'frontend-js-web';
 
 import {SPACE_KEY_CODE} from '../config/constants/keyboardCodes';
 import {config} from '../config/index';
@@ -219,6 +220,8 @@ export default function getAlloyEditorProcessor(
 		destroyEditor: (element, editableConfig) => {
 			if (_editor) {
 				const lastValue = _editor.get('nativeEditor').getData();
+
+				_callbacks.changeCallback(lastValue);
 
 				_editor.destroy();
 

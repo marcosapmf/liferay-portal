@@ -7,8 +7,13 @@ package com.liferay.portal.vulcan.internal.jaxrs.exception.mapper;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.module.service.Snapshot;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.jaxrs.exception.mapper.BaseExceptionMapper;
 import com.liferay.portal.vulcan.jaxrs.exception.mapper.Problem;
+import com.liferay.portal.vulcan.problem.ProblemProvider;
+
+import java.util.Locale;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
@@ -56,6 +61,21 @@ public class ExceptionMapper extends BaseExceptionMapper<Exception> {
 
 	@Override
 	protected Problem getProblem(Exception exception) {
+		ProblemProvider problemProvider =
+			_problemProviderRegistrySnapshot.get();
+
+		com.liferay.portal.vulcan.problem.Problem problem =
+			problemProvider.getProblem(exception);
+
+		if (problem != null) {
+			Locale locale = _acceptLanguage.getPreferredLocale();
+
+			return new Problem(
+				problem.getDetail(locale),
+				_getResponseStatus(problem.getStatus()),
+				problem.getTitle(locale), problem.getType());
+		}
+
 		_log.error(exception);
 
 		return new Problem(
@@ -63,8 +83,27 @@ public class ExceptionMapper extends BaseExceptionMapper<Exception> {
 			Response.Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
 	}
 
+	private Response.Status _getResponseStatus(
+		com.liferay.portal.vulcan.problem.Problem.Status status) {
+
+		if (com.liferay.portal.vulcan.problem.Problem.Status.BAD_REQUEST.equals(
+				status)) {
+
+			return Response.Status.BAD_REQUEST;
+		}
+
+		return Response.Status.INTERNAL_SERVER_ERROR;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		ExceptionMapper.class);
+
+	private static final Snapshot<ProblemProvider>
+		_problemProviderRegistrySnapshot = new Snapshot<>(
+			ExceptionMapper.class, ProblemProvider.class);
+
+	@Context
+	private AcceptLanguage _acceptLanguage;
 
 	@Context
 	private Providers _providers;

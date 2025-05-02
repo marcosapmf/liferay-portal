@@ -34,6 +34,8 @@ if (commerceShippingFixedOptionRel != null) {
 		<aui:input name="commerceShippingFixedOptionRelId" type="hidden" value="<%= commerceShippingFixedOptionRelId %>" />
 		<aui:input name="commerceShippingMethodId" type="hidden" value="<%= commerceShippingMethodId %>" />
 
+		<liferay-ui:error exception="<%= CommerceShippingFixedOptionRelPriceException.class %>" message="please-enter-a-valid-price" />
+
 		<div class="alert alert-info">
 			<liferay-ui:message key="commerce-shipping-fixed-option-rel-info" />
 		</div>
@@ -144,7 +146,7 @@ if (commerceShippingFixedOptionRel != null) {
 	</aui:form>
 </liferay-frontend:side-panel-content>
 
-<aui:script use="aui-base,liferay-dynamic-select">
+<aui:script use="aui-base">
 	new Liferay.DynamicSelect([
 		{
 			select: '<portlet:namespace />countryId',

@@ -15,7 +15,7 @@ import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.spi.history.CTCollectionHistoryProvider;
 import com.liferay.change.tracking.spi.history.CTCollectionHistoryProviderRegistry;
-import com.liferay.change.tracking.web.internal.spi.history.DefaultCTCollectionHistoryProvider;
+import com.liferay.change.tracking.spi.history.DefaultCTCollectionHistoryProvider;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -76,8 +76,13 @@ public class GetConflictInfoMVCResourceCommand extends BaseMVCResourceCommand {
 			return _jsonFactory.createJSONObject();
 		}
 
-		long classNameId = ParamUtil.getLong(resourceRequest, "classNameId");
 		long classPK = ParamUtil.getLong(resourceRequest, "classPK");
+
+		if (classPK == 0) {
+			return _jsonFactory.createJSONObject();
+		}
+
+		long classNameId = ParamUtil.getLong(resourceRequest, "classNameId");
 
 		List<CTEntry> ctEntries = _ctEntryLocalService.dslQuery(
 			DSLQueryFactoryUtil.select(
@@ -99,16 +104,7 @@ public class GetConflictInfoMVCResourceCommand extends BaseMVCResourceCommand {
 		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		if (ListUtil.isEmpty(ctEntries)) {
-			return JSONUtil.put(
-				"conflictIconClass", "change-tracking-conflict-icon"
-			).put(
-				"conflictIconLabel",
-				_language.get(themeDisplay.getLocale(), "no-modifications-help")
-			).put(
-				"conflictIconName", "check"
-			);
-		}
+		JSONObject conflictInfoJSONObject = _jsonFactory.createJSONObject();
 
 		Map<Long, List<ConflictInfo>> conflictInfoMap =
 			_ctCollectionLocalService.checkConflicts(
@@ -119,15 +115,17 @@ public class GetConflictInfoMVCResourceCommand extends BaseMVCResourceCommand {
 				_language.get(themeDisplay.getLocale(), "production"));
 
 		if (!conflictInfoMap.isEmpty()) {
-			return JSONUtil.put(
-				"conflictIconClass", "change-tracking-conflict-icon-danger"
-			).put(
-				"conflictIconLabel",
-				_language.get(
-					themeDisplay.getLocale(), "conflict-detected-help")
-			).put(
-				"conflictIconName", "warning-full"
-			);
+			conflictInfoJSONObject.put(
+				"danger",
+				JSONUtil.put(
+					"conflictIconClass", "change-tracking-conflict-icon-danger"
+				).put(
+					"conflictIconLabel",
+					_language.get(
+						themeDisplay.getLocale(), "conflict-detected-help")
+				).put(
+					"conflictIconName", "warning-full"
+				));
 		}
 
 		CTCollectionHistoryProvider<?> ctCollectionHistoryProvider =
@@ -160,26 +158,27 @@ public class GetConflictInfoMVCResourceCommand extends BaseMVCResourceCommand {
 		}
 
 		if (possibleConflictCollection != null) {
-			return JSONUtil.put(
-				"conflictIconClass", "change-tracking-conflict-icon-warning"
-			).put(
-				"conflictIconLabel",
-				_language.format(
-					themeDisplay.getLocale(), "concurrent-modification-help-x",
-					possibleConflictCollection.getName())
-			).put(
-				"conflictIconName", "warning-full"
-			);
+			conflictInfoJSONObject.put(
+				"warning",
+				JSONUtil.put(
+					"conflictIconClass", "change-tracking-conflict-icon-warning"
+				).put(
+					"conflictIconLabel",
+					_language.get(
+						themeDisplay.getLocale(),
+						"concurrent-modification-help")
+				).put(
+					"conflictIconName", "warning-full"
+				));
 		}
 
-		return JSONUtil.put(
-			"conflictIconClass", "change-tracking-conflict-icon"
-		).put(
-			"conflictIconLabel",
-			_language.get(themeDisplay.getLocale(), "no-modifications-help")
-		).put(
-			"conflictIconName", "check"
-		);
+		if (ListUtil.isEmpty(ctEntries) &&
+			(possibleConflictCollection == null)) {
+
+			return _jsonFactory.createJSONObject();
+		}
+
+		return conflictInfoJSONObject;
 	}
 
 	@Reference

@@ -1,5 +1,37 @@
 components:
     schemas:
+        Attachment:
+            properties:
+                externalReferenceCode:
+                    example: AB-34098-789-N
+                    readOnly: true
+                    type: string
+                id:
+                    format: int64
+                    readOnly: true
+                    type: integer
+                title:
+                    readOnly: true
+                    type: string
+                type:
+                    format: int32
+                    readOnly: true
+                    type: integer
+                url:
+                    readOnly: true
+                    type: string
+        AttachmentBase64:
+            properties:
+                attachment:
+                    description:
+                        Base64 encoded file
+                    type: string
+                externalReferenceCode:
+                    example: AB-34098-789-N
+                    type: string
+                title:
+                    type: string
+            type: object
         Error:
             properties:
                 errorCode:
@@ -25,6 +57,26 @@ components:
                     readOnly: true
                     type: integer
             type: object
+        OrderTransition:
+            properties:
+                comment:
+                    type: string
+                label:
+                    readOnly: true
+                    type: string
+                name:
+                    type: string
+                orderId:
+                    format: int64
+                    readOnly: true
+                    type: integer
+                placedOrderId:
+                    format: int64
+                    readOnly: true
+                    type: integer
+                workflowTaskId:
+                    format: int64
+                    type: integer
         PlacedOrder:
             properties:
                 account:
@@ -34,6 +86,10 @@ components:
                     format: int64
                     readOnly: true
                     type: integer
+                attachments:
+                    items:
+                        $ref: "#/components/schemas/Attachment"
+                    type: array
                 author:
                     readOnly: true
                     type: string
@@ -53,7 +109,6 @@ components:
                     type: string
                 customFields:
                     additionalProperties: true
-                    readOnly: true
                     type: object
                 errorMessages:
                     items:
@@ -62,6 +117,9 @@ components:
                     type: array
                 externalReferenceCode:
                     example: AB-34098-789-N
+                    readOnly: true
+                    type: string
+                friendlyURLSeparator:
                     readOnly: true
                     type: string
                 id:
@@ -82,6 +140,9 @@ components:
                 orderStatusInfo:
                     $ref: "#/components/schemas/Status"
                     readOnly: true
+                orderType:
+                    readOnly: true
+                    type: string
                 orderTypeExternalReferenceCode:
                     example: AB-34098-789-N
                     readOnly: true
@@ -134,11 +195,12 @@ components:
                     readOnly: true
                     type: integer
                 printedNote:
-                    readOnly: true
                     type: string
                 purchaseOrderNumber:
-                    readOnly: true
                     type: string
+                shipments:
+                    $ref: "#/components/schemas/Shipment"
+                    readOnly: true
                 shippingMethod:
                     readOnly: true
                     type: string
@@ -148,6 +210,10 @@ components:
                 status:
                     readOnly: true
                     type: string
+                steps:
+                    items:
+                        $ref: "#/components/schemas/Step"
+                    type: array
                 summary:
                     $ref: "#/components/schemas/Summary"
                     readOnly: true
@@ -212,6 +278,9 @@ components:
                 street3:
                     readOnly: true
                     type: string
+                subtype:
+                    readOnly: true
+                    type: string
                 type:
                     readOnly: true
                     type: string
@@ -259,6 +328,13 @@ components:
                     additionalProperties: true
                     readOnly: true
                     type: object
+                deliveryGroup:
+                    deprecated: true
+                    readOnly: true
+                    type: string
+                deliveryGroupName:
+                    readOnly: true
+                    type: string
                 errorMessages:
                     items:
                         type: string
@@ -316,9 +392,21 @@ components:
                 replacedSku:
                     readOnly: true
                     type: string
+                requestedDeliveryDate:
+                    format: date
+                    readOnly: true
+                    type: string
                 settings:
                     $ref: "#/components/schemas/Settings"
                     readOnly: true
+                shippingAddressExternalReferenceCode:
+                    example: AB-34098-789-N
+                    readOnly: true
+                    type: string
+                shippingAddressId:
+                    format: int64
+                    readOnly: true
+                    type: integer
                 sku:
                     readOnly: true
                     type: string
@@ -331,6 +419,9 @@ components:
                     readOnly: true
                     type: boolean
                 thumbnail:
+                    readOnly: true
+                    type: string
+                unitOfMeasure:
                     readOnly: true
                     type: string
                 unitOfMeasureKey:
@@ -360,11 +451,11 @@ components:
                     readOnly: true
                     type: integer
                 author:
-                    example: "Author"
+                    example: Author
                     readOnly: true
                     type: string
                 carrier:
-                    example: "FedEx"
+                    example: FedEx
                     readOnly: true
                     type: string
                 createDate:
@@ -417,7 +508,7 @@ components:
                     readOnly: true
                     type: integer
                 shippingOptionName:
-                    example: "Standard Delivery"
+                    example: Standard Delivery
                     readOnly: true
                     type: string
                 status:
@@ -427,7 +518,7 @@ components:
                     readOnly: true
                     type: boolean
                 trackingNumber:
-                    example: "123AD-asd"
+                    example: 123AD-asd
                     readOnly: true
                     type: string
                 trackingURL:
@@ -516,6 +607,158 @@ components:
                     readOnly: true
                     type: number
             type: object
+        Shipment:
+            properties:
+                accountId:
+                    example: 30130
+                    format: int64
+                    minimum: 0
+                    readOnly: true
+                    type: integer
+                carrier:
+                    example: FedEx
+                    readOnly: true
+                    type: string
+                createDate:
+                    format: date
+                    readOnly: true
+                    type: string
+                expectedDate:
+                    format: date
+                    readOnly: true
+                    type: string
+                externalReferenceCode:
+                    readOnly: true
+                    type: string
+                id:
+                    example: 30130
+                    format: int64
+                    minimum: 0
+                    readOnly: true
+                    type: integer
+                itemsCount:
+                    format: int32
+                    readOnly: true
+                    type: integer
+                modifiedDate:
+                    format: date
+                    readOnly: true
+                    type: string
+                oneLineAddress:
+                    readOnly: true
+                    type: string
+                orderExternalReferenceCode:
+                    example: AB-34098-789-N
+                    readOnly: true
+                    type: string
+                orderId:
+                    example: 30130
+                    format: int64
+                    minimum: 0
+                    readOnly: true
+                    type: integer
+                shippingAddress:
+                    $ref: "#/components/schemas/ShippingAddress"
+                    readOnly: true
+                shippingAddressId:
+                    example: 31130
+                    format: int64
+                    minimum: 0
+                    readOnly: true
+                    type: integer
+                shippingDate:
+                    format: date
+                    readOnly: true
+                    type: string
+                shippingMethodId:
+                    example: 30130
+                    format: int64
+                    minimum: 0
+                    readOnly: true
+                    type: integer
+                shippingOptionName:
+                    example: Standard Delivery
+                    readOnly: true
+                    type: string
+                status:
+                    $ref: "#/components/schemas/Status"
+                    readOnly: true
+                trackingNumber:
+                    example: 123AD-asd
+                    readOnly: true
+                    type: string
+                trackingURL:
+                    example: Standard Delivery
+                    readOnly: true
+                    type: string
+                userName:
+                    example: John
+                    readOnly: true
+                    type: string
+            type: object
+        ShippingAddress:
+            properties:
+                city:
+                    example: Diamond Bar
+                    readOnly: true
+                    type: string
+                countryISOCode:
+                    example: US
+                    readOnly: true
+                    type: string
+                description:
+                    example: right stairs, first room on the left
+                    readOnly: true
+                    type: string
+                externalReferenceCode:
+                    example: AB-34098-789-N
+                    readOnly: true
+                    type: string
+                id:
+                    example: 31130
+                    format: int64
+                    minimum: 0
+                    readOnly: true
+                    type: integer
+                latitude:
+                    example: 33.9976884
+                    format: double
+                    readOnly: true
+                    type: number
+                longitude:
+                    example: -117.8144595
+                    format: double
+                    readOnly: true
+                    type: number
+                name:
+                    example: Alessio Antonio Rendina
+                    readOnly: true
+                    type: string
+                phoneNumber:
+                    example: (123) 456 7890
+                    readOnly: true
+                    type: string
+                regionISOCode:
+                    example: CA
+                    readOnly: true
+                    type: string
+                street1:
+                    example: 1400 Montefino Ave
+                    readOnly: true
+                    type: string
+                street2:
+                    example: 1st floor
+                    readOnly: true
+                    type: string
+                street3:
+                    example: suite 200
+                    readOnly: true
+                    type: string
+                zip:
+                    example: "91765"
+                    readOnly: true
+                    type: string
+            type: object
         ShippingMethod:
             properties:
                 description:
@@ -571,6 +814,17 @@ components:
                     readOnly: true
                     type: string
             type: object
+        Step:
+            properties:
+                id:
+                    readOnly: true
+                    type: string
+                label:
+                    readOnly: true
+                    type: string
+                state:
+                    readOnly: true
+                    type: string
         Summary:
             properties:
                 currency:
@@ -653,6 +907,25 @@ components:
                     readOnly: true
                     type: string
             type: object
+        Term:
+            properties:
+                description:
+                    example: description
+                    readOnly: true
+                    type: string
+                externalReferenceCode:
+                    example: AAB-34098-789-N
+                    type: string
+                id:
+                    example: 30130
+                    format: int64
+                    minimum: 0
+                    type: integer
+                name:
+                    example: name
+                    readOnly: true
+                    type: string
+            type: object
         VirtualItem:
             properties:
                 url:
@@ -671,7 +944,7 @@ components:
 info:
     description:
         "Headless Delivery Commerce Order API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.delivery.order.client', and version '1.0.23'."
+        artifact ID 'com.liferay.headless.commerce.delivery.order.client', and version '1.0.30'."
     license:
         name: Apache 2.0
         url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -684,26 +957,123 @@ paths:
             description:
                 Retrieves placed orders for specific account in the given channel.
             parameters:
-                - in: path
-                  name: accountExternalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: path
-                  name: channelExternalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
+                -   in: path
+                    name: accountExternalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: path
+                    name: channelExternalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/PlacedOrder"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/PlacedOrder"
+                                type: array
+                    description:
+                        Successful operation
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["PlacedOrder"]
+    /channels/by-externalReferenceCode/{externalReferenceCode}/placed-orders:
+        get:
+            description:
+                Retrieves placed orders in the given channel.
+            operationId: getChannelByExternalReferenceCodePlacedOrdersPage
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -755,36 +1125,138 @@ paths:
             description:
                 Retrieves placed orders for specific account in the given channel.
             parameters:
-                - in: path
-                  explode: false
-                  name: accountId
-                  required: true
-                  schema:
-                      description:
-                          Account Id
-                      format: int64
-                      type: integer
-                  style: simple
-                - in: path
-                  explode: false
-                  name: channelId
-                  required: true
-                  schema:
-                      description:
-                          Channel Id
-                      format: int64
-                      type: integer
-                  style: simple
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
+                -   in: path
+                    explode: false
+                    name: accountId
+                    required: true
+                    schema:
+                        description:
+                            Account Id
+                        format: int64
+                        type: integer
+                    style: simple
+                -   in: path
+                    explode: false
+                    name: channelId
+                    required: true
+                    schema:
+                        description:
+                            Channel Id
+                        format: int64
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/PlacedOrder"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/PlacedOrder"
+                                type: array
+                    description:
+                        Successful operation
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["PlacedOrder"]
+    /channels/{channelId}/placed-orders:
+        get:
+            description:
+                Retrieves placed orders in the given channel.
+            operationId: getChannelPlacedOrdersPage
+            parameters:
+                -   in: path
+                    explode: false
+                    name: channelId
+                    required: true
+                    schema:
+                        description:
+                            Channel Id
+                        format: int64
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -834,11 +1306,11 @@ paths:
     /placed-order-comments/by-externalReferenceCode/{externalReferenceCode}:
         get:
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -888,16 +1360,16 @@ paths:
     /placed-order-comments/{placedOrderCommentId}:
         get:
             parameters:
-                - in: path
-                  explode: false
-                  name: placedOrderCommentId
-                  required: true
-                  schema:
-                      description:
-                          Note Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: placedOrderCommentId
+                    required: true
+                    schema:
+                        description:
+                            Note Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -949,11 +1421,11 @@ paths:
             description:
                 Retrieve information of the given placed order item.
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -999,11 +1471,11 @@ paths:
             description:
                 Retrieve shipments of the given placed order item.
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1053,16 +1525,16 @@ paths:
             description:
                 Retrieve information of the given Placed Order.
             parameters:
-                - in: path
-                  explode: false
-                  name: placedOrderItemId
-                  required: true
-                  schema:
-                      description:
-                          Placed Order Item Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: placedOrderItemId
+                    required: true
+                    schema:
+                        description:
+                            Placed Order Item Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -1108,16 +1580,16 @@ paths:
             description:
                 Retrieve shipments of the given Placed Order Item.
             parameters:
-                - in: path
-                  explode: false
-                  name: placedOrderItemId
-                  required: true
-                  schema:
-                      description:
-                          Placed Order Item Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: placedOrderItemId
+                    required: true
+                    schema:
+                        description:
+                            Placed Order Item Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -1168,11 +1640,11 @@ paths:
                 Retrieve information of the given Placed Order.
             operationId: getPlacedOrderByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1213,20 +1685,378 @@ paths:
                     description:
                         Unexpected error
             tags: ["PlacedOrder"]
+        patch:
+            operationId: patchPlacedOrderByExternalReferenceCode
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/PlacedOrder"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/PlacedOrder"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PlacedOrder"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/PlacedOrder"
+                    description:
+                        Updated
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            summary: Updates a Placed Order by external reference code.
+            tags: ["PlacedOrder"]
+    /placed-orders/by-externalReferenceCode/{externalReferenceCode}/attachments:
+        get:
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    explode: true
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+                -   in: query
+                    explode: true
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Attachment"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Attachment"
+                                type: array
+                    description:
+                        Successful operation
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceDeliveryOrder.read
+            summary: Gets a list of attachments related to an order.
+            tags: ["Attachment"]
+    /placed-orders/by-externalReferenceCode/{externalReferenceCode}/attachments/by-base64:
+        post:
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/AttachmentBase64"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/AttachmentBase64"
+                required: true
+            responses:
+                201:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Attachment"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Attachment"
+                    description:
+                        Created
+                202:
+                    description:
+                        Accepted - Async
+                204:
+                    description:
+                        Updated
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceDeliveryOrder.write
+            summary: Creates an attachment related to an order.
+            tags: ["Attachment"]
+    /placed-orders/by-externalReferenceCode/{externalReferenceCode}/attachments/by-externalReferenceCode/{attachmentExternalReferenceCode}:
+        delete:
+            parameters:
+                -   in: path
+                    name: attachmentExternalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+            security:
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceDeliveryOrder.write
+            summary: Deletes an attachment by external reference code.
+            tags: ["Attachment"]
+    /placed-orders/by-externalReferenceCode/{externalReferenceCode}/delivery-term:
+        get:
+            description:
+                Retrieve delivery term of the given Placed Order.
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Term"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Term"
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["Term"]
+    /placed-orders/by-externalReferenceCode/{externalReferenceCode}/payment-term:
+        get:
+            description:
+                Retrieve payment term of the given Placed Order.
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Term"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Term"
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["Term"]
     /placed-orders/by-externalReferenceCode/{externalReferenceCode}/payment-url:
         get:
             operationId: getPlacedOrderByExternalReferenceCodePaymentURL
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: callbackURL
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: callbackURL
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1240,11 +2070,11 @@ paths:
                 Retrieve placed order billing address.
             operationId: getPlacedOrderByExternalReferenceCodePlacedOrderBillingAddress
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1289,21 +2119,21 @@ paths:
         get:
             operationId: getPlacedOrderByExternalReferenceCodePlacedOrderCommentsPage
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
             responses:
                 200:
                     content:
@@ -1360,37 +2190,37 @@ paths:
                 Retrieve placed order items.
             operationId: getPlacedOrderByExternalReferenceCodePlacedOrderItemsPage
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: skuId
-                  required: false
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: sort
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: skuId
+                    required: false
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1443,11 +2273,11 @@ paths:
                 Retrieve placed order shipping address.
             operationId: getPlacedOrderByExternalReferenceCodePlacedOrderShippingAddress
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1488,21 +2318,105 @@ paths:
                     description:
                         Unexpected error
             tags: ["PlacedOrderAddress"]
+    /placed-orders/by-externalReferenceCode/{externalReferenceCode}/shipments:
+        get:
+            operationId: getPlacedOrderByExternalReferenceCodeShipmentsPage
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Shipment"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Shipment"
+                                type: array
+                    description:
+                        Successful operation
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            summary: Gets a list of Shipments related to an Order.
+            tags: ["Shipment"]
     /placed-orders/{placedOrderId}:
         get:
             description:
                 Retrieve information of the given Placed Order.
             parameters:
-                - in: path
-                  explode: false
-                  name: placedOrderId
-                  required: true
-                  schema:
-                      description:
-                          Order Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        description:
+                            Order Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -1543,21 +2457,500 @@ paths:
                     description:
                         Unexpected error
             tags: ["PlacedOrder"]
+        patch:
+            operationId: patchPlacedOrder
+            parameters:
+                -   in: path
+                    explode: false
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        description:
+                            Order Id
+                        format: int64
+                        type: integer
+                    style: simple
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/PlacedOrder"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/PlacedOrder"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PlacedOrder"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/PlacedOrder"
+                    description:
+                        Updated
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            summary: Updates a Placed Order.
+            tags: ["PlacedOrder"]
+    /placed-orders/{placedOrderId}/attachments:
+        get:
+            parameters:
+                -   in: path
+                    explode: false
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
+                -   in: query
+                    explode: true
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+                -   in: query
+                    explode: true
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Attachment"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Attachment"
+                                type: array
+                    description:
+                        Successful operation
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceDeliveryOrder.read
+            summary: Gets a list of attachments related to an order.
+            tags: ["Attachment"]
+    /placed-orders/{placedOrderId}/attachments/by-base64:
+        post:
+            parameters:
+                -   in: path
+                    explode: false
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/AttachmentBase64"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/AttachmentBase64"
+                required: true
+            responses:
+                201:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Attachment"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Attachment"
+                    description:
+                        Created
+                202:
+                    description:
+                        Accepted - Async
+                204:
+                    description:
+                        Updated
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceDeliveryOrder.write
+            summary: Creates an attachment related to an order.
+            tags: ["Attachment"]
+    /placed-orders/{placedOrderId}/attachments/{attachmentId}:
+        delete:
+            parameters:
+                -   in: path
+                    explode: false
+                    name: attachmentId
+                    required: true
+                    schema:
+                        description:
+                            The attachment Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
+                -   in: path
+                    explode: false
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+            security:
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceDeliveryOrder.write
+            summary: Deletes an attachment.
+            tags: ["Attachment"]
+    /placed-orders/{placedOrderId}/delivery-term:
+        get:
+            description:
+                Retrieve delivery term of the given Placed Order.
+            operationId: getPlacedOrderDeliveryTerm
+            parameters:
+                -   in: path
+                    explode: false
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        description:
+                            Placed Order Id
+                        format: int64
+                        type: integer
+                    style: simple
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Term"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Term"
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["Term"]
+    /placed-orders/{placedOrderId}/order-transitions:
+        get:
+            description:
+                Retrieve order transitions of the given Placed Order.
+            operationId: getPlacedOrderOrderTransitionsPage
+            parameters:
+                -   in: path
+                    explode: false
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        description:
+                            Placed Order Id
+                        format: int64
+                        type: integer
+                    style: simple
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/OrderTransition"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/OrderTransition"
+                                type: array
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["OrderTransition"]
+        post:
+            operationId: postPlacedOrderOrderTransition
+            parameters:
+                -   in: path
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/OrderTransition"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/OrderTransition"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/OrderTransition"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/OrderTransition"
+            tags: ["OrderTransition"]
+    /placed-orders/{placedOrderId}/payment-term:
+        get:
+            description:
+                Retrieve payment term of the given Placed Order.
+            operationId: getPlacedOrderPaymentTerm
+            parameters:
+                -   in: path
+                    explode: false
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        description:
+                            Placed Order Id
+                        format: int64
+                        type: integer
+                    style: simple
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Term"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Term"
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["Term"]
     /placed-orders/{placedOrderId}/payment-url:
         get:
             operationId: getPlacedOrderPaymentURL
             parameters:
-                - in: path
-                  name: placedOrderId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: callbackURL
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: callbackURL
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1570,16 +2963,16 @@ paths:
             description:
                 Retrieve placed order billing address.
             parameters:
-                - in: path
-                  explode: false
-                  name: placedOrderId
-                  required: true
-                  schema:
-                      description:
-                          Placed Order Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        description:
+                            Placed Order Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -1623,26 +3016,26 @@ paths:
     /placed-orders/{placedOrderId}/placed-order-comments:
         get:
             parameters:
-                - in: path
-                  explode: false
-                  name: placedOrderId
-                  required: true
-                  schema:
-                      description:
-                          Placed Order Id
-                      format: int64
-                      type: integer
-                  style: simple
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
+                -   in: path
+                    explode: false
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        description:
+                            Placed Order Id
+                        format: int64
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
             responses:
                 200:
                     content:
@@ -1698,42 +3091,42 @@ paths:
             description:
                 Retrieve placed order items.
             parameters:
-                - in: path
-                  explode: false
-                  name: placedOrderId
-                  required: true
-                  schema:
-                      description:
-                          Placed Order Id
-                      format: int64
-                      type: integer
-                  style: simple
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: skuId
-                  required: false
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: sort
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    explode: false
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        description:
+                            Placed Order Id
+                        format: int64
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: skuId
+                    required: false
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1785,16 +3178,16 @@ paths:
             description:
                 Retrieve placed order shipping address.
             parameters:
-                - in: path
-                  explode: false
-                  name: placedOrderId
-                  required: true
-                  schema:
-                      description:
-                          Placed Order Id
-                      format: int64
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        description:
+                            Placed Order Id
+                        format: int64
+                        type: integer
+                    style: simple
             responses:
                 200:
                     content:
@@ -1835,5 +3228,92 @@ paths:
                     description:
                         Unexpected error
             tags: ["PlacedOrderAddress"]
+    /placed-orders/{placedOrderId}/shipments:
+        get:
+            description:
+                Retrieve placed order shipments.
+            operationId: getPlacedOrderShipmentsPage
+            parameters:
+                -   in: path
+                    explode: false
+                    name: placedOrderId
+                    required: true
+                    schema:
+                        description:
+                            Placed Order Id
+                        format: int64
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Shipment"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Shipment"
+                                type: array
+                    description:
+                        Return the shipments of the placed order
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["Shipment"]
 servers:
-    - url: /
+    -   url: /

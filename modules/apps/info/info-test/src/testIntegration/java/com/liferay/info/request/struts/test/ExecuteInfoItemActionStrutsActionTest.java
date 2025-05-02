@@ -10,6 +10,7 @@ import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.object.constants.ObjectActionExecutorConstants;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectAction;
@@ -95,13 +96,13 @@ public class ExecuteInfoItemActionStrutsActionTest {
 		ObjectDefinition objectDefinition = _addObjectDefinition();
 
 		_classNameId = String.valueOf(
-			_portal.getClassNameId(
-				ObjectDefinition.class.getName() + "#" +
-					objectDefinition.getObjectDefinitionId()));
+			_portal.getClassNameId(objectDefinition.getClassName()));
 
 		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
 			_user.getUserId(), _group.getGroupId(),
 			objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"text", RandomTestUtil.randomString()
 			).build(),
@@ -166,13 +167,15 @@ public class ExecuteInfoItemActionStrutsActionTest {
 	private ObjectDefinition _addObjectDefinition() throws Exception {
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				_user.getUserId(), 0, false, true, false, false,
+				_user.getUserId(), 0, null, false, false, true, false, false,
+				false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null,
 				"control_panel.sites",
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				false, ObjectDefinitionConstants.SCOPE_SITE,
-				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT, null);
+				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(), null);
 
 		ObjectField objectField = ObjectFieldUtil.addCustomObjectField(
 			new TextObjectFieldBuilder(

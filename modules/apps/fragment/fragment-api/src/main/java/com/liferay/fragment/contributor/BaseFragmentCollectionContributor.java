@@ -219,11 +219,11 @@ public abstract class BaseFragmentCollectionContributor
 
 					FragmentEntry fragmentEntry = _getFragmentEntry(url);
 
-					List<FragmentEntry> fragmentEntryList =
+					List<FragmentEntry> fragmentEntries =
 						_fragmentEntries.computeIfAbsent(
 							fragmentEntry.getType(), type -> new ArrayList<>());
 
-					fragmentEntryList.add(fragmentEntry);
+					fragmentEntries.add(fragmentEntry);
 				}
 			}
 

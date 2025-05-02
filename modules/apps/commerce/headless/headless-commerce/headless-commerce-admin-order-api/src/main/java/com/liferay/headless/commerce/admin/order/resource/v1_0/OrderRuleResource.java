@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.order.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.order.dto.v1_0.OrderRule;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,13 +46,33 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface OrderRuleResource {
 
-	public Page<OrderRule> getOrderRulesPage(
-			String search, Filter filter, Pagination pagination, Sort[] sorts)
+	public void deleteOrderRule(Long id) throws Exception;
+
+	public Response deleteOrderRuleBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public Response postOrderRulesPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
-			String contentType, String fieldNames)
+	public void deleteOrderRuleByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public OrderRule getOrderRule(Long id) throws Exception;
+
+	public OrderRule getOrderRuleByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Page<OrderRule> getOrderRulesPage(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public OrderRule patchOrderRule(Long id, OrderRule orderRule)
+		throws Exception;
+
+	public OrderRule patchOrderRuleByExternalReferenceCode(
+			String externalReferenceCode, OrderRule orderRule)
 		throws Exception;
 
 	public OrderRule postOrderRule(OrderRule orderRule) throws Exception;
@@ -62,26 +80,15 @@ public interface OrderRuleResource {
 	public Response postOrderRuleBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public void deleteOrderRuleByExternalReferenceCode(
-			String externalReferenceCode)
+	public Response postOrderRulesPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
-	public OrderRule getOrderRuleByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public OrderRule patchOrderRuleByExternalReferenceCode(
+	public OrderRule putOrderRuleByExternalReferenceCode(
 			String externalReferenceCode, OrderRule orderRule)
-		throws Exception;
-
-	public void deleteOrderRule(Long id) throws Exception;
-
-	public Response deleteOrderRuleBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public OrderRule getOrderRule(Long id) throws Exception;
-
-	public OrderRule patchOrderRule(Long id, OrderRule orderRule)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -106,7 +113,8 @@ public interface OrderRuleResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -131,19 +139,23 @@ public interface OrderRuleResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

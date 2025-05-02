@@ -25,7 +25,6 @@ import com.liferay.document.library.web.internal.security.permission.resource.DL
 import com.liferay.document.library.web.internal.security.permission.resource.DLFolderPermission;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
@@ -296,12 +295,6 @@ public class DLViewEntriesDisplayContext {
 	}
 
 	public boolean hasApprovedVersion(long fileEntryId) {
-		if (!FeatureFlagManagerUtil.isEnabled(
-				_themeDisplay.getCompanyId(), "LPD-10701")) {
-
-			return false;
-		}
-
 		DLFileVersion dlFileVersion =
 			DLFileVersionLocalServiceUtil.fetchLatestFileVersion(
 				fileEntryId, false, WorkflowConstants.STATUS_APPROVED);
@@ -329,11 +322,7 @@ public class DLViewEntriesDisplayContext {
 	}
 
 	public boolean isDescriptiveDisplayStyle() {
-		if (Objects.equals(getDisplayStyle(), "descriptive")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getDisplayStyle(), "descriptive");
 	}
 
 	public boolean isDraggable(FileEntry fileEntry) throws PortalException {
@@ -367,11 +356,7 @@ public class DLViewEntriesDisplayContext {
 	}
 
 	public boolean isIconDisplayStyle() {
-		if (Objects.equals(getDisplayStyle(), "icon")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getDisplayStyle(), "icon");
 	}
 
 	public boolean isRootFolder() {
@@ -449,13 +434,8 @@ public class DLViewEntriesDisplayContext {
 
 		DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
 
-		if (_hasWorkflowDefinitionLink(
-				dlFileEntry.getFolderId(), dlFileEntry.getFileEntryTypeId())) {
-
-			return true;
-		}
-
-		return false;
+		return _hasWorkflowDefinitionLink(
+			dlFileEntry.getFolderId(), dlFileEntry.getFileEntryTypeId());
 	}
 
 	private boolean _hasWorkflowDefinitionLink(

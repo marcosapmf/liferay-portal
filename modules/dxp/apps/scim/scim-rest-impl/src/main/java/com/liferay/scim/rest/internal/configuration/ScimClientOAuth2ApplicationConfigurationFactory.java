@@ -14,7 +14,6 @@ import com.liferay.oauth2.provider.util.OAuth2SecureRandomGenerator;
 import com.liferay.osgi.util.configuration.ConfigurationFactoryUtil;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -22,9 +21,9 @@ import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.scim.rest.internal.provider.ScimClientBearerTokenProvider;
 import com.liferay.scim.rest.util.ScimClientUtil;
 
@@ -61,10 +60,6 @@ public class ScimClientOAuth2ApplicationConfigurationFactory {
 		ConfigurationFactoryUtil.executeAsCompany(
 			_companyLocalService, properties,
 			companyId -> {
-				if (!FeatureFlagManagerUtil.isEnabled(companyId, "LPS-96845")) {
-					return;
-				}
-
 				ScimClientOAuth2ApplicationConfiguration
 					scimClientOAuth2ApplicationConfiguration =
 						ConfigurableUtil.createConfigurable(
@@ -72,7 +67,8 @@ public class ScimClientOAuth2ApplicationConfigurationFactory {
 							properties);
 
 				_oAuth2Application = _getOrAddOAuth2Application(
-					companyId, scimClientOAuth2ApplicationConfiguration);
+					companyId, scimClientOAuth2ApplicationConfiguration,
+					GetterUtil.getLong(properties.get("userId")));
 
 				_serviceRegistration = bundleContext.registerService(
 					BearerTokenProvider.class,
@@ -111,13 +107,9 @@ public class ScimClientOAuth2ApplicationConfigurationFactory {
 	private OAuth2Application _getOrAddOAuth2Application(
 			long companyId,
 			ScimClientOAuth2ApplicationConfiguration
-				scimClientOAuth2ApplicationConfiguration)
+				scimClientOAuth2ApplicationConfiguration,
+			long userId)
 		throws Exception {
-
-		User user = _userLocalService.getGuestUser(companyId);
-
-		User clientCredentialUser = _userLocalService.getUserByScreenName(
-			companyId, PropsValues.DEFAULT_ADMIN_SCREEN_NAME);
 
 		String clientId = ScimClientUtil.generateScimClientId(
 			scimClientOAuth2ApplicationConfiguration.oAuth2ApplicationName());
@@ -127,17 +119,19 @@ public class ScimClientOAuth2ApplicationConfigurationFactory {
 				companyId, clientId);
 
 		if (oAuth2Application == null) {
+			User user = _userLocalService.getUser(userId);
+
 			oAuth2Application =
 				_oAuth2ApplicationLocalService.addOAuth2Application(
 					companyId, user.getUserId(), user.getScreenName(),
-					ListUtil.fromArray(GrantType.JWT_BEARER),
-					"client_secret_post", clientCredentialUser.getUserId(),
-					clientId, ClientProfile.HEADLESS_SERVER.id(),
+					ListUtil.fromArray(GrantType.CLIENT_CREDENTIALS),
+					"client_secret_post", user.getUserId(), clientId,
+					ClientProfile.HEADLESS_SERVER.id(),
 					OAuth2SecureRandomGenerator.generateClientSecret(), null,
 					Collections.emptyList(), null, 0, null,
 					scimClientOAuth2ApplicationConfiguration.
 						oAuth2ApplicationName(),
-					null, Collections.emptyList(), false, true, null,
+					null, Collections.emptyList(), false, false, null,
 					new ServiceContext());
 
 			if (_log.isDebugEnabled()) {

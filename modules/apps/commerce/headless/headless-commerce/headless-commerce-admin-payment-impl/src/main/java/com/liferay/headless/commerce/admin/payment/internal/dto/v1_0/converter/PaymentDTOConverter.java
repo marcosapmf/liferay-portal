@@ -73,12 +73,16 @@ public class PaymentDTOConverter
 					() -> _formatAmount(
 						commercePaymentEntry.getAmount(), commerceCurrency,
 						locale));
+				setAuthor(commercePaymentEntry::getUserName);
 				setCallbackURL(commercePaymentEntry::getCallbackURL);
 				setCancelURL(commercePaymentEntry::getCancelURL);
 				setChannelId(commercePaymentEntry::getCommerceChannelId);
 				setComment(commercePaymentEntry::getNote);
 				setCreateDate(commercePaymentEntry::getCreateDate);
 				setCurrencyCode(commercePaymentEntry::getCurrencyCode);
+				setCurrencyExternalReferenceCode(
+					commerceCurrency::getExternalReferenceCode);
+				setCurrencyId(commerceCurrency::getCommerceCurrencyId);
 				setErrorMessages(commercePaymentEntry::getErrorMessages);
 				setExternalReferenceCode(
 					commercePaymentEntry::getExternalReferenceCode);

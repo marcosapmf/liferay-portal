@@ -12,8 +12,6 @@ import com.liferay.change.tracking.rest.resource.v1_0.CTProcessResource;
 import com.liferay.change.tracking.rest.resource.v1_0.CTRemoteResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -67,40 +65,21 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Response createCTCollectionsPageExportBatch(
-			@GraphQLName("search") String search,
-			@GraphQLName("status") Integer[] status,
-			@GraphQLName("sort") String sortsString,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("contentType") String contentType,
-			@GraphQLName("fieldNames") String fieldNames)
+	public boolean deleteCTCollection(
+			@GraphQLName("ctCollectionId") Long ctCollectionId)
 		throws Exception {
 
-		return _applyComponentServiceObjects(
+		_applyVoidComponentServiceObjects(
 			_ctCollectionResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			ctCollectionResource ->
-				ctCollectionResource.postCTCollectionsPageExportBatch(
-					search, status,
-					_sortsBiFunction.apply(ctCollectionResource, sortsString),
-					callbackURL, contentType, fieldNames));
+			ctCollectionResource -> ctCollectionResource.deleteCTCollection(
+				ctCollectionId));
+
+		return true;
 	}
 
 	@GraphQLField
-	public CTCollection createCTCollection(
-			@GraphQLName("ctCollection") CTCollection ctCollection)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_ctCollectionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			ctCollectionResource -> ctCollectionResource.postCTCollection(
-				ctCollection));
-	}
-
-	@GraphQLField
-	public Response createCTCollectionBatch(
-			@GraphQLName("ctCollection") CTCollection ctCollection,
+	public Response deleteCTCollectionBatch(
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -108,8 +87,9 @@ public class Mutation {
 		return _applyComponentServiceObjects(
 			_ctCollectionResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			ctCollectionResource -> ctCollectionResource.postCTCollectionBatch(
-				ctCollection, callbackURL, object));
+			ctCollectionResource ->
+				ctCollectionResource.deleteCTCollectionBatch(
+					callbackURL, object));
 	}
 
 	@GraphQLField
@@ -128,6 +108,19 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public CTCollection patchCTCollection(
+			@GraphQLName("ctCollectionId") Long ctCollectionId,
+			@GraphQLName("ctCollection") CTCollection ctCollection)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_ctCollectionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctCollectionResource -> ctCollectionResource.patchCTCollection(
+				ctCollectionId, ctCollection));
+	}
+
+	@GraphQLField
 	public CTCollection patchCTCollectionByExternalReferenceCode(
 			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("ctCollection") CTCollection ctCollection)
@@ -139,6 +132,31 @@ public class Mutation {
 			ctCollectionResource ->
 				ctCollectionResource.patchCTCollectionByExternalReferenceCode(
 					externalReferenceCode, ctCollection));
+	}
+
+	@GraphQLField
+	public CTCollection createCTCollection(
+			@GraphQLName("ctCollection") CTCollection ctCollection)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_ctCollectionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctCollectionResource -> ctCollectionResource.postCTCollection(
+				ctCollection));
+	}
+
+	@GraphQLField
+	public Response createCTCollectionBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_ctCollectionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctCollectionResource -> ctCollectionResource.postCTCollectionBatch(
+				callbackURL, object));
 	}
 
 	@GraphQLField
@@ -172,76 +190,6 @@ public class Mutation {
 						externalReferenceCode, publishDate));
 
 		return true;
-	}
-
-	@GraphQLField
-	public boolean deleteCTCollection(
-			@GraphQLName("ctCollectionId") Long ctCollectionId)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_ctCollectionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			ctCollectionResource -> ctCollectionResource.deleteCTCollection(
-				ctCollectionId));
-
-		return true;
-	}
-
-	@GraphQLField
-	public Response deleteCTCollectionBatch(
-			@GraphQLName("ctCollectionId") Long ctCollectionId,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_ctCollectionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			ctCollectionResource ->
-				ctCollectionResource.deleteCTCollectionBatch(
-					ctCollectionId, callbackURL, object));
-	}
-
-	@GraphQLField
-	public CTCollection patchCTCollection(
-			@GraphQLName("ctCollectionId") Long ctCollectionId,
-			@GraphQLName("ctCollection") CTCollection ctCollection)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_ctCollectionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			ctCollectionResource -> ctCollectionResource.patchCTCollection(
-				ctCollectionId, ctCollection));
-	}
-
-	@GraphQLField
-	public CTCollection updateCTCollection(
-			@GraphQLName("ctCollectionId") Long ctCollectionId,
-			@GraphQLName("ctCollection") CTCollection ctCollection)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_ctCollectionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			ctCollectionResource -> ctCollectionResource.putCTCollection(
-				ctCollectionId, ctCollection));
-	}
-
-	@GraphQLField
-	public Response updateCTCollectionBatch(
-			@GraphQLName("ctCollectionId") Long ctCollectionId,
-			@GraphQLName("ctCollection") CTCollection ctCollection,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_ctCollectionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			ctCollectionResource -> ctCollectionResource.putCTCollectionBatch(
-				ctCollectionId, ctCollection, callbackURL, object));
 	}
 
 	@GraphQLField
@@ -289,10 +237,9 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Response createCTProcessesPageExportBatch(
+	public Response createCTCollectionsPageExportBatch(
 			@GraphQLName("search") String search,
 			@GraphQLName("status") Integer[] status,
-			@GraphQLName("filter") String filterString,
 			@GraphQLName("sort") String sortsString,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("contentType") String contentType,
@@ -300,14 +247,65 @@ public class Mutation {
 		throws Exception {
 
 		return _applyComponentServiceObjects(
+			_ctCollectionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctCollectionResource ->
+				ctCollectionResource.postCTCollectionsPageExportBatch(
+					search, status,
+					_sortsBiFunction.apply(ctCollectionResource, sortsString),
+					callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
+	public CTCollection updateCTCollection(
+			@GraphQLName("ctCollectionId") Long ctCollectionId,
+			@GraphQLName("ctCollection") CTCollection ctCollection)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_ctCollectionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctCollectionResource -> ctCollectionResource.putCTCollection(
+				ctCollectionId, ctCollection));
+	}
+
+	@GraphQLField
+	public Response updateCTCollectionBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_ctCollectionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctCollectionResource -> ctCollectionResource.putCTCollectionBatch(
+				callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deleteCTProcess(@GraphQLName("ctProcessId") Long ctProcessId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
 			_ctProcessResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			ctProcessResource ->
-				ctProcessResource.postCTProcessesPageExportBatch(
-					search, status,
-					_filterBiFunction.apply(ctProcessResource, filterString),
-					_sortsBiFunction.apply(ctProcessResource, sortsString),
-					callbackURL, contentType, fieldNames));
+			ctProcessResource -> ctProcessResource.deleteCTProcess(
+				ctProcessId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteCTProcessBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_ctProcessResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctProcessResource -> ctProcessResource.deleteCTProcessBatch(
+				callbackURL, object));
 	}
 
 	@GraphQLField
@@ -327,8 +325,10 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Response createCTRemotesPageExportBatch(
+	public Response createCTProcessesPageExportBatch(
 			@GraphQLName("search") String search,
+			@GraphQLName("status") Integer[] status,
+			@GraphQLName("filter") String filterString,
 			@GraphQLName("sort") String sortsString,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("contentType") String contentType,
@@ -336,35 +336,14 @@ public class Mutation {
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_ctRemoteResourceComponentServiceObjects,
+			_ctProcessResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			ctRemoteResource -> ctRemoteResource.postCTRemotesPageExportBatch(
-				search, _sortsBiFunction.apply(ctRemoteResource, sortsString),
-				callbackURL, contentType, fieldNames));
-	}
-
-	@GraphQLField
-	public CTRemote createCTRemote(@GraphQLName("ctRemote") CTRemote ctRemote)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_ctRemoteResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			ctRemoteResource -> ctRemoteResource.postCTRemote(ctRemote));
-	}
-
-	@GraphQLField
-	public Response createCTRemoteBatch(
-			@GraphQLName("ctRemote") CTRemote ctRemote,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_ctRemoteResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			ctRemoteResource -> ctRemoteResource.postCTRemoteBatch(
-				ctRemote, callbackURL, object));
+			ctProcessResource ->
+				ctProcessResource.postCTProcessesPageExportBatch(
+					search, status,
+					_filterBiFunction.apply(ctProcessResource, filterString),
+					_sortsBiFunction.apply(ctProcessResource, sortsString),
+					callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -403,6 +382,46 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public CTRemote createCTRemote(@GraphQLName("ctRemote") CTRemote ctRemote)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_ctRemoteResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctRemoteResource -> ctRemoteResource.postCTRemote(ctRemote));
+	}
+
+	@GraphQLField
+	public Response createCTRemoteBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_ctRemoteResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctRemoteResource -> ctRemoteResource.postCTRemoteBatch(
+				callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response createCTRemotesPageExportBatch(
+			@GraphQLName("search") String search,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_ctRemoteResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctRemoteResource -> ctRemoteResource.postCTRemotesPageExportBatch(
+				search, _sortsBiFunction.apply(ctRemoteResource, sortsString),
+				callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
 	public CTRemote updateCTRemote(
 			@GraphQLName("id") Long id,
 			@GraphQLName("ctRemote") CTRemote ctRemote)
@@ -416,7 +435,6 @@ public class Mutation {
 
 	@GraphQLField
 	public Response updateCTRemoteBatch(
-			@GraphQLName("ctRemote") CTRemote ctRemote,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -425,7 +443,7 @@ public class Mutation {
 			_ctRemoteResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			ctRemoteResource -> ctRemoteResource.putCTRemoteBatch(
-				ctRemote, callbackURL, object));
+				callbackURL, object));
 	}
 
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R
@@ -534,12 +552,15 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

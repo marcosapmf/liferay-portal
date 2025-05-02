@@ -44,6 +44,20 @@ public class Tree {
 		return edges;
 	}
 
+	public int getHeight(Node node) {
+		if (node == null) {
+			return -1;
+		}
+
+		int maxHeight = -1;
+
+		for (Node childNode : node.getChildNodes()) {
+			maxHeight = Math.max(maxHeight, getHeight(childNode));
+		}
+
+		return maxHeight + 1;
+	}
+
 	public Node getNode(long primaryKey) {
 		Node node = null;
 

@@ -20,27 +20,26 @@ class WebComponent extends HTMLElement {
 				<Routes
 					path={this.getAttribute('path') as RouteType}
 					properties={{
-						cloudBaseURL: this.getAttribute('cloudBaseURL') || '',
-						contactSupportUrl:
-							this.getAttribute('contactSupportUrl') || '',
+						analyticsCloudURL:
+							this.getAttribute('analyticsCloudURL') || '',
+						cloudConsoleURL:
+							this.getAttribute('cloudConsoleURL') || '',
+						contactSupportURL:
+							this.getAttribute('contactSupportURL') || '',
 						eulaBaseURL: this.getAttribute('eulaBaseURL') || '',
 						featureFlags: (this.getAttribute('featureFlags') ?? '')
 							.split(',')
 							.map((featureflag) => featureflag.trim()),
-						featurePreviews: (
-							this.getAttribute('featurePreviews') ?? ''
-						)
-							.split(',')
-							.map((featurePreview) =>
-								featurePreview.trim()
-							) as any,
 						marketoFormId: this.getAttribute('marketoFormId') || '',
+						productId: this.getAttribute('productId') || '',
 						trialAccountCheck:
 							(this.getAttribute('trialAccountCheck') as any) ||
 							'true',
 						trialEulaURL: this.getAttribute('trialEulaURL') || '',
-						trialProductId:
-							this.getAttribute('trialProductId') || '',
+						useSiteTaxonomyVocabularyQuery:
+							this.getAttribute(
+								'useSiteTaxonomyVocabularyQuery'
+							) === 'true',
 					}}
 				/>
 			);

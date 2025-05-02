@@ -7,7 +7,6 @@ package com.liferay.osb.faro.service.impl;
 
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
-import com.liferay.osb.faro.constants.DocumentationConstants;
 import com.liferay.osb.faro.constants.FaroProjectConstants;
 import com.liferay.osb.faro.model.FaroProject;
 import com.liferay.osb.faro.model.FaroUser;
@@ -21,7 +20,6 @@ import com.liferay.osb.faro.util.FaroPropsValues;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.string.CharPool;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -37,14 +35,15 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.comparator.GroupNameComparator;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
@@ -213,18 +212,19 @@ public class FaroProjectLocalServiceImpl
 		List<Long> groupIds = TransformUtil.transform(
 			groups, Group::getGroupId);
 
-		List<FaroProject> faroProjectsFiltered = new ArrayList<>();
+		return TransformUtil.transform(
+			faroProjects,
+			faroProject -> {
+				if (!groupIds.contains(faroProject.getGroupId()) &&
+					StringUtil.equals(
+						faroProject.getState(),
+						FaroProjectConstants.STATE_READY)) {
 
-		for (FaroProject faroProject : faroProjects) {
-			if (!groupIds.contains(faroProject.getGroupId()) &&
-				StringUtil.equals(
-					faroProject.getState(), FaroProjectConstants.STATE_READY)) {
+					return faroProject;
+				}
 
-				faroProjectsFiltered.add(faroProject);
-			}
-		}
-
-		return faroProjectsFiltered;
+				return null;
+			});
 	}
 
 	@Override
@@ -247,60 +247,71 @@ public class FaroProjectLocalServiceImpl
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", user.getLocale(), getClass());
 
-		String workspaceURL = EmailUtil.getWorkspaceURL(
-			_groupLocalService.fetchGroup(faroProject.getGroupId()));
+		String subject = _language.get(
+			resourceBundle, "welcome-to-analytics-cloud");
 
 		body = StringUtil.replace(
 			body,
 			new String[] {
-				"[$BUTTON_TEXT$]", "[$BUTTON_URL$]", "[$HELP_MSG$]",
-				"[$LINK_WORKSPACE$]", "[$LOGO_ICON_URL$]",
-				"[$NOTIFICATION_MSG_1$]", "[$NOTIFICATION_MSG_2$]",
-				"[$NOTIFICATION_MSG_3$]", "[$NOTIFICATION_MSG_4$]",
-				"[$NOTIFICATION_MSG_5$]", "[$NOTIFICATION_MSG_6$]",
-				"[$NOTIFICATION_MSG_7$]", "[$NOTIFICATION_MSG_8$]",
-				"[$TITLE_ICON_URL$]"
+				"[$BUTTON_TEXT$]", "[$BUTTON_URL$]", "[$EMAIL_HEADER_URL$]",
+				"[$EMAIL_TITLE$]", "[$FARO_URL$]", "[$FOOTER_MENU_1$]",
+				"[$FOOTER_MENU_2$]", "[$FOOTER_MENU_3$]", "[$FOOTER_MSG_1$]",
+				"[$FOOTER_MSG_2$]", "[$FOOTER_MSG_3$]", "[$FOOTER_MSG_4$]",
+				"[$HEADER_MSG_1$]", "[$ICON_CHECK_URL$]",
+				"[$LIFERAY_LOGO_URL$]", "[$NOTIFICATION_MSG_1$]",
+				"[$NOTIFICATION_MSG_2$]", "[$NOTIFICATION_MSG_3$]",
+				"[$NOTIFICATION_MSG_4$]", "[$NOTIFICATION_MSG_5$]",
+				"[$NOTIFICATION_MSG_6$]", "[$NOTIFICATION_MSG_7$]", "[$YEAR$]"
 			},
 			new String[] {
-				_language.get(resourceBundle, "go-to-workspace"), workspaceURL,
+				_language.get(resourceBundle, "go-to-analytics-cloud"),
+				EmailUtil.getShareIconURL(), EmailUtil.getEmailHeaderURL(),
+				subject, FaroPropsValues.FARO_URL,
+				_language.get(resourceBundle, "contact-support"),
+				_language.get(resourceBundle, "documentation"),
+				_language.get(resourceBundle, "announcements"),
 				_language.format(
-					resourceBundle, "email-need-more-help",
+					resourceBundle, "this-email-was-sent-by-x",
 					new String[] {
-						"<a class=\"body-link\" href=\"" +
-							DocumentationConstants.BASE_URL + "\">",
+						"<a style=\"color: #0b5fff; text-decoration: none;\" " +
+							"href=\"https://liferay.com\" target=\"_blank\">",
 						"</a>"
 					}),
-				StringBundler.concat(
-					"<a class=\"body-link\" href=\"", workspaceURL, "\">",
-					workspaceURL, "</a>"),
-				EmailUtil.getLogoIconURL(),
-				_language.get(resourceBundle, "welcome-to-analytics-cloud"),
+				_language.get(resourceBundle, "need-help"),
+				_language.get(
+					resourceBundle, "let-our-team-do-the-work-for-you"),
+				_language.get(
+					resourceBundle,
+					"liferay-experts-are-available-to-answer-your-questions-" +
+						"anytime"),
+				subject, EmailUtil.getCheckIconURL(),
+				EmailUtil.getLiferayIconURL(),
 				_language.format(
-					resourceBundle, "email-your-workspace-x-is-ready",
+					resourceBundle, "your-workspace-x-is-ready",
 					faroProject.getName()),
 				_language.format(
-					resourceBundle, "email-sign-in-or-create-an-account",
+					resourceBundle,
+					"sign-in-with-your-existing-liferay-username-and-" +
+						"password-or-create-an-account-using-x",
 					new String[] {
-						"<a class=\"body-link\" href=\"" +
-							FaroPropsValues.FARO_URL + "\">",
-						"</a>",
-						"<b class=\"link-override\">" +
-							faroUser.getEmailAddress() + "</strong>"
+						"<a style=\"color: #0b5fff; text-decoration: none;\" " +
+							"href=\"https://login.liferay.com/signin" +
+								"/register\" target=\"_blank\">",
+						"</a>", faroUser.getEmailAddress()
 					}),
 				_language.get(resourceBundle, "getting-started"),
 				_language.get(
 					resourceBundle, "get-up-and-running-in-three-steps"),
 				_language.get(
 					resourceBundle,
-					"connect-your-liferay-dxp-sites-to-a-property"),
-				_language.get(resourceBundle, "connect-and-map-user-data"),
+					"copy-the-token-to-your-liferay-dxp-instance"),
+				_language.get(
+					resourceBundle,
+					"sync-your-dxp-sites-and-contacts-to-a-property"),
 				_language.get(
 					resourceBundle, "invite-teammates-to-collaborate"),
-				EmailUtil.getTitleIconURL()
+				String.valueOf(DateUtil.getYear(new Date()))
 			});
-
-		String subject = _language.get(
-			resourceBundle, "your-analytics-cloud-workspace-is-ready");
 
 		_mailService.sendEmail(
 			new MailMessage(
@@ -352,11 +363,17 @@ public class FaroProjectLocalServiceImpl
 			JSONObject oldSubscriptionJSONObject =
 				_jsonFactory.createJSONObject(faroProject.getSubscription());
 
+			String oldSubscriptionName = oldSubscriptionJSONObject.getString(
+				"name");
+
+			oldSubscriptionName = StringUtil.replace(
+				oldSubscriptionName, "LXC ", "Liferay SaaS ");
+
 			JSONObject newSubscriptionJSONObject =
 				_jsonFactory.createJSONObject(subscription);
 
 			if (!Objects.equals(
-					oldSubscriptionJSONObject.get("name"),
+					oldSubscriptionName,
 					newSubscriptionJSONObject.get("name"))) {
 
 				faroProject.setSubscriptionModifiedTime(currentTimeMillis);

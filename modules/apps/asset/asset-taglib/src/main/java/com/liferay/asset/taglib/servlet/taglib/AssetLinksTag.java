@@ -13,6 +13,7 @@ import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.asset.link.model.AssetLink;
 import com.liferay.asset.link.service.AssetLinkLocalServiceUtil;
 import com.liferay.asset.taglib.internal.servlet.ServletContextUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -36,7 +37,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.taglib.util.IncludeTag;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -175,8 +175,6 @@ public class AssetLinksTag extends IncludeTag {
 	}
 
 	private List<Tuple> _getAssetLinkEntries() throws Exception {
-		List<Tuple> assetLinkEntries = new ArrayList<>();
-
 		HttpServletRequest httpServletRequest = getRequest();
 
 		ThemeDisplay themeDisplay =
@@ -200,72 +198,85 @@ public class AssetLinksTag extends IncludeTag {
 		List<AssetLink> assetLinks = AssetLinkLocalServiceUtil.getDirectLinks(
 			_assetEntryId, false);
 
-		for (AssetLink assetLink : assetLinks) {
-			AssetEntry assetLinkEntry = null;
+		return TransformUtil.transform(
+			assetLinks,
+			assetLink -> {
+				AssetEntry assetLinkEntry = null;
 
-			if (assetLink.getEntryId1() == _assetEntryId) {
-				assetLinkEntry = AssetEntryLocalServiceUtil.getEntry(
-					assetLink.getEntryId2());
-			}
-			else {
-				assetLinkEntry = AssetEntryLocalServiceUtil.getEntry(
-					assetLink.getEntryId1());
-			}
-
-			AssetRendererFactory<?> assetRendererFactory =
-				AssetRendererFactoryRegistryUtil.
-					getAssetRendererFactoryByClassName(
-						assetLinkEntry.getClassName());
-
-			if (assetRendererFactory == null) {
-				if (_log.isWarnEnabled()) {
-					String className = PortalUtil.getClassName(
-						assetLinkEntry.getClassNameId());
-
-					_log.warn(
-						"No asset renderer factory found for class " +
-							className);
+				if (assetLink.getEntryId1() == _assetEntryId) {
+					assetLinkEntry = AssetEntryLocalServiceUtil.getEntry(
+						assetLink.getEntryId2());
+				}
+				else {
+					assetLinkEntry = AssetEntryLocalServiceUtil.getEntry(
+						assetLink.getEntryId1());
 				}
 
-				continue;
-			}
+				AssetRendererFactory<?> assetRendererFactory =
+					AssetRendererFactoryRegistryUtil.
+						getAssetRendererFactoryByClassName(
+							assetLinkEntry.getClassName());
 
-			if (!assetRendererFactory.isActive(themeDisplay.getCompanyId())) {
-				continue;
-			}
+				if (assetRendererFactory == null) {
+					if (_log.isWarnEnabled()) {
+						String className = PortalUtil.getClassName(
+							assetLinkEntry.getClassNameId());
 
-			AssetRenderer<?> assetRenderer =
-				assetRendererFactory.getAssetRenderer(
-					assetLinkEntry.getClassPK());
+						_log.warn(
+							"No asset renderer factory found for class " +
+								className);
+					}
 
-			if (!assetRenderer.hasViewPermission(
-					themeDisplay.getPermissionChecker()) ||
-				!(assetLinkEntry.isVisible() ||
-				  (assetRenderer.getStatus() ==
-					  WorkflowConstants.STATUS_SCHEDULED))) {
+					return null;
+				}
 
-				continue;
-			}
+				if (!assetRendererFactory.isActive(
+						themeDisplay.getCompanyId())) {
 
-			Group group = GroupLocalServiceUtil.getGroup(
-				assetLinkEntry.getGroupId());
+					return null;
+				}
 
-			Group scopeGroup = themeDisplay.getScopeGroup();
+				AssetRenderer<?> assetRenderer =
+					assetRendererFactory.getAssetRenderer(
+						assetLinkEntry.getClassPK());
 
-			if (group.isStaged() &&
-				(group.isStagingGroup() ^ scopeGroup.isStagingGroup())) {
+				if (assetRenderer == null) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"No asset renderer found for class PK " +
+								assetLinkEntry.getClassPK());
+					}
 
-				continue;
-			}
+					return null;
+				}
 
-			String viewURL = _getViewURL(
-				assetLinkEntry, assetRenderer, assetRendererFactory.getType(),
-				liferayPortletRequest, liferayPortletResponse, themeDisplay);
+				if (!assetRenderer.hasViewPermission(
+						themeDisplay.getPermissionChecker()) ||
+					!(assetLinkEntry.isVisible() ||
+					  (assetRenderer.getStatus() ==
+						  WorkflowConstants.STATUS_SCHEDULED))) {
 
-			assetLinkEntries.add(new Tuple(assetLinkEntry, viewURL));
-		}
+					return null;
+				}
 
-		return assetLinkEntries;
+				Group group = GroupLocalServiceUtil.getGroup(
+					assetLinkEntry.getGroupId());
+
+				Group scopeGroup = themeDisplay.getScopeGroup();
+
+				if (group.isStaged() &&
+					(group.isStagingGroup() ^ scopeGroup.isStagingGroup())) {
+
+					return null;
+				}
+
+				String viewURL = _getViewURL(
+					assetLinkEntry, assetRenderer,
+					assetRendererFactory.getType(), liferayPortletRequest,
+					liferayPortletResponse, themeDisplay);
+
+				return new Tuple(assetLinkEntry, viewURL);
+			});
 	}
 
 	private String _getViewURL(

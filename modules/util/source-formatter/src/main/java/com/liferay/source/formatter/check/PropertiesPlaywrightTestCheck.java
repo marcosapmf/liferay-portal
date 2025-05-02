@@ -8,11 +8,10 @@ package com.liferay.source.formatter.check;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.source.formatter.check.util.SourceUtil;
+import com.liferay.source.formatter.util.FileUtil;
 import com.liferay.source.formatter.util.SourceFormatterUtil;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 
@@ -50,25 +49,10 @@ public class PropertiesPlaywrightTestCheck extends BaseFileCheck {
 			if (testrayMainComponentName == null) {
 				addMessage(
 					fileName,
-					"Missing property '" + _TESTRAY_MAIN_COMPONENT_NAME +
-						"' in test.properties");
+					"Missing property \"" + _TESTRAY_MAIN_COMPONENT_NAME +
+						"\" in test.properties");
 
 				return content;
-			}
-
-			List<String> testrayAllTeamsComponentNames =
-				_getTestrayAllTeamsComponentNames();
-
-			if (!testrayAllTeamsComponentNames.contains(
-					testrayMainComponentName)) {
-
-				addMessage(
-					fileName,
-					StringBundler.concat(
-						"Property value '", testrayMainComponentName,
-						"' does not exist in 'testray.team.*.component.names' ",
-						"in ", SourceUtil.getRootDirName(absolutePath),
-						"/test.properties"));
 			}
 
 			List<String> buildGradleFileNames = _getBuildGradleFileNames();
@@ -92,6 +76,15 @@ public class PropertiesPlaywrightTestCheck extends BaseFileCheck {
 				}
 			}
 
+			testPropertiesFileNames = ListUtil.filter(
+				testPropertiesFileNames,
+				testPropertiesFileName ->
+					!testPropertiesFileName.endsWith(
+						"/modules/apps/" + moduleName + "/test.properties") &&
+					!testPropertiesFileName.endsWith(
+						"/modules/dxp/apps/" + moduleName +
+							"/test.properties"));
+
 			if (ListUtil.isEmpty(testPropertiesFileNames) ||
 				(testPropertiesFileNames.size() != 1)) {
 
@@ -110,13 +103,27 @@ public class PropertiesPlaywrightTestCheck extends BaseFileCheck {
 					fileName,
 					"Missing test.properties in " +
 						testPropertiesFileName.substring(x + 1, y));
+
+				return content;
 			}
+
+			_checkMissingPlaywrightTestProjectProperty(
+				fileName, FileUtil.read(file), moduleName,
+				file.getAbsolutePath());
 		}
 
 		if (absolutePath.contains("/modules/apps/") ||
 			absolutePath.contains("/modules/dxp/apps/")) {
 
 			String moduleName = _getModuleName(absolutePath);
+
+			if (absolutePath.endsWith(
+					"/modules/apps/" + moduleName + "/test.properties") ||
+				absolutePath.endsWith(
+					"/modules/dxp/apps/" + moduleName + "/test.properties")) {
+
+				return content;
+			}
 
 			File file = new File(
 				getPortalDir() + "/modules/test/playwright/tests/" +
@@ -137,49 +144,71 @@ public class PropertiesPlaywrightTestCheck extends BaseFileCheck {
 				return content;
 			}
 
-			Properties properties = new Properties();
-
-			properties.load(new StringReader(content));
-
-			List<String> relevantRuleNames = ListUtil.fromString(
-				properties.getProperty(_RELEVANT_RULE_NAMES), StringPool.COMMA);
-
-			if (ListUtil.isEmpty(relevantRuleNames)) {
-				addMessage(
-					fileName,
-					"Missing property '" + _RELEVANT_RULE_NAMES +
-						"' in test.properties for Playwright tests");
-
-				return content;
-			}
-
-			for (String relevantRuleName : relevantRuleNames) {
-				String playwrightTestProjectPropertyName = StringBundler.concat(
-					"playwright.test.project[playwright-js-tomcat90-mysql57-",
-					"jdk8][relevant][", relevantRuleName, "]");
-
-				List<String> playwrightTestProjectList = ListUtil.fromString(
-					properties.getProperty(playwrightTestProjectPropertyName),
-					StringPool.COMMA);
-
-				if (ListUtil.isEmpty(playwrightTestProjectList)) {
-					addMessage(
-						fileName,
-						"Missing property '" +
-							playwrightTestProjectPropertyName +
-								"' in test.properties");
-				}
-				else if (!playwrightTestProjectList.contains(moduleName)) {
-					addMessage(
-						fileName,
-						StringBundler.concat(
-							"Missing property value '", moduleName, "' in '",
-							playwrightTestProjectPropertyName, "'"));
-				}
-			}
+			_checkMissingPlaywrightTestProjectProperty(
+				fileName, content, moduleName, null);
 		}
 
 		return content;
+	}
+
+	private void _checkMissingPlaywrightTestProjectProperty(
+			String fileName, String content, String moduleName,
+			String moduleTestPropertiesFilePath)
+		throws IOException {
+
+		Properties properties = new Properties();
+
+		properties.load(new StringReader(content));
+
+		List<String> relevantRuleNames = ListUtil.fromString(
+			properties.getProperty(_RELEVANT_RULE_NAMES), StringPool.COMMA);
+
+		if (ListUtil.isEmpty(relevantRuleNames)) {
+			addMessage(
+				fileName,
+				"Missing property \"" + _RELEVANT_RULE_NAMES +
+					"\" in test.properties for Playwright tests");
+
+			return;
+		}
+
+		for (String relevantRuleName : relevantRuleNames) {
+			String playwrightProjectsIncludesPropertyName =
+				StringBundler.concat(
+					"playwright.projects.includes",
+					"[playwright-js-tomcat90-mysql57][relevant][",
+					relevantRuleName, "]");
+
+			List<String> playwrightProjectsIncludesList = ListUtil.fromString(
+				properties.getProperty(playwrightProjectsIncludesPropertyName),
+				StringPool.COMMA);
+
+			String additionalMessage = "";
+
+			if (moduleTestPropertiesFilePath != null) {
+				int x = moduleTestPropertiesFilePath.indexOf("/modules/");
+
+				additionalMessage =
+					" in " + moduleTestPropertiesFilePath.substring(x + 1);
+			}
+
+			if (ListUtil.isEmpty(playwrightProjectsIncludesList)) {
+				addMessage(
+					fileName,
+					StringBundler.concat(
+						"Missing property \"",
+						playwrightProjectsIncludesPropertyName, "\"",
+						additionalMessage));
+			}
+			else if (!playwrightProjectsIncludesList.contains(moduleName)) {
+				addMessage(
+					fileName,
+					StringBundler.concat(
+						"Missing property value \"", moduleName, "\" in \"",
+						playwrightProjectsIncludesPropertyName, "\"",
+						additionalMessage));
+			}
+		}
 	}
 
 	private synchronized List<String> _getBuildGradleFileNames()
@@ -204,62 +233,11 @@ public class PropertiesPlaywrightTestCheck extends BaseFileCheck {
 		return absolutePath.substring(y + 1, x);
 	}
 
-	private synchronized List<String> _getTestrayAllTeamsComponentNames()
-		throws IOException {
-
-		if (_testrayAllTeamsComponentNames != null) {
-			return _testrayAllTeamsComponentNames;
-		}
-
-		_testrayAllTeamsComponentNames = new ArrayList<>();
-
-		File file = new File(getPortalDir(), "test.properties");
-
-		if (!file.exists()) {
-			return _testrayAllTeamsComponentNames;
-		}
-
-		Properties properties = new Properties();
-
-		properties.load(new FileInputStream(file));
-
-		List<String> testrayAvailableComponentNames = ListUtil.fromString(
-			properties.getProperty("testray.available.component.names"),
-			StringPool.COMMA);
-
-		for (String testrayAvailableComponentName :
-				testrayAvailableComponentNames) {
-
-			if (!testrayAvailableComponentName.startsWith("${") &&
-				!testrayAvailableComponentName.endsWith("}")) {
-
-				continue;
-			}
-
-			String testrayTeamComponentName =
-				testrayAvailableComponentName.substring(
-					2, testrayAvailableComponentName.length() - 1);
-
-			List<String> testrayTeamComponentNames = ListUtil.fromString(
-				properties.getProperty(testrayTeamComponentName),
-				StringPool.COMMA);
-
-			if (ListUtil.isEmpty(testrayTeamComponentNames)) {
-				continue;
-			}
-
-			_testrayAllTeamsComponentNames.addAll(testrayTeamComponentNames);
-		}
-
-		return _testrayAllTeamsComponentNames;
-	}
-
 	private static final String _RELEVANT_RULE_NAMES = "relevant.rule.names";
 
 	private static final String _TESTRAY_MAIN_COMPONENT_NAME =
 		"testray.main.component.name";
 
 	private List<String> _buildGradleFileNames;
-	private List<String> _testrayAllTeamsComponentNames;
 
 }

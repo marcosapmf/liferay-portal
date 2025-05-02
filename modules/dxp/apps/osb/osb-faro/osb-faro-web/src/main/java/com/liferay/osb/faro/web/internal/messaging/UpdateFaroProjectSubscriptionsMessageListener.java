@@ -19,6 +19,8 @@ import com.liferay.osb.faro.web.internal.messaging.destination.creator.Destinati
 import com.liferay.osb.faro.web.internal.model.display.main.FaroSubscriptionDisplay;
 import com.liferay.osb.faro.web.internal.util.JSONUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.BaseMessageListener;
@@ -29,8 +31,10 @@ import com.liferay.portal.kernel.scheduler.SchedulerEngineHelper;
 import com.liferay.portal.kernel.scheduler.StorageType;
 import com.liferay.portal.kernel.scheduler.Trigger;
 import com.liferay.portal.kernel.scheduler.TriggerFactory;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Objects;
@@ -144,15 +148,32 @@ public class UpdateFaroProjectSubscriptionsMessageListener
 						FaroProjectConstants.STATE_READY);
 				}
 
+				JSONObject jsonObject = _jsonFactory.createJSONObject(
+					faroProject.getSubscription());
+
 				faroSubscriptionDisplay.setCounts(
 					faroProject, _cerebroEngineClient, _contactsEngineClient);
+				faroSubscriptionDisplay.setIndividualsCounts(
+					jsonObject.getString("individualsCounts"));
+				faroSubscriptionDisplay.setPageViewsCounts(
+					jsonObject.getString("pageViewsCounts"));
 
 				faroProject.setSubscription(
 					JSONUtil.writeValueAsString(faroSubscriptionDisplay));
 
+				Date date = new Date();
+
+				Date endDate = new Date(date.getTime() / Time.DAY * Time.DAY);
+
+				Calendar calendar = Calendar.getInstance();
+
+				calendar.setTime(endDate);
+
+				calendar.add(Calendar.DATE, -1);
+
 				faroSubscriptionDisplay.setUsageCounts(
-					_cerebroEngineClient, _contactsEngineClient, new Date(),
-					faroProject);
+					_cerebroEngineClient, _contactsEngineClient, endDate,
+					faroProject, calendar.getTime());
 
 				_faroProjectLocalService.updateSubscription(
 					faroProject.getFaroProjectId(),
@@ -184,6 +205,9 @@ public class UpdateFaroProjectSubscriptionsMessageListener
 
 	@Reference
 	private FaroProjectLocalService _faroProjectLocalService;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference(
 		policy = ReferencePolicy.DYNAMIC,

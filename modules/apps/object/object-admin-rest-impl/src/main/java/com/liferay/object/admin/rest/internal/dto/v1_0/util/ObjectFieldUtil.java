@@ -16,7 +16,6 @@ import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectFilterLocalService;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -36,7 +35,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author Gabriel Albuquerque
@@ -95,7 +93,7 @@ public class ObjectFieldUtil {
 				objectFieldSetting.getName(),
 				ObjectFieldSettingConstants.NAME_STATE_FLOW));
 
-		if (!ArrayUtil.isEmpty(stateFlowObjectFieldSettings)) {
+		if (ArrayUtil.isNotEmpty(stateFlowObjectFieldSettings)) {
 			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 				JSONFactoryUtil.looseSerializeDeep(
 					stateFlowObjectFieldSettings[0].getValue()));
@@ -209,7 +207,7 @@ public class ObjectFieldUtil {
 	}
 
 	public static com.liferay.object.model.ObjectField toObjectField(
-		Locale defaultLocale, boolean enableLocalization,
+		String defaultLanguageId,
 		ListTypeDefinitionLocalService listTypeDefinitionLocalService,
 		ObjectField objectField,
 		ObjectFieldLocalService objectFieldLocalService,
@@ -218,14 +216,6 @@ public class ObjectFieldUtil {
 
 		if (objectField == null) {
 			return null;
-		}
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-164948") &&
-			Objects.equals(
-				objectField.getBusinessTypeAsString(),
-				ObjectFieldConstants.BUSINESS_TYPE_FORMULA)) {
-
-			throw new UnsupportedOperationException();
 		}
 
 		com.liferay.object.model.ObjectField serviceBuilderObjectField =
@@ -253,35 +243,26 @@ public class ObjectFieldUtil {
 		serviceBuilderObjectField.setIndexedLanguageId(
 			objectField.getIndexedLanguageId());
 
-		Map<Locale, String> labelMap = LocalizedMapUtil.getLocalizedMap(
-			objectField.getLabel());
+		Map<Locale, String> localizedLabelMap =
+			LocalizedMapUtil.populateLocalizedMap(
+				defaultLanguageId, objectField.getLabel(),
+				objectField.getName());
 
-		Locale siteDefaultLocale = LocaleUtil.getSiteDefault();
+		if (GetterUtil.getBoolean(objectField.getSystem())) {
+			Locale siteDefaultLocale = LocaleUtil.getSiteDefault();
 
-		if (!Objects.equals(defaultLocale, siteDefaultLocale) &&
-			Validator.isNull(labelMap.get(siteDefaultLocale)) &&
-			Validator.isNotNull(labelMap.get(defaultLocale))) {
-
-			if (GetterUtil.getBoolean(objectField.getSystem())) {
-				labelMap.put(
+			localizedLabelMap.put(
+				siteDefaultLocale,
+				LanguageUtil.get(
 					siteDefaultLocale,
-					LanguageUtil.get(
-						siteDefaultLocale,
-						_systemObjectFieldLabelKeys.get(objectField.getName()),
-						labelMap.get(defaultLocale)));
-			}
-			else {
-				labelMap.put(siteDefaultLocale, labelMap.get(defaultLocale));
-			}
+					_systemObjectFieldLabelKeys.get(objectField.getName()),
+					localizedLabelMap.get(siteDefaultLocale)));
 		}
 
-		labelMap.putIfAbsent(siteDefaultLocale, objectField.getName());
-
-		serviceBuilderObjectField.setLabelMap(labelMap);
+		serviceBuilderObjectField.setLabelMap(localizedLabelMap);
 
 		serviceBuilderObjectField.setLocalized(
-			GetterUtil.getBoolean(
-				objectField.getLocalized(), enableLocalization));
+			GetterUtil.getBoolean(objectField.getLocalized()));
 		serviceBuilderObjectField.setName(objectField.getName());
 		serviceBuilderObjectField.setObjectFieldSettings(
 			ObjectFieldSettingUtil.toObjectFieldSettings(

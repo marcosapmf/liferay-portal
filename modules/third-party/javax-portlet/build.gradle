@@ -1,0 +1,5 @@
+apply from: "../../build-jakarta-transformer.gradle"
+
+dependencies {
+	compileOnly group: "javax.portlet", name: "portlet-api", transitive: false, version: "3.0.1"
+}

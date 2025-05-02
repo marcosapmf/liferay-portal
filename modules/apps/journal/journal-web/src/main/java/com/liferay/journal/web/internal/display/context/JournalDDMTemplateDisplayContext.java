@@ -126,7 +126,7 @@ public class JournalDDMTemplateDisplayContext {
 			groupIds =
 				SiteConnectedGroupGroupProviderUtil.
 					getCurrentAndAncestorSiteAndDepotGroupIds(
-						_themeDisplay.getScopeGroupId(), true);
+						_themeDisplay.getScopeGroupId(), false, true);
 		}
 
 		long[] templateGroupIds = groupIds;
@@ -258,11 +258,7 @@ public class JournalDDMTemplateDisplayContext {
 	}
 
 	public boolean isSearch() {
-		if (Validator.isNotNull(_getKeywords())) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(_getKeywords());
 	}
 
 	private long[] _getDDMTemplateClassPKs() {

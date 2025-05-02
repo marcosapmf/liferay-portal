@@ -32,6 +32,7 @@ import com.liferay.info.item.creator.InfoItemCreator;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.info.item.updater.InfoItemFieldValuesUpdater;
+import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.info.type.WebURL;
 import com.liferay.layout.constants.LayoutWebKeys;
 import com.liferay.layout.provider.LayoutStructureProvider;
@@ -51,10 +52,8 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -71,6 +70,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.staging.StagingGroupHelper;
 
 import java.text.SimpleDateFormat;
 
@@ -153,9 +153,10 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 
 			long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
 
-			Group group = _groupLocalService.fetchGroup(groupId);
+			if ((groupId == 0) ||
+				_stagingGroupHelper.isLocalStagingGroup(groupId) ||
+				_stagingGroupHelper.isRemoteStagingGroup(groupId)) {
 
-			if ((group == null) || !group.isSite()) {
 				throw new InfoFormInvalidGroupException();
 			}
 
@@ -178,7 +179,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 
 			Object infoItem = null;
 
-			String className = _portal.getClassName(
+			String className = _portal.fetchClassName(
 				ParamUtil.getLong(httpServletRequest, "classNameId"));
 
 			InfoItemIdentifier infoItemIdentifier = _getInfoItemIdentifier(
@@ -306,9 +307,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 								getInfoFieldUniqueId())) {
 
 						SessionErrors.add(
-							httpServletRequest,
-							infoFormValidationExceptionCustomValidation.
-								getInfoFieldUniqueId(),
+							httpServletRequest, InfoFormException.class,
 							infoFormValidationExceptionCustomValidation);
 					}
 					else {
@@ -331,8 +330,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 					infoFormValidationException.getInfoFieldUniqueId())) {
 
 				SessionErrors.add(
-					httpServletRequest,
-					infoFormValidationException.getInfoFieldUniqueId(),
+					httpServletRequest, InfoFormException.class,
 					infoFormValidationException);
 			}
 		}
@@ -360,7 +358,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 		}
 
 		if (!success && (infoFieldValues != null)) {
-			Map<String, String> infoFormParameterMap = new HashMap<>();
+			Map<String, Object> infoFormParameterMap = new HashMap<>();
 
 			for (InfoFieldValue<Object> infoFieldValue :
 					infoFieldValues.values()) {
@@ -397,12 +395,13 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 		String notificationText = ParamUtil.getString(
 			httpServletRequest, "notificationText");
 
-		if (Validator.isNotNull(notificationText)) {
+		if (success && Validator.isNotNull(notificationText)) {
 			SessionMessages.add(
-				httpServletRequest, "requestProcessed", notificationText);
+				httpServletRequest, "form_requestProcessedSuccess",
+				notificationText);
 		}
 
-		httpServletResponse.sendRedirect(redirect);
+		httpServletResponse.sendRedirect(_portal.escapeRedirect(redirect));
 
 		return null;
 	}
@@ -542,7 +541,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 			ParamUtil.getLong(httpServletRequest, "segmentsExperienceId"));
 	}
 
-	private String _getValue(InfoFieldValue<?> infoFieldValue) {
+	private Object _getValue(InfoFieldValue<?> infoFieldValue) {
 		if (infoFieldValue == null) {
 			return null;
 		}
@@ -569,6 +568,13 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 
 		if (value instanceof List) {
 			return ListUtil.toString((List<?>)value, StringPool.BLANK);
+		}
+
+		if (value instanceof InfoLocalizedValue) {
+			InfoLocalizedValue<String> infoLocalizedValue =
+				(InfoLocalizedValue<String>)value;
+
+			return infoLocalizedValue.getValues();
 		}
 
 		return String.valueOf(value);
@@ -706,9 +712,6 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 	private FragmentEntryLocalService _fragmentEntryLocalService;
 
 	@Reference
-	private GroupLocalService _groupLocalService;
-
-	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
 
 	private volatile InfoRequestFieldValuesProviderHelper
@@ -725,5 +728,8 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private StagingGroupHelper _stagingGroupHelper;
 
 }

@@ -9,9 +9,9 @@ import useSWR from 'swr';
 
 import ErrorBoundary from '../../../../components/ErrorBoundary';
 import SearchBuilder from '../../../../core/SearchBuilder';
-import {ORDER_TYPES} from '../../../../enums/Order';
+import {OrderTypes} from '../../../../enums/Order';
 import i18n from '../../../../i18n';
-import HeadlessCommerceAdminOrderImpl from '../../../../services/rest/HeadlessCommerceAdminOrder';
+import HeadlessCommerceAdminOrder from '../../../../services/rest/HeadlessCommerceAdminOrder';
 import InfoCard from '../../components/InfoCard';
 import useAccountsMetrics from '../../hooks/useAccountsMetrics';
 import useAnalyticsViewsMetrics from '../../hooks/useAnalyticsViewsMetrics';
@@ -42,11 +42,15 @@ const Metrics = () => {
 	const {data: orders} = useSWR<APIResponse<Order>>(
 		'administrator-dashboard/orders',
 		() =>
-			HeadlessCommerceAdminOrderImpl.getOrders(
+			HeadlessCommerceAdminOrder.getOrders(
 				new URLSearchParams({
 					filter: SearchBuilder.in('orderTypeExternalReferenceCode', [
-						ORDER_TYPES.CLOUDAPP,
-						ORDER_TYPES.DXPAPP,
+						OrderTypes.CLIENT_EXTENSION,
+						OrderTypes.CLOUDAPP,
+						OrderTypes.DXPAPP,
+						OrderTypes.COMPOSITE_APP,
+						OrderTypes.LOW_CODE_CONFIGURATION,
+						OrderTypes.OTHER,
 					]),
 					nestedFields: 'account,orderItems',
 					pageSize: '30',

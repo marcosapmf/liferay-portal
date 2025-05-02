@@ -37,6 +37,7 @@ import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -50,6 +51,7 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -79,6 +81,7 @@ public class CPPublisherDisplayContext extends BaseCPPublisherDisplayContext {
 
 	public CPPublisherDisplayContext(
 			AMImageHTMLTagFactory amImageHTMLTagFactory,
+			ConfigurationProvider configurationProvider,
 			CommerceCatalogDefaultImage commerceCatalogDefaultImage,
 			CommerceMediaResolver commerceMediaResolver,
 			CPAttachmentFileEntryLocalService cpAttachmentFileEntryLocalService,
@@ -94,14 +97,17 @@ public class CPPublisherDisplayContext extends BaseCPPublisherDisplayContext {
 			ModelResourcePermission<DLFileEntry>
 				dlFileEntryModelResourcePermission,
 			FriendlyURLEntryLocalService friendlyURLEntryLocalService,
+			GroupLocalService groupLocalService,
 			HttpServletRequest httpServletRequest, Portal portal)
 		throws PortalException {
 
 		super(
-			contentListEntryRendererRegistry, cpContentListRendererRegistry,
-			cpPublisherWebHelper, cpTypeRegistry, httpServletRequest);
+			configurationProvider, contentListEntryRendererRegistry,
+			cpContentListRendererRegistry, cpPublisherWebHelper, cpTypeRegistry,
+			groupLocalService, httpServletRequest);
 
 		_amImageHTMLTagFactory = amImageHTMLTagFactory;
+		_configurationProvider = configurationProvider;
 		_commerceCatalogDefaultImage = commerceCatalogDefaultImage;
 		_commerceMediaResolver = commerceMediaResolver;
 		_cpAttachmentFileEntryLocalService = cpAttachmentFileEntryLocalService;
@@ -159,6 +165,10 @@ public class CPPublisherDisplayContext extends BaseCPPublisherDisplayContext {
 		}
 		else if (isSelectionStyleManual()) {
 			List<CPCatalogEntry> catalogEntries = getCPCatalogEntries();
+
+			if (catalogEntries == null) {
+				return null;
+			}
 
 			int end = _searchContainer.getEnd();
 
@@ -311,6 +321,10 @@ public class CPPublisherDisplayContext extends BaseCPPublisherDisplayContext {
 						(CommerceContext)httpServletRequest.getAttribute(
 							CommerceWebKeys.COMMERCE_CONTEXT);
 
+					if (commerceContext == null) {
+						return null;
+					}
+
 					AccountEntry accountEntry =
 						commerceContext.getAccountEntry();
 
@@ -393,6 +407,7 @@ public class CPPublisherDisplayContext extends BaseCPPublisherDisplayContext {
 	private final AMImageHTMLTagFactory _amImageHTMLTagFactory;
 	private final CommerceCatalogDefaultImage _commerceCatalogDefaultImage;
 	private final CommerceMediaResolver _commerceMediaResolver;
+	private final ConfigurationProvider _configurationProvider;
 	private final CPAttachmentFileEntryLocalService
 		_cpAttachmentFileEntryLocalService;
 	private final CPDataSourceRegistry _cpDataSourceRegistry;

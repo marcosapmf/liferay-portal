@@ -27,7 +27,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -59,8 +58,9 @@ public class DiscountChannelResourceImpl
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -74,12 +74,12 @@ public class DiscountChannelResourceImpl
 				commerceDiscount.getCommerceDiscountId(), null,
 				pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems = _commerceChannelRelService.getCommerceChannelRelsCount(
+		int totalCount = _commerceChannelRelService.getCommerceChannelRelsCount(
 			CommerceDiscount.class.getName(),
 			commerceDiscount.getCommerceDiscountId());
 
 		return Page.of(
-			_toDiscountChannels(commerceChannelRels), pagination, totalItems);
+			_toDiscountChannels(commerceChannelRels), pagination, totalCount);
 	}
 
 	@NestedField(parentClass = Discount.class, value = "discountChannels")
@@ -101,11 +101,11 @@ public class DiscountChannelResourceImpl
 				CommerceDiscount.class.getName(), id, search,
 				pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems = _commerceChannelRelService.getCommerceChannelRelsCount(
+		int totalCount = _commerceChannelRelService.getCommerceChannelRelsCount(
 			CommerceDiscount.class.getName(), id, search);
 
 		return Page.of(
-			_toDiscountChannels(commerceChannelRel), pagination, totalItems);
+			_toDiscountChannels(commerceChannelRel), pagination, totalCount);
 	}
 
 	@Override
@@ -114,8 +114,9 @@ public class DiscountChannelResourceImpl
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -179,15 +180,10 @@ public class DiscountChannelResourceImpl
 			List<CommerceChannelRel> commerceChannelRels)
 		throws Exception {
 
-		List<DiscountChannel> discountChannels = new ArrayList<>();
-
-		for (CommerceChannelRel commerceChannelRel : commerceChannelRels) {
-			discountChannels.add(
-				_toDiscountChannel(
-					commerceChannelRel.getCommerceChannelRelId()));
-		}
-
-		return discountChannels;
+		return transform(
+			commerceChannelRels,
+			commerceChannelRel -> _toDiscountChannel(
+				commerceChannelRel.getCommerceChannelRelId()));
 	}
 
 	@Reference(

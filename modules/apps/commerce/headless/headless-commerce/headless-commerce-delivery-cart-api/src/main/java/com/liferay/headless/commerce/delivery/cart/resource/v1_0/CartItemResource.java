@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.delivery.cart.resource.v1_0;
 
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.CartItem;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,30 +46,42 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface CartItemResource {
 
+	public void deleteCartItem(Long cartItemId) throws Exception;
+
+	public Response deleteCartItemBatch(String callbackURL, Object object)
+		throws Exception;
+
 	public void deleteCartItemByExternalReferenceCode(
 			String externalReferenceCode)
 		throws Exception;
 
+	public Page<CartItem> getCartByExternalReferenceCodeItemsPage(
+			String externalReferenceCode, String search, Long skuId,
+			Pagination pagination)
+		throws Exception;
+
+	public CartItem getCartItem(Long cartItemId) throws Exception;
+
 	public CartItem getCartItemByExternalReferenceCode(
 			String externalReferenceCode)
+		throws Exception;
+
+	public Page<CartItem> getCartItemsPage(
+			Long cartId, String search, Long skuId, Pagination pagination)
+		throws Exception;
+
+	public CartItem patchCartItem(Long cartItemId, CartItem cartItem)
 		throws Exception;
 
 	public CartItem patchCartItemByExternalReferenceCode(
 			String externalReferenceCode, CartItem cartItem)
 		throws Exception;
 
-	public CartItem putCartItemByExternalReferenceCode(
+	public CartItem postCartByExternalReferenceCodeItem(
 			String externalReferenceCode, CartItem cartItem)
 		throws Exception;
 
-	public void deleteCartItem(Long cartItemId) throws Exception;
-
-	public Response deleteCartItemBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public CartItem getCartItem(Long cartItemId) throws Exception;
-
-	public CartItem patchCartItem(Long cartItemId, CartItem cartItem)
+	public CartItem postCartItem(Long cartId, CartItem cartItem)
 		throws Exception;
 
 	public CartItem putCartItem(Long cartItemId, CartItem cartItem)
@@ -80,19 +90,8 @@ public interface CartItemResource {
 	public Response putCartItemBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public Page<CartItem> getCartByExternalReferenceCodeItemsPage(
-			String externalReferenceCode, Long skuId, Pagination pagination)
-		throws Exception;
-
-	public CartItem postCartByExternalReferenceCodeItem(
+	public CartItem putCartItemByExternalReferenceCode(
 			String externalReferenceCode, CartItem cartItem)
-		throws Exception;
-
-	public Page<CartItem> getCartItemsPage(
-			Long cartId, Long skuId, Pagination pagination)
-		throws Exception;
-
-	public CartItem postCartItem(Long cartId, CartItem cartItem)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -117,7 +116,8 @@ public interface CartItemResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -142,19 +142,23 @@ public interface CartItemResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

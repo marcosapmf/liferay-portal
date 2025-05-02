@@ -37,8 +37,10 @@ renderResponse.setTitle(editClientExtensionEntryDisplayContext.getTitle());
 		<liferay-ui:message arguments="<%= clientExtensionEntryTypeSettingsException.getMessageArguments() %>" key="<%= clientExtensionEntryTypeSettingsException.getMessageKey() %>" />
 	</liferay-ui:error>
 
+	<liferay-ui:error exception="<%= PortalException.class %>" message="an-unexpected-error-occurred" />
+
 	<liferay-frontend:edit-form-body>
-		<h3 class="mb-3"><%= editClientExtensionEntryDisplayContext.getTitle() %></h3>
+		<h3 class="mb-3"><%= HtmlUtil.escape(editClientExtensionEntryDisplayContext.getTitle()) %></h3>
 
 		<p class="text-secondary"><%= editClientExtensionEntryDisplayContext.getHelpLabel() %>
 			<liferay-learn:message
@@ -49,7 +51,7 @@ renderResponse.setTitle(editClientExtensionEntryDisplayContext.getTitle());
 
 		<p class="text-secondary">
 			<liferay-learn:message
-				key="learn-browser-based-client-extensions"
+				key="browser-based-client-extensions"
 				resource="client-extension-web"
 			/>
 		</p>

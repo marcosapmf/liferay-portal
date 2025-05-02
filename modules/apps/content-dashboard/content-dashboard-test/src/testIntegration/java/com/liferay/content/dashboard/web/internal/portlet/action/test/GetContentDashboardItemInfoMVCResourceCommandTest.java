@@ -65,7 +65,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -116,7 +115,6 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 		_initCategoryAndVocabulary();
 	}
 
-	@FeatureFlags("LPD-30087")
 	@Test
 	public void testGetFileEntrySpecificFields() throws Exception {
 		JSONObject jsonObject = _serveResource(
@@ -149,7 +147,6 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 			jsonObject.getJSONArray("specificFields"));
 	}
 
-	@FeatureFlags("LPD-30087")
 	@Test
 	public void testServeResource() throws Exception {
 		ContentDashboardItem<?> contentDashboardItem =
@@ -223,20 +220,19 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 			contentDashboardItemSubtype.getLabel(LocaleUtil.US),
 			jsonObject.getString("subType"));
 
-		List<ContentDashboardItem.SpecificInformation<?>>
-			specificInformationList =
-				contentDashboardItem.getSpecificInformationList(LocaleUtil.US);
+		List<ContentDashboardItem.SpecificInformation<?>> specificInformations =
+			contentDashboardItem.getSpecificInformationList(LocaleUtil.US);
 
 		Assert.assertEquals(
-			String.valueOf(specificInformationList), 7,
-			specificInformationList.size());
+			String.valueOf(specificInformations), 7,
+			specificInformations.size());
 
 		JSONArray specificFieldsJSONArray = jsonObject.getJSONArray(
 			"specificFields");
 
-		for (int i = 0; i < specificInformationList.size(); i++) {
+		for (int i = 0; i < specificInformations.size(); i++) {
 			ContentDashboardItem.SpecificInformation<?> specificInformation =
-				specificInformationList.get(i);
+				specificInformations.get(i);
 
 			JSONObject specificFieldJSONObject =
 				specificFieldsJSONArray.getJSONObject(i);

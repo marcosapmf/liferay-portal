@@ -52,7 +52,7 @@ public class StyleBookEntryServiceTest {
 		StyleBookEntry sourceStyleBookEntry =
 			_styleBookEntryService.addStyleBookEntry(
 				null, _group.getGroupId(), RandomTestUtil.randomString(),
-				"STYLE_BOOK_ENTRY_KEY",
+				"STYLE_BOOK_ENTRY_KEY", RandomTestUtil.randomString(),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		StyleBookEntry targetStyleBookEntry =

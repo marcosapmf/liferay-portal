@@ -123,8 +123,8 @@ public class CommercePriceListIndexerTest {
 			commerceCurrency.getCode());
 
 		_commercePriceListLocalService.addCommercePriceList(
-			null, commerceCatalog.getGroupId(), _user.getUserId(),
-			commerceCurrency.getCommerceCurrencyId(), true,
+			null, _user.getUserId(), commerceCatalog.getGroupId(),
+			commerceCurrency.getCode(), true,
 			CommercePriceListConstants.TYPE_PRICE_LIST, 0, false,
 			RandomTestUtil.randomString(), 0, 1, 1, 2018, 3, 4, 0, 0, 0, 0, 0,
 			true,

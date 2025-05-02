@@ -13,29 +13,38 @@ import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.asset.kernel.service.AssetCategoryService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.headless.admin.user.dto.v1_0.Account;
 import com.liferay.headless.admin.user.dto.v1_0.AccountBrief;
+import com.liferay.headless.admin.user.dto.v1_0.AssetLibraryBrief;
 import com.liferay.headless.admin.user.dto.v1_0.EmailAddress;
 import com.liferay.headless.admin.user.dto.v1_0.OrganizationBrief;
 import com.liferay.headless.admin.user.dto.v1_0.Phone;
 import com.liferay.headless.admin.user.dto.v1_0.PostalAddress;
 import com.liferay.headless.admin.user.dto.v1_0.RoleBrief;
 import com.liferay.headless.admin.user.dto.v1_0.SiteBrief;
+import com.liferay.headless.admin.user.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccountContactInformation;
 import com.liferay.headless.admin.user.dto.v1_0.UserGroupBrief;
 import com.liferay.headless.admin.user.dto.v1_0.WebUrl;
-import com.liferay.headless.admin.user.internal.dto.v1_0.util.CustomFieldsUtil;
+import com.liferay.headless.admin.user.internal.dto.v1_0.converter.constants.DTOConverterConstants;
+import com.liferay.headless.admin.user.internal.dto.v1_0.util.CreatorUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.EmailAddressUtil;
+import com.liferay.headless.admin.user.internal.dto.v1_0.util.PermissionUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.PhoneUtil;
-import com.liferay.headless.admin.user.internal.dto.v1_0.util.PostalAddressUtil;
+import com.liferay.headless.admin.user.internal.dto.v1_0.util.RoleBriefUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderListTypeUtil;
+import com.liferay.headless.admin.user.internal.dto.v1_0.util.TaxonomyCategoryBriefUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.WebUrlUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
@@ -46,6 +55,8 @@ import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.UserBag;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.PermissionService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -54,11 +65,17 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.security.permission.UserBagFactoryUtil;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
+import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
+import com.liferay.portal.vulcan.fields.NestedFieldsSupplier;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Collection;
@@ -121,7 +138,39 @@ public class UserResourceDTOConverter
 				setActions(dtoConverterContext::getActions);
 				setAdditionalName(user::getMiddleName);
 				setAlternateName(user::getScreenName);
-				setBirthDate(contact::getBirthday);
+				setAssetLibraryBriefs(
+					() -> NestedFieldsSupplier.supply(
+						"assetLibraryBriefs",
+						fieldName -> TransformUtil.transformToArray(
+							ListUtil.filter(
+								user.getAllGroups(),
+								group ->
+									group.getType() ==
+										GroupConstants.TYPE_DEPOT),
+							group -> _toAssetLibraryBrief(
+								group, dtoConverterContext),
+							AssetLibraryBrief.class)));
+				setBirthDate(
+					() -> {
+						if (contact == null) {
+							return null;
+						}
+
+						return contact.getBirthday();
+					});
+				setCreator(
+					() -> {
+						if (contact == null) {
+							return null;
+						}
+
+						return NestedFieldsSupplier.supply(
+							"creator",
+							fieldName -> CreatorUtil.toCreator(
+								_portal,
+								_userLocalService.fetchUser(
+									contact.getUserId())));
+					});
 				setCustomFields(
 					() -> CustomFieldsUtil.toCustomFields(
 						dtoConverterContext.isAcceptAllLanguages(),
@@ -143,19 +192,56 @@ public class UserResourceDTOConverter
 				setEmailAddress(user::getEmailAddress);
 				setExternalReferenceCode(user::getExternalReferenceCode);
 				setFamilyName(user::getLastName);
+				setGender(
+					() -> {
+						if (!PrefsPropsUtil.getBoolean(
+								user.getCompanyId(),
+								PropsKeys.
+									FIELD_ENABLE_COM_LIFERAY_PORTAL_KERNEL_MODEL_CONTACT_MALE) ||
+							(contact == null)) {
+
+							return null;
+						}
+
+						if (contact.isMale()) {
+							return Gender.MALE;
+						}
+
+						return Gender.FEMALE;
+					});
 				setGivenName(user::getFirstName);
+				setHasLoginDate(
+					() -> {
+						boolean hasLoginDate = false;
+
+						if (user.getLastLoginDate() != null) {
+							hasLoginDate = true;
+						}
+
+						return hasLoginDate;
+					});
 				setHonorificPrefix(
-					() ->
-						ServiceBuilderListTypeUtil.
+					() -> {
+						if (contact == null) {
+							return null;
+						}
+
+						return ServiceBuilderListTypeUtil.
 							getServiceBuilderListTypeMessage(
 								contact.getPrefixListTypeId(),
-								dtoConverterContext.getLocale()));
+								dtoConverterContext.getLocale());
+					});
 				setHonorificSuffix(
-					() ->
-						ServiceBuilderListTypeUtil.
+					() -> {
+						if (contact == null) {
+							return null;
+						}
+
+						return ServiceBuilderListTypeUtil.
 							getServiceBuilderListTypeMessage(
 								contact.getSuffixListTypeId(),
-								dtoConverterContext.getLocale()));
+								dtoConverterContext.getLocale());
+					});
 				setId(user::getUserId);
 				setImage(
 					() -> {
@@ -199,6 +285,13 @@ public class UserResourceDTOConverter
 						organization -> _toOrganizationBrief(
 							dtoConverterContext, organization, user),
 						OrganizationBrief.class));
+				setPermissions(
+					() -> NestedFieldsSupplier.supply(
+						"permissions",
+						nestedFieldNames -> PermissionUtil.toPermissions(
+							user.getCompanyId(), user.getGroupId(),
+							user.getUserId(), User.class.getName(),
+							_permissionService, _resourceActionLocalService)));
 				setProfileURL(
 					() -> {
 						Group group = user.getGroup();
@@ -238,6 +331,17 @@ public class UserResourceDTOConverter
 
 						return null;
 					});
+				setTaxonomyCategoryBriefs(
+					() -> NestedFieldsSupplier.supply(
+						"taxonomyCategoryBriefs",
+						nestedFieldNames -> TransformUtil.transformToArray(
+							_assetCategoryService.getCategories(
+								User.class.getName(), user.getUserId()),
+							assetCategory ->
+								TaxonomyCategoryBriefUtil.
+									toTaxonomyCategoryBrief(
+										assetCategory, dtoConverterContext),
+							TaxonomyCategoryBrief.class)));
 				setUserAccountContactInformation(
 					() -> new UserAccountContactInformation() {
 						{
@@ -246,25 +350,63 @@ public class UserResourceDTOConverter
 									user.getEmailAddresses(),
 									EmailAddressUtil::toEmailAddress,
 									EmailAddress.class));
-							setFacebook(contact::getFacebookSn);
-							setJabber(contact::getJabberSn);
+							setFacebook(
+								() -> {
+									if (contact == null) {
+										return null;
+									}
+
+									return contact.getFacebookSn();
+								});
+							setJabber(
+								() -> {
+									if (contact == null) {
+										return null;
+									}
+
+									return contact.getJabberSn();
+								});
 							setPostalAddresses(
 								() -> TransformUtil.transformToArray(
 									user.getAddresses(),
-									address ->
-										PostalAddressUtil.toPostalAddress(
+									address -> _postalAddressDTOConverter.toDTO(
+										new DefaultDTOConverterContext(
 											dtoConverterContext.
 												isAcceptAllLanguages(),
-											address, user.getCompanyId(),
-											dtoConverterContext.getLocale()),
+											null, _dtoConverterRegistry,
+											address.getAddressId(),
+											dtoConverterContext.getLocale(),
+											dtoConverterContext.getUriInfo(),
+											dtoConverterContext.getUser())),
 									PostalAddress.class));
-							setSkype(contact::getSkypeSn);
-							setSms(contact::getSmsSn);
+							setSkype(
+								() -> {
+									if (contact == null) {
+										return null;
+									}
+
+									return contact.getSkypeSn();
+								});
+							setSms(
+								() -> {
+									if (contact == null) {
+										return null;
+									}
+
+									return contact.getSmsSn();
+								});
 							setTelephones(
 								() -> TransformUtil.transformToArray(
 									user.getPhones(), PhoneUtil::toPhone,
 									Phone.class));
-							setTwitter(contact::getTwitterSn);
+							setTwitter(
+								() -> {
+									if (contact == null) {
+										return null;
+									}
+
+									return contact.getTwitterSn();
+								});
 							setWebUrls(
 								() -> TransformUtil.transformToArray(
 									user.getWebsites(), WebUrlUtil::toWebUrl,
@@ -320,6 +462,20 @@ public class UserResourceDTOConverter
 						accountRole -> _toRoleBrief(
 							accountRole, dtoConverterContext),
 						RoleBrief.class));
+				setType(accountEntry::getType);
+			}
+		};
+	}
+
+	private AssetLibraryBrief _toAssetLibraryBrief(
+			Group group, DTOConverterContext dtoConverterContext)
+		throws PortalException {
+
+		return new AssetLibraryBrief() {
+			{
+				setExternalReferenceCode(group::getExternalReferenceCode);
+				setGroupId(group::getGroupId);
+				setName(() -> group.getName(dtoConverterContext.getLocale()));
 			}
 		};
 	}
@@ -330,6 +486,8 @@ public class UserResourceDTOConverter
 
 		return new OrganizationBrief() {
 			{
+				setExternalReferenceCode(
+					organization::getExternalReferenceCode);
 				setId(organization::getOrganizationId);
 				setName(organization::getName);
 				setRoleBriefs(
@@ -349,23 +507,9 @@ public class UserResourceDTOConverter
 
 		return new RoleBrief() {
 			{
+				setExternalReferenceCode(accountRole::getExternalReferenceCode);
 				setId(accountRole::getAccountRoleId);
 				setName(accountRole::getRoleName);
-				setName_i18n(
-					() -> LocalizedMapUtil.getI18nMap(
-						dtoConverterContext.isAcceptAllLanguages(),
-						role.getTitleMap()));
-			}
-		};
-	}
-
-	private RoleBrief _toRoleBrief(
-		DTOConverterContext dtoConverterContext, Role role) {
-
-		return new RoleBrief() {
-			{
-				setId(role::getRoleId);
-				setName(() -> role.getTitle(dtoConverterContext.getLocale()));
 				setName_i18n(
 					() -> LocalizedMapUtil.getI18nMap(
 						dtoConverterContext.isAcceptAllLanguages(),
@@ -387,7 +531,7 @@ public class UserResourceDTOConverter
 					return null;
 				}
 
-				return _toRoleBrief(dtoConverterContext, role);
+				return RoleBriefUtil.toRoleBrief(dtoConverterContext, role);
 			},
 			RoleBrief.class);
 	}
@@ -404,6 +548,7 @@ public class UserResourceDTOConverter
 					() -> LocalizedMapUtil.getI18nMap(
 						dtoConverterContext.isAcceptAllLanguages(),
 						group.getDescriptiveNameMap()));
+				setExternalReferenceCode(group::getExternalReferenceCode);
 				setId(group::getGroupId);
 				setName(() -> group.getName(dtoConverterContext.getLocale()));
 				setName_i18n(
@@ -423,6 +568,7 @@ public class UserResourceDTOConverter
 		return new UserGroupBrief() {
 			{
 				setDescription(userGroup::getDescription);
+				setExternalReferenceCode(userGroup::getExternalReferenceCode);
 				setId(userGroup::getGroupId);
 				setName(userGroup::getName);
 			}
@@ -439,13 +585,28 @@ public class UserResourceDTOConverter
 	private AccountRoleLocalService _accountRoleLocalService;
 
 	@Reference
+	private AssetCategoryService _assetCategoryService;
+
+	@Reference
 	private AssetTagLocalService _assetTagLocalService;
+
+	@Reference
+	private DTOConverterRegistry _dtoConverterRegistry;
 
 	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
+	private PermissionService _permissionService;
+
+	@Reference
 	private Portal _portal;
+
+	@Reference(target = DTOConverterConstants.POSTAL_ADDRESS_DTO_CONVERTER)
+	private DTOConverter<Address, PostalAddress> _postalAddressDTOConverter;
+
+	@Reference
+	private ResourceActionLocalService _resourceActionLocalService;
 
 	@Reference
 	private RoleLocalService _roleLocalService;

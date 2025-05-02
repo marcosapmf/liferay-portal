@@ -48,7 +48,6 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -289,6 +288,28 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 		}
 
 		return StringUtil.merge(new Object[] {uuid, groupId}, StringPool.POUND);
+	}
+
+	@Override
+	protected String getImportPortletPreferencesNewExternalReferenceCode(
+		PortletDataContext portletDataContext, Class<?> clazz,
+		long companyGroupId, Map<String, String[]> primaryKeys,
+		String externalReferenceCode) {
+
+		String className = clazz.getName();
+
+		if (!className.equals(Group.class.getName())) {
+			return null;
+		}
+
+		Group group = groupLocalService.fetchGroupByExternalReferenceCode(
+			externalReferenceCode, portletDataContext.getCompanyId());
+
+		if (group == null) {
+			return null;
+		}
+
+		return externalReferenceCode;
 	}
 
 	@Override
@@ -1079,9 +1100,7 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 						DDMStructure.class.getName());
 				}
 			}
-			else if (name.equals("assetListEntryExternalReferenceCode") ||
-					 name.equals("assetListEntryId")) {
-
+			else if (name.equals("assetListEntryExternalReferenceCode")) {
 				AssetListEntry assetListEntry =
 					AssetPublisherUtil.getAssetListEntry(
 						false, portletDataContext.getCompanyId(),
@@ -1093,9 +1112,12 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 						portletDataContext, portletId, assetListEntry);
 				}
 
-				if (FeatureFlagManagerUtil.isEnabled("LPD-22837")) {
-					portletPreferences.reset("assetListEntryId");
-				}
+				portletPreferences.reset("assetListEntryId");
+			}
+			else if (name.equals("assetListEntryGroupExternalReferenceCode")) {
+				updateExportPortletPreferencesExternalReferenceCodes(
+					portletDataContext, portlet, portletPreferences, name,
+					Group.class.getName());
 			}
 			else if (name.equals("assetVocabularyId")) {
 				long assetVocabularyId = GetterUtil.getLong(value);
@@ -1305,12 +1327,10 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 					portletDataContext, portletPreferences, name,
 					DDMStructure.class, companyGroup.getGroupId());
 			}
-			else if (name.equals("assetListEntryId") &&
-					 !FeatureFlagManagerUtil.isEnabled("LPD-22837")) {
-
-				updateImportPortletPreferencesClassPKs(
-					portletDataContext, portletPreferences, name,
-					AssetListEntry.class, companyGroup.getGroupId());
+			else if (name.equals("assetListEntryGroupExternalReferenceCode")) {
+				updateImportPortletPreferencesExternalReferenceCodes(
+					portletDataContext, portletPreferences, name, Group.class,
+					companyGroup.getGroupId());
 			}
 			else if (name.equals("assetVocabularyId")) {
 				updateImportPortletPreferencesClassPKs(

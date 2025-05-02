@@ -358,6 +358,12 @@ public class ClientExtensionEntryRelLocalServiceUtil {
 			classNameId, classPK, type, start, end);
 	}
 
+	public static List<ClientExtensionEntryRel> getClientExtensionEntryRels(
+		String type) {
+
+		return getService().getClientExtensionEntryRels(type);
+	}
+
 	/**
 	 * Returns all the client extension entry rels matching the UUID and company.
 	 *

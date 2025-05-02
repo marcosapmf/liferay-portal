@@ -13,8 +13,9 @@ function main {
 
 		rsync \
 			-a --delete \
-			--exclude "README.markdown" \
+			--exclude "README.md" \
 			--exclude "client-extensions" \
+			--exclude "language" \
 			--exclude "modules" \
 			--exclude "node_modules" \
 			--exclude "node_modules_cache" \

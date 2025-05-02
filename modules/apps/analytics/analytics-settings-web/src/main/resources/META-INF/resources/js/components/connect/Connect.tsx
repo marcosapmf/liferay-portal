@@ -22,7 +22,9 @@ interface IConnectProps {
 	title: string;
 }
 
-const Connect: React.FC<IConnectProps> = ({onConnect, title}) => {
+const Connect: React.FC<
+	{children?: React.ReactNode | undefined} & IConnectProps
+> = ({onConnect, title}) => {
 	const {
 		connected,
 		liferayAnalyticsURL,
@@ -124,14 +126,19 @@ const Connect: React.FC<IConnectProps> = ({onConnect, title}) => {
 								onClick={async () => {
 									setSubmitting(true);
 
-									const {ok} = await fetchConnection(token);
+									const response =
+										await fetchConnection(token);
 
 									setSubmitting(false);
 
-									if (ok) {
+									if (response.ok) {
+										const {liferayAnalyticsURL} =
+											await response.json();
+
 										dispatch({
 											payload: {
 												connected: true,
+												liferayAnalyticsURL,
 												token,
 											},
 											type: Events.Connect,

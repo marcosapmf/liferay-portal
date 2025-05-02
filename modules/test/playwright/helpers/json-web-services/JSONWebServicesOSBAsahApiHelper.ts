@@ -3,21 +3,56 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {asahConfig} from '../../tests/osb-faro-web/asah.config';
-import {Nanites} from '../../tests/osb-faro-web/utils/nanites';
+import {asahConfig} from '../../tests/osb-faro-web/main/asah.config';
+import {Nanites} from '../../tests/osb-faro-web/main/utils/nanites';
 import {ApiHelpers} from '../ApiHelpers';
+
+type BlogDaily = {
+	assetId: string;
+	assetTitle: string;
+	canonicalUrl: string;
+	channelId: string;
+	clicks: number;
+	comments: number;
+	eventDate: string;
+	pageTitle?: string;
+	ratings: number;
+	ratingsScore: number;
+	readTime: number;
+	sessions: number;
+	userId: string | null;
+	views: number;
+};
+
+type DocumentLibraryDaily = {
+	assetId: string;
+	assetTitle: string;
+	canonicalUrl: string;
+	channelId: string;
+	downloads: number;
+	eventDate: string;
+	pageTitle?: string;
+	previews: number;
+	ratings: number;
+	ratingsScore: number;
+	userId: string;
+};
 
 type Event = {
 	applicationId: string;
 	assetId?: string;
 	assetTitle?: string;
+	browserName?: string;
 	canonicalUrl: string;
 	channelId: string;
 	dataSourceId?: number;
+	deviceType?: string;
 	eventDate: string;
 	eventId: string;
 	eventProperties?: string;
+	platformName?: string;
 	properties?: Property[];
+	referrer?: string;
 	title: string;
 	userId: string;
 };
@@ -44,6 +79,17 @@ type Identity = {
 	createDate: string;
 	id: string;
 	individualId?: string;
+};
+
+type JournalDaily = {
+	assetId: string;
+	assetTitle: string;
+	canonicalUrl: string;
+	channelId: string;
+	eventDate: string;
+	pageTitle?: string;
+	userId: string;
+	views: number;
 };
 
 type Field = {
@@ -166,6 +212,41 @@ export class JSONWebServicesOSBAsahApiHelper {
 		);
 	}
 
+	async createBlogsDaily(blogsDaily: BlogDaily[]): Promise<any> {
+		return this.apiHelpers.post(
+			`${asahConfig.environment.backendUrl}${this.basePath}/blogsdaily`,
+			{
+				data: blogsDaily,
+				failOnStatusCode: true,
+				headers: this.getHeaders(),
+			}
+		);
+	}
+
+	async createDocumentLibrariesDaily(
+		documentLibrariesDaily: DocumentLibraryDaily[]
+	): Promise<any> {
+		return this.apiHelpers.post(
+			`${asahConfig.environment.backendUrl}${this.basePath}/documentlibrariesdaily`,
+			{
+				data: documentLibrariesDaily,
+				failOnStatusCode: true,
+				headers: this.getHeaders(),
+			}
+		);
+	}
+
+	async createJournalsDaily(journalsdaily: JournalDaily[]): Promise<any> {
+		return this.apiHelpers.post(
+			`${asahConfig.environment.backendUrl}${this.basePath}/journalsdaily`,
+			{
+				data: journalsdaily,
+				failOnStatusCode: true,
+				headers: this.getHeaders(),
+			}
+		);
+	}
+
 	async createSessions(session: Session[]): Promise<any> {
 		return this.apiHelpers.post(
 			`${asahConfig.environment.backendUrl}${this.basePath}/sessions`,
@@ -180,7 +261,7 @@ export class JSONWebServicesOSBAsahApiHelper {
 	async closeSessions(): Promise<any> {
 		return this.apiHelpers.delete(
 			`${asahConfig.environment.backendUrl}${this.basePath}/sessions/close`,
-			this.getHeaders()
+			{headers: this.getHeaders()}
 		);
 	}
 }

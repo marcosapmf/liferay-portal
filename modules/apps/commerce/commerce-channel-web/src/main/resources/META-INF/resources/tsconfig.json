@@ -1,22 +1,30 @@
 {
-	"@generated": "3810a025d8e0fa402b399ec938d89c936e5f3d53",
+	"@generated": "775606e4b61559783c64a59dd848ef3fbee2e248",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
+			"@liferay/marketplace-js-components-web": [
+				"../../../../../../../marketplace/marketplace-js-components-web/src/main/resources/META-INF/resources/js/index.ts"
+			],
 			"commerce-frontend-js": [
 				"../../../../../../commerce-frontend-js/src/main/resources/META-INF/resources/index.js"
 			],
+			"frontend-js-components-web": [
+				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
+			],
 			"frontend-js-web": [
-				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/index.d.ts"
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/main/index.d.ts"
+			],
+			"frontend-js-web/legacy": [
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/legacy/index.ts"
 			]
 		},
 		"rootDir": "../../../../../../../..",
@@ -36,7 +44,13 @@
 	],
 	"references": [
 		{
+			"path": "../../../../../../../marketplace/marketplace-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
 			"path": "../../../../../../commerce-frontend-js/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},
 		{
 			"path": "../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/tsconfig.json"

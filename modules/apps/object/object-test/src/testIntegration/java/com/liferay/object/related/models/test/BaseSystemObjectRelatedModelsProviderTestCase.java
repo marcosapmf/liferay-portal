@@ -5,6 +5,7 @@
 
 package com.liferay.object.related.models.test;
 
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.RequiredObjectRelationshipException;
 import com.liferay.object.model.ObjectDefinition;
@@ -66,7 +67,93 @@ public abstract class BaseSystemObjectRelatedModelsProviderTestCase {
 	}
 
 	@Test
-	public void testSystemObjectEntry1toMObjectRelatedModelsProviderImpl()
+	public void testSystemObjectEntry1toMObjectRelatedModels()
+		throws Exception {
+
+		_testSystemObjectEntry1toMObjectRelatedModels(0);
+
+		_objectDefinition.setScope(ObjectDefinitionConstants.SCOPE_SITE);
+
+		_objectDefinition =
+			_objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition);
+
+		_testSystemObjectEntry1toMObjectRelatedModels(
+			TestPropsValues.getGroupId());
+	}
+
+	@Test
+	public void testSystemObjectEntryMtoMObjectRelatedModels()
+		throws Exception {
+
+		_testSystemObjectEntryMtoMObjectRelatedModels(0);
+
+		_objectDefinition.setScope(ObjectDefinitionConstants.SCOPE_SITE);
+
+		_objectDefinition =
+			_objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition);
+
+		_testSystemObjectEntryMtoMObjectRelatedModels(
+			TestPropsValues.getGroupId());
+	}
+
+	protected abstract long[] addBaseModels(int count) throws Exception;
+
+	protected abstract void assertFailure(long primaryKey) throws Exception;
+
+	protected abstract void deleteBaseModel(long primaryKey) throws Exception;
+
+	protected abstract Object fetchBaseModel(long primaryKey);
+
+	protected abstract String getName(long primaryKey) throws Exception;
+
+	protected abstract ObjectDefinition getSystemObjectDefinition()
+		throws Exception;
+
+	private void _addObjectRelationship(
+			ObjectDefinition objectDefinition1,
+			ObjectDefinition objectDefinition2, String deletionType,
+			String relationshipType)
+		throws Exception {
+
+		_objectRelationship =
+			_objectRelationshipLocalService.addObjectRelationship(
+				null, TestPropsValues.getUserId(),
+				objectDefinition1.getObjectDefinitionId(),
+				objectDefinition2.getObjectDefinitionId(), 0, deletionType,
+				false,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				StringUtil.randomId(), false, relationshipType, null);
+
+		if (!StringUtil.equals(
+				relationshipType,
+				ObjectRelationshipConstants.TYPE_MANY_TO_MANY)) {
+
+			_relationshipObjectField = _objectFieldLocalService.getObjectField(
+				_objectRelationship.getObjectFieldId2());
+		}
+
+		_objectRelatedModelsProvider =
+			_objectRelatedModelsProviderRegistry.getObjectRelatedModelsProvider(
+				objectDefinition2.getClassName(),
+				objectDefinition2.getCompanyId(), relationshipType);
+	}
+
+	private void _insertIntoOrUpdateExtensionTable(
+			long objectEntryId, long primaryKey, long systemObjectDefinitionId)
+		throws Exception {
+
+		_objectEntryLocalService.insertIntoOrUpdateExtensionTable(
+			TestPropsValues.getUserId(), systemObjectDefinitionId, primaryKey,
+			HashMapBuilder.<String, Serializable>put(
+				"textField", RandomTestUtil.randomString()
+			).put(
+				_relationshipObjectField.getName(), objectEntryId
+			).build());
+	}
+
+	private void _testSystemObjectEntry1toMObjectRelatedModels(long groupId)
 		throws Exception {
 
 		long[] primaryKeys = addBaseModels(3);
@@ -77,7 +164,7 @@ public abstract class BaseSystemObjectRelatedModelsProviderTestCase {
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 
 		ObjectEntry objectEntry1 = ObjectEntryTestUtil.addObjectEntry(
-			0, _objectDefinition.getObjectDefinitionId(),
+			groupId, _objectDefinition.getObjectDefinitionId(),
 			Collections.emptyMap());
 
 		ObjectRelationshipTestUtil.assertGetRelatedModels(
@@ -105,7 +192,8 @@ public abstract class BaseSystemObjectRelatedModelsProviderTestCase {
 		ObjectRelationshipTestUtil.assertSearchRelatedModels(
 			0, _objectRelatedModelsProvider,
 			_objectRelationship.getObjectRelationshipId(),
-			objectEntry1.getObjectEntryId(), StringUtil.randomString());
+			objectEntry1.getObjectEntryId(),
+			String.valueOf(RandomTestUtil.randomInt()));
 		ObjectRelationshipTestUtil.assertSearchRelatedModels(
 			1, _objectRelatedModelsProvider,
 			_objectRelationship.getObjectRelationshipId(),
@@ -149,7 +237,7 @@ public abstract class BaseSystemObjectRelatedModelsProviderTestCase {
 			_objectRelationship.getLabelMap());
 
 		ObjectEntry objectEntry2 = ObjectEntryTestUtil.addObjectEntry(
-			0, _objectDefinition.getObjectDefinitionId(),
+			groupId, _objectDefinition.getObjectDefinitionId(),
 			Collections.emptyMap());
 
 		_insertIntoOrUpdateExtensionTable(
@@ -179,7 +267,7 @@ public abstract class BaseSystemObjectRelatedModelsProviderTestCase {
 			_objectRelationship.getLabelMap());
 
 		ObjectEntry objectEntry3 = ObjectEntryTestUtil.addObjectEntry(
-			0, _objectDefinition.getObjectDefinitionId(),
+			groupId, _objectDefinition.getObjectDefinitionId(),
 			Collections.emptyMap());
 
 		_insertIntoOrUpdateExtensionTable(
@@ -203,8 +291,7 @@ public abstract class BaseSystemObjectRelatedModelsProviderTestCase {
 			_objectRelationship);
 	}
 
-	@Test
-	public void testSystemObjectEntryMtoMObjectRelatedModels()
+	private void _testSystemObjectEntryMtoMObjectRelatedModels(long groupId)
 		throws Exception {
 
 		long[] primaryKeys = addBaseModels(3);
@@ -215,7 +302,7 @@ public abstract class BaseSystemObjectRelatedModelsProviderTestCase {
 			ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
 
 		ObjectEntry objectEntry1 = ObjectEntryTestUtil.addObjectEntry(
-			0, _objectDefinition.getObjectDefinitionId(),
+			groupId, _objectDefinition.getObjectDefinitionId(),
 			Collections.emptyMap());
 
 		ObjectRelationshipTestUtil.assertGetRelatedModels(
@@ -240,7 +327,8 @@ public abstract class BaseSystemObjectRelatedModelsProviderTestCase {
 		ObjectRelationshipTestUtil.assertSearchRelatedModels(
 			0, _objectRelatedModelsProvider,
 			_objectRelationship.getObjectRelationshipId(),
-			objectEntry1.getObjectEntryId(), StringUtil.randomString());
+			objectEntry1.getObjectEntryId(),
+			String.valueOf(RandomTestUtil.randomInt()));
 		ObjectRelationshipTestUtil.assertSearchRelatedModels(
 			1, _objectRelatedModelsProvider,
 			_objectRelationship.getObjectRelationshipId(),
@@ -283,7 +371,7 @@ public abstract class BaseSystemObjectRelatedModelsProviderTestCase {
 			_objectRelationship.getLabelMap());
 
 		ObjectEntry objectEntry2 = ObjectEntryTestUtil.addObjectEntry(
-			0, _objectDefinition.getObjectDefinitionId(),
+			groupId, _objectDefinition.getObjectDefinitionId(),
 			Collections.emptyMap());
 
 		ObjectRelationshipTestUtil.addObjectRelationshipMappingTableValues(
@@ -313,7 +401,7 @@ public abstract class BaseSystemObjectRelatedModelsProviderTestCase {
 			_objectRelationship.getLabelMap());
 
 		ObjectEntry objectEntry3 = ObjectEntryTestUtil.addObjectEntry(
-			0, _objectDefinition.getObjectDefinitionId(),
+			groupId, _objectDefinition.getObjectDefinitionId(),
 			HashMapBuilder.<String, Serializable>put(
 				"able", "Entry"
 			).build());
@@ -345,7 +433,7 @@ public abstract class BaseSystemObjectRelatedModelsProviderTestCase {
 				ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
 
 		ObjectEntry objectEntry4 = ObjectEntryTestUtil.addObjectEntry(
-			0, _objectDefinition.getObjectDefinitionId(),
+			groupId, _objectDefinition.getObjectDefinitionId(),
 			HashMapBuilder.<String, Serializable>put(
 				"able", "New Entry"
 			).build());
@@ -383,60 +471,6 @@ public abstract class BaseSystemObjectRelatedModelsProviderTestCase {
 		Assert.assertNull(
 			_objectRelationshipLocalService.fetchObjectRelationship(
 				_objectRelationship.getObjectRelationshipId()));
-	}
-
-	protected abstract long[] addBaseModels(int count) throws Exception;
-
-	protected abstract void assertFailure(long primaryKey) throws Exception;
-
-	protected abstract void deleteBaseModel(long primaryKey) throws Exception;
-
-	protected abstract Object fetchBaseModel(long primaryKey);
-
-	protected abstract String getName(long primaryKey) throws Exception;
-
-	protected abstract ObjectDefinition getSystemObjectDefinition()
-		throws Exception;
-
-	private void _addObjectRelationship(
-			ObjectDefinition objectDefinition1,
-			ObjectDefinition objectDefinition2, String deletionType,
-			String relationshipType)
-		throws Exception {
-
-		_objectRelationship =
-			_objectRelationshipLocalService.addObjectRelationship(
-				null, TestPropsValues.getUserId(),
-				objectDefinition1.getObjectDefinitionId(),
-				objectDefinition2.getObjectDefinitionId(), 0, deletionType,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				StringUtil.randomId(), false, relationshipType, null);
-
-		if (!StringUtil.equals(
-				relationshipType,
-				ObjectRelationshipConstants.TYPE_MANY_TO_MANY)) {
-
-			_relationshipObjectField = _objectFieldLocalService.getObjectField(
-				_objectRelationship.getObjectFieldId2());
-		}
-
-		_objectRelatedModelsProvider =
-			_objectRelatedModelsProviderRegistry.getObjectRelatedModelsProvider(
-				objectDefinition2.getClassName(),
-				objectDefinition2.getCompanyId(), relationshipType);
-	}
-
-	private void _insertIntoOrUpdateExtensionTable(
-			long objectEntryId, long primaryKey, long systemObjectDefinitionId)
-		throws Exception {
-
-		_objectEntryLocalService.insertIntoOrUpdateExtensionTable(
-			TestPropsValues.getUserId(), systemObjectDefinitionId, primaryKey,
-			HashMapBuilder.<String, Serializable>put(
-				"textField", RandomTestUtil.randomString()
-			).put(
-				_relationshipObjectField.getName(), objectEntryId
-			).build());
 	}
 
 	@DeleteAfterTestRun

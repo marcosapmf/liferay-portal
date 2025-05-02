@@ -5,12 +5,12 @@
 
 import ClayBadge from '@clayui/badge';
 import ClayPanel from '@clayui/panel';
-import {parse} from 'date-fns';
 import PropTypes from 'prop-types';
 import React, {useEffect} from 'react';
 
 import useKeyboardNavigation from '../../hooks/useKeyboardNavigation';
 import {PROPERTY_TYPES} from '../../utils/constants';
+import {getUtcDate} from '../../utils/date';
 import {LIST_ITEM_TYPES} from '../../utils/listItemTypes';
 import {propertyGroupShape} from '../../utils/types.es';
 import {jsDatetoYYYYMMDD} from '../../utils/utils';
@@ -33,13 +33,9 @@ function getDefaultValue(property) {
 		defaultValue = jsDatetoYYYYMMDD(new Date());
 	}
 	else if (type === PROPERTY_TYPES.DATE_TIME) {
-		const simpleDate = jsDatetoYYYYMMDD(new Date());
+		const utcDate = getUtcDate();
 
-		defaultValue = parse(
-			simpleDate,
-			'yyyy-MM-dd',
-			new Date()
-		).toISOString();
+		defaultValue = utcDate.toISOString();
 	}
 	else if (type === PROPERTY_TYPES.BOOLEAN) {
 		defaultValue = 'true';

@@ -5,8 +5,8 @@
 
 package com.liferay.saml.internal.upgrade.v1_0_0;
 
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.configuration.Filter;
-import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -111,17 +111,12 @@ public class SamlProviderConfigurationPreferencesUpgradeProcess
 		}
 
 		if (!migratedPrefsPropsKeys.isEmpty()) {
-			long companyThreadLocalCompanyId =
-				CompanyThreadLocal.getCompanyId();
-
-			try {
-				CompanyThreadLocal.setCompanyId(companyId);
+			try (SafeCloseable safeCloseable =
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						companyId)) {
 
 				_samlProviderConfigurationHelper.updateProperties(
 					unicodeProperties);
-			}
-			finally {
-				CompanyThreadLocal.setCompanyId(companyThreadLocalCompanyId);
 			}
 		}
 
@@ -160,18 +155,8 @@ public class SamlProviderConfigurationPreferencesUpgradeProcess
 		}
 
 		if (!unicodeProperties.isEmpty()) {
-			long companyThreadLocalCompanyId =
-				CompanyThreadLocal.getCompanyId();
-
-			try {
-				CompanyThreadLocal.setCompanyId(CompanyConstants.SYSTEM);
-
-				_samlProviderConfigurationHelper.updateProperties(
-					unicodeProperties);
-			}
-			finally {
-				CompanyThreadLocal.setCompanyId(companyThreadLocalCompanyId);
-			}
+			_samlProviderConfigurationHelper.updateProperties(
+				unicodeProperties);
 		}
 	}
 

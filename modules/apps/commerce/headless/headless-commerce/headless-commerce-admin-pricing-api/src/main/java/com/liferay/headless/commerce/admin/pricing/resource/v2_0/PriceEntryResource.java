@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.pricing.resource.v2_0;
 
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceEntry;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -48,40 +46,44 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface PriceEntryResource {
 
+	public void deletePriceEntry(Long priceEntryId) throws Exception;
+
+	public Response deletePriceEntryBatch(String callbackURL, Object object)
+		throws Exception;
+
 	public void deletePriceEntryByExternalReferenceCode(
 			String externalReferenceCode)
 		throws Exception;
 
+	public PriceEntry getPriceEntry(Long priceEntryId) throws Exception;
+
 	public PriceEntry getPriceEntryByExternalReferenceCode(
 			String externalReferenceCode)
+		throws Exception;
+
+	public Page<PriceEntry> getPriceListByExternalReferenceCodePriceEntriesPage(
+			String externalReferenceCode, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Page<PriceEntry> getPriceListIdPriceEntriesPage(
+			Long id, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public PriceEntry patchPriceEntry(Long priceEntryId, PriceEntry priceEntry)
 		throws Exception;
 
 	public PriceEntry patchPriceEntryByExternalReferenceCode(
 			String externalReferenceCode, PriceEntry priceEntry)
 		throws Exception;
 
-	public void deletePriceEntry(Long priceEntryId) throws Exception;
-
-	public Response deletePriceEntryBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public PriceEntry getPriceEntry(Long priceEntryId) throws Exception;
-
-	public PriceEntry patchPriceEntry(Long priceEntryId, PriceEntry priceEntry)
-		throws Exception;
-
-	public Page<PriceEntry> getPriceListByExternalReferenceCodePriceEntriesPage(
-			String externalReferenceCode, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
-		throws Exception;
-
 	public PriceEntry postPriceListByExternalReferenceCodePriceEntry(
 			String externalReferenceCode, PriceEntry priceEntry)
-		throws Exception;
-
-	public Page<PriceEntry> getPriceListIdPriceEntriesPage(
-			Long id, String search, Filter filter, Pagination pagination,
-			Sort[] sorts)
 		throws Exception;
 
 	public PriceEntry postPriceListIdPriceEntry(Long id, PriceEntry priceEntry)
@@ -113,7 +115,8 @@ public interface PriceEntryResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -138,19 +141,23 @@ public interface PriceEntryResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

@@ -39,17 +39,17 @@ public abstract class BaseTemplateUpgradeProcess extends UpgradeProcess {
 	private Pattern _getDeprecatedClassPattern() {
 		String deprecatedClass = getDeprecatedClass();
 
-		if (deprecatedClass != null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append("\\w+\\s*\\=\\s*.+");
-			sb.append(StringUtil.replace(deprecatedClass, '.', "\\."));
-			sb.append("\\\"\\)");
-
-			return Pattern.compile(sb.toString());
+		if (deprecatedClass == null) {
+			return null;
 		}
 
-		return null;
+		StringBundler sb = new StringBundler(3);
+
+		sb.append("\\w+\\s*\\=\\s*.+");
+		sb.append(StringUtil.replace(deprecatedClass, '.', "\\."));
+		sb.append("\\\"\\)");
+
+		return Pattern.compile(sb.toString());
 	}
 
 	private String _getVariableName(Matcher matcher) {
@@ -100,11 +100,13 @@ public abstract class BaseTemplateUpgradeProcess extends UpgradeProcess {
 	private void _upgradeDDMTemplates() throws Exception {
 		try (PreparedStatement selectPreparedStatement =
 				connection.prepareStatement(
-					"select templateId, script from DDMTemplate");
+					"select ctCollectionId, templateId, script from " +
+						"DDMTemplate");
 			PreparedStatement updatePreparedStatement =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
-					"update DDMTemplate set script = ? where templateId = ?")) {
+					"update DDMTemplate set script = ? where ctCollectionId " +
+						"= ? and templateId = ?")) {
 
 			try (ResultSet resultSet = selectPreparedStatement.executeQuery()) {
 				while (resultSet.next()) {
@@ -118,7 +120,9 @@ public abstract class BaseTemplateUpgradeProcess extends UpgradeProcess {
 							Pattern.compile("\\<\\#assign\\s*\\/?\\>"),
 							resultSet.getString("script")));
 					updatePreparedStatement.setLong(
-						2, resultSet.getLong("templateId"));
+						2, resultSet.getLong("ctCollectionId"));
+					updatePreparedStatement.setLong(
+						3, resultSet.getLong("templateId"));
 
 					updatePreparedStatement.addBatch();
 				}

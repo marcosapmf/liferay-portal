@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.headless.delivery.dto.v1_0.Creator;
-import com.liferay.headless.delivery.dto.v1_0.CustomField;
 import com.liferay.headless.delivery.dto.v1_0.PageDefinition;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
@@ -18,8 +17,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serializable;
 
@@ -49,11 +46,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 	description = "Represents a Display Page Template that has fields and is tied to a content type",
 	value = "DisplayPageTemplate"
 )
-@JsonFilter("Liferay.Vulcan")
-@Schema(
+@io.swagger.v3.oas.annotations.media.Schema(
 	description = "Represents a Display Page Template that has fields and is tied to a content type",
 	requiredProperties = {"title"}
 )
+@JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "DisplayPageTemplate")
 public class DisplayPageTemplate implements Serializable {
 
@@ -66,7 +63,7 @@ public class DisplayPageTemplate implements Serializable {
 			DisplayPageTemplate.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
 		if (_actionsSupplier != null) {
@@ -109,7 +106,7 @@ public class DisplayPageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The list of languages the Display Page Template has a translation for."
 	)
 	public String[] getAvailableLanguages() {
@@ -154,7 +151,9 @@ public class DisplayPageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _availableLanguagesSupplier;
 
-	@Schema(description = "The Display Page Template's creator.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The Display Page Template's creator."
+	)
 	@Valid
 	public Creator getCreator() {
 		if (_creatorSupplier != null) {
@@ -196,11 +195,13 @@ public class DisplayPageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<Creator> _creatorSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The custom fields associated to the page that renders the Display Page Template."
 	)
 	@Valid
-	public CustomField[] getCustomFields() {
+	public com.liferay.portal.vulcan.custom.field.CustomField[]
+		getCustomFields() {
+
 		if (_customFieldsSupplier != null) {
 			customFields = _customFieldsSupplier.get();
 
@@ -210,7 +211,9 @@ public class DisplayPageTemplate implements Serializable {
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields) {
+
 		this.customFields = customFields;
 
 		_customFieldsSupplier = null;
@@ -218,7 +221,9 @@ public class DisplayPageTemplate implements Serializable {
 
 	@JsonIgnore
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.custom.field.CustomField[], Exception>
+				customFieldsUnsafeSupplier) {
 
 		_customFieldsSupplier = () -> {
 			try {
@@ -237,12 +242,15 @@ public class DisplayPageTemplate implements Serializable {
 		description = "The custom fields associated to the page that renders the Display Page Template."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected CustomField[] customFields;
+	protected com.liferay.portal.vulcan.custom.field.CustomField[] customFields;
 
 	@JsonIgnore
-	private Supplier<CustomField[]> _customFieldsSupplier;
+	private Supplier<com.liferay.portal.vulcan.custom.field.CustomField[]>
+		_customFieldsSupplier;
 
-	@Schema(description = "The Display Page Template's creation date.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The Display Page Template's creation date."
+	)
 	public Date getDateCreated() {
 		if (_dateCreatedSupplier != null) {
 			dateCreated = _dateCreatedSupplier.get();
@@ -283,7 +291,7 @@ public class DisplayPageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateCreatedSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The last time any field of the Display Page Template was changed."
 	)
 	public Date getDateModified() {
@@ -328,7 +336,9 @@ public class DisplayPageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateModifiedSupplier;
 
-	@Schema(description = "The Display Page Template's external key.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The Display Page Template's external key."
+	)
 	public String getDisplayPageTemplateKey() {
 		if (_displayPageTemplateKeySupplier != null) {
 			displayPageTemplateKey = _displayPageTemplateKeySupplier.get();
@@ -370,7 +380,9 @@ public class DisplayPageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _displayPageTemplateKeySupplier;
 
-	@Schema(description = "The Display Page Template's external key.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The Display Page Template's external key."
+	)
 	@Valid
 	public DisplayPageTemplateSettings getDisplayPageTemplateSettings() {
 		if (_displayPageTemplateSettingsSupplier != null) {
@@ -417,7 +429,7 @@ public class DisplayPageTemplate implements Serializable {
 	private Supplier<DisplayPageTemplateSettings>
 		_displayPageTemplateSettingsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Specifies if the Display Page Template is the default one for the content type."
 	)
 	public Boolean getMarkedAsDefault() {
@@ -462,7 +474,7 @@ public class DisplayPageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _markedAsDefaultSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public PageDefinition getPageDefinition() {
 		if (_pageDefinitionSupplier != null) {
@@ -505,7 +517,7 @@ public class DisplayPageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<PageDefinition> _pageDefinitionSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The ID of the site to which this Page Template is scoped."
 	)
 	public Long getSiteId() {
@@ -550,7 +562,9 @@ public class DisplayPageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _siteIdSupplier;
 
-	@Schema(description = "The title of the Display Page Template")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The title of the Display Page Template"
+	)
 	public String getTitle() {
 		if (_titleSupplier != null) {
 			title = _titleSupplier.get();
@@ -592,7 +606,7 @@ public class DisplayPageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _titleSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A valid external identifier to reference this Display Page Template."
 	)
 	public String getUuid() {
@@ -715,7 +729,8 @@ public class DisplayPageTemplate implements Serializable {
 			sb.append(creator);
 		}
 
-		CustomField[] customFields = getCustomFields();
+		com.liferay.portal.vulcan.custom.field.CustomField[] customFields =
+			getCustomFields();
 
 		if (customFields != null) {
 			if (sb.length() > 1) {
@@ -871,8 +886,8 @@ public class DisplayPageTemplate implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.content.dto.v1_0.DisplayPageTemplate",
 		name = "x-class-name"
 	)

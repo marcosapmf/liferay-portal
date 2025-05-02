@@ -9,6 +9,10 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 	}
 
 	tearDown {
@@ -37,8 +41,6 @@ definition {
 	@description = "This is a use case for LPS-119168."
 	@priority = 4
 	test AddUser {
-		property testray.component.names = "Training";
-
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
@@ -637,82 +639,6 @@ definition {
 			assigneeName = "UG UserGroup Name");
 	}
 
-	@priority = 4
-	test BulkDeactivateUserSucceed {
-		for (var userNum : list "1,2,3,4,5") {
-			JSONUser.addUser(
-				userEmailAddress = "userea${userNum}@liferay.com",
-				userFirstName = "userfn${userNum}",
-				userLastName = "userln${userNum}",
-				userScreenName = "usersn${userNum}");
-		}
-
-		User.openUsersAdmin();
-
-		User.deactivateCP(
-			deactivateType = "Management Toolbar",
-			userFirstNameList = "userfn1,userfn3,userfn5");
-
-		User.openUsersAdmin();
-
-		for (var rowEntry : list "userfn1 userln1,userfn3 userln3,userfn5 userln5") {
-			LexiconEntry.viewNoEntry(rowEntry = ${rowEntry});
-		}
-
-		for (var rowEntry : list "userfn2 userln2,userfn4 userln4") {
-			LexiconEntry.viewEntryName(rowEntry = ${rowEntry});
-		}
-
-		ManagementBar.setFilterAndOrder(filterBy = "Inactive");
-
-		for (var rowEntry : list "userfn1 userln1,userfn3 userln3,userfn5 userln5") {
-			LexiconEntry.viewEntryName(rowEntry = ${rowEntry});
-		}
-
-		for (var rowEntry : list "userfn2 userln2,userfn4 userln4") {
-			LexiconEntry.viewNoEntry(rowEntry = ${rowEntry});
-		}
-	}
-
-	@priority = 4
-	test BulkDeleteUserSucceed {
-		for (var userNum : list "1,2,3,4,5") {
-			JSONUser.addUser(
-				userEmailAddress = "userea${userNum}@liferay.com",
-				userFirstName = "userfn${userNum}",
-				userLastName = "userln${userNum}",
-				userScreenName = "usersn${userNum}");
-		}
-
-		for (var userNum : list "1,3,5") {
-			JSONUser.updateStatus(
-				userEmailAddress = "userea${userNum}@liferay.com",
-				userStatus = "Inactive");
-		}
-
-		User.openUsersAdmin();
-
-		User.deleteCP(
-			deactivateType = "Management Toolbar",
-			userFirstNameList = "userfn1,userfn3,userfn5");
-
-		for (var rowEntry : list "userfn1 userln1,userfn3 userln3,userfn5 userln5") {
-			LexiconEntry.viewNoEntry(rowEntry = ${rowEntry});
-		}
-
-		User.openUsersAdmin();
-
-		for (var rowEntry : list "userfn1 userln1,userfn3 userln3,userfn5 userln5") {
-			LexiconEntry.viewNoEntry(rowEntry = ${rowEntry});
-		}
-
-		ManagementBar.setFilterAndOrder(filterBy = "Inactive");
-
-		for (var rowEntry : list "userfn1 userln1,userfn3 userln3,userfn5 userln5") {
-			LexiconEntry.viewNoEntry(rowEntry = ${rowEntry});
-		}
-	}
-
 	@description = "This is a use case for can add comment for user."
 	@priority = 4
 	test CanAddComment {
@@ -760,45 +686,6 @@ definition {
 		Navigator.gotoPersonalSite();
 
 		Portlet.viewDefaultTitle(portletName = "Asset Publisher");
-	}
-
-	@priority = 4
-	test CanBulkActivateUsers {
-		for (var userNum : list "1,2,3,4,5") {
-			JSONUser.addUser(
-				userEmailAddress = "userea${userNum}@liferay.com",
-				userFirstName = "userfn${userNum}",
-				userLastName = "userln${userNum}",
-				userScreenName = "usersn${userNum}");
-		}
-
-		User.openUsersAdmin();
-
-		User.deactivateCP(
-			deactivateType = "Management Toolbar",
-			userFirstNameList = "userfn1,userfn3,userfn5");
-
-		ManagementBar.setFilterAndOrder(filterBy = "Inactive");
-
-		for (var rowEntry : list "userfn1 userln1,userfn3 userln3,userfn5 userln5") {
-			LexiconEntry.viewEntryName(rowEntry = ${rowEntry});
-		}
-
-		User.bulkActivateCP(
-			activateType = "Management Toolbar",
-			userFirstNameList = "userfn1,userfn3,userfn5");
-
-		for (var rowEntry : list "userfn1 userln1,userfn3 userln3,userfn5 userln5") {
-			LexiconEntry.viewNoEntry(rowEntry = ${rowEntry});
-		}
-
-		User.openUsersAdmin();
-
-		for (var rowEntry : list "userfn1 userln1,userfn2 userln2,userfn3 userln3,userfn4 userln4,userfn5 userln5") {
-			AssertElementPresent(
-				key_rowEntry = ${rowEntry},
-				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
-		}
 	}
 
 	@description = "This test changes to cards view for users."
@@ -1120,156 +1007,6 @@ definition {
 		}
 	}
 
-	@description = "LPS-201007. As an admin, I can share documents with users of the same user group that has a site membership."
-	@priority = 5
-	test CanShareDocumentWithSiteMemberUserGroupUser {
-		property portal.acceptance = "true";
-
-		task ("Given a user group with two new users is created") {
-			for (var newUser : list "abc,user1") {
-				JSONUser.addUser(
-					userEmailAddress = "${newUser}@liferay.com",
-					userFirstName = ${newUser},
-					userLastName = ${newUser},
-					userScreenName = ${newUser});
-
-				JSONUser.setFirstPassword(
-					agreeToTermsAndAnswerReminderQuery = "true",
-					requireReset = "false",
-					userEmailAddress = "${newUser}@liferay.com");
-			}
-
-			JSONUserGroup.addUserGroup(
-				userGroupDescription = "UG1 Name Description",
-				userGroupName = "UG1");
-
-			UserGroup.openUserGroupsAdmin();
-
-			for (var userName : list "abc,user1") {
-				UserGroup.assignMemberCP(
-					userGroupName = "UG1",
-					userScreenName = ${userName});
-
-				Navigator.gotoBack();
-			}
-		}
-
-		task ("And the user group is assigned to the site") {
-			Site.openSiteSettingsAdmin(siteURLKey = "guest");
-
-			Site.manageMembershipOptions(
-				allowManualMembershipManagement = "true",
-				membershipType = "Open",
-				selectMembershipType = "true");
-
-			Site.openSiteMembershipsAdmin(siteURLKey = "guest");
-
-			Site.assignUserGroupAsMemberCP(userGroupName = "UG1");
-		}
-
-		task ("And Site Administrator role is given to the user1") {
-			JSONRole.assignSiteRoleToUser(
-				groupName = "Guest",
-				roleTitle = "Site Administrator",
-				userEmailAddress = "user1@liferay.com");
-		}
-
-		task ("When the user1 uploads a document in Documents and Media page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "user1@liferay.com",
-				userLoginFullName = "user1 user1");
-
-			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-			DMNavigator.gotoAddDocumentTypeCP(dmDocumentTypeName = "File Upload");
-
-			UploadDependencyFile.uploadFile(fileName = "Document_1.pdf");
-
-			PortletEntry.inputTitle(title = "Document1");
-
-			PortletEntry.publish();
-		}
-
-		task ("Then can share the document with user 'abc'") {
-			DMNavigator.gotoShareInfoPanel(dmDocumentTitle = "Document1");
-
-			DMDocument.shareWithNoSharingPermissionsUser(userEmailAddress = "abc@liferay.com");
-
-			Alert.viewSuccessMessage();
-		}
-
-		task ("And the user 'abc' can view the notification and the shared document when logs in") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "abc@liferay.com",
-				userLoginFullName = "abc abc");
-
-			Notifications.viewBadgeCount(notificationCount = 1);
-
-			Notifications.gotoNotifications();
-
-			Notifications.viewNewSharedContent(
-				contentSharingPermission = "viewing",
-				contentTitle = "Document1",
-				ownerName = "user1 user1");
-		}
-	}
-
-	@priority = 4
-	test ChangeUserPassword {
-		property portal.acceptance = "true";
-
-		JSONUser.addUser(
-			userEmailAddress = "userea@liferay.com",
-			userFirstName = "userfn",
-			userLastName = "userln",
-			userScreenName = "usersn");
-
-		User.openUsersAdmin();
-
-		User.editPasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
-
-		User.logoutPG();
-
-		User.loginUserPG(userEmailAddress = "userea@liferay.com");
-
-		Navigator.openURL();
-
-		Navigator.gotoAccountSettings();
-
-		User.changePasswordCP(userEmailAddress = "userea@liferay.com");
-	}
-
-	@priority = 4
-	test ChangeUserPasswordInvalid {
-		User.openUsersAdmin();
-
-		User.addCP(
-			userEmailAddress = "userea@liferay.com",
-			userFirstName = "userfn",
-			userLastName = "userln",
-			userScreenName = "usersn");
-
-		User.openUsersAdmin();
-
-		User.editPasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
-
-		User.logoutPG();
-
-		User.loginUserPG(userEmailAddress = "userea@liferay.com");
-
-		Navigator.openURL();
-
-		Navigator.gotoAccountSettings();
-
-		User.changePasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "Invalid");
-	}
-
 	@description = "This test changes password through the API Explorer GUI."
 	@priority = 4
 	test ChangeUserPasswordViaAPIExplorerGUI {
@@ -1317,7 +1054,7 @@ definition {
 				method = "patchUserAccount",
 				value1 = 200);
 
-			Masterclass.goBackUsingBrowserButton();
+			ExecuteJavaScript(value1 = "window.history.go(-1)");
 
 			Refresh();
 		}
@@ -1563,7 +1300,6 @@ definition {
 	@priority = 4
 	test EditUserAddresses {
 		property portal.acceptance = "true";
-		property testray.component.names = "Address";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1597,8 +1333,10 @@ definition {
 		User.addContactInformation(
 			city = "Chicago",
 			contactType = "add-address-link",
+			country = "United States",
 			makePrimary = "true",
 			postalCode = 60606,
+			region = "Illinois",
 			street1 = "205 West Wacker Dr");
 
 		User.viewIsPrimary(primaryValue = "205 West Wacker Dr");
@@ -1606,7 +1344,9 @@ definition {
 		User.addContactInformation(
 			city = "Raleigh",
 			contactType = "add-address-link",
+			country = "United States",
 			postalCode = 27607,
+			region = "North Carolina",
 			street1 = "4000 Westchase Blvd");
 
 		User.viewNotPrimary(primaryValue = "1400 Montefino Ave");
@@ -1759,7 +1499,7 @@ definition {
 
 	@priority = 4
 	test EditUserSite {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property app.server.types = "jboss,tomcat,weblogic,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
@@ -1884,155 +1624,6 @@ definition {
 		User.viewIsPrimary(
 			contactInfoPrimaryValue = "http://www.liferay1.com",
 			searchContainerType = "websitesSearchContainer");
-	}
-
-	@priority = 4
-	test ImpersonatingAdministratorandOwner {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		var siteName = TestCase.getSiteName(siteName = ${siteName});
-
-		JSONRole.addRegularRole(roleKey = "Impersonating Role Name");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW_CONTROL_PANEL",
-			resourceName = 90,
-			roleTitle = "Impersonating Role Name");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_users_admin_web_portlet_UsersAdminPortlet",
-			roleTitle = "Impersonating Role Name");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW",
-			resourceName = "com_liferay_users_admin_web_portlet_UsersAdminPortlet",
-			roleTitle = "Impersonating Role Name");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW",
-			resourceName = "com.liferay.portal.kernel.model.User",
-			roleTitle = "Impersonating Role Name");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "IMPERSONATE",
-			resourceName = "com.liferay.portal.kernel.model.User",
-			roleTitle = "Impersonating Role Name");
-
-		JSONUser.addUser(
-			userEmailAddress = "userea1@liferay.com",
-			userFirstName = "userfn1",
-			userLastName = "userln1",
-			userScreenName = "usersn1");
-
-		JSONUser.addUser(
-			userEmailAddress = "userea2@liferay.com",
-			userFirstName = "userfn2",
-			userLastName = "userln2",
-			userScreenName = "usersn2");
-
-		JSONUser.addUser(
-			userEmailAddress = "userea3@liferay.com",
-			userFirstName = "userfn3",
-			userLastName = "userln3",
-			userScreenName = "usersn3");
-
-		User.openUsersAdmin();
-
-		User.editPasswordCP(
-			userEmailAddress = "userea1@liferay.com",
-			userScreenName = "usersn1");
-
-		JSONRole.assignRoleToUser(
-			roleTitle = "Impersonating Role Name",
-			userEmailAddress = "userea1@liferay.com");
-
-		JSONRole.assignRoleToUser(
-			roleTitle = "Administrator",
-			userEmailAddress = "userea3@liferay.com");
-
-		User.openUsersAdmin();
-
-		User.editPasswordCP(
-			userEmailAddress = "userea2@liferay.com",
-			userScreenName = "usersn2");
-
-		User.openUsersAdmin();
-
-		User.editPasswordCP(
-			userEmailAddress = "userea3@liferay.com",
-			userScreenName = "usersn3");
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "userea1@liferay.com",
-			userLoginFullName = "userfn1 userln1");
-
-		User.openUsersAdmin();
-
-		User.impersonateCP(
-			siteName = ${siteName},
-			userScreenName = "usersn2");
-
-		Close.closeWindow(locator1 = "title=Welcome - ${siteName}");
-
-		SelectWindow(value1 = "title=Users - Users - Users and Organizations - ${siteName}");
-
-		User.openUsersAdmin();
-
-		User.attemptImpersonateCP(
-			notAdmin = "true",
-			siteName = ${siteName},
-			userScreenName = "usersn3");
-
-		User.openUsersAdmin();
-
-		User.attemptImpersonateCP(
-			notAdmin = "true",
-			siteName = ${siteName},
-			userScreenName = "test");
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test");
-
-		JSONRole.assignRoleToUser(
-			roleTitle = "Administrator",
-			userEmailAddress = "userea1@liferay.com");
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "userea1@liferay.com",
-			userLoginFullName = "userfn1 userln1");
-
-		User.openUsersAdmin();
-
-		User.impersonateCP(
-			siteName = ${siteName},
-			userScreenName = "usersn2");
-
-		Close.closeWindow(locator1 = "title=Welcome - ${siteName}");
-
-		SelectWindow(value1 = "title=Users - Users - Users and Organizations - ${siteName}");
-
-		User.openUsersAdmin();
-
-		User.impersonateCP(
-			siteName = ${siteName},
-			userScreenName = "usersn3");
-
-		Close.closeWindow(locator1 = "title=Welcome - ${siteName}");
-
-		SelectWindow(value1 = "title=Users - Users - Users and Organizations - ${siteName}");
-
-		User.openUsersAdmin();
-
-		User.impersonateCP(
-			siteName = ${siteName},
-			userScreenName = "test");
-
-		Close.closeWindow(locator1 = "title=Welcome - ${siteName}");
-
-		SelectWindow(value1 = "title=Users - Users - Users and Organizations - ${siteName}");
 	}
 
 	@description = "This is a use case for LPS-145025. No redirect and language is changed when change the language in password reset page."
@@ -2179,71 +1770,6 @@ definition {
 		Navigator.openSpecificURL(url = "${portalURL}/c/portal/logout");
 
 		User.viewLoggedOutPG();
-	}
-
-	@priority = 4
-	test OnlyGlobalTagCanbeAssociatedToUser {
-		JSONAssettag.addTag(
-			groupName = "Guest",
-			tagName = "default site tag name");
-
-		JSONAssettag.addTag(
-			groupName = "Global",
-			tagName = "global tag name 1");
-
-		JSONAssettag.addTag(
-			groupName = "Global",
-			tagName = "global tag name 2");
-
-		JSONUser.addUser(
-			userEmailAddress = "userea@liferay.com",
-			userFirstName = "userfn",
-			userLastName = "userln",
-			userScreenName = "usersn");
-
-		User.openUsersAdmin();
-
-		User.editUserTagCP(
-			addTagMethod = "Select",
-			tagNameList = "global tag name 1,global tag name 2",
-			userName = "userfn userln");
-
-		User.openUsersAdmin();
-
-		UserNavigator.gotoUser(userScreenName = "usersn");
-
-		for (var tagName : list "global tag name 1,global tag name 2") {
-			AssetCategorization.viewTag(tagName = ${tagName});
-		}
-
-		Click(
-			key_fieldLabel = "Tags",
-			key_text = "Select",
-			locator1 = "Button#ANY_WITH_LABEL");
-
-		IFrame.selectTagFrame();
-
-		var rowEntry = StringUtil.lowerCase(${rowEntry});
-
-		LexiconEntry.viewNoEntry(rowEntry = StringUtil.lowerCase("default site tag name"));
-
-		// Additional steps to cover LPS-111656
-
-		User.openUsersAdmin();
-
-		UserNavigator.gotoUser(userScreenName = "usersn");
-
-		UserNavigator.gotoMemberships();
-
-		PortletEntry.save();
-
-		User.openUsersAdmin();
-
-		UserNavigator.gotoUser(userScreenName = "usersn");
-
-		for (var tagName : list "global tag name 1,global tag name 2") {
-			AssetCategorization.viewTag(tagName = ${tagName});
-		}
 	}
 
 	@description = "This test disables the property that allows numeric values in the screen name field. It asserts that the specific error message displays when a user attempts to do so. It also covers LPS-12849."
@@ -2840,11 +2366,10 @@ definition {
 
 	@priority = 4
 	test ViewLoginForActivatedUser {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property app.server.types = "jboss,tomcat,weblogic,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
-		property testray.component.names = "Training";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",

@@ -44,6 +44,22 @@ public class DepotEntryGroupRelServiceUtil {
 		return getService().deleteDepotEntryGroupRel(depotEntryGroupRelId);
 	}
 
+	public static DepotEntryGroupRel
+			getDepotEntryGroupRelByDepotEntryIdToGroupId(
+				long depotEntryId, long toGroupId)
+		throws PortalException {
+
+		return getService().getDepotEntryGroupRelByDepotEntryIdToGroupId(
+			depotEntryId, toGroupId);
+	}
+
+	public static List<DepotEntryGroupRel> getDepotEntryGroupRels(
+			com.liferay.depot.model.DepotEntry depotEntry, int start, int end)
+		throws PortalException {
+
+		return getService().getDepotEntryGroupRels(depotEntry, start, end);
+	}
+
 	public static List<DepotEntryGroupRel> getDepotEntryGroupRels(
 			long groupId, int start, int end)
 		throws PortalException {

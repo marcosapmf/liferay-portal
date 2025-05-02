@@ -53,16 +53,21 @@ public class ObjectDefinitionWrapper
 		attributes.put("titleObjectFieldId", getTitleObjectFieldId());
 		attributes.put("accountEntryRestricted", isAccountEntryRestricted());
 		attributes.put("active", isActive());
-		attributes.put("dbTableName", getDBTableName());
-		attributes.put("label", getLabel());
 		attributes.put("className", getClassName());
+		attributes.put("dbTableName", getDBTableName());
 		attributes.put("enableCategorization", isEnableCategorization());
 		attributes.put("enableComments", isEnableComments());
+		attributes.put(
+			"enableFriendlyURLCustomization",
+			isEnableFriendlyURLCustomization());
 		attributes.put("enableIndexSearch", isEnableIndexSearch());
 		attributes.put("enableLocalization", isEnableLocalization());
 		attributes.put("enableObjectEntryDraft", isEnableObjectEntryDraft());
 		attributes.put(
 			"enableObjectEntryHistory", isEnableObjectEntryHistory());
+		attributes.put(
+			"enableObjectEntryVersioning", isEnableObjectEntryVersioning());
+		attributes.put("label", getLabel());
 		attributes.put("modifiable", isModifiable());
 		attributes.put("name", getName());
 		attributes.put("panelAppOrder", getPanelAppOrder());
@@ -185,22 +190,16 @@ public class ObjectDefinitionWrapper
 			setActive(active);
 		}
 
-		String dbTableName = (String)attributes.get("dbTableName");
-
-		if (dbTableName != null) {
-			setDBTableName(dbTableName);
-		}
-
-		String label = (String)attributes.get("label");
-
-		if (label != null) {
-			setLabel(label);
-		}
-
 		String className = (String)attributes.get("className");
 
 		if (className != null) {
 			setClassName(className);
+		}
+
+		String dbTableName = (String)attributes.get("dbTableName");
+
+		if (dbTableName != null) {
+			setDBTableName(dbTableName);
 		}
 
 		Boolean enableCategorization = (Boolean)attributes.get(
@@ -214,6 +213,13 @@ public class ObjectDefinitionWrapper
 
 		if (enableComments != null) {
 			setEnableComments(enableComments);
+		}
+
+		Boolean enableFriendlyURLCustomization = (Boolean)attributes.get(
+			"enableFriendlyURLCustomization");
+
+		if (enableFriendlyURLCustomization != null) {
+			setEnableFriendlyURLCustomization(enableFriendlyURLCustomization);
 		}
 
 		Boolean enableIndexSearch = (Boolean)attributes.get(
@@ -242,6 +248,19 @@ public class ObjectDefinitionWrapper
 
 		if (enableObjectEntryHistory != null) {
 			setEnableObjectEntryHistory(enableObjectEntryHistory);
+		}
+
+		Boolean enableObjectEntryVersioning = (Boolean)attributes.get(
+			"enableObjectEntryVersioning");
+
+		if (enableObjectEntryVersioning != null) {
+			setEnableObjectEntryVersioning(enableObjectEntryVersioning);
+		}
+
+		String label = (String)attributes.get("label");
+
+		if (label != null) {
+			setLabel(label);
 		}
 
 		Boolean modifiable = (Boolean)attributes.get("modifiable");
@@ -409,6 +428,11 @@ public class ObjectDefinitionWrapper
 		return model.getDefaultLanguageId();
 	}
 
+	@Override
+	public java.util.Locale getDefaultLocale() {
+		return model.getDefaultLocale();
+	}
+
 	/**
 	 * Returns the description object field ID of this object definition.
 	 *
@@ -442,6 +466,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public boolean getEnableComments() {
 		return model.getEnableComments();
+	}
+
+	/**
+	 * Returns the enable friendly url customization of this object definition.
+	 *
+	 * @return the enable friendly url customization of this object definition
+	 */
+	@Override
+	public boolean getEnableFriendlyURLCustomization() {
+		return model.getEnableFriendlyURLCustomization();
 	}
 
 	/**
@@ -482,6 +516,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public boolean getEnableObjectEntryHistory() {
 		return model.getEnableObjectEntryHistory();
+	}
+
+	/**
+	 * Returns the enable object entry versioning of this object definition.
+	 *
+	 * @return the enable object entry versioning of this object definition
+	 */
+	@Override
+	public boolean getEnableObjectEntryVersioning() {
+		return model.getEnableObjectEntryVersioning();
 	}
 
 	@Override
@@ -628,6 +672,13 @@ public class ObjectDefinitionWrapper
 	@Override
 	public long getObjectDefinitionId() {
 		return model.getObjectDefinitionId();
+	}
+
+	@Override
+	public java.util.List<ObjectDefinitionSetting>
+		getObjectDefinitionSettings() {
+
+		return model.getObjectDefinitionSettings();
 	}
 
 	@Override
@@ -784,6 +835,11 @@ public class ObjectDefinitionWrapper
 	@Override
 	public String getPortletId() {
 		return model.getPortletId();
+	}
+
+	@Override
+	public String getPreviousRESTContextPath() {
+		return model.getPreviousRESTContextPath();
 	}
 
 	/**
@@ -977,6 +1033,16 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Returns <code>true</code> if this object definition is enable friendly url customization.
+	 *
+	 * @return <code>true</code> if this object definition is enable friendly url customization; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isEnableFriendlyURLCustomization() {
+		return model.isEnableFriendlyURLCustomization();
+	}
+
+	/**
 	 * Returns <code>true</code> if this object definition is enable index search.
 	 *
 	 * @return <code>true</code> if this object definition is enable index search; <code>false</code> otherwise
@@ -1014,6 +1080,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public boolean isEnableObjectEntryHistory() {
 		return model.isEnableObjectEntryHistory();
+	}
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable object entry versioning.
+	 *
+	 * @return <code>true</code> if this object definition is enable object entry versioning; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isEnableObjectEntryVersioning() {
+		return model.isEnableObjectEntryVersioning();
 	}
 
 	@Override
@@ -1200,6 +1276,18 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Sets whether this object definition is enable friendly url customization.
+	 *
+	 * @param enableFriendlyURLCustomization the enable friendly url customization of this object definition
+	 */
+	@Override
+	public void setEnableFriendlyURLCustomization(
+		boolean enableFriendlyURLCustomization) {
+
+		model.setEnableFriendlyURLCustomization(enableFriendlyURLCustomization);
+	}
+
+	/**
 	 * Sets whether this object definition is enable index search.
 	 *
 	 * @param enableIndexSearch the enable index search of this object definition
@@ -1237,6 +1325,18 @@ public class ObjectDefinitionWrapper
 	@Override
 	public void setEnableObjectEntryHistory(boolean enableObjectEntryHistory) {
 		model.setEnableObjectEntryHistory(enableObjectEntryHistory);
+	}
+
+	/**
+	 * Sets whether this object definition is enable object entry versioning.
+	 *
+	 * @param enableObjectEntryVersioning the enable object entry versioning of this object definition
+	 */
+	@Override
+	public void setEnableObjectEntryVersioning(
+		boolean enableObjectEntryVersioning) {
+
+		model.setEnableObjectEntryVersioning(enableObjectEntryVersioning);
 	}
 
 	/**
@@ -1361,6 +1461,13 @@ public class ObjectDefinitionWrapper
 	@Override
 	public void setObjectDefinitionId(long objectDefinitionId) {
 		model.setObjectDefinitionId(objectDefinitionId);
+	}
+
+	@Override
+	public void setObjectDefinitionSettings(
+		java.util.List<ObjectDefinitionSetting> objectDefinitionSettings) {
+
+		model.setObjectDefinitionSettings(objectDefinitionSettings);
 	}
 
 	/**
@@ -1488,6 +1595,11 @@ public class ObjectDefinitionWrapper
 	@Override
 	public void setPortlet(boolean portlet) {
 		model.setPortlet(portlet);
+	}
+
+	@Override
+	public void setPreviousRESTContextPath(String previousRESTContextPath) {
+		model.setPreviousRESTContextPath(previousRESTContextPath);
 	}
 
 	/**
