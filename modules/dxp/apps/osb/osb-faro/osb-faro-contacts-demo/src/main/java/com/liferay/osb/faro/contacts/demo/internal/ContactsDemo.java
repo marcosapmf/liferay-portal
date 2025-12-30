@@ -65,16 +65,8 @@ public class ContactsDemo {
 							Thread.sleep(Time.SECOND * 30);
 						}
 					}
-
-					if (StringUtil.equals(
-							FaroPropsValues.FARO_DEMO_CREATOR_METHOD,
-							"nanite")) {
-
-						_naniteDemoCreatorService.createDemo();
-					}
-					else {
-						_snapshotDemoCreatorService.createDemo();
-					}
+					
+					_dummyCreatorService.createDemo();
 
 					if (_log.isInfoEnabled()) {
 						_log.info("Completed demo data creation");
@@ -101,17 +93,13 @@ public class ContactsDemo {
 	private static final Log _log = LogFactoryUtil.getLog(ContactsDemo.class);
 
 	@Reference
+	private DummyCreatorService _dummyCreatorService;
+	
+	@Reference
 	private FaroProjectLocalService _faroProjectLocalService;
 
 	private FutureTask<Void> _futureTask;
 
-	@Reference
-	private NaniteDemoCreatorService _naniteDemoCreatorService;
-
 	@Reference(target = "(jakarta.portlet.name=faro_portlet)")
 	private Portlet _portlet;
-
-	@Reference
-	private SnapshotDemoCreatorService _snapshotDemoCreatorService;
-
 }
